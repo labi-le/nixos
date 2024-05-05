@@ -7,7 +7,7 @@
 {
   imports =
     [ # Include the results of the hardware scan.
-      ./system/hardware.nix
+      ./hardware.nix
       ./wayland/login-manager.nix
       ./modules/docker.nix
     ];
