@@ -8,8 +8,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware.nix
-      ./wayland/login-manager.nix
-      ./modules/docker.nix
+      ./modules
     ];
 
   # Bootloader.
