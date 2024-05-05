@@ -71,13 +71,18 @@
       wget
       neovim
       fastfetch
+      gnumake
+
       psmisc
       ncurses
       pavucontrol
       dconf
+
       go
+      
       ipset
       gost
+      
 
       xdg-utils
       wl-clipboard
