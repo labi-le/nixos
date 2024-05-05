@@ -137,7 +137,9 @@
 
   environment.interactiveShellInit = ''
     alias nec='nvim /home/labile/nix/system/configuration.nix'
-    alias nrs='sudo nixos-rebuild switch --flake /home/labile/nix'
+    alias nrs='sudo nixos-rebuild switch --flake /home/labile/nix/#pc --impure && home-manager switch --flake /home/labile/nix'
+    alias rr='ranger'
+    alias n='nvim'
 '';
 
   # Enable the OpenSSH daemon.
