@@ -1,3 +1,5 @@
+.phony: rebuild-from-flake
+
 generate-hardware:
 	sudo nixos-generate-config --show-hardware-config > system/hardware.nix
 
