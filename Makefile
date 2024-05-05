@@ -1,6 +1,6 @@
 .phony: rebuild-from-flake
 
-generate-hardware: prepare
+generate-hardware: 
 	sudo nixos-generate-config --show-hardware-config > system/hardware.nix && git add --intent-to-add system/hardware.nix
 
 rebuild-from-flake: generate-hardware
