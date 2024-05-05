@@ -1,0 +1,5 @@
+{
+  imports = [
+    ./login-manager.nix
+  ];
+}
