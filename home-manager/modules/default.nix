@@ -6,5 +6,7 @@
     ./mako.nix
     ./git.nix
     ./ide.nix
+    ./alacritty.nix
+    ./wayshot.nix
   ];
 }

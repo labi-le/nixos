@@ -85,7 +85,10 @@
       xdg-utils
       wl-clipboard
       slurp
+      wayshot
       grim
+
+      (callPackage ../pkgs/wl-uploader.nix {})
 
       alacritty
       ranger
