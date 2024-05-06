@@ -223,10 +223,10 @@ in
       #
       # Screenshots
       #
-      bindsym --to-code $comand+s exec wl-screenshot
-      bindsym --to-code $comand+a exec wl-screenshot -capture all
+      bindsym --to-code $comand+s exec capture-area 
+      bindsym --to-code $comand+a exec capture-all
 
-      bindsym --to-code $comand+e exec wl-screenshot -edit
+      bindsym --to-code $comand+e exec capture-edit
 
       #
       # Import clipboard to https://0x0.st/
@@ -259,8 +259,8 @@ in
               xkb_options grp:caps_toggle
       }
 
-      set $left 'HDMI-A-1'
-      set $right 'DP-1'
+      set $right 'HDMI-A-1'
+      set $left 'DP-1'
 
       workspace $develop_workspace output $left
 
