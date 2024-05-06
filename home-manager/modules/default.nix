@@ -5,5 +5,6 @@
     ./wofi.nix
     ./mako.nix
     ./git.nix
+    ./ide.nix
   ];
 }
