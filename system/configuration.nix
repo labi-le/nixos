@@ -82,7 +82,6 @@
       ipset
       gost
       
-
       xdg-utils
       wl-clipboard
       slurp
@@ -103,7 +102,6 @@
 
       telegram-desktop
   ];
-
 
   environment.sessionVariables = rec {
     XDG_CONFIG_HOME = "\${HOME}/.config";
@@ -136,8 +134,7 @@
     };
 
   environment.interactiveShellInit = ''
-    alias nec='nvim /home/labile/nix/system/configuration.nix'
-    alias nrs='sudo nixos-rebuild switch --flake /home/labile/nix/#pc --impure && home-manager switch --flake /home/labile/nix'
+    alias ec='nvim /home/labile/nix/system/configuration.nix'
     alias rr='ranger'
     alias n='nvim'
 '';
