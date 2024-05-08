@@ -1,10 +1,15 @@
 { pkgs, ... } :
 
 {
-  programs.alacritty.enable = true;
-  programs.alacritty.settings = {
-    font.size = 17;
-    window.opacity = 0.4;
+  programs.alacritty = {
+    enable = true;
+    package = pkgs.unstable.alacritty;
+    settings = {
+      font.size = 17.0;
+      window.opacity = 0.4;
+    };
+
   };
+
 }
 
