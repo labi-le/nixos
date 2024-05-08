@@ -6,7 +6,7 @@
     package = pkgs.unstable.alacritty;
     settings = {
       font.size = 17.0;
-      window.opacity = 0.4;
+      window.opacity = 0.1;
     };
 
   };

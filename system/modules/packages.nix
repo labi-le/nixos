@@ -28,7 +28,7 @@
 
       (callPackage ../../pkgs/wl-uploader.nix {})
 
-      #alacritty
+      unstable.alacritty
       ranger
       unstable.btop
       git
