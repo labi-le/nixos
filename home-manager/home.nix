@@ -44,7 +44,7 @@
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
-
+  home.enableNixpkgsReleaseCheck = false;
   nixpkgs = {
     config = {
       allowUnfree = true;
