@@ -89,6 +89,7 @@
     alias ec='nvim /home/labile/nix/system/configuration.nix'
     alias rr='ranger'
     alias n='nvim'
+    alias upd='sudo nixos-rebuild switch --flake /home/labile/nix/#$(shell hostname) --impure'
 '';
 
   # Enable the OpenSSH daemon.

@@ -35,15 +35,20 @@
       modules = [
         ./system/configuration.nix
 	({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
+	home-manager.nixosModules.home-manager {
+	  home-manager.users.labile = import ./home-manager/home.nix;
+	  home-manager.useGlobalPkgs = true;
+	  home-manager.useUserPackages = true;
+	}
       ];
     };
 
-    homeConfigurations.labile = home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.${system};
-      modules = [
-        ./home-manager/home.nix
-	({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
-      ];
-    };
+    #homeConfigurations.labile = home-manager.lib.homeManagerConfiguration {
+    #  pkgs = nixpkgs.legacyPackages.${system};
+    #  modules = [
+    #    ./home-manager/home.nix
+    #	({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
+    #  ];
+    #};
   };
 }
