@@ -1,8 +1,9 @@
 {
   imports = [
     ./docker.nix
-    ./wayland
-    ./services
     ./shell.nix
+    ./logind.nix
+    ./sound.nix
+    ./greeter.nix
   ];
 }
