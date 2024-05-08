@@ -146,12 +146,6 @@
   services.openssh.enable = true;
 
   xdg.portal.config.common.default = "*";
-  sound.enable = true;
-  sound.mediaKeys.enable = true;
-  services.pipewire = {
-    enable = true;
-    pulse.enable = true;
-  };
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
