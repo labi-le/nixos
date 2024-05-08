@@ -77,7 +77,7 @@
       pavucontrol
       dconf
 
-      go
+      unstable.go
       
       ipset
       gost
@@ -92,7 +92,7 @@
 
       alacritty
       ranger
-      btop
+      unstable.btop
       git
       home-manager
       docker
