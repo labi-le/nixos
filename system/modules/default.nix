@@ -5,5 +5,6 @@
     ./logind.nix
     ./sound.nix
     ./greeter.nix
+    ./packages.nix
   ];
 }
