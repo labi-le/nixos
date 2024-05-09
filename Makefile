@@ -1,9 +1,7 @@
 
-.DEFAULT_GOAL := switch-all
+.DEFAULT_GOAL := switch
 
-rollup: generate-hardware rebuild-all
-
-switch-all: switch-system 
+rollup: generate-hardware fix-flake switch
 
 disko:
 	sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./disko.nix
@@ -14,7 +12,7 @@ prepare:
 fix-flake:
 	@git add --intent-to-add .
 
-switch-system:
+switch:
 	sudo nixos-rebuild switch --flake ./#$(shell hostname) --impure
 
 generate-hardware: 
