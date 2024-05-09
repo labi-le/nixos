@@ -12,6 +12,7 @@
       ./modules
     ];
 
+
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -64,7 +65,7 @@
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  environment.sessionVariables = rec {
+  environment.sessionVariables = {
     XDG_CONFIG_HOME = "\${HOME}/.config";
     SDL_VIDEODRIVER = "wayland";
     QT_QPA_PLATFORM = "wayland";

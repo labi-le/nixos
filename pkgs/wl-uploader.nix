@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> { } }:
 
-pkgs.stdenv.mkDerivation rec {
+pkgs.stdenv.mkDerivation {
   name = "wl-uploader";
   src = pkgs.fetchurl {
     url = "https://github.com/labi-le/wl-paste-uploader/releases/download/v1.0.1/wl-uploader_1.0.1_linux_amd64";
