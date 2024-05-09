@@ -12,7 +12,7 @@ prepare:
 fix-flake:
 	@git add --intent-to-add .
 
-switch:
+switch: fmt
 	sudo nixos-rebuild switch --flake ./#$(shell hostname) --impure --cores $(shell nproc)
 
 generate-hardware: 
