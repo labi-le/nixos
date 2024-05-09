@@ -17,3 +17,6 @@ switch:
 
 generate-hardware: 
 	sudo nixos-generate-config --show-hardware-config > system/hardware.nix
+
+fmt:
+	 nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt .'
