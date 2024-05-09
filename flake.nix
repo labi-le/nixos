@@ -22,33 +22,35 @@
           config.allowUnfree = true;
         };
       };
-    in {
+    in
+    {
 
-    nixosConfigurations.pc = nixpkgs.lib.nixosSystem {
-      specialArgs = {
-        pkgs-stable = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
+      nixosConfigurations.pc = nixpkgs.lib.nixosSystem {
+        specialArgs = {
+          pkgs-stable = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+          };
+          inherit inputs system;
         };
-        inherit inputs system;
+        modules = [
+          ./system/configuration.nix
+          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.users.labile = import ./home-manager/home.nix;
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+          }
+        ];
       };
-      modules = [
-        ./system/configuration.nix
-	({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
-	home-manager.nixosModules.home-manager {
-	  home-manager.users.labile = import ./home-manager/home.nix;
-	  home-manager.useGlobalPkgs = true;
-	  home-manager.useUserPackages = true;
-	}
-      ];
-    };
 
-    #homeConfigurations.labile = home-manager.lib.homeManagerConfiguration {
-    #  pkgs = nixpkgs.legacyPackages.${system};
-    #  modules = [
-    #    ./home-manager/home.nix
-    #	({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
-    #  ];
-    #};
-  };
+      #homeConfigurations.labile = home-manager.lib.homeManagerConfiguration {
+      #  pkgs = nixpkgs.legacyPackages.${system};
+      #  modules = [
+      #    ./home-manager/home.nix
+      #	({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
+      #  ];
+      #};
+    };
 }

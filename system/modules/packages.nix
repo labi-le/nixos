@@ -1,47 +1,47 @@
-{ pkgs, ... } :
+{ pkgs, ... }:
 
 {
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-  #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-      wget
-      neovim
-      fastfetch
-      gnumake
+    #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    wget
+    neovim
+    fastfetch
+    gnumake
 
-      psmisc
-      ncurses
-      pavucontrol
-      dconf
+    psmisc
+    ncurses
+    pavucontrol
+    dconf
 
-      unstable.go
+    unstable.go
 
-      ipset
-      gost
+    ipset
+    gost
 
-      xdg-utils
-      wl-clipboard
-      slurp
-      wayshot
-      grim
+    xdg-utils
+    wl-clipboard
+    slurp
+    wayshot
+    grim
 
-      (callPackage ../../pkgs/wl-uploader.nix {})
+    (callPackage ../../pkgs/wl-uploader.nix { })
 
-      unstable.alacritty
-      ranger
-      unstable.btop
-      git
-      home-manager
-      docker
-      docker-compose
-      libnotify
-      sshfs
+    unstable.alacritty
+    ranger
+    unstable.btop
+    git
+    home-manager
+    docker
+    docker-compose
+    libnotify
+    sshfs
 
-      google-chrome
-      vesktop
+    google-chrome
+    vesktop
 
-      telegram-desktop
+    telegram-desktop
   ];
 
   fonts.packages = with pkgs; [

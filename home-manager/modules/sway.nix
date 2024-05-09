@@ -1,8 +1,7 @@
-{
-  config,
-  pkgs,
-  lib,
-  ...
+{ config
+, pkgs
+, lib
+, ...
 }:
 
 let
@@ -30,7 +29,7 @@ in
         { command = terminal; }
         { command = "import-gsettings"; }
       ];
-      bars = [ { command = bar; } ];
+      bars = [{ command = bar; }];
     };
 
     extraConfig = ''

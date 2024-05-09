@@ -3,7 +3,7 @@
 {
   programs.git = {
     enable = true;
-    userName  = "labile";
+    userName = "labile";
     userEmail = "i@labile.cc";
     extraConfig = {
       push = { autoSetupRemote = true; };

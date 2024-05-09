@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> { } }:
 
 pkgs.stdenv.mkDerivation rec {
   name = "wl-uploader";
@@ -7,7 +7,7 @@ pkgs.stdenv.mkDerivation rec {
     sha256 = "56fb1d5a121e0177150342ec3133ac5ae08692d16d0ff844fad1295aff3bc7f5";
   };
 
-  phases = ["installPhase"];
+  phases = [ "installPhase" ];
 
   installPhase = ''
     mkdir -p $out/bin
