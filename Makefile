@@ -13,7 +13,7 @@ fix-flake:
 	@git add --intent-to-add .
 
 switch:
-	sudo nixos-rebuild switch --flake ./#$(shell hostname) --impure
+	sudo nixos-rebuild switch --flake ./#$(shell hostname) --impure --cores $(shell nproc)
 
 generate-hardware: 
 	sudo nixos-generate-config --show-hardware-config > system/hardware.nix
