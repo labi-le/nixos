@@ -10,9 +10,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixvim = {
+      url = "github:nix-community/nixvim/nixos-23.05";
+    };
+
   };
 
-  outputs = { nixpkgs, nixpkgs-unstable, home-manager, ... }@inputs:
+  outputs = { nixpkgs, nixpkgs-unstable, home-manager, nixvim, ... }@inputs:
 
     let
       system = "x86_64-linux";
@@ -36,11 +40,13 @@
         modules = [
           ./system/configuration.nix
           ({ ... }: { nixpkgs.overlays = [ overlay-unstable ]; })
+          nixvim.nixosModules.nixvim
           home-manager.nixosModules.home-manager
           {
             home-manager.users.labile = import ./home-manager/home.nix;
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.sharedModules = [ nixvim.homeManagerModules.nixvim ];
           }
         ];
       };

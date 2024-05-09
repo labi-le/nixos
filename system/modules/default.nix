@@ -6,5 +6,6 @@
     ./sound.nix
     ./greeter.nix
     ./packages.nix
+    ./nixvim
   ];
 }
