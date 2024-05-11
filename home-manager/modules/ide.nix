@@ -3,7 +3,7 @@
 }:
 
 {
-  home.packages = with pkgs.unstable.jetbrains; [
+  home.packages = with pkgs.jetbrains; [
     goland
     phpstorm
   ];
