@@ -50,17 +50,14 @@
     layout = "us";
   };
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.labile = {
     isNormalUser = true;
     description = "labile";
     extraGroups = [ "networkmanager" "wheel" "docker" "audio" "video" "input" "tun" ];
   };
 
-  # Enable automatic login for the user.
   services.getty.autologinUser = "labile";
 
-  # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
