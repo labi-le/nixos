@@ -1,6 +1,6 @@
 {
   programs.nixvim = {
     enable = true;
-    colorschemes.gruvbox.enable = true;
+    colorschemes.catppuccin.enable = true;
   };
 }
