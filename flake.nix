@@ -2,8 +2,8 @@
   description = "My system configuration";
 
   inputs = {
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    #nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -11,17 +11,18 @@
     };
 
     nixvim = {
-      url = "github:nix-community/nixvim/nixos-23.05";
+      #url = "github:nix-community/nixvim/nixos-23.05";
+      url = "github:nix-community/nixvim";
     };
 
   };
 
-  outputs = { nixpkgs, nixpkgs-unstable, home-manager, nixvim, ... }@inputs:
+  outputs = { nixpkgs, home-manager, nixvim, ... }@inputs:
 
     let
       system = "x86_64-linux";
       overlay-unstable = final: prev: {
-        unstable = import nixpkgs-unstable {
+        unstable = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
         };
@@ -46,7 +47,7 @@
             home-manager.users.labile = import ./home-manager/home.nix;
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.sharedModules = [ nixvim.homeManagerModules.nixvim ];
+            home-manager.sharedModules = [ ];
           }
         ];
       };

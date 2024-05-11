@@ -15,6 +15,7 @@
     dconf
 
     unstable.go
+    unstable.hyprland
 
     ipset
     gost
