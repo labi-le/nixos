@@ -24,6 +24,7 @@
     slurp
     wayshot
     grim
+    brightnessctl
 
     (callPackage ../../pkgs/wl-uploader.nix { })
 
