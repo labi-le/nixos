@@ -3,8 +3,8 @@
 {
   programs.git = {
     enable = true;
-    userName = "labile";
-    userEmail = "i@labile.cc";
+    userName = "labi-le";
+    userEmail = "1a6i1e@gmail.com";
     extraConfig = {
       push = { autoSetupRemote = true; };
       color.ui = true;
