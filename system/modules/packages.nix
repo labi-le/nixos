@@ -14,8 +14,7 @@
     pavucontrol
     dconf
 
-    unstable.go
-    unstable.hyprland
+    go
 
     ipset
     gost
@@ -29,9 +28,9 @@
 
     (callPackage ../../pkgs/wl-uploader.nix { })
 
-    unstable.alacritty
+    alacritty
     ranger
-    unstable.btop
+    btop
     git
     home-manager
     docker

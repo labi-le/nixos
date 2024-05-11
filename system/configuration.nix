@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, ... }:
 
 {
   imports =
@@ -55,7 +55,6 @@
     isNormalUser = true;
     description = "labile";
     extraGroups = [ "networkmanager" "wheel" "docker" "audio" "video" "input" "tun" ];
-    packages = with pkgs; [ ];
   };
 
   # Enable automatic login for the user.
