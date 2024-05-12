@@ -1,7 +1,3 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
-
 { config, ... }:
 
 {
@@ -62,7 +58,7 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   environment.sessionVariables = {
-    XDG_CONFIG_HOME = "\${HOME}/.config";
+    XDG_CONFIG_HOME = "${config.users.users.labile.home}/.config";
     SDL_VIDEODRIVER = "wayland";
     QT_QPA_PLATFORM = "wayland";
     QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
@@ -84,10 +80,11 @@
   };
 
   environment.interactiveShellInit = ''
-    alias ec='nvim /home/labile/nix/system/configuration.nix'
+    alias ec='nvim ${config.users.users.labile.home}/nix/system/configuration.nix'
     alias rr='ranger'
     alias n='nvim'
-    alias upd='sudo nixos-rebuild switch --flake /home/labile/nix/#$(shell hostname) --impure'
+    alias sw='cd ${config.users.users.labile.home}/nix && make'
+    alias up='cd ${config.users.users.labile.home}/nix && make update'
   '';
 
   # Enable the OpenSSH daemon.
