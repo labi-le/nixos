@@ -20,3 +20,6 @@ generate-hardware:
 
 fmt:
 	 nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt .'
+
+upgrade:
+	sudo nixos-rebuild switch --upgrade --flake ./#$(shell hostname) --impure --cores $(shell nproc)
