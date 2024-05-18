@@ -67,6 +67,7 @@
     WLR_NO_HARDWARE_CURSORS = "1";
     WLR_RENDERER_ALLOW_SOFTWARE = "1";
   };
+  environment.etc."ppp/options".text = "ipcp-accept-remote";
 
   environment.variables.EDITOR = "nvim";
   hardware.opengl.enable = true;
@@ -83,8 +84,8 @@
     alias ec='nvim ${config.users.users.labile.home}/nix/system/configuration.nix'
     alias rr='ranger'
     alias n='nvim'
-    alias sw='cd ${config.users.users.labile.home}/nix && make'
-    alias up='cd ${config.users.users.labile.home}/nix && make update'
+    alias sw='alacritty -e `cd ${config.users.users.labile.home}/nix && make`'
+    alias up='alacritty -e `cd ${config.users.users.labile.home}/nix/ make update`'
   '';
 
   # Enable the OpenSSH daemon.

@@ -7,7 +7,7 @@
   programs.zsh = {
     autosuggestions = {
       enable = true;
-      strategy = [ "completion" ];
+      strategy = [ "history" ];
       async = true;
       highlightStyle = "fg=cyan";
     };

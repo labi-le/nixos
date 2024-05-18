@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-22.05";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -15,10 +16,16 @@
 
   };
 
-  outputs = { nixpkgs, home-manager, nixvim, ... }@inputs:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }@inputs:
 
     let
       system = "x86_64-linux";
+      overlay-stable = final: prev: {
+        stable = import nixpkgs-stable {
+          inherit system;
+          config.allowUnfree = true;
+        };
+      };
     in
     {
 
@@ -32,6 +39,7 @@
         };
         modules = [
           ./system/configuration.nix
+          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
           nixvim.nixosModules.nixvim
           home-manager.nixosModules.home-manager
           {

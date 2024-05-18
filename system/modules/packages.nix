@@ -42,7 +42,10 @@
     vesktop
 
     telegram-desktop
+
+    dbeaver
   ];
+
 
   fonts.packages = with pkgs; [
     dejavu_fonts
