@@ -7,5 +7,6 @@
     ./greeter.nix
     ./packages.nix
     ./nixvim
+    ./network
   ];
 }
