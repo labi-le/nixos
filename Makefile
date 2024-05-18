@@ -13,7 +13,7 @@ fix-flake:
 	@git add --intent-to-add .
 
 switch: fmt
-	sudo nixos-rebuild switch --flake ./#$(shell hostname) --impure --cores $(shell nproc)
+	sudo nixos-rebuild switch --fast --flake ./#$(shell hostname) --impure --cores $(shell nproc)
 
 generate-hardware: 
 	sudo nixos-generate-config --show-hardware-config > system/hardware.nix
@@ -23,3 +23,6 @@ fmt:
 
 upgrade:
 	sudo nixos-rebuild switch --upgrade --flake ./#$(shell hostname) --impure --cores $(shell nproc)
+
+boot:
+	sudo nixos-rebuild boot --flake ./#$(shell hostname) --impure --cores $(shell nproc)
