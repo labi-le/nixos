@@ -8,5 +8,6 @@
     ./packages.nix
     ./nixvim
     ./network
+    ./thunar.nix
   ];
 }
