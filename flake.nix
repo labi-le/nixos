@@ -37,6 +37,7 @@
           };
           inherit inputs system;
         };
+
         modules = [
           ./system/configuration.nix
           ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
@@ -48,6 +49,13 @@
             home-manager.useUserPackages = true;
             home-manager.sharedModules = [ ];
           }
+        ];
+      };
+
+      nixosConfigurations.live = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
         ];
       };
     };
