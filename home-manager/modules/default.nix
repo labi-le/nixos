@@ -8,5 +8,6 @@
     ./ide.nix
     ./alacritty.nix
     ./wayshot.nix
+    ./theme.nix
   ];
 }

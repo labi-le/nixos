@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ ... }:
 
 {
   imports = [ ./modules ];
@@ -7,26 +7,6 @@
   home.username = "labile";
   home.homeDirectory = "/home/labile";
 
-  gtk = {
-    enable = true;
-    theme = {
-      name = "Dracula";
-      package = pkgs.dracula-theme;
-    };
-    iconTheme = {
-      name = "Dracula";
-      package = pkgs.dracula-icon-theme;
-    };
-    font = {
-      package = pkgs.dejavu_fonts;
-      name = "DejaVu Sans";
-      size = 14;
-    };
-    cursorTheme = {
-      name = "Capitaine Cursors";
-      package = pkgs.capitaine-cursors;
-    };
-  };
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
   # introduces backwards incompatible changes.
