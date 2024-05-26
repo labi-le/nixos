@@ -256,8 +256,8 @@ in
               xkb_options grp:caps_toggle
       }
 
-      set $right 'HDMI-A-1'
-      set $left 'DP-1'
+      set $right 'DP-3'
+      set $left 'DP-2'
 
       workspace $develop_workspace output $left
 

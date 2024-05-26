@@ -20,7 +20,11 @@
     font = {
       package = pkgs.dejavu_fonts;
       name = "DejaVu Sans";
-      size = 15;
+      size = 14;
+    };
+    cursorTheme = {
+      name = "Capitaine Cursors";
+      package = pkgs.capitaine-cursors;
     };
   };
   # This value determines the Home Manager release that your configuration is
