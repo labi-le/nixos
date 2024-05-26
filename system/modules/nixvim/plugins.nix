@@ -16,7 +16,7 @@
         nil_ls.enable = true;
         gopls.enable = true;
       };
-
+      autoArcive = true;
     };
   };
 }
