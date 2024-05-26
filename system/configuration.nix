@@ -117,5 +117,7 @@
   security.sudo.extraConfig = ''
     Defaults timestamp_timeout=-1
   '';
+
+  services.fstrim.enable = true;
 }
 

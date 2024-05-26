@@ -16,7 +16,11 @@
         nil_ls.enable = true;
         gopls.enable = true;
       };
-      autoArcive = true;
     };
+
+    lsp-format = {
+      enable = true;
+    };
+
   };
 }

@@ -13,6 +13,15 @@
       name = "Dracula";
       package = pkgs.dracula-theme;
     };
+    iconTheme = {
+      name = "Dracula";
+      package = pkgs.dracula-icon-theme;
+    };
+    font = {
+      package = pkgs.dejavu_fonts;
+      name = "DejaVu Sans";
+      size = 15;
+    };
   };
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
