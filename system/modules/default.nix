@@ -9,5 +9,6 @@
     ./nixvim
     ./network
     ./thunar.nix
+    ./polkit.nix
   ];
 }
