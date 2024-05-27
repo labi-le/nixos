@@ -23,15 +23,13 @@
   };
 
   home.pointerCursor = {
-
-    gtk.enable = true;
-
-    package = pkgs.phinger-cursors;
-
-    name = "Phinger-cursors-light";
-
-    size = 48;
-
+    name = "Adwaita";
+    package = pkgs.gnome.adwaita-icon-theme;
+    size = 24;
+    x11 = {
+      enable = true;
+      defaultCursor = "Adwaita";
+    };
   };
 
 }
