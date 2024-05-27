@@ -7,7 +7,7 @@ let
   cursorTheme = {
     name = "Adwaita";
     package = pkgs.gnome.adwaita-icon-theme;
-    size = 30;
+    size = 32;
   };
 in
 {
