@@ -9,5 +9,6 @@
     ./alacritty.nix
     ./wayshot.nix
     ./theme.nix
+    ./ssh.nix
   ];
 }
