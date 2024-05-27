@@ -2,6 +2,14 @@
 , ...
 }:
 
+
+let
+  cursorTheme = {
+    name = "capitaine-cursors";
+    package = pkgs.capitaine-cursors;
+    size = 40;
+  };
+in
 {
   gtk = {
     enable = true;
@@ -14,21 +22,17 @@
       package = pkgs.dracula-icon-theme;
     };
 
-    #cursorTheme = {
-    #  name = "banana-cursor";
-    #  package = pkgs.banana-cursor;
-    #  size = 24;
-    #};
+    inherit cursorTheme;
 
   };
 
   home.pointerCursor = {
-    name = "Adwaita";
-    package = pkgs.gnome.adwaita-icon-theme;
-    size = 24;
+    name = cursorTheme.name;
+    package = cursorTheme.package;
+    size = cursorTheme.size;
     x11 = {
       enable = true;
-      defaultCursor = "Adwaita";
+      defaultCursor = cursorTheme.name;
     };
   };
 
