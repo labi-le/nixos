@@ -29,6 +29,7 @@ in
       ];
       bars = [{ command = bar; }];
     };
+    wrapperFeatures.gtk = true;
 
     extraConfig = ''
       set $mod Mod4

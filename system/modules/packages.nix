@@ -46,6 +46,9 @@
     dbeaver-bin
 
     stable.openfortivpn
+
+    glib
+    gsettings-desktop-schemas
   ];
 
 
