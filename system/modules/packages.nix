@@ -43,9 +43,9 @@
 
     telegram-desktop
 
-    dbeaver
+    dbeaver-bin
 
-    openfortivpn
+    stable.openfortivpn
   ];
 
 
