@@ -25,7 +25,7 @@ in
       inherit terminal;
       startup = [
         { command = terminal; }
-        { command = "import-gsettings"; }
+        { command = "import-gsettings"; always = true; }
       ];
       bars = [{ command = bar; }];
     };
