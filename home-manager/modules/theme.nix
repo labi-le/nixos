@@ -5,9 +5,9 @@
 
 let
   cursorTheme = {
-    name = "capitaine-cursors";
-    package = pkgs.capitaine-cursors;
-    size = 40;
+    name = "Adwaita";
+    package = pkgs.gnome.adwaita-icon-theme;
+    size = 30;
   };
 in
 {
@@ -34,6 +34,11 @@ in
       enable = true;
       defaultCursor = cursorTheme.name;
     };
+  };
+
+  home.sessionVariables = {
+    XCURSOR_SIZE = cursorTheme.size;
+    XCURSOR_THEME = cursorTheme.name;
   };
 
 }
