@@ -32,6 +32,7 @@ in
     wrapperFeatures.gtk = true;
 
     extraConfig = ''
+      seat seat0 xcursor_theme "Adwaita" 26 
       set $mod Mod4
       set $comand Mod1
 

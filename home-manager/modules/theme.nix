@@ -35,10 +35,4 @@ in
       defaultCursor = cursorTheme.name;
     };
   };
-
-  home.sessionVariables = {
-    XCURSOR_SIZE = cursorTheme.size;
-    XCURSOR_THEME = cursorTheme.name;
-  };
-
 }
