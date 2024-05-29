@@ -14,6 +14,10 @@
       url = "github:nix-community/nixvim";
     };
 
+    flake-utils.url = "github:numtide/flake-utils";
+    #phps = {
+    #  url = "github:loophp/nix-shell";
+    #};
   };
 
   outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }@inputs:
@@ -28,7 +32,6 @@
       };
     in
     {
-
       nixosConfigurations.pc = nixpkgs.lib.nixosSystem {
         specialArgs = {
           pkgs-stable = import nixpkgs {
@@ -49,13 +52,6 @@
             home-manager.useUserPackages = true;
             home-manager.sharedModules = [ ];
           }
-        ];
-      };
-
-      nixosConfigurations.live = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [
-          (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
         ];
       };
     };

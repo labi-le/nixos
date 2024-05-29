@@ -16,8 +16,14 @@
 
     go
 
+    (php.buildEnv {
+      extensions = { all, enabled }: with all; enabled ++ [ xdebug redis parallel ];
+      extraConfig = ''
+        xdebug.mode=debug
+      '';
+    })
+
     ipset
-    gost
 
     xdg-utils
     wl-clipboard
