@@ -8,6 +8,7 @@
     wget
     fastfetch
     gnumake
+    lsof
 
     psmisc
     ncurses
@@ -17,9 +18,10 @@
     go
 
     (php.buildEnv {
-      extensions = { all, enabled }: with all; enabled ++ [ xdebug redis parallel ];
+      extensions = { all, enabled }: with all; enabled ++ [ xdebug redis ];
       extraConfig = ''
         xdebug.mode=debug
+        xdebug.discover_client_host=1
       '';
     })
 
