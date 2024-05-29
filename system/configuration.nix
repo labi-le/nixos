@@ -120,5 +120,8 @@
 
   services.fstrim.enable = true;
   services.gnome.gnome-keyring.enable = true;
+
+  networking.firewall.enable = false;
+  boot.blacklistedKernelModules = [ "pcspkr" ];
 }
 
