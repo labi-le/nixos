@@ -52,6 +52,7 @@
     telegram-desktop
 
     dbeaver-bin
+    notepad-next
 
     stable.openfortivpn
 
