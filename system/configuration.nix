@@ -116,10 +116,6 @@
 
   security.sudo.extraConfig = ''
       Defaults timestamp_timeout=-1
-
-    Cmnd_Alias  OPENFORTIVPN = /run/current-system/sw/bin/openfortivpn
-
-    %wheel ALL=(ALL) NOPASSWD: OPENFORTIVPN
   '';
 
   services.fstrim.enable = true;
