@@ -1,11 +1,21 @@
 { ... }:
 
+let
+
+  username = "labile";
+  homeDirectory = "/home/labile";
+
+
+in
+
 {
   imports = [ ./modules ];
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
-  home.username = "labile";
-  home.homeDirectory = "/home/labile";
+  home.username = username;
+  home.homeDirectory = homeDirectory;
+  home.file."/tmp/".source = homeDirectory + "/Downloads";
+
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -43,4 +53,5 @@
       allowUnfreePredicate = (_: true);
     };
   };
+
 }

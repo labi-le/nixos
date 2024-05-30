@@ -115,7 +115,7 @@
   };
 
   security.sudo.extraConfig = ''
-      Defaults timestamp_timeout=-1
+    Defaults timestamp_timeout=-1
   '';
 
   services.fstrim.enable = true;
@@ -123,5 +123,9 @@
 
   networking.firewall.enable = false;
   boot.blacklistedKernelModules = [ "pcspkr" ];
+
+  nix.settings.auto-optimise-store = true;
+  nix.gc.automatic = true;
+  nix.gc.dates = "daily";
 }
 
