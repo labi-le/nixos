@@ -122,7 +122,7 @@
   services.gnome.gnome-keyring.enable = true;
 
   networking.firewall.enable = false;
-  boot.blacklistedKernelModules = [ "pcspkr" ];
+  boot.blacklistedKernelModules = [ "snd_pcsp" "pcspkr" ];
 
   nix.settings.auto-optimise-store = true;
   nix.gc.automatic = true;
