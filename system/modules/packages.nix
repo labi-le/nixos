@@ -46,21 +46,22 @@
     docker-compose
     libnotify
     sshfs
-
+    obsidian
     google-chrome
     vesktop
-
     telegram-desktop
 
     dbeaver-bin
     notepad-next
 
     stable.openfortivpn
+    libreoffice-qt6-still
 
     glib
     gsettings-desktop-schemas
 
     ngrok
+    postman
   ];
 
 
