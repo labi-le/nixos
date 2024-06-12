@@ -27,5 +27,5 @@ upgrade:
 boot:
 	sudo nixos-rebuild boot --flake ./#$(shell hostname) --impure --cores $(shell nproc)
 
-cleanup:
+cleanup: boot
 	sudo nix-collect-garbage -d && make switch
