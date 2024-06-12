@@ -19,7 +19,7 @@
       plugins = [ "git" "dotenv" "history" "golang" "z" "github" "yii2" ];
     };
     enableCompletion = true;
-    interactiveShellInit = "fastfetch";
+    #interactiveShellInit = "fortune";
   };
 }
 

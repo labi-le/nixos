@@ -8,6 +8,7 @@
         command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --cmd sway";
         user = "greeter";
       };
+      remember-user-session = true;
     };
   };
 
