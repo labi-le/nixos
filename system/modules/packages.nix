@@ -27,6 +27,7 @@
     })
 
     ipset
+    inetutils
 
     xdg-utils
     wl-clipboard
