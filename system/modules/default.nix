@@ -10,5 +10,6 @@
     ./network
     ./thunar.nix
     ./polkit.nix
+    ./uxplay.nix
   ];
 }
