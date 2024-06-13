@@ -51,6 +51,7 @@
     google-chrome
     vesktop
     telegram-desktop
+    uxplay
 
     dbeaver-bin
     notepad-next
