@@ -52,6 +52,7 @@
     vesktop
     telegram-desktop
     uxplay
+    avahi
 
     dbeaver-bin
     notepad-next
