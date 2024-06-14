@@ -5,7 +5,6 @@ let
   username = "labile";
   homeDirectory = "/home/labile";
 
-
 in
 
 {
@@ -14,8 +13,9 @@ in
   # manage.
   home.username = username;
   home.homeDirectory = homeDirectory;
-  home.file."/tmp/".source = homeDirectory + "/Downloads";
 
+
+  xdg.userDirs.download = "/tmp";
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
