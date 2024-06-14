@@ -86,6 +86,8 @@
     alias n='nvim'
     alias sw='alacritty -e `cd ${config.users.users.labile.home}/nix && make`'
     alias up='alacritty -e `cd ${config.users.users.labile.home}/nix/ make update`'
+    alias ddu=docker update --restart=no $(docker ps -qa)
+    alias dsa=docker stop $(docker ps -qa)
   '';
 
   # Enable the OpenSSH daemon.
