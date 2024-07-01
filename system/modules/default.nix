@@ -4,6 +4,7 @@
     ./shell.nix
     ./logind.nix
     ./sound.nix
+    ./boot.nix
     ./greeter.nix
     ./packages.nix
     ./nixvim
