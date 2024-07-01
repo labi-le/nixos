@@ -33,6 +33,7 @@
         modules = [
           ./system/configuration.nix
           ./system/hardware-${hostname}.nix
+          { networking.hostName = hostname; }
           ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
           nixvim.nixosModules.nixvim
           home-manager.nixosModules.home-manager
