@@ -93,9 +93,6 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  xdg.portal.config.common.default = "*";
-  xdg.portal.wlr.enable = true;
-
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];

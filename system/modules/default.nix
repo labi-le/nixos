@@ -11,5 +11,6 @@
     ./thunar.nix
     ./polkit.nix
     ./uxplay.nix
+    ./wayland.nix
   ];
 }
