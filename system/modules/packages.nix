@@ -7,6 +7,8 @@
     fastfetch
     gnumake
     lsof
+    mpv
+    unzip
 
     psmisc
     ncurses
