@@ -20,6 +20,7 @@ generate-hardware:
 	@echo "Generating hardware configuration for $(HOSTNAME)"
 	@sudo nixos-generate-config --show-hardware-config > $(HARDWARE_FILE)
 	@echo "Hardware configuration saved to $(HARDWARE_FILE)"
+	@make fmt
 
 fmt:
 	nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt .'
