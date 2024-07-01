@@ -20,19 +20,6 @@
       fsType = "ext4";
     };
 
-  fileSystems."/boot" =
-    {
-      device = "systemd-1";
-      fsType = "autofs";
-    };
-
-  fileSystems."/boot" =
-    {
-      device = "/dev/disk/by-uuid/65F6-7061";
-      fsType = "vfat";
-      options = [ "fmask=0077" "dmask=0077" ];
-    };
-
   fileSystems."/efi" =
     {
       device = "systemd-1";
