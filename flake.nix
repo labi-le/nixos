@@ -21,7 +21,7 @@
           config.allowUnfree = true;
         };
       };
-      
+
       mkSystem = hostname: nixpkgs.lib.nixosSystem {
         specialArgs = {
           pkgs-stable = import nixpkgs {
