@@ -9,6 +9,7 @@
     lsof
     mpv
     unzip
+    gparted
 
     psmisc
     ncurses
