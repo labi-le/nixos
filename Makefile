@@ -1,7 +1,8 @@
-
 .DEFAULT_GOAL := switch
 
-rollup: generate-hardware fix-flake switch
+HOSTNAME := $(shell hostname)
+CPUS := $(shell nproc)
+HARDWARE_FILE := system/hardware-$(HOSTNAME).nix
 
 disko:
 	sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./disko.nix
@@ -13,19 +14,22 @@ fix-flake:
 	@git add --intent-to-add .
 
 switch: fmt
-	sudo nixos-rebuild switch --fast --flake ./#$(shell hostname) --impure --cores $(shell nproc)
+	sudo nixos-rebuild switch --fast --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
 
 generate-hardware: 
-	sudo nixos-generate-config --show-hardware-config > system/hardware.nix
+	@echo "Generating hardware configuration for $(HOSTNAME)"
+	@sudo nixos-generate-config --show-hardware-config > $(HARDWARE_FILE)
+	@echo "Hardware configuration saved to $(HARDWARE_FILE)"
+	@make fmt
 
 fmt:
-	 nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt .'
+	nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt .'
 
 upgrade:
-	sudo nixos-rebuild switch --upgrade --flake ./#$(shell hostname) --impure --cores $(shell nproc)
+	sudo nixos-rebuild switch --upgrade --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
 
 boot:
-	sudo nixos-rebuild boot --flake ./#$(shell hostname) --impure --cores $(shell nproc)
+	sudo nixos-rebuild boot --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
 
 cleanup: boot
 	sudo nix-collect-garbage -d && make switch
