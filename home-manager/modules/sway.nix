@@ -28,6 +28,7 @@ in
         { command = "import-gsettings"; always = true; }
       ];
       bars = [{ command = bar; }];
+      modifier = "Mod4";
     };
     wrapperFeatures.gtk = true;
 
