@@ -1,6 +1,9 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
+  home.packages = with pkgs; [
+    pulseaudio
+  ];
   programs.waybar = {
     enable = true;
     style = ''
