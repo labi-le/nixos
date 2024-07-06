@@ -7,11 +7,11 @@
       },
       "locked": {
         "dir": "nix",
-        "lastModified": 1720289549,
-        "narHash": "sha256-Xfp+63B3oXCTJ3NODIk490yCSSDwtgkb+YQnmvTnHN8=",
+        "lastModified": 1720290917,
+        "narHash": "sha256-lRgyxvHmRK4yE+FAL3AX+ucytq3z1HxhITybMq8ONqE=",
         "owner": "labi-le",
         "repo": "belphegor",
-        "rev": "f2fa4faf837e110e491047d5e337fa9092c036a2",
+        "rev": "a8469026e88c43a6ff47f9d6c745e19bbbb08c60",
         "type": "github"
       },
       "original": {

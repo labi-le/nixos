@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
   #environment.systemPackages = with pkgs; [
@@ -7,6 +7,7 @@
   services.belphegor = {
     enable = true;
     useWlClipboard = true;
+    user = "labile";
     debug = true;
   };
 }
