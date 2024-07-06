@@ -63,8 +63,8 @@
 
     ngrok
     postman
-  ];
 
+  ];
 
   fonts.packages = with pkgs; [
     dejavu_fonts
