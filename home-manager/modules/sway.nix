@@ -25,6 +25,7 @@ in
       inherit terminal;
       startup = [
         { command = terminal; }
+        { command = "belphegor"; }
         { command = "import-gsettings"; always = true; }
       ];
       bars = [{ command = bar; }];
