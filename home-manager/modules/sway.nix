@@ -264,8 +264,8 @@ in
       workspace $develop_workspace output $left
 
       workspace $social_workspace output $right
-      workspace $terminal_workspace output $right
-      workspace $browser_workspace output $right
+      workspace $terminal_workspace output $left
+      workspace $browser_workspace output $left
 
       output $left {
           mode --custom 2560x1440@83Hz
