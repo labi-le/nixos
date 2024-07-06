@@ -37,6 +37,7 @@
     brightnessctl
 
     (callPackage ../../pkgs/wl-uploader.nix { })
+    (callPackage ../../pkgs/belphegor.nix { })
 
     alacritty
     ranger
