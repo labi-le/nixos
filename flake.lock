@@ -1,26 +1,6 @@
 {
   "nodes": {
-    "belphegor": {
-      "inputs": {
-        "nixpkgs": "nixpkgs",
-        "utils": "utils"
-      },
-      "locked": {
-        "dir": "nix",
-        "lastModified": 1720290917,
-        "narHash": "sha256-lRgyxvHmRK4yE+FAL3AX+ucytq3z1HxhITybMq8ONqE=",
-        "owner": "labi-le",
-        "repo": "belphegor",
-        "rev": "a8469026e88c43a6ff47f9d6c745e19bbbb08c60",
-        "type": "github"
-      },
-      "original": {
-        "dir": "nix",
-        "owner": "labi-le",
-        "repo": "belphegor",
-        "type": "github"
-      }
-    },
+
     "devshell": {
       "inputs": {
         "flake-utils": "flake-utils_2",
@@ -348,7 +328,6 @@
     },
     "root": {
       "inputs": {
-        "belphegor": "belphegor",
         "flake-utils": "flake-utils",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs_2",

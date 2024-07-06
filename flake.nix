@@ -10,13 +10,9 @@
     nixvim = {
       url = "github:nix-community/nixvim";
     };
-    belphegor = {
-      url = "github:labi-le/belphegor?dir=nix";
-      #url = "path:/home/labile/GolandProjects/belphegor/nix";
-    };
     flake-utils.url = "github:numtide/flake-utils";
   };
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, belphegor, ... }@inputs:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }@inputs:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -41,7 +37,6 @@
           ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
           nixvim.nixosModules.nixvim
           home-manager.nixosModules.home-manager
-          belphegor.nixosModules.belphegor
           {
             home-manager.users.labile = import ./home-manager/home.nix;
             home-manager.useGlobalPkgs = true;
