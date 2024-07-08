@@ -50,6 +50,7 @@
       nixosConfigurations = {
         pc = mkSystem "pc";
         fx516 = mkSystem "fx516";
+        thinkbook = mkSystem "thinkbook";
       };
     };
 }
