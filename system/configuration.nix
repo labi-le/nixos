@@ -63,7 +63,7 @@
   environment.etc."ppp/options".text = "ipcp-accept-remote";
 
   environment.variables.EDITOR = "nvim";
-  hardware.opengl.enable = true;
+  hardware.graphics.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
