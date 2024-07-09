@@ -23,6 +23,7 @@
       extraConfig = ''
         xdebug.mode=debug
         xdebug.discover_client_host=1
+        xdebug.start_with_request = yes
       '';
     })
 
