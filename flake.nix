@@ -12,7 +12,7 @@
     };
     flake-utils.url = "github:numtide/flake-utils";
   };
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }@inputs:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, lib, ... }@inputs:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -36,6 +36,7 @@
           { networking.hostName = hostname; }
           ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
           nixvim.nixosModules.nixvim
+        ] ++ lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
           {
             home-manager.users.labile = import ./home-manager/home.nix;
@@ -51,6 +52,7 @@
         pc = mkSystem "pc";
         fx516 = mkSystem "fx516";
         thinkbook = mkSystem "thinkbook";
+        server = mkSystem "server";
       };
     };
 }
