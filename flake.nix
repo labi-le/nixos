@@ -12,7 +12,7 @@
     };
     flake-utils.url = "github:numtide/flake-utils";
   };
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, lib, ... }@inputs:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -22,21 +22,14 @@
         };
       };
 
-      mkSystem = hostname: nixpkgs.lib.nixosSystem {
-        specialArgs = {
-          pkgs-stable = import nixpkgs {
-            inherit system;
-            config.allowUnfree = true;
-          };
-          inherit inputs system;
-        };
+      mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {
         modules = [
-          ./system/configuration.nix
+          configuration
           ./system/hardware-${hostname}.nix
           { networking.hostName = hostname; }
           ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
           nixvim.nixosModules.nixvim
-        ] ++ lib.optionals (hostname != "server") [
+        ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
           {
             home-manager.users.labile = import ./home-manager/home.nix;
@@ -49,10 +42,10 @@
     in
     {
       nixosConfigurations = {
-        pc = mkSystem "pc";
-        fx516 = mkSystem "fx516";
-        thinkbook = mkSystem "thinkbook";
-        server = mkSystem "server";
+        pc = mkSystem "pc" ./system/configuration.nix;
+        fx516 = mkSystem "fx516" ./system/configuration.nix;
+        thinkbook = mkSystem "thinkbook" ./system/configuration.nix;
+        server = mkSystem "server" ./system/configuration-server.nix;
       };
     };
 }
