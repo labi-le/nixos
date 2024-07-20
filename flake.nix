@@ -21,6 +21,7 @@
           config.allowUnfree = true;
         };
       };
+      defaultConfiguration = ./system/configuration.nix;
 
       mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {
         modules = [
@@ -42,9 +43,9 @@
     in
     {
       nixosConfigurations = {
-        pc = mkSystem "pc" ./system/configuration.nix;
-        fx516 = mkSystem "fx516" ./system/configuration.nix;
-        thinkbook = mkSystem "thinkbook" ./system/configuration.nix;
+        pc = mkSystem "pc" defaultConfiguration;
+        fx516 = mkSystem "fx516" defaultConfiguration;
+        thinkbook = mkSystem "thinkbook" defaultConfiguration;
         server = mkSystem "server" ./system/configuration-server.nix;
       };
     };
