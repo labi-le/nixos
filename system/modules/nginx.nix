@@ -17,6 +17,10 @@
     appendHttpConfig = ''
       access_log /var/log/nginx/access.log;
       error_log /var/log/nginx/error.log;
+
+      ssl_certificate /etc/ssl/labile.cc.pem;
+      ssl_certificate_key /etc/ssl/labile.cc.key;
+      ssl_client_certificate /etc/ssl/cloudflare.crt;
     '';
   };
 
