@@ -7,6 +7,8 @@
     ./docker.nix
     ./packages-server.nix
     ./nginx.nix
+    ./drive.nix
+    ./polkit.nix
   ];
 }
 
