@@ -13,6 +13,5 @@
     ./polkit.nix
     ./uxplay.nix
     ./wayland.nix
-    ./nginx.nix
   ];
 }
