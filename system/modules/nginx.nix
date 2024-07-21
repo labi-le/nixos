@@ -1,4 +1,4 @@
-let 
+let
   virtualHostCommon = {
     onlySSL = true;
     http2 = true;
@@ -9,8 +9,9 @@ let
       locations."/".proxyPass = "http://${address}:${toString port}";
     };
 
-in {
-   services.logrotate.settings.nginx.enable = false;
+in
+{
+  services.logrotate.settings.nginx.enable = false;
   services.nginx.enable = true;
   services.nginx.user = "www-data";
   services.nginx.httpConfig = "
@@ -37,6 +38,7 @@ in {
   include /etc/nginx/conf.d/*.conf;
   include /etc/nginx/sites-enabled/*;
   ";
+
   services.nginx.virtualHosts = {
     "labile.cc" = makeVirtualHost "labile.cc" "localhost" 7004;
     "cloud.labile.cc" = makeVirtualHost "cloud.labile.cc" "localhost" 7009;
