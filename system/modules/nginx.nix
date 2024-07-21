@@ -10,6 +10,7 @@ let
     };
 
 in {
+   services.logrotate.settings.nginx.enable = false;
   services.nginx.enable = true;
   services.nginx.user = "www-data";
   services.nginx.httpConfig = "
