@@ -28,16 +28,26 @@
     let
       base = locations: {
         inherit locations;
+        forceSSL = true;
+        sslCertificate = "/etc/ssl/labile.cc.pem";
+        sslCertificateKey = "/etc/ssl/labile.cc.key";
       };
       proxy = port: base {
-        "/".proxyPass = "http://127.0.0.1:" + toString (port) + "/";
+        "/" = {
+          proxyPass = "http://127.0.0.1:" + toString (port) + "/";
+        };
+      };
+
+      proxyWithAddr = port: addr: base {
+        "/" = {
+          proxyPass = "http://" + addr + ":" + toString (port) + "/";
+        };
       };
     in
     {
-      "localhost" = proxy 8080 // { default = true; };
       "labile.cc" = proxy 7004;
       "cloud.labile.cc" = proxy 7009;
-      "local.labile.cc" = proxy 8080;
+      "local.labile.cc" = proxyWithAddr 8080 "192.168.1.3";
       "matrix.labile.cc" = proxy 8008;
       "obsidian.labile.cc" = proxy 7007;
       "torrent.labile.cc" = proxy 7000;
