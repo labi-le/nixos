@@ -21,6 +21,9 @@
       ssl_certificate /etc/ssl/labile.cc.pem;
       ssl_certificate_key /etc/ssl/labile.cc.key;
       ssl_client_certificate /etc/ssl/cloudflare.crt;
+      ssl_stapling off;
+      ssl_verify_client on;
+
     '';
   };
 
