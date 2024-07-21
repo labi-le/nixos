@@ -32,25 +32,19 @@
         sslCertificate = "/etc/ssl/labile.cc.pem";
         sslCertificateKey = "/etc/ssl/labile.cc.key";
       };
-      proxy = port: base {
+      proxy = protocol: port: base {
         "/" = {
-          proxyPass = "http://127.0.0.1:" + toString (port) + "/";
-        };
-      };
-
-      proxyWithAddr = port: addr: base {
-        "/" = {
-          proxyPass = "http://" + addr + ":" + toString (port) + "/";
+          proxyPass = toString (protocol)+"://127.0.0.1:" + toString (port) + "/";
         };
       };
     in
     {
-      "labile.cc" = proxy 7004;
-      "cloud.labile.cc" = proxy 7009;
-      "local.labile.cc" = proxyWithAddr 8080 "192.168.1.3";
-      "matrix.labile.cc" = proxy 8008;
-      "obsidian.labile.cc" = proxy 7007;
-      "torrent.labile.cc" = proxy 7000;
-      "vaultwarden.labile.cc" = proxy 7005;
+      "labile.cc" = proxy "http://127.0.0.1:7004";
+      "cloud.labile.cc" = proxy "http://127.0.0.1:7009";
+      "local.labile.cc" = proxy "http://192.168.1.3:8080";
+      "matrix.labile.cc" = proxy "http://127.0.0.1:8008";
+      "obsidian.labile.cc" = proxy "http://127.0.0.1:7007";
+      "torrent.labile.cc" = proxy "http://127.0.0.1:7000";
+      "vaultwarden.labile.cc" = proxy "http://127.0.0.1:7005";
     };
 }
