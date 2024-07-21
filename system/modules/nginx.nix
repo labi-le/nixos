@@ -32,9 +32,9 @@
         sslCertificate = "/etc/ssl/labile.cc.pem";
         sslCertificateKey = "/etc/ssl/labile.cc.key";
       };
-      proxy = protocol: port: base {
+      proxy = addr: base {
         "/" = {
-          proxyPass = toString (protocol)+"://127.0.0.1:" + toString (port) + "/";
+          proxyPass = addr;
         };
       };
     in
