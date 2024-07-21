@@ -6,6 +6,7 @@
     ./nixvim
     ./docker.nix
     ./packages-server.nix
+    ./nginx.nix
   ];
 }
 
