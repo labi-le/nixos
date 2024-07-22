@@ -35,7 +35,7 @@
   users.users.labile = {
     isNormalUser = true;
     description = "labile";
-    extraGroups = [ "networkmanager" "wheel" "docker" "audio" "video" "input" "tun" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "audio" "video" "input" "tun" "fuse" ];
   };
 
   services.getty.autologinUser = "labile";
