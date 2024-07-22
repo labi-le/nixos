@@ -6,6 +6,7 @@
       "nodev"
       "noatime"
       "allow_other"
+      "nofail"
       "debug"
       "sshfs_debug"
     ];
