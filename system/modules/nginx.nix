@@ -44,6 +44,7 @@
       "local.labile.cc" = proxy "http://192.168.1.3:8080";
       "matrix.labile.cc" = proxy "http://127.0.0.1:8008";
       "obsidian.labile.cc" = proxy "http://127.0.0.1:7007";
+      "mail.labile.cc" = proxy "http://127.0.0.1:7001";
       "torrent.labile.cc" = proxy "http://127.0.0.1:7000";
       "vaultwarden.labile.cc" = proxy "http://127.0.0.1:7005";
     };
