@@ -77,7 +77,10 @@
   '';
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    listenAddresses = [{ addr = "192.168.1.2"; }];
+  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
