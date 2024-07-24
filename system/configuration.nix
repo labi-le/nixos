@@ -103,6 +103,9 @@
   services.gnome.gnome-keyring.enable = true;
 
   networking.firewall.enable = false;
+  networking.hosts = {
+    "172.16.0.11" = [ "forms.local.ru" ];
+  };
   boot.blacklistedKernelModules = [ "snd_pcsp" "pcspkr" ];
 
   nix.settings.auto-optimise-store = true;
