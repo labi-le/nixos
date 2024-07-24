@@ -39,7 +39,7 @@
       };
     in
     {
-      "labile.cc" = proxy "http://127.0.0.1:7004";
+      "labile.cc" = proxy "http://127.0.0.1:7004" // { default = true; };
       "cloud.labile.cc" = proxy "http://127.0.0.1:7009";
       "local.labile.cc" = proxy "http://192.168.1.3:8080";
       "matrix.labile.cc" = proxy "http://127.0.0.1:8008";

@@ -66,6 +66,8 @@
     ngrok
     postman
 
+    thunderbird
+
   ];
 
   fonts.packages = with pkgs; [
