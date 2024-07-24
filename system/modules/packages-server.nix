@@ -20,6 +20,8 @@
 
     openssl
     dig
+
+    gdu # disk usage
   ];
 }
 
