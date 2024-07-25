@@ -118,7 +118,7 @@
   nix.gc.dates = "daily";
 
   systemd.extraConfig = ''
-    DefaultTimeoutStopSec=30s
+    DefaultTimeoutStopSec=10s
   '';
 }
 
