@@ -2,6 +2,6 @@
   fileSystems."/drive" = {
     device = "/dev/disk/by-uuid/b631c90c-690f-4cf0-9775-56c53f69f5b5";
     fsType = "ext4";
-    options = [ "noatime" "nofail" "reconnect" "ServerAliveInterval=15" "ServerAliveCountMax=3" ];
+    options = [ "noatime" "nofail" ];
   };
 }

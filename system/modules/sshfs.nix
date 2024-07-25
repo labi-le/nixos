@@ -1,14 +1,14 @@
 {
-  fileSystems."/drive" = {
+  fileSystems."/home/drive" = {
     device = "labile@192.168.1.2:/drive";
     fsType = "sshfs";
     options = [
-      "nodev"
-      "noatime"
       "allow_other"
-      "nofail"
-      "debug"
-      "sshfs_debug"
+      "_netdev"
+      "x-systemd.automount"
+      # SSH options
+      "reconnect" # handle connection drops
+      "ServerAliveInterval=15" # keep connections alive
     ];
   };
 }
