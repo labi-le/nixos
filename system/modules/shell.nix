@@ -16,10 +16,30 @@
     ohMyZsh = {
       enable = true;
       theme = "simple";
-      plugins = [ "git" "dotenv" "history" "golang" "z" "github" "yii2" ];
+      plugins = [
+        "themes"
+        "git"
+        "dotenv"
+        "history"
+        "golang"
+        "z"
+        "github"
+        "yii2"
+        "sudo"
+        "copybuffer"
+        "copyfile"
+        "copypath"
+        "zsh-interactive-cd"
+        "ssh"
+        "git-auto-fetch"
+      ];
     };
     enableCompletion = true;
-    #interactiveShellInit = "fortune";
   };
+
+  environment.systemPackages = with pkgs; [
+    fzf
+  ];
+
 }
 
