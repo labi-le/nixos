@@ -75,7 +75,7 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  system.stateVersion = "23.11";
+  system.stateVersion = "24.11";
   system.autoUpgrade = {
     enable = false;
     flake = "${config.users.users.labile.home}/nix";
