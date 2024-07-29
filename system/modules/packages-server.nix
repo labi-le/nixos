@@ -7,8 +7,8 @@
     fastfetch
     gnumake
     lsof
-    mpv
     unzip
+    jq
 
     psmisc # for killall
 
@@ -23,6 +23,7 @@
 
     gdu # disk usage
     hdparm # for smartctl
+    
   ];
 }
 
