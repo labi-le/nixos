@@ -80,7 +80,7 @@
     enable = true;
   };
 
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = "24.11";
   system.autoUpgrade = {
     enable = false;
     flake = "${config.users.users.labile.home}/nix";
