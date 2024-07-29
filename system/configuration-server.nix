@@ -120,5 +120,9 @@
   systemd.extraConfig = ''
     DefaultTimeoutStopSec=10s
   '';
+  services.journald.extraConfig = ''
+    Storage=persistent
+    SystemMaxUse=1Gystemd
+  '';
 }
 
