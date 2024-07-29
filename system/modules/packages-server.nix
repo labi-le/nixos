@@ -22,6 +22,7 @@
     dig
 
     gdu # disk usage
+    hdparm # for smartctl
   ];
 }
 
