@@ -17,6 +17,7 @@
     dconf
 
     go
+    wireshark
 
     (php.buildEnv {
       extensions = { all, enabled }: with all; enabled ++ [ xdebug redis ];

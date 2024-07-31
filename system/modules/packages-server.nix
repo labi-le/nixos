@@ -22,6 +22,7 @@
     dig
 
     gdu # disk usage
+    smartmontools
   ];
 }
 
