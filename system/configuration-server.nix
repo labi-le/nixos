@@ -94,7 +94,6 @@
     Defaults timestamp_timeout=-1
   '';
 
-  services.fstrim.enable = true;
   services.gnome.gnome-keyring.enable = true;
 
   networking.firewall.enable = false;
@@ -109,7 +108,12 @@
   '';
   services.journald.extraConfig = ''
     Storage=persistent
-    SystemMaxUse=1Gystemd
+    SystemMaxUse=5G
   '';
+
+  services.fstrim.enable = true;
+  services.smartd.enable = true;
+  boot.kernelParams = [ "nvme_core.default_ps_max_latency_us=0" ];
+
 }
 
