@@ -22,12 +22,8 @@
     dig
 
     gdu # disk usage
-<<<<<<< HEAD
     smartmontools
-=======
     hdparm # for smartctl
-
->>>>>>> refs/remotes/origin/main
   ];
 }
 
