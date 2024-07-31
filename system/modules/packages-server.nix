@@ -23,7 +23,8 @@
 
     gdu # disk usage
     smartmontools
-    hdparm # for smartctl
+    hdparm
+    nvme-cli
   ];
 }
 
