@@ -1,3 +1,5 @@
+{ pkgs, ... }:
+
 {
   virtualisation.docker = {
     enable = true;
@@ -5,4 +7,8 @@
       registry-mirrors = [ "https://mirror.gcr.io" "https://huecker.io" ];
     };
   };
+
+  environment.systemPackages = with pkgs; [
+    ctop
+  ];
 }
