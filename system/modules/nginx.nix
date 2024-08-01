@@ -49,6 +49,7 @@
       "mail.labile.cc" = proxy "http://127.0.0.1:7001";
       "torrent.labile.cc" = proxy "http://127.0.0.1:7000";
       "vaultwarden.labile.cc" = proxy "http://127.0.0.1:7005";
+      "notify.labile.cc" = proxy "http://127.0.0.1:1717";
       "_" = {
         listen = [
           { addr = "0.0.0.0"; port = 80; }
