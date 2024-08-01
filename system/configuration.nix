@@ -29,5 +29,8 @@
   nix.settings.auto-optimise-store = true;
   nix.gc.automatic = true;
   nix.gc.dates = "daily";
+
+  network.injectHosts = true;
+  packages.forDesktop = true;
 }
 

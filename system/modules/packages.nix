@@ -1,79 +1,55 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
+with lib;
+
+let
+  cfg = config.packages;
+  desktopPackages = import ./packages-desktop.nix { inherit pkgs; };
+  serverPackages = import ./packages-server.nix { inherit pkgs; };
+in
 {
-  nixpkgs.config.allowUnfree = true;
-  environment.systemPackages = with pkgs; [
-    wget
-    fastfetch
-    gnumake
-    lsof
-    mpv
-    unzip
-    gparted
+  options.packages = {
+    forServer = mkOption {
+      type = types.bool;
+      default = false;
+      description = mdDoc "Enable server-specific packages.";
+    };
 
-    psmisc
-    ncurses
-    pavucontrol
-    dconf
+    forDesktop = mkOption {
+      type = types.bool;
+      default = false;
+      description = mdDoc "Enable desktop-specific packages.";
+    };
+  };
 
-    go
-    wireshark
+  config = {
+    environment.systemPackages = with pkgs; [
+      wget
+      fastfetch
+      gnumake
+      lsof
+      unzip
+      jq
+      openssl
+      dig
+      alacritty
+      ranger
+      btop
+      git
+      gparted
+      psmisc # killall
+      ncurses
+      sshfs
+    ] ++ optionals cfg.forDesktop desktopPackages
+    ++ optionals cfg.forServer serverPackages;
 
-    (php.buildEnv {
-      extensions = { all, enabled }: with all; enabled ++ [ xdebug redis ];
-      extraConfig = ''
-        xdebug.mode=debug
-        xdebug.discover_client_host=1
-        xdebug.start_with_request = yes
-      '';
-    })
-
-    ipset
-    inetutils
-
-    xdg-utils
-    wl-clipboard
-    slurp
-    wayshot
-    grim
-    brightnessctl
-
-    (callPackage ../../pkgs/wl-uploader.nix { })
-    (callPackage ../../pkgs/belphegor.nix { })
-
-    alacritty
-    ranger
-    btop
-    git
-    home-manager
-    docker
-    docker-compose
-    libnotify
-    sshfs
-    obsidian
-    google-chrome
-    vesktop
-    telegram-desktop
-
-    dbeaver-bin
-    notepad-next
-
-    stable.openfortivpn
-    libreoffice-qt6-still
-
-    glib
-    gsettings-desktop-schemas
-
-    ngrok
-    postman
-  ];
-
-  fonts.packages = with pkgs; [
-    dejavu_fonts
-    jetbrains-mono
-    font-awesome
-    noto-fonts
-    noto-fonts-emoji
-  ];
+    fonts.packages = with pkgs; optionals cfg.forDesktop [
+      dejavu_fonts
+      jetbrains-mono
+      font-awesome
+      noto-fonts
+      noto-fonts-emoji
+    ];
+  };
 }
 

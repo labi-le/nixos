@@ -15,6 +15,7 @@
     ./users.nix
     ./env.nix
     ./network
+    ./packages.nix
   ];
 }
 
