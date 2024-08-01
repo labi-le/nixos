@@ -1,14 +1,9 @@
 {
   imports = [
-    ./boot.nix
-    ./logind.nix
-    ./shell.nix
-    ./nixvim
-    ./docker.nix
+    ./base.nix
     ./packages-server.nix
     ./nginx.nix
     ./drive.nix
-    ./polkit.nix
   ];
 }
 
