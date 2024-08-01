@@ -6,14 +6,14 @@
   #  frequency = "daily";
   #};
 
-  systemd.services.nginx.serviceConfig.ReadWritePaths = [ "/var/spool/nginx/logs/" ];
-
   security.acme = {
     acceptTerms = true;
     defaults.email = "i@labile.cc";
   };
+  services.logrotate.settings.nginx.enable = false;
 
   services.nginx = {
+
     enable = true;
     recommendedGzipSettings = true;
     recommendedOptimisation = true;
