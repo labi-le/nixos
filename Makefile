@@ -14,7 +14,7 @@ fix-flake:
 	@git add --intent-to-add .
 
 switch: fmt
-	sudo nixos-rebuild switch --fast --flake ./#$(HOSTNAME) --impure --cores $(CPUS) 
+	sudo nixos-rebuild switch --fast --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --show-trace
 
 generate-hardware: 
 	@echo "Generating hardware configuration for $(HOSTNAME)"

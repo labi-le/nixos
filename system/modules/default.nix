@@ -3,8 +3,6 @@
     ./base.nix
     ./sound.nix
     ./greeter.nix
-    ./packages.nix
-    ./network/hosts.nix
     ./thunar.nix
     ./uxplay.nix
     ./wayland.nix
