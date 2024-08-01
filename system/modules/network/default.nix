@@ -1,44 +1,44 @@
 { lib, config, ... }:
 
+with lib;
+
 let
   cfg = config.network;
 in
 {
   options.network = {
-    injectHosts = lib.mkOption {
-      type = lib.types.bool;
+    injectHosts = mkOption {
+      type = types.bool;
       default = false;
       description = "Enable or disable injecting host.";
     };
 
-    enableProxy = lib.mkOption {
-      type = lib.types.bool;
+    enableProxy = mkOption {
+      type = types.bool;
       default = false;
       description = "Enable or disable proxy";
     };
 
-    enableFirewall = lib.mkOption {
-      type = lib.types.bool;
+    enableFirewall = mkOption {
+      type = types.bool;
       default = false;
       description = "Enable or disable firewall";
     };
 
-    enableNetworkManager = lib.mkOption {
-      type = lib.types.bool;
+    enableNetworkManager = mkOption {
+      type = types.bool;
       default = true;
       description = "Enable or disable NetworkManager";
     };
-
   };
 
   imports = [
-    (lib.mkIf cfg.enableProxy (import ./proxy.nix))
-    (lib.mkIf cfg.injectHosts (import ./hosts.nix))
+    (mkIf cfg.enableProxy (import ./proxy.nix))
+    (mkIf cfg.injectHosts (import ./hosts.nix))
   ];
 
-  config =
-    lib.mkIf cfg.enableNetworkManager { networking.networkmanager.enable = cfg.enableNetworkManager; }
-    // lib.mkIf cfg.enableFirewall { networking.firewall.enable = cfg.enableFirewall; };
-
+  config = {
+    networking.networkmanager.enable = cfg.enableNetworkManager;
+    networking.firewall.enable = cfg.enableFirewall;
+  };
 }
-
