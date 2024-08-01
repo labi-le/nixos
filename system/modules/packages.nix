@@ -40,6 +40,7 @@ in
       psmisc # killall
       ncurses
       sshfs
+      telnet
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 
