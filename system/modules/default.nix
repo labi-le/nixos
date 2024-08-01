@@ -1,16 +1,11 @@
 {
   imports = [
-    ./docker.nix
-    ./shell.nix
-    ./logind.nix
+    ./base.nix
     ./sound.nix
-    ./boot.nix
     ./greeter.nix
     ./packages.nix
-    ./nixvim
-    ./network
+    ./network/hosts.nix
     ./thunar.nix
-    ./polkit.nix
     ./uxplay.nix
     ./wayland.nix
     ./sshfs.nix
