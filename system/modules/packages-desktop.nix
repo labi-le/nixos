@@ -18,7 +18,6 @@ with pkgs;
   libnotify
   home-manager
   ipset
-  inetutils
   xdg-utils
   pavucontrol
   dconf
