@@ -1,10 +1,12 @@
 {
-  services.logrotate.enable = true;
-  services.logrotate.settings.nginx = {
-    path = "/var/log/nginx";
-    rotate = 10;
-    frequency = "daily";
-  };
+  #services.logrotate.enable = true;
+  #services.logrotate.settings.nginx = {
+  #  path = "/var/log/nginx";
+  #  rotate = 10;
+  #  frequency = "daily";
+  #};
+
+  systemd.services.nginx.serviceConfig.ReadWritePaths = [ "/var/spool/nginx/logs/" ];
 
   security.acme = {
     acceptTerms = true;
