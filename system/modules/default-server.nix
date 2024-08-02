@@ -4,7 +4,6 @@
     ./nginx.nix
     ./drive.nix
     ./gotify.nix
-    ./syncthing.nix
   ];
 }
 
