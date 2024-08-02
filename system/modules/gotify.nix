@@ -1,7 +1,9 @@
 {
   services.gotify = {
     enable = true;
-    port = 1717;
+    environment = {
+      GOTIFY_SERVER_PORT = 1717;
+    };
   };
 }
 
