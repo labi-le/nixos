@@ -7,5 +7,6 @@
     ./uxplay.nix
     ./wayland.nix
     ./sshfs.nix
+    ./firefox.nix
   ];
 }

@@ -4,7 +4,6 @@ with pkgs;
 [
   mpv
   obsidian
-  google-chrome
   vesktop
   telegram-desktop
   dbeaver-bin
@@ -38,5 +37,7 @@ with pkgs;
   brightnessctl
   (callPackage ../../pkgs/wl-uploader.nix { })
   (callPackage ../../pkgs/belphegor.nix { })
+
+  google-chrome
 ]
 
