@@ -3,7 +3,7 @@
 }:
 
 let
-  browser = "google-chrome-stable --restore-last-session";
+  browser = "firefox";
   terminal = "alacritty";
   bar = "waybar";
   menu = "wofi";
