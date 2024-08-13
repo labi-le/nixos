@@ -39,5 +39,6 @@ with pkgs;
   (callPackage ../../pkgs/belphegor.nix { })
 
   google-chrome
+  thunderbird
 ]
 
