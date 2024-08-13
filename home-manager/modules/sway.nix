@@ -3,7 +3,7 @@
 }:
 
 let
-  browser = "firefox";
+  browser = "google-chrome-stable";
   terminal = "alacritty";
   bar = "waybar";
   menu = "wofi";
