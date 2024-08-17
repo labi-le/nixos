@@ -1,14 +1,14 @@
 { pkgs ? import <nixpkgs> { } }:
 
 let
-  version = "1.0.2";
+  version = "1.1.0";
   name = "belphegor";
 in
 pkgs.stdenv.mkDerivation {
   inherit name version;
   src = pkgs.fetchurl {
     url = "https://github.com/labi-le/belphegor/releases/download/v${version}/belphegor_${version}_linux_amd64";
-    sha256 = "42abb3d03b02a383743adbc82d39b38e849c191cff453b8740436038cb85b1b4";
+    sha256 = "52910b8dfadb30bcf9aad80081a9cf433640c09a0671e9461830a319ab967ea0";
   };
 
   dontUnpack = true;
