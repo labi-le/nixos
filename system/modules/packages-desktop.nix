@@ -20,7 +20,9 @@ with pkgs;
   xdg-utils
   pavucontrol
   dconf
+
   go
+
   wireshark
   (php.buildEnv {
     extensions = { all, enabled }: with all; enabled ++ [ xdebug redis ];
