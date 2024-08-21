@@ -12,5 +12,6 @@
     ./ssh.nix
     ./mimeapps.nix
     ./telegram.nix
+    ./yazi.nix
   ];
 }
