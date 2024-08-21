@@ -14,7 +14,6 @@ in
   home.username = username;
   home.homeDirectory = homeDirectory;
 
-
   xdg.userDirs.download = "/tmp";
 
   # This value determines the Home Manager release that your configuration is
