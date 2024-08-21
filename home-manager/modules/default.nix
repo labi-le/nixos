@@ -10,5 +10,7 @@
     ./wayshot.nix
     ./theme.nix
     ./ssh.nix
+    ./mimeapps.nix
+    ./telegram.nix
   ];
 }

@@ -5,7 +5,6 @@ with pkgs;
   mpv
   obsidian
   vesktop
-  telegram-desktop
   dbeaver-bin
   notepad-next
   stable.openfortivpn

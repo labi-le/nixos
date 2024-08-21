@@ -34,6 +34,7 @@ in
       dig
       alacritty
       ranger
+      imv
       btop
       git
       gparted
