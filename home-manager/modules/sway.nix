@@ -342,9 +342,7 @@ in
       for_window [app_id="org.telegram.desktop"] move to workspace $social_workspace; layout tabbed;
       for_window [class="TelegramDesktop"] move to workspace $social_workspace; layout tabbed;
       for_window [class="discord"] move to workspace $social_workspace; layout tabbed;
-      for_window [class="VencordDesktop"] move to workspace $social_workspace; layout tabbed;
-      for_window [app_id="de.shorsh.discord-screenaudio"] move to workspace $social_workspace; layout tabbed;
-      for_window [class="Spotify"] move to workspace $social_workspace; layout tabbed;
+      for_window [class="vesktop"] move to workspace $social_workspace; layout tabbed;
 
       #
       # Dev workspace
