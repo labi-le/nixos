@@ -10,7 +10,7 @@
       * {
           border-radius: 0;
           font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-          font-size: 14pt;
+          font-size: 16pt;
           min-height: 0;
       }
 
