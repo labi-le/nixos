@@ -16,6 +16,7 @@
     ./env.nix
     ./network
     ./packages.nix
+    ./ssh.nix
   ];
 }
 
