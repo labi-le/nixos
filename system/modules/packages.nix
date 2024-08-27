@@ -31,7 +31,13 @@ in
       unzip
       jq
       openssl
+
       dig
+      nmap
+      tcpdump
+      mtr
+      inetutils
+
       alacritty
       ranger
       imv
@@ -41,7 +47,7 @@ in
       psmisc # killall
       ncurses
       sshfs
-      inetutils
+      fselect
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 

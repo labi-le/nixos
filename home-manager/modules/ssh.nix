@@ -7,11 +7,10 @@
     matchBlocks = {
       "pet".hostname = "192.168.1.2";
 
-      "pc".
-      hostname = "192.168.1.3";
+      "pc".hostname = "192.168.1.3";
 
       "vpn" = {
-        hostname = "wg.labile.cc";
+        hostname = "185.224.250.119";
         user = "root";
       };
 
