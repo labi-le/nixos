@@ -42,6 +42,8 @@ in
       ncurses
       sshfs
       inetutils
+      fselect
+      mtr
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 
