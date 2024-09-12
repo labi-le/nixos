@@ -7,6 +7,5 @@
     ./wayland.nix
     ./sshfs.nix
     ./thunar.nix
-    ./battery.nix
   ];
 }
