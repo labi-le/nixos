@@ -4,4 +4,17 @@
     fsType = "ext4";
     options = [ "noatime" "nofail" ];
   };
+
+  services.nfs.server = {
+    enable = true;
+    exports = ''
+      /drive/torrents 
+      192.168.1.0/24(rw,sync,no_subtree_check)
+    '';
+  };
+  networking.firewall = {
+    allowedTCPPorts =
+      [ 2049 ];
+    allowedUDPPorts = [ 2049 ];
+  };
 }
