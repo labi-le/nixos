@@ -48,6 +48,8 @@ in
       ncurses
       sshfs
       fselect
+
+      yt-dlp
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 
