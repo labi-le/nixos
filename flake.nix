@@ -45,7 +45,7 @@
     {
       nixosConfigurations = {
         pc = mkSystem "pc" defaultConfiguration;
-        fx516 = mkSystem "fx516" defaultConfiguration;
+        fx516 = mkSystem "fx516" ./system/configuration-fx516.nix;
         thinkbook = mkSystem "thinkbook" defaultConfiguration;
         server = mkSystem "server" ./system/configuration-server.nix;
       };
