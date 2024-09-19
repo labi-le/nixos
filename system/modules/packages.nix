@@ -37,6 +37,7 @@ in
       tcpdump
       mtr
       inetutils
+      iperf3
 
       alacritty
       ranger
