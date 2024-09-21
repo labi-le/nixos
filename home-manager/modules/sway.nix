@@ -298,7 +298,7 @@ in
 
 
       # Set wallpaper:
-      #exec swaybg -i ~/Pictures/hw-de7dc7a.jpg
+      exec swaybg -i ~/Pictures/catalina-mountains-night.jpg
       #exec hw -follow 1h -search-phrase galaxy
 
       # Title format for windows
@@ -427,5 +427,7 @@ in
       gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
       gsettings set "$gnome_schema" font-name "$font_name"
     '')
+
+    swaybg
   ];
 }
