@@ -2,7 +2,7 @@
   description = "My system configuration";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-23.05";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -11,7 +11,11 @@
       url = "github:nix-community/nixvim";
     };
     flake-utils.url = "github:numtide/flake-utils";
+    # nix-gaming.url = "github:fufexan/nix-gaming";
   };
+
+
+
   outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }:
     let
       system = "x86_64-linux";
@@ -21,6 +25,11 @@
           config.allowUnfree = true;
         };
       };
+
+      # overlay-nix-gaming = final: prev: {
+      #   nix-gaming = nix-gaming.packages.${system};
+      # };
+
       defaultConfiguration = ./system/configuration.nix;
 
       mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {
