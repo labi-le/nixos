@@ -1,16 +1,13 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
-  home.packages = with pkgs; [
-    pulseaudio
-  ];
   programs.waybar = {
     enable = true;
     style = ''
       * {
           border-radius: 0;
           font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-          font-size: 16pt;
+          font-size: 14pt;
           min-height: 0;
       }
 
@@ -53,7 +50,7 @@
           background-color: rgba(0, 0, 0, 0);
               color: #A4B9EF;
       }
-
+      
       #memory,
       #cpu,
       #clock,
@@ -63,15 +60,8 @@
       #workspaces,
       #mpd,
       #network,
-      #custom-spotify,
       #language,
-      #custom-vpn {
-              padding: 2px 10px;
-          background: #000000;
 
-          margin-top: 5px;
-          margin-bottom: 5px;
-      }
 
       #network {
           padding-left: 15px;
@@ -149,34 +139,9 @@
       format = "cpu {usage}%";
     };
 
-    settings.common.custom-spotify = {
-      escape = true;
-      exec = "playerctl -p spotify metadata --format '{{ artist }} - {{ album }} - {{ title }}'";
-      exec-if = "pgrep spotify";
-      format = " {}";
-      interval = 1;
-      max-length = 50;
-      on-click = "playerctl -p spotify play-pause";
-      on-double-click = "playerctl -p spotify next";
-      on-scroll-down = "playerctl -p spotify next";
-      on-scroll-up = "playerctl -p spotify previous";
-      tooltip = true;
-    };
-
-    settings.common.custom-vpn = {
-      exec = "waybar-nmvpn";
-      format = "{icon}";
-      format-icons = {
-        connected = "";
-        disconnected = "";
-        error = "⚠";
-        none = "";
-      };
-      return-type = "json";
-    };
-
-    settings.common.position = "top";
-    settings.common.height = 12;
+    settings.common.position = "bottom";
+    settings.common.output = "DP-2";
+    settings.common.height = 10;
     settings.common.memory = {
       format = "mem {}%";
     };
@@ -216,7 +181,31 @@
       on-click-right = "pavucontrol";
     };
 
-    settings.common.sway-workspaces = {
+    settings.second = {
+      height = 10;
+      wlr-workspaces = {
+        all-outputs = true;
+        disable-scroll = true;
+        format = "{icon}";
+        format-icons = {
+          "1" = "1";
+          "2" = "2";
+          "3" = "3";
+          "4" = "4";
+          "5" = "5";
+          "6" = "6";
+          "7" = "7";
+          "8" = "8";
+        };
+      };
+
+      position = "bottom";
+      output = "DP-3";
+      modules-left = [ "sway/workspaces" ];
+
+    };
+
+    settings.common.wlr-workspaces = {
       all-outputs = true;
       disable-scroll = true;
       format = "{icon}";

@@ -5,7 +5,6 @@
   programs.nixvim.plugins.auto-save.enable = true;
   programs.nixvim.plugins.auto-session.enable = true;
   programs.nixvim.plugins.comment.enable = true;
-  programs.nixvim.plugins.telescope.enable = true;
   programs.nixvim.plugins.indent-blankline.enable = true;
   programs.nixvim.plugins.lsp-lines.enable = true;
 

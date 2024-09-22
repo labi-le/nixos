@@ -28,7 +28,7 @@ in
         { command = "belphegor"; }
         { command = "import-gsettings"; always = true; }
       ];
-      bars = [{ command = bar; }];
+      bars = [{ command = bar; mode = "hide"; hiddenState = "hide"; }];
       modifier = "Mod4";
     };
     wrapperFeatures.gtk = true;
@@ -67,6 +67,9 @@ in
 
           # Kill window in border click middle mouse button
           bindcode 274 kill --border
+
+          # Kill bar
+          bindsym --to-code $mod+z exec pkill -SIGUSR1 waybar
 
           # Start your launcher
           # Button D
@@ -235,11 +238,6 @@ in
       bindsym --to-code $mod+p exec wl-uploader
 
       #
-      # Hide bar
-      #
-      bindsym --to-code $mod+z exec killall -SIGUSR1 ${bar}
-
-      #
       # Move workspace to monitor
       #
       bindsym --to-code $mod+Control+Shift+Right move workspace to output right
@@ -279,9 +277,6 @@ in
           pos 2560 0
           #bg ~/Pictures/hw-87d0bc3.jpg fill
       }
-
-      # Apply gtk theming
-      exec_always ~/.config/sway/scripts/import-gsettings
 
       # Set inner/outer gaps
       gaps inner 2
