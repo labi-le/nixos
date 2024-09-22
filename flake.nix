@@ -11,7 +11,11 @@
       url = "github:nix-community/nixvim";
     };
     flake-utils.url = "github:numtide/flake-utils";
+    # nix-gaming.url = "github:fufexan/nix-gaming";
   };
+
+
+
   outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }:
     let
       system = "x86_64-linux";
@@ -21,6 +25,11 @@
           config.allowUnfree = true;
         };
       };
+
+      # overlay-nix-gaming = final: prev: {
+      #   nix-gaming = nix-gaming.packages.${system};
+      # };
+
       defaultConfiguration = ./system/configuration.nix;
 
       mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {

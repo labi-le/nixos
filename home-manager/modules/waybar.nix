@@ -7,7 +7,7 @@
       * {
           border-radius: 0;
           font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-          font-size: 16pt;
+          font-size: 14pt;
           min-height: 0;
       }
 
@@ -60,15 +60,8 @@
       #workspaces,
       #mpd,
       #network,
-      #custom-spotify,
       #language,
-      #custom-vpn {
-          padding: 2px 10px;
-          background: #000000;
 
-          margin-top: 5px;
-          margin-bottom: 5px;
-      }
 
       #network {
           padding-left: 15px;
@@ -188,27 +181,30 @@
       on-click-right = "pavucontrol";
     };
 
-    # settings.second = {
-    #   wlr-workspaces = {
-    #     all-outputs = true;
-    #     disable-scroll = true;
-    #     format = "{icon}";
-    #     format-icons = {
-    #       "1" = "1";
-    #       "2" = "2";
-    #       "3" = "3";
-    #       "4" = "4";
-    #       "5" = "5";
-    #       "6" = "6";
-    #       "7" = "7";
-    #       "8" = "8";
-    #     };
-    #   };
-    #
-    #   position = "bottom";
-    #   output = "DP-3";
-    # };
-    #
+    settings.second = {
+      height = 10;
+      wlr-workspaces = {
+        all-outputs = true;
+        disable-scroll = true;
+        format = "{icon}";
+        format-icons = {
+          "1" = "1";
+          "2" = "2";
+          "3" = "3";
+          "4" = "4";
+          "5" = "5";
+          "6" = "6";
+          "7" = "7";
+          "8" = "8";
+        };
+      };
+
+      position = "bottom";
+      output = "DP-3";
+      modules-left = [ "sway/workspaces" ];
+
+    };
+
     settings.common.wlr-workspaces = {
       all-outputs = true;
       disable-scroll = true;

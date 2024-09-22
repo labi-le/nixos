@@ -11,6 +11,5 @@
     ./theme.nix
     ./ssh.nix
     ./mimeapps.nix
-    ./telegram.nix
   ];
 }

@@ -41,5 +41,7 @@ with pkgs;
 
   google-chrome
   thunderbird
+
+  telegram-desktop
 ]
 

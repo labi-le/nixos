@@ -7,5 +7,6 @@
     ./wayland.nix
     ./sshfs.nix
     ./thunar.nix
+    ./steam.nix
   ];
 }
