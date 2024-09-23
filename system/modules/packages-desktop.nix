@@ -43,5 +43,6 @@ with pkgs;
   thunderbird
 
   telegram-desktop
+  zoom-us
 ]
 
