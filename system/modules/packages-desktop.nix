@@ -42,7 +42,7 @@ with pkgs;
   google-chrome
   thunderbird
 
-  telegram-desktop
   zoom-us
+  telegram-desktop
 ]
 
