@@ -2,7 +2,6 @@
 
 with pkgs;
 [
-  mpv
   obsidian
   vesktop
   dbeaver-bin
@@ -44,5 +43,11 @@ with pkgs;
 
   zoom-us
   telegram-desktop
+
+  pcsx2
+  mangohud
+  bottles
+  vulkan-tools
+
 ]
 
