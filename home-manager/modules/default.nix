@@ -11,5 +11,6 @@
     ./theme.nix
     ./ssh.nix
     ./mimeapps.nix
+    ./mpv.nix
   ];
 }
