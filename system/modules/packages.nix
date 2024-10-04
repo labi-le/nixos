@@ -51,6 +51,8 @@ in
       fselect
 
       yt-dlp
+
+      gdu
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 

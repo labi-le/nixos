@@ -48,6 +48,7 @@ with pkgs;
   mangohud
   bottles
   vulkan-tools
+  radeontop
 
 ]
 
