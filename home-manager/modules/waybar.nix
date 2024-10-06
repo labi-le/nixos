@@ -1,5 +1,8 @@
-{ ... }:
-
+{ pkgs, ... }:
+let
+  first = "DP-1";
+  second = "DP-2";
+in
 {
   programs.waybar = {
     enable = true;
@@ -102,8 +105,8 @@
         ""
         ""
       ];
-      on-scroll-down = "brightnessctl -c backlight set 1%-";
-      on-scroll-up = "brightnessctl -c backlight set +1%";
+      on-scroll-down = "${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 1%-";
+      on-scroll-up = "${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +1%";
     };
 
     settings.common.battery = {
@@ -140,7 +143,7 @@
     };
 
     settings.common.position = "bottom";
-    settings.common.output = "DP-2";
+    settings.common.output = second;
     settings.common.height = 10;
     settings.common.memory = {
       format = "mem {}%";
@@ -163,7 +166,6 @@
       format-disconnected = "Disconnected";
       format-linked = "{ifname} (No IP) ";
       format-wifi = "<span size='13000' foreground='#F2CECF'> </span>{signaldBm}";
-      on-click-right = "alacritty -e nmtui";
       tooltip-format-wifi = "Signal Strenght: {signalStrength}%";
     };
 
@@ -178,7 +180,7 @@
       };
       format-muted = "<span size='14000' foreground='#EBDDAA'></span> Muted";
       on-click = "pactl set-sink-mute @DEFAULT_SINK@ toggle";
-      on-click-right = "pavucontrol";
+      on-click-right = "${pkgs.pavucontrol}/bin/pavucontrol";
     };
 
     settings.second = {
@@ -200,7 +202,7 @@
       };
 
       position = "bottom";
-      output = "DP-3";
+      output = first;
       modules-left = [ "sway/workspaces" ];
 
     };
