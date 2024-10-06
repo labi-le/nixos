@@ -7,6 +7,11 @@ let
   terminal = "alacritty";
   bar = "waybar";
   menu = "wofi";
+  filemanager = "thunar";
+
+  left = "DP-1";
+  right = "DP-3";
+
 in
 {
   wayland.windowManager.sway = {
@@ -69,7 +74,7 @@ in
           bindcode 274 kill --border
 
           # Kill bar
-          bindsym --to-code $mod+z exec pkill -SIGUSR1 waybar
+          bindsym --to-code $mod+z exec pkill -SIGUSR1 ${bar}
 
           # Start your launcher
           # Button D
@@ -134,8 +139,6 @@ in
           bindsym --to-code $mod+Shift+8 move container to workspace $private_workspace
           bindsym --to-code $mod+Shift+9 move container to workspace number 9
           bindsym --to-code $mod+Shift+0 move container to workspace number 10
-          # Note: workspaces can have any name you want, not just numbers.
-          # We just use 1-10 as the default.
 
           bindsym --to-code $mod+$comand+Left workspace prev
           bindsym --to-code $mod+$comand+Up workspace prev
@@ -215,13 +218,14 @@ in
       #
       # Backlight
       #
-      bindsym XF86MonBrightnessUp exec brightnessctl -c backlight set +5%
-      bindsym XF86MonBrightnessDown exec brightnessctl -c backlight set 5%-
+      bindsym XF86MonBrightnessUp exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%
+      bindsym XF86MonBrightnessDown exec ${pkgs.brightnessctl}/bin/brightnessctl  -c backlight set 5%-
 
+      
       #
       # App shortcuts
       #
-      bindsym --to-code $mod+r exec $file_manager
+      bindsym --to-code $mod+r exec ${filemanager}
       bindsym --to-code $mod+o exec ${browser}
 
       #
@@ -254,28 +258,23 @@ in
       }
 
       input * {
-              xkb_layout us,ru
-              xkb_options grp:caps_toggle
+            xkb_layout us,ru
+            xkb_options grp:caps_toggle
       }
 
-      set $right 'DP-3'
-      set $left 'DP-2'
+      workspace $develop_workspace output ${left}
+      workspace $social_workspace output ${right}
+      workspace $terminal_workspace output ${left}
+      workspace $browser_workspace output ${left}
 
-      workspace $develop_workspace output $left
-
-      workspace $social_workspace output $right
-      workspace $terminal_workspace output $left
-      workspace $browser_workspace output $left
-
-      output $left {
-          mode --custom 2560x1440@83Hz
+      output ${left} {
+          mode --custom 1920x1080@165Hz
           pos 0 0
       }
 
-      output $right {
-          mode --custom 1920x1080@165Hz
+      output ${right} {
+          mode --custom 2560x1440@83Hz
           pos 2560 0
-          #bg ~/Pictures/hw-87d0bc3.jpg fill
       }
 
       # Set inner/outer gaps
@@ -293,7 +292,7 @@ in
 
 
       # Set wallpaper:
-      exec swaybg -i ~/Pictures/catalina-mountains-night.jpg
+      exec ${pkgs.swaybg}/bin/swaybg -i ~/Pictures/catalina-mountains-night.jpg
       #exec hw -follow 1h -search-phrase galaxy
 
       # Title format for windows
@@ -422,7 +421,5 @@ in
       gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
       gsettings set "$gnome_schema" font-name "$font_name"
     '')
-
-    swaybg
   ];
 }
