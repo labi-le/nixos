@@ -35,8 +35,10 @@ with pkgs;
   wayshot
   grim
   brightnessctl
+
   (callPackage ../../pkgs/wl-uploader.nix { })
   (callPackage ../../pkgs/belphegor.nix { })
+  (callPackage ../../pkgs/ea-disable-overlay.nix { })
 
   google-chrome
   thunderbird
@@ -50,5 +52,6 @@ with pkgs;
   vulkan-tools
   radeontop
 
+  qbittorrent
 ]
 

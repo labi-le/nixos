@@ -11,33 +11,9 @@ let
 
   left = "DP-1";
   right = "DP-3";
-
 in
 {
   wayland.windowManager.sway = {
-    extraSessionCommands = ''
-      export SDL_VIDEODRIVER=wayland
-      export QT_QPA_PLATFORM=wayland
-      export QT_WAYLAND_DISABLE_WINDOWDECORATION="1"
-      export _JAVA_AWT_WM_NONREPARENTING=1
-      export MOZ_ENABLE_WAYLAND=1
-      export WLR_NO_HARDWARE_CURSORS=1
-      export WLR_RENDERER_ALLOW_SOFTWARE=1
-    '';
-
-    enable = true;
-    config = rec {
-      inherit terminal;
-      startup = [
-        { command = terminal; }
-        { command = "belphegor"; }
-        { command = "import-gsettings"; always = true; }
-      ];
-      bars = [{ command = bar; mode = "hide"; hiddenState = "hide"; }];
-      modifier = "Mod4";
-    };
-    wrapperFeatures.gtk = true;
-
     extraConfig = ''
       seat seat0 xcursor_theme "Adwaita" 26 
       set $mod Mod4
@@ -46,12 +22,27 @@ in
       set $terminal_workspace 1
       set $develop_workspace 2
       set $browser_workspace 3
-      set $social_workspace 4
-      set $file_workspace 5
-      set $game_workspace 6
+      set $game_workspace 4
+      set $social_workspace 5
+      set $file_workspace 6
       set $work_workspace 7
       set $private_workspace 8
 
+      workspace $develop_workspace output ${right}
+      workspace $social_workspace output ${right}
+      workspace $terminal_workspace output ${left}
+      workspace $browser_workspace output ${left}
+      workspace $game_workspace output ${left}
+
+      output ${left} {
+          mode --custom 1920x1080@165Hz
+          pos 0 0
+      }
+
+      output ${right} {
+          mode --custom 2560x1440@83Hz
+          pos 2560 0
+      }
       # only enable this if every app you use is compatible with wayland
       xwayland enable
 
@@ -118,25 +109,25 @@ in
       #
 
           # Switch to workspace
-          bindsym --to-code $mod+1 workspace $terminal_workspace
-          bindsym --to-code $mod+2 workspace $develop_workspace
-          bindsym --to-code $mod+3 workspace $browser_workspace
-          bindsym --to-code $mod+4 workspace $social_workspace
-          bindsym --to-code $mod+5 workspace $file_workspace
-          bindsym --to-code $mod+6 workspace $game_workspace
-          bindsym --to-code $mod+7 workspace $work_workspace
-          bindsym --to-code $mod+8 workspace $private_workspace
+          bindsym --to-code $mod+$terminal_workspace workspace $terminal_workspace
+          bindsym --to-code $mod+$develop_workspace workspace $develop_workspace
+          bindsym --to-code $mod+$browser_workspace workspace $browser_workspace
+          bindsym --to-code $mod+$social_workspace workspace $social_workspace
+          bindsym --to-code $mod+$file_workspace workspace $file_workspace
+          bindsym --to-code $mod+$game_workspace workspace $game_workspace
+          bindsym --to-code $mod+$work_workspace workspace $work_workspace
+          bindsym --to-code $mod+$private_workspace workspace $private_workspace
           bindsym --to-code $mod+9 workspace 9
           bindsym --to-code $mod+0 workspace 10
           # Move focused container to workspace
-          bindsym --to-code $mod+Shift+1 move container to workspace $terminal_workspace
-          bindsym --to-code $mod+Shift+2 move container to workspace $develop_workspace
-          bindsym --to-code $mod+Shift+3 move container to workspace $browser_workspace
-          bindsym --to-code $mod+Shift+4 move container to workspace $social_workspace
-          bindsym --to-code $mod+Shift+5 move container to workspace $file_workspace
-          bindsym --to-code $mod+Shift+6 move container to workspace $game_workspace
-          bindsym --to-code $mod+Shift+7 move container to workspace $work_workspace
-          bindsym --to-code $mod+Shift+8 move container to workspace $private_workspace
+          bindsym --to-code $mod+Shift+$terminal_workspace move container to workspace $terminal_workspace
+          bindsym --to-code $mod+Shift+$develop_workspace move container to workspace $develop_workspace
+          bindsym --to-code $mod+Shift+$browser_workspace move container to workspace $browser_workspace
+          bindsym --to-code $mod+Shift+$social_workspace move container to workspace $social_workspace
+          bindsym --to-code $mod+Shift+$file_workspace move container to workspace $file_workspace
+          bindsym --to-code $mod+Shift+$game_workspace move container to workspace $game_workspace
+          bindsym --to-code $mod+Shift+$work_workspace move container to workspace $work_workspace
+          bindsym --to-code $mod+Shift+$private_workspace move container to workspace $private_workspace
           bindsym --to-code $mod+Shift+9 move container to workspace number 9
           bindsym --to-code $mod+Shift+0 move container to workspace number 10
 
@@ -262,21 +253,6 @@ in
             xkb_options grp:caps_toggle
       }
 
-      workspace $develop_workspace output ${left}
-      workspace $social_workspace output ${right}
-      workspace $terminal_workspace output ${left}
-      workspace $browser_workspace output ${left}
-
-      output ${left} {
-          mode --custom 1920x1080@165Hz
-          pos 0 0
-      }
-
-      output ${right} {
-          mode --custom 2560x1440@83Hz
-          pos 2560 0
-      }
-
       # Set inner/outer gaps
       gaps inner 2
       gaps outer 0
@@ -289,7 +265,6 @@ in
 
       # Thin borders:
       smart_borders on
-
 
       # Set wallpaper:
       exec ${pkgs.swaybg}/bin/swaybg -i ~/Pictures/catalina-mountains-night.jpg
@@ -357,7 +332,7 @@ in
       #
       # Game
       #
-      assign [class="Steam"] $game_workspace
+      assign [class="steam"] $game_workspace
 
       #
       # Private
@@ -403,6 +378,28 @@ in
       for_window [app_id="xsensors"] floating enable
       for_window [title="Save File"] floating enable
     '';
+    extraSessionCommands = ''
+      export SDL_VIDEODRIVER=wayland
+      export QT_QPA_PLATFORM=wayland
+      export QT_WAYLAND_DISABLE_WINDOWDECORATION="1"
+      export _JAVA_AWT_WM_NONREPARENTING=1
+      export MOZ_ENABLE_WAYLAND=1
+      export WLR_NO_HARDWARE_CURSORS=1
+      export WLR_RENDERER_ALLOW_SOFTWARE=1
+    '';
+
+    enable = true;
+    config = rec {
+      inherit terminal;
+      startup = [
+        { command = terminal; }
+        { command = "belphegor"; }
+        { command = "import-gsettings"; always = true; }
+      ];
+      bars = [{ command = bar; mode = "hide"; hiddenState = "hide"; }];
+      modifier = "Mod4";
+    };
+    wrapperFeatures.gtk = true;
   };
 
   home.packages = with pkgs; [
