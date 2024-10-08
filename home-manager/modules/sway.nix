@@ -11,6 +11,9 @@ let
 
   left = "DP-1";
   right = "DP-3";
+
+
+  grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
 in
 {
   wayland.windowManager.sway = {
@@ -22,8 +25,8 @@ in
       set $terminal_workspace 1
       set $develop_workspace 2
       set $browser_workspace 3
-      set $game_workspace 4
-      set $social_workspace 5
+      set $social_workspace 4
+      set $game_workspace 5
       set $file_workspace 6
       set $work_workspace 7
       set $private_workspace 8
@@ -222,10 +225,10 @@ in
       #
       # Screenshots
       #
-      bindsym --to-code $comand+s exec capture-area 
-      bindsym --to-code $comand+a exec capture-all
+      bindsym --to-code $comand+s exec ${grimshot} copy area
+      bindsym --to-code $comand+a exec ${grimshot} copy active
 
-      bindsym --to-code $comand+e exec capture-edit
+      bindsym --to-code $comand+e exec ${grimshot} save area - | swappy -f -
 
       #
       # Import clipboard to https://0x0.st/
