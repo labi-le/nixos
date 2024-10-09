@@ -28,5 +28,7 @@
 
   network.injectHosts = true;
   packages.forDesktop = true;
+
+  networking.interfaces.enp37s0.wakeOnLan.enable = true;
 }
 
