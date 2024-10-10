@@ -38,6 +38,7 @@ in
       mtr
       inetutils
       iperf3
+      ipcalc
 
       alacritty
       ranger
