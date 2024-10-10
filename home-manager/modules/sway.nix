@@ -152,8 +152,6 @@ in
       # Button V
       bindsym --to-code $mod+v splitv
 
-      # Switch the current container between different layout styles
-
       # Button S
       bindsym --to-code $mod+s layout stacking
       # Button W
@@ -169,9 +167,6 @@ in
       bindsym --to-code $mod+Shift+space floating toggle
 
       # Move focus to the parent container
-
-      # Button A
-      bindsym --to-code $mod+a focus parent
 
       # Resizing containers:
       #
