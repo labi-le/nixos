@@ -7,7 +7,6 @@
     ./git.nix
     ./ide.nix
     ./alacritty.nix
-    ./wayshot.nix
     ./theme.nix
     ./ssh.nix
     ./mimeapps.nix
