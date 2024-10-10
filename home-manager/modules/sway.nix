@@ -38,7 +38,7 @@ in
       workspace $game_workspace output ${left}
 
       output ${left} {
-          mode --custom 1920x1080@165Hz
+          mode --custom 1920x1080@165Hz adaptive_sync on
           pos 0 0
       }
 
