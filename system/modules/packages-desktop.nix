@@ -53,5 +53,7 @@ with pkgs;
   radeontop
 
   qbittorrent
+
+  waypipe
 ]
 
