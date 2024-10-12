@@ -43,8 +43,9 @@ in
       }
 
       output ${right} {
-          mode --custom 2560x1440@83Hz
+          mode 2560x1440
           pos 2560 0
+          scale 1.5
       }
       # only enable this if every app you use is compatible with wayland
       xwayland enable
