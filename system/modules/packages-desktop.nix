@@ -35,6 +35,7 @@ with pkgs;
   wayshot
   grim
   brightnessctl
+  wf-recorder
 
   (callPackage ../../pkgs/wl-uploader.nix { })
   (callPackage ../../pkgs/belphegor.nix { })
@@ -54,6 +55,7 @@ with pkgs;
 
   qbittorrent
 
-  waypipe
+  audacity
+  alsa-scarlett-gui
 ]
 
