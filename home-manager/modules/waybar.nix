@@ -54,14 +54,18 @@ in
     settings.common.output = second;
     settings.common.height = 15;
     settings.common.memory = {
-      format = "mem {used:0.1f}/{total:0.1f}";
+      format = "mem: {free}/{total}";
       #format = "mem {}%";
+    };
+    settings.common.disk = {
+      format = "nvme: {free}/{total}";
     };
     settings.common.modules-center = [ "custom/spotify" ];
     settings.common.modules-left = [ "sway/workspaces" ];
     settings.common.modules-right = [
       "network"
       "custom/vpn"
+      "disk"
       "memory"
       "cpu"
       "pulseaudio"
@@ -183,6 +187,7 @@ in
       }
       
       #memory,
+      #disk,
       #cpu,
       #clock,
       #battery,
