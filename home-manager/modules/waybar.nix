@@ -54,8 +54,7 @@ in
     settings.common.output = second;
     settings.common.height = 15;
     settings.common.memory = {
-      format = "mem: {free}/{total}";
-      #format = "mem {}%";
+      format = "mem {}%";
     };
     settings.common.disk = {
       format = "nvme: {free}/{total}";
