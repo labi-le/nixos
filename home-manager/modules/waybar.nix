@@ -90,10 +90,12 @@ in
       };
       format-muted = "<span size='14000' foreground='#EBDDAA'></span> Muted";
 
-      on-click = "pactl set-sink-mute @DEFAULT_SINK@ toggle";
+      on-click = "${pkgs.pulseaudio}/bin/pactl set-sink-mute @DEFAULT_SINK@ toggle";
       on-click-middle = "${pkgs.pavucontrol}/bin/pavucontrol";
+      on-scroll-up = "${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ +1%";
+      on-scroll-down = "${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ -1%";
 
-      on-click-right = "pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+      on-click-right = "${pkgs.pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
       format-source-muted = "";
       format-source = "";
     };
