@@ -12,11 +12,12 @@
     };
     flake-utils.url = "github:numtide/flake-utils";
     # nix-gaming.url = "github:fufexan/nix-gaming";
+    musnix = { url = "github:musnix/musnix"; };
   };
 
 
 
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, ... }:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, musnix, ... }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -39,6 +40,7 @@
           { networking.hostName = hostname; }
           ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
           nixvim.nixosModules.nixvim
+          musnix.nixosModules.musnix
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
           {

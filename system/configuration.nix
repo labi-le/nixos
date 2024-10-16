@@ -30,5 +30,5 @@
   packages.forDesktop = true;
 
   networking.interfaces.enp37s0.wakeOnLan.enable = true;
+  musnix.enable = true;
 }
-
