@@ -98,6 +98,8 @@ in
       on-click-right = "${pkgs.pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
       format-source-muted = "";
       format-source = "";
+
+      ignored-sinks = [ "Easy Effects Sink" ];
     };
 
     settings.second = {
