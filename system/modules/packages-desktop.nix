@@ -58,5 +58,7 @@ with pkgs;
   audacity
   alsa-scarlett-gui
   patchage
+  qpwgraph
+  pwvucontrol
 ]
 
