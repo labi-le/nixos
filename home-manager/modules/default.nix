@@ -11,5 +11,7 @@
     ./ssh.nix
     ./mimeapps.nix
     ./mpv.nix
+    ./easyeffects.nix
+    ./lf.nix
   ];
 }
