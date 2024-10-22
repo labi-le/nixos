@@ -10,7 +10,7 @@ let
   filemanager = "thunar";
 
   left = "DP-1";
-  right = "DP-3";
+  right = "DP-2";
 
 
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
@@ -38,14 +38,15 @@ in
       workspace $game_workspace output ${left}
 
       output ${left} {
-          mode --custom 1920x1080@165Hz adaptive_sync on
+          mode --custom 1920x1080@165Hz
           pos 0 0
       }
 
       output ${right} {
-          mode 2560x1440
-          pos 2560 0
-          scale 1.5
+          mode --custom 2560x1440@83Hz
+          pos 1920 0
+          #scale 1.1
+          #scale_filter smart
       }
       # only enable this if every app you use is compatible with wayland
       xwayland enable
@@ -224,7 +225,7 @@ in
       bindsym --to-code $comand+s exec ${grimshot} copy area
       bindsym --to-code $comand+a exec ${grimshot} copy active
 
-      bindsym --to-code $comand+e exec ${grimshot} save area - | swappy -f -
+      bindsym --to-code $comand+e exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -
 
       #
       # Import clipboard to https://0x0.st/
