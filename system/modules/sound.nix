@@ -1,19 +1,29 @@
 { pkgs, ... }:
 
 {
+  security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     pulse.enable = true;
-
+    jack.enable = false;
     extraConfig.pipewire = {
       "99-disable-bell" = {
         "context.properties" = {
           "module.x11.bell" = false;
         };
       };
+      "99-lowlatency" = {
+        "context.properties" = {
+          "default.clock.quantum" = 64;
+          "default.clock.min-quantum" = 64;
+          "default.clock.max-quantum" = 64;
+          "default.clock.force-quantum" = 64;
+        };
+      };
     };
   };
 
+  environment.systemPackages = with pkgs; [ pulseaudio pipecontrol ];
 
   services.actkbd =
     let

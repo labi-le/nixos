@@ -11,13 +11,13 @@
       url = "github:nix-community/nixvim";
     };
     flake-utils.url = "github:numtide/flake-utils";
-    # nix-gaming.url = "github:fufexan/nix-gaming";
+    nix-gaming.url = "github:fufexan/nix-gaming";
     musnix = { url = "github:musnix/musnix"; };
   };
 
 
 
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, musnix, ... }:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, musnix, nix-gaming, ... }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -27,9 +27,9 @@
         };
       };
 
-      # overlay-nix-gaming = final: prev: {
-      #   nix-gaming = nix-gaming.packages.${system};
-      # };
+      overlay-nix-gaming = final: prev: {
+        nix-gaming = nix-gaming.packages.${system};
+      };
 
       defaultConfiguration = ./system/configuration.nix;
 
@@ -38,7 +38,7 @@
           configuration
           ./system/hardware-${hostname}.nix
           { networking.hostName = hostname; }
-          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable ]; })
+          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable overlay-nix-gaming ]; })
           nixvim.nixosModules.nixvim
           musnix.nixosModules.musnix
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
