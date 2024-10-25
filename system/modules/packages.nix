@@ -54,6 +54,8 @@ in
       yt-dlp
 
       gdu
+
+      pgcli
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 
