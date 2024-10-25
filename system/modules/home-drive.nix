@@ -1,17 +1,15 @@
 {
-  fileSystems."/home/labile/external_storage" = {
-    device = "/dev/disk/by-uuid/7F99-F331";
-    fsType = "exfat";
+  fileSystems."/media/storage" = {
+    device = "/dev/disk/by-uuid/b5eb331a-08e3-4942-ac86-25974cf29e10";
+    fsType = "f2fs";
     options = [
       "defaults"
       "nofail"
       "x-systemd.automount"
-      "uid=1000"
-      "gid=100"
+      "rw"
       "noatime"
       "nodiratime"
       "async"
-      "utf8"
     ];
   };
 }
