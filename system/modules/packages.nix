@@ -45,7 +45,10 @@ in
       imv
       btop
       git
+
       gparted
+      f2fs-tools
+
       psmisc # killall
       ncurses
       sshfs
