@@ -12,12 +12,13 @@
     };
     flake-utils.url = "github:numtide/flake-utils";
     nix-gaming.url = "github:fufexan/nix-gaming";
-    musnix = { url = "github:musnix/musnix"; };
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-
-
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, musnix, nix-gaming, ... }:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, nix-index-database, ... }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -40,9 +41,9 @@
           { networking.hostName = hostname; }
           ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable overlay-nix-gaming ]; })
           nixvim.nixosModules.nixvim
-          musnix.nixosModules.musnix
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
+          nix-index-database.nixosModules.nix-index
           {
             home-manager.users.labile = import ./home-manager/home.nix;
             home-manager.useGlobalPkgs = true;
