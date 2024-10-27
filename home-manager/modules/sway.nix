@@ -189,14 +189,11 @@ in
       #
       # Volume
       #
-      #bindsym --locked XF86AudioRaiseVolume exec pamixer --allow-boost -ui 2
-      #bindsym --locked XF86AudioLowerVolume exec pamixer --allow-boost -ud 2
-      #bindsym --locked XF86AudioMute exec pamixer -t
 
-      bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume 0 -2%
-      bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume 0 +2%
+      bindsym --locked XF86AudioLowerVolume exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 -2%
+      bindsym --locked XF86AudioRaiseVolume exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 +2%
 
-      bindsym --locked XF86AudioMute exec pactl set-sink-mute 0 toggle
+      bindsym --locked XF86AudioMute exec ${pkgs.alsa-utils}/bin/amixer -c 0 cset numid=10 toggle 
 
       #
       # Player

@@ -60,5 +60,6 @@ with pkgs;
   patchage
   qpwgraph
   pwvucontrol
+  alsa-utils
 ]
 
