@@ -193,7 +193,7 @@ in
       bindsym --locked XF86AudioLowerVolume exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 -2%
       bindsym --locked XF86AudioRaiseVolume exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 +2%
 
-      bindsym --locked XF86AudioMute exec ${pkgs.alsa-utils}/bin/amixer -c 0 cset numid=10 toggle 
+      bindsym --locked XF86AudioMute exec ${pkgs.alsa-utils}/bin/amixer -c $(cat /proc/asound/cards | grep "Scarlett" | head -n1 | awk '{print $1}') cset numid=10 toggle 
 
       #
       # Player
