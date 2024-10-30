@@ -61,5 +61,7 @@ with pkgs;
   qpwgraph
   pwvucontrol
   alsa-utils
+
+  element-desktop
 ]
 
