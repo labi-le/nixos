@@ -33,9 +33,8 @@
   networking.interfaces.enp37s0.wakeOnLan.enable = true;
 
   nix.settings = {
-    substituters = [ "https://nix-cache.mildenberger.me" "https://cache.nixos.org/" "https://cosmic.cachix.org/" ];
+    substituters = [ "https://cache.nixos.org/" "https://cosmic.cachix.org/" ];
     trusted-public-keys = [
-      "nix-cache.mildenberger.me:dcNVw3YMUReIGC5JsMN4Ifv9xjbQn7rkDF7gJIO0ZoI="
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE="
     ];
