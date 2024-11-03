@@ -35,7 +35,7 @@ with pkgs;
   wayshot
   grim
   brightnessctl
-  wf-recorder
+  stable.wf-recorder
 
   (callPackage ../../pkgs/wl-uploader.nix { })
   (callPackage ../../pkgs/belphegor.nix { })
