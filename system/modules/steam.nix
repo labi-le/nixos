@@ -11,7 +11,7 @@
         jdk21
         ftgl
         freetype
-        pkgsi686Linux.libpulseaudio
+        #pkgsi686Linux.libpulseaudio
         gtk3
         openjfx
       ];
@@ -38,5 +38,6 @@
   environment.systemPackages = with pkgs; [
     #nix-gaming.faf-client
     jdk21
+    mpg123
   ];
 }
