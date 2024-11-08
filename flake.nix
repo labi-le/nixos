@@ -7,18 +7,17 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixvim = {
-      url = "github:nix-community/nixvim";
-    };
+    nixvim.url = "github:nix-community/nixvim";
     flake-utils.url = "github:numtide/flake-utils";
     nix-gaming.url = "github:fufexan/nix-gaming";
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    belphegor.url = "github:labi-le/belphegor";
   };
 
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, nix-index-database, ... }:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, nix-index-database, belphegor, ... }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -32,6 +31,10 @@
         nix-gaming = nix-gaming.packages.${system};
       };
 
+      overlay-belphegor = final: prev: {
+        belphegor = belphegor.packages.${system}.default;
+      };
+
       defaultConfiguration = ./system/configuration.nix;
 
       mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {
@@ -39,7 +42,7 @@
           configuration
           ./system/hardware-${hostname}.nix
           { networking.hostName = hostname; }
-          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable overlay-nix-gaming ]; })
+          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable overlay-nix-gaming overlay-belphegor ]; })
           nixvim.nixosModules.nixvim
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
