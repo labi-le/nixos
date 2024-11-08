@@ -38,7 +38,7 @@ with pkgs;
   stable.wf-recorder
 
   (callPackage ../../pkgs/wl-uploader.nix { })
-  (callPackage ../../pkgs/belphegor.nix { })
+  belphegor
   (callPackage ../../pkgs/ea-disable-overlay.nix { })
 
   google-chrome
