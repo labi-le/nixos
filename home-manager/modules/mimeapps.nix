@@ -8,26 +8,27 @@
     mimeApps =
       let
         discord = "vesktop.desktop";
-        gimp = "gimp.desktop";
+        image-editor = "gimp.desktop";
         imv = "imv.desktop";
         mediaplayer = "mpv.desktop";
-        neovim = "nvim.desktop";
+        editor = "nvim.desktop";
         filemanager = "thunar.desktop";
+        archive-manager = "xarchiver.desktop";
         browser = "google-chrome.desktop";
-        zathura = "org.pwmt.zathura.desktop";
+        pdf = "org.pwmt.zathura.desktop";
       in
       {
         enable = true;
         associations.added = {
           "application/pdf" = [ browser ];
-          "application/vnd.ms-publisher" = [ neovim ];
+          "application/vnd.ms-publisher" = [ editor ];
           "application/x-extension-htm" = [ browser ];
           "application/x-extension-html" = [ browser ];
           "application/x-extension-shtml" = [ browser ];
           "application/x-extension-xht" = [ browser ];
           "application/x-extension-xhtml" = [ browser ];
           "application/xhtml+xml" = [ browser ];
-          "application/xml" = [ neovim ];
+          "application/xml" = [ editor ];
           "audio/aac" = [ mediaplayer ];
           "audio/flac" = [ mediaplayer ];
           "audio/mp4" = [ mediaplayer ];
@@ -39,11 +40,11 @@
           "image/png" = [ imv ];
           "image/svg+xml" = [ browser ];
           "image/webp" = [ imv ];
-          "image/x-xcf" = [ gimp ];
+          "image/x-xcf" = [ image-editor ];
           "inode/directory" = [ filemanager ];
           "text/html" = [ browser ];
-          "text/markdown" = [ neovim ];
-          "text/plain" = [ neovim ];
+          "text/markdown" = [ editor ];
+          "text/plain" = [ editor ];
           "text/uri-list" = [ browser ];
           "video/mp4" = [ mediaplayer ];
           "video/ogg" = [ mediaplayer ];
@@ -60,17 +61,21 @@
           "x-scheme-handler/http" = [ browser ];
           "x-scheme-handler/https" = [ browser ];
           "x-scheme-handler/unknown" = [ browser ];
+          "application/zip" = [ archive-manager ];
+          "application/rar" = [ archive-manager ];
+          "application/7z" = [ archive-manager ];
+          "application/*tar" = [ archive-manager ];
         };
         defaultApplications = {
-          "application/pdf" = [ zathura ];
-          "application/vnd.ms-publisher" = [ neovim ];
+          "application/pdf" = [ pdf ];
+          "application/vnd.ms-publisher" = [ editor ];
           "application/x-extension-htm" = [ browser ];
           "application/x-extension-html" = [ browser ];
           "application/x-extension-shtml" = [ browser ];
           "application/x-extension-xht" = [ browser ];
           "application/x-extension-xhtml" = [ browser ];
           "application/xhtml+xml" = [ browser ];
-          "application/xml" = [ neovim ];
+          "application/xml" = [ editor ];
           "audio/aac" = [ mediaplayer ];
           "audio/flac" = [ mediaplayer ];
           "audio/mp4" = [ mediaplayer ];
@@ -81,11 +86,11 @@
           "image/jpeg" = [ imv ];
           "image/png" = [ imv ];
           "image/webp" = [ imv ];
-          "image/x-xcf" = [ gimp ];
+          "image/x-xcf" = [ image-editor ];
           "inode/directory" = [ filemanager ];
           "text/html" = [ browser ];
-          "text/markdown" = [ neovim ];
-          "text/plain" = [ neovim ];
+          "text/markdown" = [ editor ];
+          "text/plain" = [ editor ];
           "text/uri-list" = [ browser ];
           "video/mp4" = [ mediaplayer ];
           "video/ogg" = [ mediaplayer ];
@@ -102,6 +107,7 @@
           "x-scheme-handler/http" = [ browser ];
           "x-scheme-handler/https" = [ browser ];
           "x-scheme-handler/unknown" = [ browser ];
+
         };
       };
   };
