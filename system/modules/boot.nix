@@ -6,5 +6,6 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot";
   boot.tmp.cleanOnBoot = true;
+  boot.plymouth.enable = true;
 
 }
