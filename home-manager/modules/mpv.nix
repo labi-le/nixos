@@ -3,7 +3,6 @@
   programs.mpv = {
     enable = true;
     scripts = with pkgs.mpvScripts; [
-      thumbnail
       sponsorblock-minimal
       videoclip
     ];
@@ -11,17 +10,6 @@
       sponsorblock-minimal = {
         sponsorblock_minimal-server = "https://sponsor.ajay.app/api/skipSegments";
         sponsorblock_minimal-categories = [ "sponsor" ];
-      };
-      mpv_thumbnail_script = {
-        autogenerate = "yes";
-        autogenerate_max_duration = "3600";
-        prefer_mpv = "yes";
-        mpv_no_sub = "no";
-        thumbnail_width = 200;
-        thumbnail_height = 200;
-        thumbnail_count = 150;
-        thumbnail_network = "no";
-        background_color = "282828";
       };
       videoclip = {
         video_quality = 1;
