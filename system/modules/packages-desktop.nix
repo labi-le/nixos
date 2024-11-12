@@ -45,7 +45,6 @@ with pkgs;
   thunderbird
 
   zoom-us
-  telegram-desktop
 
   pcsx2
   mangohud
