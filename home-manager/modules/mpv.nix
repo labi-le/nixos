@@ -3,7 +3,6 @@
   programs.mpv = {
     enable = true;
     scripts = with pkgs.mpvScripts; [
-      thumbnail
       sponsorblock-minimal
       videoclip
     ];
