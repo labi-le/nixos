@@ -15,9 +15,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     belphegor.url = "github:labi-le/belphegor";
+    ayugram-desktop.url = "github:/ayugram-port/ayugram-desktop/release?submodules=1";
   };
 
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, nix-index-database, belphegor, ... }:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, nix-index-database, belphegor, ayugram-desktop, ... }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -35,6 +36,10 @@
         belphegor = belphegor.packages.${system}.default;
       };
 
+      overlay-ayugram-desktop = final: prev: {
+        ayugram-desktop = ayugram-desktop.packages.${system}.ayugram-desktop;
+      };
+
       defaultConfiguration = ./system/configuration.nix;
 
       mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {
@@ -42,7 +47,7 @@
           configuration
           ./system/hardware-${hostname}.nix
           { networking.hostName = hostname; }
-          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable overlay-nix-gaming overlay-belphegor ]; })
+          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable overlay-nix-gaming overlay-belphegor overlay-ayugram-desktop ]; })
           nixvim.nixosModules.nixvim
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
