@@ -63,5 +63,6 @@ with pkgs;
   alsa-utils
 
   element-desktop
+  ayugram-desktop
 ]
 
