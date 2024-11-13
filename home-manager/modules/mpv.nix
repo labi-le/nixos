@@ -5,6 +5,8 @@
     scripts = with pkgs.mpvScripts; [
       sponsorblock-minimal
       videoclip
+      thumbfast
+      uosc
     ];
     scriptOpts = {
       sponsorblock-minimal = {
@@ -19,14 +21,33 @@
         audio_folder_path = "/tmp";
         clean_filename = "yes";
       };
+
+      thumbfast = {
+        network = "yes";
+        autogenerate = "yes";
+        hwdec = "yes";
+        direct_io = "yes";
+        worker_count = "8";
+      };
     };
     config = {
-      cache-secs = "300";
-      hwdec = "vaapi";
-      vo = "gpu";
-      gpu-context = "wayland";
+      save-position-on-quit = "yes";
+
+      cache = "yes";
+      cache-secs = "600";
+      cache-pause = "no";
+
+      hwdec = "auto-safe";
+      hwdec-codecs = "vulkan";
+
+      vo = "gpu-next";
+      gpu-api = "vulkan";
+      gpu-context = "waylandvk";
+
       fs = "yes";
       osc = "no";
+      osd-bar = "no";
+
       glsl-shaders = "${pkgs.anime4k}/Anime4K_Clamp_Highlights.glsl:${pkgs.anime4k}/Anime4K_Restore_CNN_VL.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_VL.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x2.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x4.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_M.glsl";
     };
     bindings = {
