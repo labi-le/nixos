@@ -17,7 +17,6 @@
 
   environment.interactiveShellInit = ''
     alias ec='nvim ${config.users.users.labile.home}/nix/system/configuration.nix'
-    alias rr='ranger'
     alias n='nvim'
     alias sw='alacritty -e `cd ${config.users.users.labile.home}/nix && make`'
     alias up='alacritty -e `cd ${config.users.users.labile.home}/nix/ make update`'

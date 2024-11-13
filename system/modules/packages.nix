@@ -41,7 +41,6 @@ in
       ipcalc
 
       alacritty
-      ranger
       imv
       btop
       git
