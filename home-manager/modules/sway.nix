@@ -306,6 +306,7 @@ in
       #
 
       for_window [app_id="org.telegram.desktop"] move to workspace $social_workspace; layout tabbed;
+      for_window [app_id="com.ayugram"] move to workspace $social_workspace; layout tabbed;
       for_window [class="TelegramDesktop"] move to workspace $social_workspace; layout tabbed;
       for_window [class="discord"] move to workspace $social_workspace; layout tabbed;
       for_window [class="vesktop"] move to workspace $social_workspace; layout tabbed;
