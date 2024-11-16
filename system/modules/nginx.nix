@@ -43,21 +43,7 @@
       "torrent.labile.cc" = proxy "http://127.0.0.1:7000";
       "vaultwarden.labile.cc" = proxy "http://127.0.0.1:7005";
       "sync.labile.cc" = proxy "http://127.0.0.1:7006";
-      "notify.labile.cc" = {
-        forceSSL = true;
-        enableACME = true;
-        extraConfig = ''
-          location / {
-            proxy_pass http://127.0.0.1:1717;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "Upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-          }
-        '';
-      };
+      "asf.labile.cc" = proxy "http://127.0.0.1:1242";
       "_" = {
         listen = [
           { addr = "0.0.0.0"; port = 80; }
