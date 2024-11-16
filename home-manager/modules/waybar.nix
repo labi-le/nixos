@@ -151,7 +151,7 @@ in
 
       window#waybar {
           color: #DADAE8;
-          background-color: rgba(0, 0, 0, 0);
+          background-color: rgba(0, 0, 0, 0.4);
       }
 
       /* tooltip {
