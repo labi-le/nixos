@@ -31,6 +31,7 @@ in
       unzip
       jq
       openssl
+      ranger
 
       dig
       nmap
