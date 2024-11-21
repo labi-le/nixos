@@ -10,15 +10,11 @@
     nixvim.url = "github:nix-community/nixvim";
     flake-utils.url = "github:numtide/flake-utils";
     nix-gaming.url = "github:fufexan/nix-gaming";
-    nix-index-database = {
-      url = "github:nix-community/nix-index-database";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     belphegor.url = "github:labi-le/belphegor";
     ayugram-desktop.url = "github:/ayugram-port/ayugram-desktop/release?submodules=1";
   };
 
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, nix-index-database, belphegor, ayugram-desktop, ... }:
+  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, belphegor, ayugram-desktop, ... }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -51,7 +47,6 @@
           nixvim.nixosModules.nixvim
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
-          nix-index-database.nixosModules.nix-index
           {
             home-manager.users.labile = import ./home-manager/home.nix;
             home-manager.useGlobalPkgs = true;
