@@ -264,7 +264,7 @@ in
       smart_borders on
 
       # Set wallpaper:
-      exec ${pkgs.swaybg}/bin/swaybg -i ~/Pictures/3ma6nhepxbb81.jpg
+      exec ${pkgs.swaybg}/bin/swaybg -i ~/Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg 
       #exec hw -follow 1h -search-phrase galaxy
 
       # Title format for windows

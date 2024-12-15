@@ -42,6 +42,7 @@ with pkgs;
   (callPackage ../../pkgs/ea-disable-overlay.nix { })
 
   google-chrome
+  chromium
   thunderbird
 
   zoom-us
