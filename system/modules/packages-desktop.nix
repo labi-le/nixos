@@ -20,6 +20,8 @@ with pkgs;
   dconf
 
   go
+  golangci-lint
+  graphviz
 
   wireshark
   (php.buildEnv {
