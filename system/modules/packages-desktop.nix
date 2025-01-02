@@ -51,7 +51,6 @@ with pkgs;
 
   pcsx2
   mangohud
-  bottles
   vulkan-tools
   radeontop
 
