@@ -12,9 +12,20 @@
     nix-gaming.url = "github:fufexan/nix-gaming";
     belphegor.url = "github:labi-le/belphegor";
     ayugram-desktop.url = "github:/ayugram-port/ayugram-desktop/release?submodules=1";
+    chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
   };
 
-  outputs = { nixpkgs, nixpkgs-stable, home-manager, nixvim, nix-gaming, belphegor, ayugram-desktop, ... }:
+  outputs =
+    { nixpkgs
+    , nixpkgs-stable
+    , home-manager
+    , nixvim
+    , nix-gaming
+    , belphegor
+    , ayugram-desktop
+    , chaotic
+    , ...
+    }:
     let
       system = "x86_64-linux";
       overlay-stable = final: prev: {
@@ -43,8 +54,22 @@
           configuration
           ./system/hardware-${hostname}.nix
           { networking.hostName = hostname; }
-          ({ config, pkgs, ... }: { nixpkgs.overlays = [ overlay-stable overlay-nix-gaming overlay-belphegor overlay-ayugram-desktop ]; })
+          (
+            { config, pkgs, ... }: {
+              nixpkgs.overlays = [
+                overlay-stable
+                overlay-nix-gaming
+                overlay-belphegor
+                overlay-ayugram-desktop
+              ];
+
+              nixpkgs.config = {
+                allowUnfree = true;
+              };
+            }
+          )
           nixvim.nixosModules.nixvim
+          chaotic.nixosModules.default
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
           {

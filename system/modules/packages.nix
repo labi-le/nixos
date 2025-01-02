@@ -59,6 +59,7 @@ in
       gdu
 
       pgcli
+      ranger
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 
