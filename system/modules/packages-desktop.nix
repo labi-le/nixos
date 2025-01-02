@@ -20,6 +20,9 @@ with pkgs;
   dconf
 
   go
+  gcc
+  golangci-lint
+  graphviz
 
   wireshark
   (php.buildEnv {
@@ -49,7 +52,6 @@ with pkgs;
 
   pcsx2
   mangohud
-  bottles
   vulkan-tools
   radeontop
 

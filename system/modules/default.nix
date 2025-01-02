@@ -8,5 +8,6 @@
     ./sshfs.nix
     ./thunar.nix
     # ./steam.nix
+    ./kernel-cachyos.nix
   ];
 }

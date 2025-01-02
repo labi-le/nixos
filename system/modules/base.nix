@@ -17,7 +17,6 @@
     ./network
     ./packages.nix
     ./ssh.nix
-    ./kernel-zen.nix
   ];
 }
 

@@ -1,6 +1,6 @@
 {
   programs.nixvim.plugins.transparent.enable = true;
-  programs.nixvim.plugins.codeium-vim.enable = true;
+  # programs.nixvim.plugins.codeium-vim.enable = true;
   programs.nixvim.plugins.nix.enable = true;
   programs.nixvim.plugins.auto-save.enable = true;
   programs.nixvim.plugins.auto-session.enable = true;
