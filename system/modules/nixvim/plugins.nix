@@ -1,3 +1,5 @@
+{ pkgs, ... }:
+
 {
   programs.nixvim.plugins.transparent.enable = true;
   # programs.nixvim.plugins.codeium-vim.enable = true;
@@ -7,7 +9,6 @@
   programs.nixvim.plugins.comment.enable = true;
   programs.nixvim.plugins.indent-blankline.enable = true;
   programs.nixvim.plugins.lsp-lines.enable = true;
-
   programs.nixvim.plugins = {
     lsp = {
       enable = true;
@@ -20,6 +21,6 @@
     lsp-format = {
       enable = true;
     };
-
   };
+
 }

@@ -284,12 +284,13 @@ in
       #
       # Terminal workspace
       #
-      for_window [app_id="Alacritty"] move to workspace $terminal_workspace; focus
+      for_window [app_id="Alacritty"] floating enable, resize set width 800px height 500px
+      for_window [app_id="Alacritty" workspace=$terminal_workspace] floating disable
 
       #
       # Browser workspace
       #
-      for_window [class="Google-chrome"] move to workspace $browser_workspace; inhibit_idle fullscreen
+      for_window [instance="google-chrome"] move to workspace $browser_workspace; inhibit_idle fullscreen
       for_window [app_id="waterfox"] move to workspace $browser_workspace; inhibit_idle fullscreen
       for_window [app_id="firefox"] move to workspace $browser_workspace; inhibit_idle fullscreen
       for_window [class="Vivaldi-stable"] move to workspace $browser_workspace; inhibit_idle fullscreen
@@ -299,12 +300,11 @@ in
       # File workspace
       #
       for_window [app_id="file-roller"] move to workspace $file_workspace; floating enable; focus
-
+      for_window [app_id="com.github.wwmm.easyeffects"] floating enable, resize set width 1200px height 800px; focus
 
       #
       # Social workspace
       #
-
       for_window [app_id="org.telegram.desktop"] move to workspace $social_workspace; layout tabbed;
       for_window [app_id="com.ayugram"] move to workspace $social_workspace; layout tabbed;
       for_window [class="TelegramDesktop"] move to workspace $social_workspace; layout tabbed;
@@ -314,16 +314,7 @@ in
       #
       # Dev workspace
       #
-      assign [class="jetbrains-toolbox"] $develop_workspace
-      assign [class="jetbrains-goland"] $develop_workspace
-      assign [class="jetbrains-phpstorm"] $develop_workspace
-      assign [class="jetbrains-pycharm"] $develop_workspace
-      assign [class="jetbrains-studio"] $develop_workspace
-      assign [class="jetbrains-idea"] $develop_workspace
-      assign [class="jetbrains-clion"] $develop_workspace
-      assign [class="jetbrains-webstorm"] $develop_workspace
-      assign [class="jetbrains-fleet"] $develop_workspace
-
+      assign [class="^jetbrains-[^\s]+$"] $develop_workspace
       assign [class="Code"] $develop_workspace
       assign [class="Postman"] $develop_workspace
 
@@ -347,8 +338,8 @@ in
       # set floating (nontiling)for apps needing it:
       for_window [class="Yad" instance="yad"] floating enable
       for_window [app_id="yad"] floating enable
-      for_window [app_id="blueman-manager"] floating enable,  resize set width 40 ppt height 30 ppt
-      for_window [app_id="io.bassi.Amberol"] floating enable,  resize set width 40 ppt height 30 ppt
+      for_window [app_id="blueman-manager"] floating enable, resize set width 40 ppt height 30 ppt
+      for_window [app_id="io.bassi.Amberol"] floating enable, resize set width 40 ppt height 30 ppt
 
       # set floating (nontiling) for special apps:
       for_window [class="Xsane" instance="xsane"] floating enable
@@ -358,7 +349,7 @@ in
       for_window [app_id="pamac-manager"] floating enable, resize set width 80 ppt height 70 ppt
       for_window [class="Lxappearance"] floating enable, resize set width 60 ppt height 50 ppt
 
-      for_window [app_id="mpv"] floating enable, resize set width 50 ppt height 40 ppt
+      for_window [app_id="mpv"] floating enable, resize set width 1400px height 800px; focus
 
       # set floating for window roles
       for_window [window_role="pop-up"] floating enable
