@@ -10,8 +10,11 @@
       youtube-chat
     ];
     scriptOpts = {
+      uosc = {
+        progress = "never";
+      };
       mpv-youtube-chat = {
-        auto-load = "yes";
+        auto-load = "no";
         anchor = 9;
       };
       sponsorblock-minimal = {
@@ -43,14 +46,14 @@
       vo = "gpu-next";
       gpu-context = "wayland";
 
-      fs = "yes";
+      fs = "no";
       osc = "no";
       osd-bar = "no";
 
       glsl-shaders = "${pkgs.anime4k}/Anime4K_Clamp_Highlights.glsl:${pkgs.anime4k}/Anime4K_Restore_CNN_VL.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_VL.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x2.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x4.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_M.glsl";
     };
     bindings = {
-      "Ctrl+j" = "script-message chat-hidden";
+      "Ctrl+j" = "script-message load-chat";
 
       WHEEL_UP = "add volume 1";
       WHEEL_DOWN = "add volume -1";
