@@ -7,8 +7,13 @@
       videoclip
       thumbfast
       uosc
+      youtube-chat
     ];
     scriptOpts = {
+      mpv-youtube-chat = {
+        auto-load = "yes";
+        anchor = 9;
+      };
       sponsorblock-minimal = {
         sponsorblock_minimal-server = "https://sponsor.ajay.app/api/skipSegments";
         sponsorblock_minimal-categories = [ "sponsor" ];
@@ -24,10 +29,7 @@
 
       thumbfast = {
         network = "yes";
-        autogenerate = "yes";
         hwdec = "yes";
-        direct_io = "yes";
-        worker_count = "8";
       };
     };
     config = {
@@ -37,12 +39,9 @@
       cache-secs = "600";
       cache-pause = "no";
 
-      hwdec = "auto-safe";
-      hwdec-codecs = "vulkan";
-
+      hwdec = "auto";
       vo = "gpu-next";
-      gpu-api = "vulkan";
-      gpu-context = "waylandvk";
+      gpu-context = "wayland";
 
       fs = "yes";
       osc = "no";
@@ -51,6 +50,8 @@
       glsl-shaders = "${pkgs.anime4k}/Anime4K_Clamp_Highlights.glsl:${pkgs.anime4k}/Anime4K_Restore_CNN_VL.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_VL.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x2.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x4.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_M.glsl";
     };
     bindings = {
+      "Ctrl+j" = "script-message chat-hidden";
+
       WHEEL_UP = "add volume 1";
       WHEEL_DOWN = "add volume -1";
       "Shift+WHEEL_UP" = "add volume 5";
