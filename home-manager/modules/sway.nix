@@ -378,10 +378,8 @@ in
     '';
 
     enable = true;
-    config = rec {
-      inherit terminal;
+    config = {
       startup = [
-        { command = terminal; }
         { command = "belphegor"; }
         { command = "import-gsettings"; always = true; }
       ];
