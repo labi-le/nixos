@@ -12,6 +12,7 @@ in
 {
   home.packages = with pkgs; [
     jetbrains.phpstorm
+    jetbrains.clion
     golandCustomDelve
   ];
 }
