@@ -74,7 +74,6 @@
           home-manager.nixosModules.home-manager
           {
             home-manager.users.labile = import ./home-manager/home.nix;
-            home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.sharedModules = [ ];
             home-manager.backupFileExtension = "hm-backup";
