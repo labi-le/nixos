@@ -66,5 +66,6 @@ with pkgs;
 
   element-desktop
   ayugram-desktop
+  skypeforlinux
 ]
 

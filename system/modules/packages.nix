@@ -60,6 +60,8 @@ in
 
       pgcli
       ranger
+
+      nix-tree
     ] ++ optionals cfg.forDesktop desktopPackages
     ++ optionals cfg.forServer serverPackages;
 
