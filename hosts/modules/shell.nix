@@ -32,6 +32,7 @@
         "zsh-interactive-cd"
         "ssh"
         "git-auto-fetch"
+        "git"
       ];
     };
     enableCompletion = true;
