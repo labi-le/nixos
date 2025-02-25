@@ -5,7 +5,6 @@
     ./wofi.nix
     ./mako.nix
     ./git.nix
-    ./ide.nix
     ./alacritty.nix
     ./theme.nix
     ./ssh.nix

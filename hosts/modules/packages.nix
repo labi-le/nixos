@@ -6,20 +6,28 @@ let
   cfg = config.packages;
   desktopPackages = import ./packages-desktop.nix { inherit pkgs; };
   serverPackages = import ./packages-server.nix { inherit pkgs; };
+  devPackages = import ./packages-dev.nix { inherit pkgs; };
 in
 {
   options.packages = {
-    forServer = mkOption {
+    server = mkOption {
       type = types.bool;
       default = false;
       description = mdDoc "Enable server-specific packages.";
     };
 
-    forDesktop = mkOption {
+    desktop = mkOption {
       type = types.bool;
       default = false;
       description = mdDoc "Enable desktop-specific packages.";
     };
+
+    dev = mkOption {
+      type = types.bool;
+      default = false;
+      description = mdDoc "Enable dev-specific packages.";
+    };
+
   };
 
   config = {
@@ -39,7 +47,6 @@ in
       mtr
       inetutils
       iperf3
-      ipcalc
 
       alacritty
       imv
@@ -52,20 +59,17 @@ in
       psmisc # killall
       ncurses
       sshfs
-      fselect
 
       yt-dlp
 
       gdu
 
-      pgcli
-      ranger
-
       nix-tree
-    ] ++ optionals cfg.forDesktop desktopPackages
-    ++ optionals cfg.forServer serverPackages;
+    ] ++ optionals cfg.desktop desktopPackages
+    ++ optionals cfg.server serverPackages
+    ++ optionals cfg.dev devPackages;
 
-    fonts.packages = with pkgs; optionals cfg.forDesktop [
+    fonts.packages = with pkgs; optionals cfg.desktop [
       dejavu_fonts
       jetbrains-mono
       font-awesome
@@ -73,7 +77,6 @@ in
       noto-fonts-emoji
     ];
   };
-
 
 }
 

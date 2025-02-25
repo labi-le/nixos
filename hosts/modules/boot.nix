@@ -1,13 +1,6 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
-  # boot.loader.systemd-boot.enable = true;
-  # boot.loader.systemd-boot.configurationLimit = 3;
-  # boot.loader.efi.canTouchEfiVariables = true;
-  # boot.loader.efi.efiSysMountPoint = "/boot";
-  # boot.tmp.cleanOnBoot = true;
-  # boot.plymouth = {
-  #   enable = true;
   boot = {
     loader = {
       systemd-boot = {
@@ -22,16 +15,6 @@
     tmp = {
       cleanOnBoot = true;
     };
-    plymouth = {
-      enable = true;
-      theme = "red_loader";
-      themePackages = with pkgs; [
-        (adi1090x-plymouth-themes.override {
-          selected_themes = [ "red_loader" ];
-        })
-      ];
-    };
-
     consoleLogLevel = 0;
     initrd.verbose = false;
     kernelParams = [
