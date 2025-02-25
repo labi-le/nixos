@@ -47,12 +47,12 @@
         ayugram-desktop = ayugram-desktop.packages.${system}.ayugram-desktop;
       };
 
-      defaultConfiguration = ./system/configuration.nix;
+      defaultConfiguration = ./hosts/configuration.nix;
 
       mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {
         modules = [
           configuration
-          ./system/hardware-${hostname}.nix
+          ./hosts/hardware-${hostname}.nix
           { networking.hostName = hostname; }
           (
             { config, pkgs, ... }: {
@@ -84,9 +84,9 @@
     {
       nixosConfigurations = {
         pc = mkSystem "pc" defaultConfiguration;
-        fx516 = mkSystem "fx516" ./system/configuration-fx516.nix;
+        fx516 = mkSystem "fx516" ./hosts/configuration-fx516.nix;
         thinkbook = mkSystem "thinkbook" defaultConfiguration;
-        server = mkSystem "server" ./system/configuration-server.nix;
+        server = mkSystem "server" ./hosts/configuration-server.nix;
       };
     };
 }
