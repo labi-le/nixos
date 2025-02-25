@@ -25,27 +25,9 @@
     , ayugram-desktop
     , chaotic
     , ...
-    }:
+    }@inputs:
     let
       system = "x86_64-linux";
-      overlay-stable = final: prev: {
-        stable = import nixpkgs-stable {
-          inherit system;
-          config.allowUnfree = true;
-        };
-      };
-
-      overlay-nix-gaming = final: prev: {
-        nix-gaming = nix-gaming.packages.${system};
-      };
-
-      overlay-belphegor = final: prev: {
-        belphegor = belphegor.packages.${system}.default;
-      };
-
-      overlay-ayugram-desktop = final: prev: {
-        ayugram-desktop = ayugram-desktop.packages.${system}.ayugram-desktop;
-      };
 
       defaultConfiguration = ./hosts/configuration.nix;
 
@@ -56,12 +38,7 @@
           { networking.hostName = hostname; }
           (
             { config, pkgs, ... }: {
-              nixpkgs.overlays = [
-                overlay-stable
-                overlay-nix-gaming
-                overlay-belphegor
-                overlay-ayugram-desktop
-              ];
+              nixpkgs.overlays = import ./overlays.nix { inherit inputs system; };
 
               nixpkgs.config = {
                 allowUnfree = true;
