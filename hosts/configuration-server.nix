@@ -3,7 +3,10 @@
 {
   imports =
     [
-      ./modules/default-server.nix
+      ./modules/base.nix
+      ./modules/nginx.nix
+      ./modules/drive.nix
+      ./modules/kernel-zen.nix
     ];
 
   # Configure keymap in X11
@@ -30,6 +33,6 @@
   nix.gc.automatic = true;
   nix.gc.dates = "daily";
 
-  packages.forServer = true;
+  packages = { server = true; };
 }
 

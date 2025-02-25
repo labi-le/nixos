@@ -4,13 +4,9 @@ with pkgs;
 [
   obsidian
   vesktop
-  dbeaver-bin
-  notepad-next
-  stable.openfortivpn
   libreoffice-qt6-still
   glib
   gsettings-desktop-schemas
-  ngrok
   postman
   libnotify
   home-manager
@@ -38,15 +34,12 @@ with pkgs;
   wayshot
   grim
   brightnessctl
-  stable.wf-recorder
+  wf-recorder
 
   (callPackage ../../pkgs/wl-uploader.nix { })
   belphegor
-  (callPackage ../../pkgs/ea-disable-overlay.nix { })
 
   google-chrome
-  chromium
-  thunderbird
 
   zoom-us
 
@@ -64,8 +57,6 @@ with pkgs;
   pwvucontrol
   alsa-utils
 
-  element-desktop
   ayugram-desktop
-  skypeforlinux
 ]
 
