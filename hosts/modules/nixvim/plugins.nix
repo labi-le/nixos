@@ -20,6 +20,7 @@
       comment.enable = true;
       indent-blankline.enable = true;
       lsp-lines.enable = true;
+      bufferline.enable = true;
 
       telescope = {
         enable = true;
