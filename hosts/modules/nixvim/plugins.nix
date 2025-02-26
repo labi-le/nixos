@@ -2,7 +2,7 @@
 
 {
   programs.nixvim = {
-    extraPlugins = with pkgs; [ vimPlugins.vim-visual-multi ];
+
     plugins = {
       lsp = {
         enable = true;
@@ -21,6 +21,16 @@
       indent-blankline.enable = true;
       lsp-lines.enable = true;
 
+      telescope = {
+        enable = true;
+      };
+      web-devicons.enable = true;
+
     };
+    extraPlugins = with pkgs; [
+      vimPlugins.vim-visual-multi
+    ];
+
+
   };
 }
