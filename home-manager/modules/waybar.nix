@@ -10,8 +10,8 @@ in
     settings.common.backlight = {
       format = "{icon} {percent}%";
       format-icons = [
-        ""
-        ""
+        " "
+        " "
       ];
       on-scroll-down = "${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 1%-";
       on-scroll-up = "${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +1%";
@@ -24,11 +24,11 @@ in
       format-critical = "<span size='13000' foreground='#E38C8F'>{icon}</span> {capacity}%";
       format-full = "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%";
       format-icons = [
-        ""
-        ""
-        ""
-        ""
-        ""
+        " "
+        " "
+        " "
+        " "
+        " "
       ];
       format-plugged = "<span size='13000' foreground='#B1E3AD'> </span>{capacity}%";
       format-warning = "<span size='13000' foreground='#B1E3AD'>{icon}</span> {capacity}%";
@@ -40,7 +40,7 @@ in
     };
 
     settings.common.clock = {
-      format = " {:%a %d %H:%M}";
+      format = "{:%a %d %H:%M}";
       tooltip-format = ''
         <big>{:%Y %B}</big>
         <tt><small>{calendar}</small></tt>'';
@@ -57,14 +57,14 @@ in
       format = "mem {}%";
     };
     settings.common.disk = {
-      format = "nvme: {free}/{total}";
+      format = "nvme {free}/{total}";
     };
     settings.common.modules-center = [ "custom/spotify" ];
     settings.common.modules-left = [ "sway/workspaces" ];
     settings.common.modules-right = [
       "network"
       "custom/vpn"
-      "disk"
+      # "disk"
       "memory"
       "cpu"
       "pulseaudio"
@@ -86,9 +86,9 @@ in
       format = "<span size='13000' foreground='#EBDDAA'>{icon}</span> {volume}% {format_source}";
       format-bluetooth = "<span size='13000' foreground='#EBDDAA'>{icon} </span> {volume}%";
       format-icons = {
-        default = [ "" "" ];
+        default = [ " " " " ];
       };
-      format-muted = "<span size='14000' foreground='#EBDDAA'></span> Muted";
+      format-muted = "<span size='14000' foreground='#EBDDAA'> </span> Muted";
 
       on-click = "${pkgs.pulseaudio}/bin/pactl set-sink-mute @DEFAULT_SINK@ toggle";
       on-click-middle = "${pkgs.pavucontrol}/bin/pavucontrol";
@@ -96,7 +96,7 @@ in
       on-scroll-down = "${pkgs.pulseaudio}/bin/pactl set-sink-volume @DEFAULT_SINK@ -1%";
 
       on-click-right = "${pkgs.pulseaudio}/bin/pactl set-source-mute @DEFAULT_SOURCE@ toggle";
-      format-source-muted = "";
+      format-source-muted = " ";
       format-source = "";
 
       ignored-sinks = [ "Easy Effects Sink" ];
