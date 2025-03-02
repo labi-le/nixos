@@ -70,13 +70,18 @@ in
     ++ optionals cfg.server serverPackages
     ++ optionals cfg.dev devPackages;
 
-    fonts.packages = with pkgs; optionals cfg.desktop [
-      dejavu_fonts
-      jetbrains-mono
-      font-awesome
-      noto-fonts
-      noto-fonts-emoji
-    ];
+    fonts = {
+      enableDefaultPackages = true;
+      packages = with pkgs; optionals cfg.desktop [
+        nerd-fonts.dejavu-sans-mono
+      ];
+      # fontconfig = {
+      #   defaultFonts = {
+      #     monospace = [ "DejaVu Sans Mono" ];
+      #   };
+      #
+      # };
+    };
   };
 
 }
