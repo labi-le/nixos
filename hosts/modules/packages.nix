@@ -65,6 +65,7 @@ in
       gdu
 
       nix-tree
+      nix-prefetch-git
     ] ++ optionals cfg.desktop desktopPackages
     ++ optionals cfg.server serverPackages
     ++ optionals cfg.dev devPackages;
