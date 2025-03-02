@@ -13,6 +13,7 @@
     belphegor.url = "github:labi-le/belphegor";
     ayugram-desktop.url = "github:/ayugram-port/ayugram-desktop/release?submodules=1";
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
+    spicetify-nix.url = "github:Gerg-L/spicetify-nix";
   };
 
   outputs =
@@ -24,6 +25,7 @@
     , belphegor
     , ayugram-desktop
     , chaotic
+    , spicetify-nix
     , ...
     }@inputs:
     let
@@ -32,6 +34,7 @@
       defaultConfiguration = ./hosts/configuration.nix;
 
       mkSystem = hostname: configuration: nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; };
         modules = [
           configuration
           ./hosts/hardware-${hostname}.nix
@@ -47,6 +50,8 @@
           )
           nixvim.nixosModules.nixvim
           chaotic.nixosModules.default
+          spicetify-nix.nixosModules.default
+
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
           {

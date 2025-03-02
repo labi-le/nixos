@@ -12,6 +12,7 @@
       ./modules/sshfs.nix
       ./modules/thunar.nix
       ./modules/kernel-cachyos.nix
+      ./modules/spicetify.nix
     ];
 
 
