@@ -4,6 +4,7 @@ with pkgs;
 [
   go
   gcc
+  rustup
   golangci-lint
   graphviz
   pgcli
@@ -21,7 +22,7 @@ with pkgs;
   vulkan-tools
   radeontop
 
-  # Пакеты из home-manager/modules/ide.nix
+  jetbrains.rust-rover
   jetbrains.phpstorm
   jetbrains.clion
   (jetbrains.goland.overrideAttrs (oldAttrs: {
