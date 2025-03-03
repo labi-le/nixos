@@ -48,6 +48,7 @@
               };
             }
           )
+          ./cache.nix
           nixvim.nixosModules.nixvim
           chaotic.nixosModules.default
           spicetify-nix.nixosModules.default
