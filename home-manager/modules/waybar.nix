@@ -3,7 +3,7 @@ let
   first = "DP-1";
   second = "DP-2";
   workspacesConfig = {
-    all-outputs = true;
+    all-outputs = false;
     disable-scroll = true;
     format = "{icon}";
     format-icons = {
