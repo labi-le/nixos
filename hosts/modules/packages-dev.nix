@@ -2,6 +2,7 @@
 
 with pkgs;
 [
+  cmake
   go
   gcc
   rustup
