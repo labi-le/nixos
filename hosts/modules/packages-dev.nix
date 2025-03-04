@@ -9,6 +9,8 @@ with pkgs;
   golangci-lint
   graphviz
   pgcli
+  postman
+  zoom-us
 
   wireshark
   (php.buildEnv {

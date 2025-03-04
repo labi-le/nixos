@@ -7,18 +7,12 @@ with pkgs;
   libreoffice-qt6-still
   glib
   gsettings-desktop-schemas
-  postman
   libnotify
   home-manager
   ipset
   xdg-utils
   pavucontrol
   dconf
-
-  go
-  gcc
-  golangci-lint
-  graphviz
 
   wireshark
   (php.buildEnv {
@@ -41,13 +35,7 @@ with pkgs;
 
   google-chrome
 
-  zoom-us
-
   pcsx2
-  mangohud
-  vulkan-tools
-  radeontop
-
   qbittorrent
 
   audacity
