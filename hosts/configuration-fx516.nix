@@ -20,7 +20,9 @@
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  hardware.graphics.enable = true;
+  hardware = {
+    graphics.enable = true;
+  };
 
   programs.gnupg.agent = {
     enable = true;
@@ -28,7 +30,10 @@
   };
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services = {
+    openssh.enable = true;
+    hardware.bolt.enable = true;
+  };
 
   system.stateVersion = "24.11";
 
