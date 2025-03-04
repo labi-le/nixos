@@ -13,6 +13,7 @@
       ./modules/thunar.nix
       ./modules/kernel-cachyos.nix
       ./modules/spicetify.nix
+      ./modules/thunderbolt.nix
     ];
 
 

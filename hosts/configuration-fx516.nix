@@ -10,6 +10,7 @@
       ./modules/sshfs.nix
       ./modules/thunar.nix
       ./modules/kernel-zen.nix
+      ./modules/thunderbolt.nix
     ];
 
 
@@ -30,10 +31,7 @@
   };
 
   # Enable the OpenSSH daemon.
-  services = {
-    openssh.enable = true;
-    hardware.bolt.enable = true;
-  };
+  services.openssh.enable = true;
 
   system.stateVersion = "24.11";
 
