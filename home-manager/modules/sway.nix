@@ -10,7 +10,8 @@ let
   filemanager = "thunar";
 
   left = "DP-1";
-  right = "DP-2";
+  center = "DP-2";
+  right = "DP-3";
 
 
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
@@ -30,24 +31,32 @@ in
       set $file_workspace 6
       set $work_workspace 7
       set $private_workspace 8
- 
-      workspace $develop_workspace output ${right}
+
+
+      workspace $develop_workspace output ${center}
+      workspace $private_workspace output ${center}
+      workspace $file_workspace output ${left}
       workspace $social_workspace output ${right}
       workspace $terminal_workspace output ${left}
       workspace $browser_workspace output ${left}
-      workspace $game_workspace output ${left}
+      workspace $game_workspace output ${center}
  
       output ${left} {
-          mode --custom 1920x1080@165Hz
+          mode 2560x1440@179.999Hz
           pos 0 0
+      } 
+ 
+      output ${center} {
+          mode --custom 1920x1080@165Hz
+          pos 2560 0
       } 
  
       output ${right} {
           mode --custom 2560x1440@83Hz
-          pos 1920 0
-          #scale 1.1
-          #scale_filter smart
+          transform 270
+          pos 4480 0
       } 
+
       # only enable this if every app you use is compatible with wayland
       xwayland enable
  
