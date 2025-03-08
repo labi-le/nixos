@@ -41,4 +41,23 @@
   packages = { desktop = true; dev = true; };
 
   networking.interfaces.enp37s0.wakeOnLan.enable = true;
+
+  monitors = {
+    "DP-1" = {
+      mode = "2560x1440@179.999Hz";
+      geometry = "0 0";
+      position = "left";
+    };
+    "DP-2" = {
+      mode = "1920x1080@165Hz";
+      geometry = "2560 0";
+      position = "center";
+    };
+    "DP-3" = {
+      mode = "--custom 2560x1440@83Hz";
+      transform = "270";
+      geometry = "4480 0";
+      position = "right";
+    };
+  };
 }
