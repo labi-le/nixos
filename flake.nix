@@ -56,7 +56,9 @@
         ] ++ nixpkgs.lib.optionals (hostname != "server") [
           home-manager.nixosModules.home-manager
           {
-            home-manager.users.labile = import ./home-manager/home.nix;
+            home-manager.users.labile = {
+              imports = [ ./home-manager/home.nix ];
+            };
             home-manager.useUserPackages = true;
             home-manager.sharedModules = [ ];
             home-manager.backupFileExtension = "hm-backup";
