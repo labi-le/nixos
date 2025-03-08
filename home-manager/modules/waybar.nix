@@ -1,7 +1,9 @@
 { pkgs, osConfig, ... }:
 let
-  first = builtins.elemAt (builtins.attrNames osConfig.monitors) 0;
-  second = builtins.elemAt (builtins.attrNames osConfig.monitors) 1;
+  monitors = builtins.attrNames osConfig.monitors;
+  first = builtins.elemAt monitors 0;
+  second = if (builtins.length monitors) > 1 then builtins.elemAt monitors 1 else null;
+
   workspacesConfig = {
     all-outputs = false;
     disable-scroll = true;
@@ -21,7 +23,7 @@ in
     enable = true;
     settings = [
       {
-        output = second;
+        output = first;
         height = 15;
         position = "bottom";
         modules-left = [ "sway/workspaces" ];
@@ -98,8 +100,9 @@ in
           ignored-sinks = [ "Easy Effects Sink" ];
         };
       }
+    ] ++ pkgs.lib.optionals (second != null) [
       {
-        output = first;
+        output = second;
         height = 10;
         position = "bottom";
         modules-left = [ "sway/workspaces" ];

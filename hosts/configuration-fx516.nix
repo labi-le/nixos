@@ -41,5 +41,13 @@
 
   network.injectHosts = true;
   packages.desktop = true;
+
+  monitors = {
+    "eDP-1" = {
+      mode = "1920x1080@144Hz";
+      geometry = "0 0";
+      position = "center";
+    };
+  };
 }
 
