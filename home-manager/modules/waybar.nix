@@ -1,21 +1,19 @@
-{ pkgs, ... }:
+{ pkgs, osConfig, ... }:
 let
-  first = "DP-1";
-  second = "DP-2";
+  first = builtins.elemAt (builtins.attrNames osConfig.monitors) 0;
+  second = builtins.elemAt (builtins.attrNames osConfig.monitors) 1;
   workspacesConfig = {
     all-outputs = false;
     disable-scroll = true;
     format = "{icon}";
-    format-icons = {
-      "1" = "1";
-      "2" = "2";
-      "3" = "3";
-      "4" = "4";
-      "5" = "5";
-      "6" = "6";
-      "7" = "7";
-      "8" = "8";
-    };
+    format-icons = builtins.listToAttrs (
+      map
+        (n: { name = n; value = n; })
+        (
+          map toString (builtins.genList (x: x + 1) 8)
+        )
+    );
+
   };
 in
 {
