@@ -20,5 +20,6 @@
     alias rr='ranger'
     alias ddu='docker update --restart=no $(docker ps -qa)'
     alias dsa='docker stop $(docker ps -qa)'
+    alias lz='lazygit'
   '';
 }

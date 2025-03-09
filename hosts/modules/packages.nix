@@ -52,6 +52,7 @@ in
       imv
       btop
       git
+      lazygit
 
       gparted
       f2fs-tools
