@@ -10,7 +10,6 @@ with pkgs;
   graphviz
   pgcli
   postman
-  zoom-us
 
   wireshark
   (php.buildEnv {

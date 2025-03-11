@@ -14,6 +14,7 @@
       ./modules/kernel-cachyos.nix
       ./modules/spicetify.nix
       ./modules/thunderbolt.nix
+      ./modules/firefox.nix
     ];
 
 
