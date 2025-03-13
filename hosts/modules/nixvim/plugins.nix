@@ -1,4 +1,4 @@
-{ lib, inputs, pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   programs.nixvim = {
@@ -11,8 +11,8 @@
             settings = {
               nix = {
                 flake = {
-                  autoEvalInputs = true;
-                  autoArchive = true;
+                  autoEvalInputs = false;
+                  autoArchive = false;
                 };
               };
             };
@@ -21,7 +21,7 @@
             enable = true;
             autostart = true;
             settings = {
-              nixpkgs.expr = ''import "${inputs.nixpkgs.outPath}" { }'';
+              nixpkgs.expr = "import <nixpkgs> { }";
               formatting.command = [ "${lib.getExe pkgs.nixfmt-classic}" ];
               options =
                 let flake = ''(builtins.getFlake "github:labi-le/nixos")'';
@@ -31,8 +31,8 @@
                   nixvim.expr = "${flake}.packages.${pkgs.system}.nvim.options";
                 };
             };
-
           };
+
           gopls.enable = true;
           phpactor.enable = true;
           pyright.enable = true;
