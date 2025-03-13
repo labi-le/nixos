@@ -12,7 +12,8 @@ let
   right = "DP-3";
 
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
-in {
+in
+{
   wayland.windowManager.sway = {
     extraConfig = ''
       seat seat0 xcursor_theme "Adwaita" 26 
@@ -382,13 +383,15 @@ in {
         hiddenState = "hide";
       }];
 
-      output = lib.mapAttrs (name: monitor:
-        {
-          mode = monitor.mode;
-          pos = monitor.geometry;
-        } // lib.optionalAttrs (monitor.transform != null) {
-          transform = monitor.transform;
-        }) osConfig.monitors;
+      output = lib.mapAttrs
+        (name: monitor:
+          {
+            mode = monitor.mode;
+            pos = monitor.geometry;
+          } // lib.optionalAttrs (monitor.transform != null) {
+            transform = monitor.transform;
+          })
+        osConfig.monitors;
 
     };
     wrapperFeatures.gtk = true;
