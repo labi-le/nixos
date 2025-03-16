@@ -334,7 +334,7 @@ in
         }
         {
           workspace = workspaces.browser;
-          output = left;
+          output = center;
         }
         {
           workspace = workspaces.social;

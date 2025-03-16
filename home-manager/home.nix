@@ -6,7 +6,6 @@ let
   homeDirectory = "/home/labile";
 
 in
-
 {
   imports = [ ./modules ];
   # Home Manager needs a bit of information about you and the paths it should
@@ -27,9 +26,7 @@ in
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
-  home.packages = with pkgs; [
-    pulseaudio
-  ];
+  home.packages = with pkgs; [ pulseaudio ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
@@ -38,15 +35,11 @@ in
   };
 
   home.sessionVariables = {
-    EDITOR = "nvim";
     SDL_VIDEODRIVER = "wayland";
     XDG_SESSION_TYPE = "wayland";
     XDG_CURRENT_DESKTOP = "sway";
-    QT_QPA_PLATFORM = "wayland";
-    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
   };
 
-  # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
   home.enableNixpkgsReleaseCheck = false;
   nixpkgs = {

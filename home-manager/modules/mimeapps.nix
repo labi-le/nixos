@@ -1,10 +1,9 @@
 { ... }:
 
 {
+
   xdg = {
-    configFile = {
-      "mimeapps.list".force = true;
-    };
+    configFile = { "mimeapps.list".force = true; };
     mimeApps =
       let
         discord = "vesktop.desktop";
@@ -16,10 +15,12 @@
         archive-manager = "xarchiver.desktop";
         browser = "google-chrome.desktop";
         pdf = "org.pwmt.zathura.desktop";
+        terminal = "Alacritty.desktop";
       in
       {
         enable = true;
         associations.added = {
+          "x-scheme-handler/terminal" = [ terminal ];
           "application/pdf" = [ browser ];
           "application/vnd.ms-publisher" = [ editor ];
           "application/x-extension-htm" = [ browser ];
@@ -67,6 +68,7 @@
           "application/*tar" = [ archive-manager ];
         };
         defaultApplications = {
+          "x-scheme-handler/terminal" = [ terminal ];
           "application/pdf" = [ pdf ];
           "application/vnd.ms-publisher" = [ editor ];
           "application/x-extension-htm" = [ browser ];

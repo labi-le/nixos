@@ -40,6 +40,7 @@ in
       jq
       openssl
       ranger
+      yazi
 
       dig
       nmap
