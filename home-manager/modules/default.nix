@@ -11,6 +11,8 @@
     ./mimeapps.nix
     ./mpv.nix
     ./easyeffects.nix
-    ./lf.nix
+    ./yazi.nix
+    ./thunar.nix
   ];
+
 }
