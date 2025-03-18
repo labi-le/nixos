@@ -16,15 +16,22 @@
     ./modules/firefox.nix
   ];
 
-  services.xserver.xkb = { layout = "us"; };
+  services.xserver.xkb = {
+    layout = "us";
+  };
 
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.rocmSupport = true;
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   hardware.graphics.enable = true;
 
-  programs.gnupg.agent = { enable = true; };
+  programs.gnupg.agent = {
+    enable = true;
+  };
   programs.dconf.enable = true;
 
   system.stateVersion = "24.11";

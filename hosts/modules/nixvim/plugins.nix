@@ -1,102 +1,41 @@
-{ lib, pkgs, ... }:
-
+{ pkgs, ... }:
 {
+
+  imports = [
+    ./barbar.nix
+    ./telescope.nix
+    ./cmp.nix
+    ./lsp.nix
+    ./conform.nix
+  ];
   programs.nixvim = {
     plugins = {
-      lsp = {
+      friendly-snippets.enable = true;
+      luasnip = {
         enable = true;
-        servers = {
-          nil_ls = {
-            enable = true;
-            settings = {
-              nix = {
-                flake = {
-                  autoEvalInputs = false;
-                  autoArchive = false;
-                };
-              };
-            };
-          };
-          nixd = {
-            enable = true;
-            autostart = true;
-            settings = {
-              nixpkgs.expr = "import <nixpkgs> { }";
-              formatting.command = [ "${lib.getExe pkgs.nixfmt-classic}" ];
-              options =
-                let flake = ''(builtins.getFlake "github:labi-le/nixos")'';
-                in {
-                  home-manager.expr =
-                    ''${flake}.homeConfigurations."pc".options'';
-                  nixvim.expr = "${flake}.packages.${pkgs.system}.nvim.options";
-                };
-            };
-          };
-
-          gopls.enable = true;
-          phpactor.enable = true;
-          pyright.enable = true;
-        };
-
-      };
-      cmp = {
-        enable = true;
-        autoEnableSources = true;
-        settings = {
-          sources = [
-            { name = "nvim_lsp"; }
-            { name = "path"; }
-            { name = "buffer"; }
-            { name = "luasnip"; }
-          ];
-
-          mapping = {
-            "<C-Space>" = ''
-              cmp.mapping(function(_)
-              if cmp.visible() then
-              cmp.abort()
-              else
-              cmp.complete()
-              end
-              end, { 'i', 'c' })
-            '';
-            "<Up>" = "cmp.mapping.select_prev_item()";
-            "<Down>" = "cmp.mapping.select_next_item()";
-            "<CR>" = "cmp.mapping.confirm({ select = true })";
-            "<Tab>" = ''
-              cmp.mapping(function(fallback)
-              if cmp.visible() then
-              cmp.select_next_item()
-              else
-              fallback()
-              end
-              end, { 'i', 's' })'';
-          };
-
-          window = {
-            completion = {
-              border = "rounded";
-              winhighlight =
-                "Normal:Pmenu,FloatBorder:Pmenu,CursorLine:PmenuSel,Search:None";
-            };
-          };
-        };
       };
       lsp-format.enable = true;
-      transparent = { enable = true; };
+      transparent = {
+        enable = true;
+      };
       nix.enable = true;
       auto-save.enable = true;
       auto-session.enable = true;
       comment.enable = true;
-      indent-blankline.enable = true;
-      lsp-lines.enable = true;
-      bufferline.enable = true;
-
-      telescope = { enable = true; };
+      # double shift menu
       web-devicons.enable = true;
+      treesitter.enable = true;
+      lsp-lines.enable = true;
 
     };
-    extraPlugins = with pkgs; [ vimPlugins.vim-visual-multi ];
+    extraPlugins = with pkgs; [
+      vimPlugins.vim-visual-multi
+      vimPlugins.tiny-inline-diagnostic-nvim
+    ];
+    extraPackages = with pkgs; [
+      ripgrep
+      fd
+    ];
 
   };
 
