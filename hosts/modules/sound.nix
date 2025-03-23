@@ -23,7 +23,9 @@
     };
   };
 
-  environment.systemPackages = with pkgs; [ pulseaudio pipecontrol ];
+  environment.systemPackages = with pkgs; [
+    pulseaudio
+  ];
 
   services.actkbd =
     let
@@ -34,14 +36,35 @@
       enable = true;
       bindings = [
         # "Mute" media key
-        { keys = [ 113 ]; events = [ "key" ]; command = "${alsa-utils}/bin/amixer -q set Master toggle"; }
+        {
+          keys = [ 113 ];
+          events = [ "key" ];
+          command = "${alsa-utils}/bin/amixer -q set Master toggle";
+        }
         # "Lower Volume" media key
-        { keys = [ 114 ]; events = [ "key" "rep" ]; command = "${alsa-utils}/bin/amixer -q set Master ${volumeStep}- unmute"; }
+        {
+          keys = [ 114 ];
+          events = [
+            "key"
+            "rep"
+          ];
+          command = "${alsa-utils}/bin/amixer -q set Master ${volumeStep}- unmute";
+        }
         # "Raise Volume" media key
-        { keys = [ 115 ]; events = [ "key" "rep" ]; command = "${alsa-utils}/bin/amixer -q set Master ${volumeStep}+ unmute"; }
+        {
+          keys = [ 115 ];
+          events = [
+            "key"
+            "rep"
+          ];
+          command = "${alsa-utils}/bin/amixer -q set Master ${volumeStep}+ unmute";
+        }
         # "Mic Mute" media key
-        { keys = [ 190 ]; events = [ "key" ]; command = "${alsa-utils}/bin/amixer -q set Capture toggle"; }
+        {
+          keys = [ 190 ];
+          events = [ "key" ];
+          command = "${alsa-utils}/bin/amixer -q set Capture toggle";
+        }
       ];
     };
 }
-
