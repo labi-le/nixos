@@ -12,6 +12,8 @@
     recommendedProxySettings = true;
     recommendedTlsSettings = true;
 
+    statusPage = true;
+
     clientMaxBodySize = "10G";
     commonHttpConfig = "
           map $http_upgrade $connection_upgrade {
