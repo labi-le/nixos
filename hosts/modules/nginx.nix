@@ -6,7 +6,6 @@
   services.logrotate.settings.nginx.enable = false;
 
   services.nginx = {
-
     enable = true;
     recommendedGzipSettings = true;
     recommendedOptimisation = true;
@@ -14,6 +13,12 @@
     recommendedTlsSettings = true;
 
     clientMaxBodySize = "10G";
+    commonHttpConfig = "
+          map $http_upgrade $connection_upgrade {
+          default upgrade;
+          '' close;
+      }
+    ";
     appendHttpConfig = ''
       access_log /var/log/nginx/access.log;
       error_log /var/log/nginx/error.log;
@@ -27,25 +32,36 @@
         forceSSL = true;
         enableACME = true;
       };
-      proxy = addr: base {
-        "/" = {
-          proxyPass = addr;
+      proxy =
+        addr:
+        base {
+          "/" = {
+            proxyPass = addr;
+          };
         };
-      };
     in
     {
       "labile.cc" = proxy "http://127.0.0.1:7004";
-      "cloud.labile.cc" = proxy "http://127.0.0.1:7009";
       "local.labile.cc" = proxy "http://192.168.1.3:8080";
-      "matrix.labile.cc" = proxy "http://127.0.0.1:8008";
       "obsidian.labile.cc" = proxy "http://127.0.0.1:7007";
       "mail.labile.cc" = proxy "http://127.0.0.1:7001";
       "torrent.labile.cc" = proxy "http://127.0.0.1:7000";
       "vaultwarden.labile.cc" = proxy "http://127.0.0.1:7005";
       "sync.labile.cc" = proxy "http://127.0.0.1:7006";
+      "logs.labile.cc" = {
+        locations."/" = {
+          proxyPass = "http://127.0.0.1:8008";
+          proxyWebsockets = true;
+        };
+        forceSSL = true;
+        enableACME = true;
+      };
       "_" = {
         listen = [
-          { addr = "0.0.0.0"; port = 80; }
+          {
+            addr = "0.0.0.0";
+            port = 80;
+          }
         ];
         serverName = "_";
         locations."/" = {
@@ -54,4 +70,3 @@
       };
     };
 }
-
