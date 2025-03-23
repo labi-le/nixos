@@ -1,4 +1,4 @@
-{ config, ... }:
+{ lib, config, ... }:
 {
   services.grafana = {
     enable = true;
@@ -41,6 +41,9 @@
         enabledCollectors = [ "systemd" ];
         enable = true;
       };
+      nginx = {
+        enable = true;
+      };
     };
 
     scrapeConfigs = [
@@ -49,6 +52,22 @@
         static_configs = [
           {
             targets = [ "127.0.0.1:${toString config.services.prometheus.exporters.node.port}" ];
+          }
+        ];
+      }
+      {
+        job_name = "nginx";
+        static_configs = [
+          {
+            targets = [ "127.0.0.1:${toString config.services.prometheus.exporters.nginx.port}" ];
+          }
+        ];
+      }
+      {
+        job_name = "telegraf";
+        static_configs = [
+          {
+            targets = [ "127.0.0.1:9273" ];
           }
         ];
       }
@@ -147,7 +166,7 @@
           job_name = "nginx";
           static_configs = [
             {
-              targets = [ "localhost" ];
+              # targets = [ "localhost" ];
               labels = {
                 job = "nginx";
                 __path__ = "/var/log/nginx/*.log";
