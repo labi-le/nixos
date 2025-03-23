@@ -8,6 +8,13 @@
         "https://mirror.gcr.io"
         "https://huecker.io"
       ];
+      default-ulimits = {
+        nofile = {
+          Name = "nofile";
+          Soft = 65536;
+          Hard = 65536;
+        };
+      };
     };
   };
 
