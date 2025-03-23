@@ -1,4 +1,4 @@
-{ lib, config, ... }:
+{ config, ... }:
 {
   services.grafana = {
     enable = true;
@@ -38,7 +38,19 @@
     exporters = {
       node = {
         port = 3021;
-        enabledCollectors = [ "systemd" ];
+        enabledCollectors = [
+          "systemd"
+          "cpu"
+          "meminfo"
+          "netdev"
+          "diskstats"
+          "filesystem"
+          "loadavg"
+          "stat"
+          "uname"
+          "vmstat"
+          "time"
+        ];
         enable = true;
       };
       nginx = {
