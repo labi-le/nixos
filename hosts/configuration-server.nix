@@ -1,18 +1,16 @@
 { ... }:
 
 {
-  imports =
-    [
-      ./modules/base.nix
-      ./modules/nginx.nix
-      ./modules/drive.nix
-      ./modules/kernel-zen.nix
-    ];
+  imports = [
+    ./modules/base.nix
+    ./modules/nginx.nix
+    ./modules/drive.nix
+    ./modules/kernel-zen.nix
+    ./modules/grafana.nix
+  ];
 
   # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "us";
-  };
+  services.xserver.xkb = { layout = "us"; };
 
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -22,10 +20,7 @@
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
-  programs.gnupg.agent = {
-    enable = true;
-  };
-
+  programs.gnupg.agent = { enable = true; };
 
   system.stateVersion = "24.11";
 
