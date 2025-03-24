@@ -36,11 +36,14 @@
       };
       proxy =
         addr:
-        base {
-          "/" = {
-            proxyPass = addr;
+        let
+          baseCfg = base {
+            "/" = {
+              proxyPass = addr;
+            };
           };
-        };
+        in
+        baseCfg // { kTLS = true; };
     in
     {
       "labile.cc" = proxy "http://127.0.0.1:7004";
