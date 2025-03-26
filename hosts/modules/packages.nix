@@ -1,4 +1,8 @@
-{ config, lib, pkgs, ... }:
+{ config
+, lib
+, pkgs
+, ...
+}:
 
 with lib;
 
@@ -7,6 +11,7 @@ let
   desktopPackages = import ./packages-desktop.nix { inherit pkgs; };
   serverPackages = import ./packages-server.nix { inherit pkgs; };
   devPackages = import ./packages-dev.nix { inherit pkgs; };
+  idePackages = import ./packages-ide.nix { inherit pkgs; };
 in
 {
   options.packages = {
@@ -28,63 +33,68 @@ in
       description = mdDoc "Enable dev-specific packages.";
     };
 
+    ide = mkOption {
+      type = types.bool;
+      default = false;
+      description = mdDoc "Enable dev-specific packages.";
+    };
+
   };
 
   config = {
-    environment.systemPackages = with pkgs; [
-      wget
-      fastfetch
-      gnumake
-      lsof
-      unzip
-      jq
-      openssl
-      ranger
-      yazi
+    environment.systemPackages =
+      with pkgs;
+      [
+        wget
+        fastfetch
+        gnumake
+        lsof
+        unzip
+        jq
+        openssl
+        ranger
+        yazi
 
-      dig
-      nmap
-      tcpdump
-      mtr
-      inetutils
-      iperf3
+        dig
+        nmap
+        tcpdump
+        mtr
+        inetutils
+        iperf3
 
-      alacritty
-      imv
-      btop
-      git
-      lazygit
+        alacritty
+        imv
+        btop
+        git
+        lazygit
 
-      gparted
-      f2fs-tools
+        gparted
+        f2fs-tools
 
-      psmisc # killall
-      ncurses
-      sshfs
+        psmisc # killall
+        ncurses
+        sshfs
 
-      yt-dlp
+        yt-dlp
 
-      gdu
+        gdu
 
-      nix-tree
-      nix-prefetch-git
-    ] ++ optionals cfg.desktop desktopPackages
-    ++ optionals cfg.server serverPackages
-    ++ optionals cfg.dev devPackages;
+        nix-tree
+        nix-prefetch-git
+      ]
+      ++ optionals cfg.desktop desktopPackages
+      ++ optionals cfg.server serverPackages
+      ++ optionals cfg.dev devPackages
+      ++ optionals cfg.ide idePackages;
 
     fonts = {
       enableDefaultPackages = true;
-      packages = with pkgs; optionals cfg.desktop [
-        nerd-fonts.dejavu-sans-mono
-      ];
-      # fontconfig = {
-      #   defaultFonts = {
-      #     monospace = [ "DejaVu Sans Mono" ];
-      #   };
-      #
-      # };
+      packages =
+        with pkgs;
+        optionals cfg.desktop [
+          nerd-fonts.dejavu-sans-mono
+        ];
     };
   };
 
 }
-
