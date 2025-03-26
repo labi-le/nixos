@@ -1,25 +1,26 @@
 { ... }:
 
 {
-  imports =
-    [
-      ./modules/base.nix
-      ./modules/sound.nix
-      ./modules/greeter.nix
-      ./modules/wayland.nix
-      ./modules/sshfs.nix
-      ./modules/thunar.nix
-      ./modules/kernel-zen.nix
-      ./modules/thunderbolt.nix
-    ];
-
+  imports = [
+    ./modules/base.nix
+    ./modules/sound.nix
+    ./modules/greeter.nix
+    ./modules/wayland.nix
+    ./modules/sshfs.nix
+    ./modules/thunar.nix
+    ./modules/kernel-zen.nix
+    ./modules/thunderbolt.nix
+  ];
 
   services.xserver.xkb = {
     layout = "us";
   };
 
   nixpkgs.config.allowUnfree = true;
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   hardware = {
     graphics.enable = true;
@@ -40,7 +41,10 @@
   nix.gc.dates = "daily";
 
   network.injectHosts = true;
-  packages.desktop = true;
+  packages = {
+    desktop = true;
+    dev = true;
+  };
 
   monitors = {
     "eDP-1" = {
@@ -50,4 +54,3 @@
     };
   };
 }
-

@@ -43,6 +43,7 @@
   packages = {
     desktop = true;
     dev = true;
+    ide = true;
   };
 
   networking.interfaces.enp37s0.wakeOnLan.enable = true;
