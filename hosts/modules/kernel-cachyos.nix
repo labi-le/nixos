@@ -6,7 +6,10 @@
     "mitigations=off"
   ];
   boot.kernelPackages = pkgs.linuxPackages_cachyos;
-  boot.blacklistedKernelModules = [ "snd_pcsp" "pcspkr" ];
+  boot.blacklistedKernelModules = [
+    "snd_pcsp"
+    "pcspkr"
+  ];
   services.scx = {
     enable = true;
     scheduler = "scx_rusty";
