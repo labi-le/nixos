@@ -13,6 +13,7 @@
       "input"
       "tun"
       "fuse"
+      "realtime"
     ];
   };
 
