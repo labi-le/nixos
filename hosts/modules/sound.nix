@@ -1,7 +1,11 @@
 { pkgs, ... }:
 
 {
-  security.rtkit.enable = true;
+  security.rtkit.enable = false;
+  musnix = {
+    enable = true;
+    rtcqs.enable = true;
+  };
   services.pipewire = {
     enable = true;
     pulse.enable = true;
