@@ -18,6 +18,6 @@
     ./network
     ./packages.nix
     ./ssh.nix
+    ./builders.nix
   ];
 }
-

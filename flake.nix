@@ -19,6 +19,8 @@
 
     flake-utils.url = "github:numtide/flake-utils";
     musnix.url = "github:musnix/musnix";
+
+    agenix.url = "github:ryantm/agenix";
   };
 
   outputs =
@@ -49,7 +51,7 @@
               }
 
               # Extra Modules
-              ./cache.nix
+              ./settings.nix
               nixvim.nixosModules.nixvim
               chaotic.nixosModules.default
               spicetify-nix.nixosModules.default

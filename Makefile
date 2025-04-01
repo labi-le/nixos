@@ -13,14 +13,13 @@ prepare:
 fix-flake:
 	@git add --intent-to-add .
 
-switch: fmt
+switch:
 	sudo nixos-rebuild switch --fast --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --show-trace
 
 generate-hardware: 
 	@echo "Generating hardware configuration for $(HOSTNAME)"
 	@sudo nixos-generate-config --show-hardware-config > $(HARDWARE_FILE)
 	@echo "Hardware configuration saved to $(HARDWARE_FILE)"
-	@make fmt
 
 fmt:
 	nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt .'
@@ -33,3 +32,36 @@ boot:
 
 cleanup: boot
 	sudo nix-collect-garbage -d && make switch
+
+install-hooks:
+	mkdir -p .git/hooks
+	echo '#!/bin/sh' > .git/hooks/pre-commit
+	echo 'nix-shell -p nixpkgs-fmt --run "nixpkgs-fmt ."' >> .git/hooks/pre-commit
+	chmod +x .git/hooks/pre-commit
+
+.PHONY: dump
+dump:
+	@{ \
+		echo "=== START PROJECT CODE DUMP ==="; \
+		echo ""; \
+		echo "=== PROJECT TREE ==="; \
+		nix run nixpkgs#tree -- . || echo "(tree failed)"; \
+		echo ""; \
+		find . -type f \( \
+			-name "*.go" -o \
+			-name "*.yml" -o \
+			-name "*.yaml" -o \
+			-name "*.proto" -o \
+			-name "*.mod" -o \
+			-name "*.sum" -o \
+			-name "*.nix" -o \
+			-name "Makefile" \
+		\) | sort | while read file; do \
+			echo "=== FILE: $$file ==="; \
+			echo "=== START CODE ==="; \
+			cat "$$file"; \
+			echo "=== END CODE ==="; \
+			echo ""; \
+		done; \
+	} | wl-copy
+
