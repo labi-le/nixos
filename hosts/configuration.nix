@@ -16,17 +16,19 @@
     ./modules/radeon.nix
   ];
 
+  builders = {
+    enableRemoteBuilding = true;
+    remoteBuilders = {
+      mainServer = {
+        host = "192.168.1.2";
+        keyFile = "/home/labile/.ssh/nix-builder";
+      };
+    };
+  };
+
   services.xserver.xkb = {
     layout = "us";
   };
-
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.rocmSupport = true;
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
-
   hardware.graphics.enable = true;
 
   programs.gnupg.agent = {
