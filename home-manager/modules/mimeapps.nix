@@ -1,16 +1,17 @@
 { ... }:
 
 {
-
   xdg = {
-    configFile = { "mimeapps.list".force = true; };
+    configFile = {
+      "mimeapps.list".force = true;
+    };
     mimeApps =
       let
         discord = "vesktop.desktop";
         image-editor = "gimp.desktop";
         imv = "imv.desktop";
         mediaplayer = "mpv.desktop";
-        editor = "nvim.desktop";
+        editor = "neovide.desktop";
         filemanager = "thunar.desktop";
         archive-manager = "xarchiver.desktop";
         browser = "google-chrome.desktop";
