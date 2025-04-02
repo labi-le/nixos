@@ -1,7 +1,10 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
-  imports = [ ./plugins.nix ./keymaps.nix ];
+  imports = [
+    ./plugins.nix
+    ./keymaps.nix
+  ];
   programs.nixvim = {
     enable = true;
     colorschemes.catppuccin.enable = true;
@@ -14,4 +17,6 @@
       cursorline = true;
     };
   };
+
+  environment.systemPackages = with pkgs; [ neovide ];
 }
