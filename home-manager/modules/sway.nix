@@ -1,4 +1,9 @@
-{ lib, osConfig, pkgs, ... }:
+{
+  lib,
+  osConfig,
+  pkgs,
+  ...
+}:
 
 let
   browser = "google-chrome-stable";
@@ -11,8 +16,8 @@ let
   center = "DP-2";
   right = "DP-3";
 
-  common = "Mod1";
-  additional = "Mod4";
+  common = osConfig.hotkeys.common;
+  additional = osConfig.hotkeys.additional;
 
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
 
@@ -36,11 +41,13 @@ in
       modifier = common;
       terminal = terminal;
       menu = menu;
-      bars = [{
-        command = bar;
-        mode = "hide";
-        hiddenState = "hide";
-      }];
+      bars = [
+        {
+          command = bar;
+          mode = "hide";
+          hiddenState = "hide";
+        }
+      ];
       startup = [
         { command = "belphegor"; }
         {
@@ -48,8 +55,7 @@ in
           always = true;
         }
         {
-          command =
-            "${pkgs.swaybg}/bin/swaybg -i ~/Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
+          command = "${pkgs.swaybg}/bin/swaybg -i ~/Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
         }
       ];
       modes = {
@@ -62,15 +68,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (name: monitor:
-          {
-            mode = monitor.mode;
-            pos = monitor.geometry;
-          } // lib.optionalAttrs (monitor.transform != null) {
-            transform = monitor.transform;
-          })
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -125,8 +132,8 @@ in
           { class = "Code"; }
           { class = "Postman"; }
         ];
-        ${workspaces.game} = [{ class = "steam"; }];
-        ${workspaces.private} = [{ app_id = "thunderbird"; }];
+        ${workspaces.game} = [ { class = "steam"; } ];
+        ${workspaces.private} = [ { app_id = "thunderbird"; } ];
       };
       window.commands = [
         {
@@ -137,70 +144,94 @@ in
           };
         }
         {
-          command =
-            "move to workspace ${workspaces.browser}; inhibit_idle fullscreen";
-          criteria = { instance = "google-chrome"; };
+          command = "move to workspace ${workspaces.browser}; inhibit_idle fullscreen";
+          criteria = {
+            instance = "google-chrome";
+          };
         }
         {
-          command =
-            "move to workspace ${workspaces.browser}; inhibit_idle fullscreen";
-          criteria = { app_id = "waterfox"; };
+          command = "move to workspace ${workspaces.browser}; inhibit_idle fullscreen";
+          criteria = {
+            app_id = "waterfox";
+          };
         }
         {
-          command =
-            "move to workspace ${workspaces.browser}; inhibit_idle fullscreen";
-          criteria = { app_id = "firefox"; };
+          command = "move to workspace ${workspaces.browser}; inhibit_idle fullscreen";
+          criteria = {
+            app_id = "firefox";
+          };
         }
         {
-          command =
-            "resize set width 45ppt height 60ppt; floating enable; focus";
-          criteria = { app_id = "file-roller"; };
+          command = "resize set width 45ppt height 60ppt; floating enable; focus";
+          criteria = {
+            app_id = "file-roller";
+          };
         }
         {
-          command =
-            "floating enable; resize set width 45ppt height 60ppt; focus";
-          criteria = { app_id = "thunar"; };
+          command = "floating enable; resize set width 45ppt height 60ppt; focus";
+          criteria = {
+            app_id = "thunar";
+          };
         }
         {
-          command =
-            "floating enable; resize set width 65ppt height 70ppt; focus";
-          criteria = { app_id = "com.github.wwmm.easyeffects"; };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = { app_id = "org.telegram.desktop"; };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = { app_id = "com.ayugram"; };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = { class = "TelegramDesktop"; };
+          command = "floating enable; resize set width 65ppt height 70ppt; focus";
+          criteria = {
+            app_id = "com.github.wwmm.easyeffects";
+          };
         }
         {
           command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = { class = "discord"; };
+          criteria = {
+            app_id = "org.telegram.desktop";
+          };
         }
         {
           command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = { class = "vesktop"; };
+          criteria = {
+            app_id = "com.ayugram";
+          };
+        }
+        {
+          command = "move to workspace ${workspaces.social}; layout tabbed";
+          criteria = {
+            class = "TelegramDesktop";
+          };
+        }
+        {
+          command = "move to workspace ${workspaces.social}; layout tabbed";
+          criteria = {
+            class = "discord";
+          };
+        }
+        {
+          command = "move to workspace ${workspaces.social}; layout tabbed";
+          criteria = {
+            class = "vesktop";
+          };
         }
         {
           command = "floating enable; sticky enable";
-          criteria = { title = "\\ -\\ Sharing\\ Indicator$"; };
+          criteria = {
+            title = "\\ -\\ Sharing\\ Indicator$";
+          };
         }
         {
           command = "floating enable; resize set width 40 ppt height 30 ppt";
-          criteria = { app_id = "blueman-manager"; };
+          criteria = {
+            app_id = "blueman-manager";
+          };
         }
         {
           command = "floating enable; resize set width 40 ppt height 30 ppt";
-          criteria = { app_id = "io.bassi.Amberol"; };
+          criteria = {
+            app_id = "io.bassi.Amberol";
+          };
         }
         {
           command = "floating enable; resize set width 40 ppt height 30 ppt";
-          criteria = { app_id = "pavucontrol"; };
+          criteria = {
+            app_id = "pavucontrol";
+          };
         }
         {
           command = "floating enable; resize set width 60 ppt height 50 ppt";
@@ -211,115 +242,131 @@ in
         }
         {
           command = "resize set width 60 ppt height 50 ppt; floating enable";
-          criteria = { class = "Lxappearance"; };
+          criteria = {
+            class = "Lxappearance";
+          };
         }
         {
-          command =
-            "resize set width 45ppt height 60ppt; floating enable; focus";
-          criteria = { app_id = "mpv"; };
+          command = "resize set width 45ppt height 60ppt; floating enable; focus";
+          criteria = {
+            app_id = "mpv";
+          };
         }
 
         {
-          command =
-            "sticky enable; resize set width 40 ppt height 30 ppt; floating enable";
-          criteria = { title = "File Operation Progress"; };
+          command = "sticky enable; resize set width 40 ppt height 30 ppt; floating enable";
+          criteria = {
+            title = "File Operation Progress";
+          };
         }
         {
-          command =
-            "sticky enable; resize set width 40 ppt height 30 ppt; floating enable;";
+          command = "sticky enable; resize set width 40 ppt height 30 ppt; floating enable;";
           criteria = {
             app_id = "firefox";
             title = "Library";
           };
         }
         {
-          command =
-            "floating enable; sticky enable, resize set width 30 ppt height 40 ppt";
-          criteria = { app_id = "floating_shell_portrait"; };
+          command = "floating enable; sticky enable, resize set width 30 ppt height 40 ppt";
+          criteria = {
+            app_id = "floating_shell_portrait";
+          };
         }
         {
           command = "floating enable; sticky enable";
-          criteria = { title = "Picture in picture"; };
+          criteria = {
+            title = "Picture in picture";
+          };
         }
         {
           command = "floating enable";
-          criteria = { app_id = "xsensors"; };
+          criteria = {
+            app_id = "xsensors";
+          };
         }
         {
           command = "floating enable";
-          criteria = { title = "Save File"; };
+          criteria = {
+            title = "Save File";
+          };
         }
       ];
-      keybindings = {
-        "${common}+Return" = "exec ${terminal}";
-        "${common}+Shift+e" = "exec wofi-powermenu";
-        "${common}+q" = "kill";
-        "BTN_MIDDLE" = "kill --border"; # bindcode
-        "${common}+z" = "exec pkill -SIGUSR1 ${bar}";
-        "${common}+x" = "mode resize";
-        "${common}+d" = "exec ${menu} -c ~/.config/wofi/config -I";
-        "${common}+Shift+c" = "reload";
-        "${common}+Left" = "focus left";
-        "${common}+Down" = "focus down";
-        "${common}+Up" = "focus up";
-        "${common}+Right" = "focus right";
-        "${common}+Shift+Left" = "move left";
-        "${common}+Shift+Down" = "move down";
-        "${common}+Shift+Up" = "move up";
-        "${common}+Shift+Right" = "move right";
-        "${common}+${additional}+Left" = "workspace prev";
-        "${common}+${additional}+Up" = "workspace prev";
-        "${common}+${additional}+Right" = "workspace next";
-        "${common}+${additional}+Down" = "workspace next";
-        "${common}+b" = "splith";
-        "${common}+v" = "splitv";
-        "${common}+s" = "layout stacking";
-        "${common}+w" = "layout tabbed";
-        "${common}+e" = "layout toggle split";
-        "${common}+f" = "fullscreen";
-        "${common}+Shift+space" = "floating toggle";
-        "${common}+Ctrl+Right" = "resize shrink width 20 ppt";
-        "${common}+Ctrl+Up" = "resize grow height 20 ppt";
-        "${common}+Ctrl+Down" = "resize shrink height 20 ppt";
-        "${common}+Ctrl+Left" = "resize grow width 20 ppt";
-        "XF86AudioLowerVolume" =
-          "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 -2%";
-        "XF86AudioRaiseVolume" =
-          "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 +2%";
-        "XF86AudioMute" = ''
-          exec ${pkgs.alsa-utils}/bin/amixer -c $(cat /proc/asound/cards | grep "Scarlett" | head -n1 | awk '{print $1}') cset numid=10 toggle'';
-        "XF86AudioPlay" = "exec playerctl play";
-        "XF86AudioPause" = "exec playerctl pause";
-        "XF86AudioNext" = "exec playerctl next";
-        "XF86AudioPrev" = "exec playerctl previous";
-        "XF86MonBrightnessUp" =
-          "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
-        "XF86MonBrightnessDown" =
-          "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
-        "${common}+r" = "exec ${filemanager}";
-        "${common}+o" = "exec ${browser}";
-        "${additional}+s" = "exec ${grimshot} copy area";
-        "${additional}+a" = "exec ${grimshot} copy active";
-        "${additional}+e" =
-          "exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -";
-        "${additional}+p" = "exec wl-uploader";
-        "${common}+${additional}+Shift+Right" =
-          "move workspace to output right";
-        "${common}+${additional}+Shift+Left" = "move workspace to output left";
-        "${common}+${additional}+Shift+Down" = "move workspace to output down";
-        "${common}+${additional}+Shift+Up" = "move workspace to output up";
-      } // builtins.listToAttrs (builtins.concatLists (map
-        (n: [
-          {
-            name = "${common}+shift+${n}";
-            value = "move container to workspace ${n}";
-          }
-          {
-            name = "${common}+${n}";
-            value = "workspace ${n}";
-          }
-        ])
-        (builtins.attrValues workspaces ++ [ "9" "0" ])));
+      keybindings =
+        {
+          "${common}+Return" = "exec ${terminal}";
+          "${common}+Shift+e" = "exec wofi-powermenu";
+          "${common}+q" = "kill";
+          "BTN_MIDDLE" = "kill --border"; # bindcode
+          "${common}+z" = "exec pkill -SIGUSR1 ${bar}";
+          "${common}+x" = "mode resize";
+          "${common}+d" = "exec ${menu} -c ~/.config/wofi/config -I";
+          "${common}+Shift+c" = "reload";
+          "${common}+Left" = "focus left";
+          "${common}+Down" = "focus down";
+          "${common}+Up" = "focus up";
+          "${common}+Right" = "focus right";
+          "${common}+Shift+Left" = "move left";
+          "${common}+Shift+Down" = "move down";
+          "${common}+Shift+Up" = "move up";
+          "${common}+Shift+Right" = "move right";
+          "${common}+${additional}+Left" = "workspace prev";
+          "${common}+${additional}+Up" = "workspace prev";
+          "${common}+${additional}+Right" = "workspace next";
+          "${common}+${additional}+Down" = "workspace next";
+          "${common}+b" = "splith";
+          "${common}+v" = "splitv";
+          "${common}+s" = "layout stacking";
+          "${common}+w" = "layout tabbed";
+          "${common}+e" = "layout toggle split";
+          "${common}+f" = "fullscreen";
+          "${common}+Shift+space" = "floating toggle";
+          "${common}+Ctrl+Right" = "resize shrink width 20 ppt";
+          "${common}+Ctrl+Up" = "resize grow height 20 ppt";
+          "${common}+Ctrl+Down" = "resize shrink height 20 ppt";
+          "${common}+Ctrl+Left" = "resize grow width 20 ppt";
+          "XF86AudioLowerVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 -2%";
+          "XF86AudioRaiseVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 +2%";
+          "XF86AudioMute" =
+            ''exec ${pkgs.alsa-utils}/bin/amixer -c $(cat /proc/asound/cards | grep "Scarlett" | head -n1 | awk '{print $1}') cset numid=10 toggle'';
+          "XF86AudioPlay" = "exec playerctl play";
+          "XF86AudioPause" = "exec playerctl pause";
+          "XF86AudioNext" = "exec playerctl next";
+          "XF86AudioPrev" = "exec playerctl previous";
+          "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
+          "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
+          "${common}+r" = "exec ${filemanager}";
+          "${common}+o" = "exec ${browser}";
+          "${additional}+s" = "exec ${grimshot} copy area";
+          "${additional}+a" = "exec ${grimshot} copy active";
+          "${additional}+e" = "exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -";
+          "${additional}+p" = "exec wl-uploader";
+          "${common}+${additional}+Shift+Right" = "move workspace to output right";
+          "${common}+${additional}+Shift+Left" = "move workspace to output left";
+          "${common}+${additional}+Shift+Down" = "move workspace to output down";
+          "${common}+${additional}+Shift+Up" = "move workspace to output up";
+        }
+        // builtins.listToAttrs (
+          builtins.concatLists (
+            map
+              (n: [
+                {
+                  name = "${common}+shift+${n}";
+                  value = "move container to workspace ${n}";
+                }
+                {
+                  name = "${common}+${n}";
+                  value = "workspace ${n}";
+                }
+              ])
+              (
+                builtins.attrValues workspaces
+                ++ [
+                  "9"
+                  "0"
+                ]
+              )
+          )
+        );
 
       bindkeysToCode = true;
       workspaceOutputAssign = [
