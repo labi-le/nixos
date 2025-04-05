@@ -19,5 +19,6 @@
     ./packages.nix
     ./ssh.nix
     ./builders.nix
+    ./hotkeys.nix
   ];
 }

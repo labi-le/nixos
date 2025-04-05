@@ -45,6 +45,11 @@
     dev = true;
   };
 
+  hotkeys = {
+    common = "Mod4";
+    additional = "Mod1";
+  };
+
   monitors = {
     "eDP-1" = {
       mode = "1920x1080@144Hz";
