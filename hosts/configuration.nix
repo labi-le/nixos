@@ -29,7 +29,6 @@
   services.xserver.xkb = {
     layout = "us";
   };
-  hardware.graphics.enable = true;
 
   programs.gnupg.agent = {
     enable = true;
@@ -49,7 +48,10 @@
   };
 
   networking.interfaces.enp37s0.wakeOnLan.enable = true;
-
+  hotkeys = {
+    common = "Mod1";
+    additional = "Mod4";
+  };
   monitors = {
     "DP-2" = {
       mode = "2560x1440@179.999Hz";

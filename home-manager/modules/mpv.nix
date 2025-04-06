@@ -42,9 +42,11 @@
       cache-secs = "600";
       cache-pause = "no";
 
-      hwdec = "auto";
-      vo = "gpu-next";
       gpu-context = "wayland";
+      hwdec = "auto-safe";
+      vo = "gpu-next";
+      hwdec-codecs = "all";
+      profile = "gpu-hq";
 
       fs = "no";
       osc = "no";

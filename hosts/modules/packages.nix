@@ -64,7 +64,9 @@ in
 
         alacritty
         imv
-        btop
+        (btop.override {
+          rocmSupport = true;
+        })
         git
         lazygit
 
