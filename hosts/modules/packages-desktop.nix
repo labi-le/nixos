@@ -16,7 +16,14 @@ with pkgs;
 
   wireshark
   (php.buildEnv {
-    extensions = { all, enabled }: with all; enabled ++ [ xdebug redis ];
+    extensions =
+      { all, enabled }:
+        with all;
+        enabled
+        ++ [
+          xdebug
+          redis
+        ];
     extraConfig = ''
       xdebug.mode=debug
       xdebug.discover_client_host=1
@@ -33,7 +40,13 @@ with pkgs;
   (callPackage ../../pkgs/wl-uploader.nix { })
   belphegor
 
-  google-chrome
+  (google-chrome.override {
+    commandLineArgs = [
+      "--enable-features=AcceleratedVideoEncoder"
+      "--ignore-gpu-blocklist"
+      "--enable-zero-copy"
+    ];
+  })
 
   pcsx2
   qbittorrent
@@ -47,4 +60,3 @@ with pkgs;
 
   ayugram-desktop
 ]
-

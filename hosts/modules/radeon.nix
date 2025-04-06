@@ -1,6 +1,20 @@
-{ config, lib, pkgs, ... }:
+{ pkgs
+, ...
+}:
 
 {
+  hardware = {
+    graphics = {
+      enable = true;
+      extraPackages = with pkgs; [
+        amdvlk
+      ];
+    };
+
+    amdgpu = {
+      amdvlk.enable = true;
+    };
+  };
   environment.systemPackages = with pkgs; [
     lact
   ];
