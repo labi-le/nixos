@@ -67,6 +67,7 @@ in
         (btop.override {
           rocmSupport = true;
         })
+        glances
         git
         lazygit
 
