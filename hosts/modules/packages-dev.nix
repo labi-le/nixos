@@ -31,4 +31,7 @@ with pkgs;
   vulkan-tools
   radeontop
 
+  python3
+  ffmpeg
+
 ]
