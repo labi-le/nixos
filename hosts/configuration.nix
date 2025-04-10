@@ -17,7 +17,7 @@
   ];
 
   builders = {
-    enableRemoteBuilding = true;
+    enableRemoteBuilding = false;
     remoteBuilders = {
       mainServer = {
         host = "192.168.1.2";
