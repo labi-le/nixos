@@ -55,7 +55,6 @@ with pkgs;
   alsa-scarlett-gui
   patchage
   qpwgraph
-  pwvucontrol
   alsa-utils
 
   ayugram-desktop

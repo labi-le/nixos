@@ -14,6 +14,7 @@
     ./modules/spicetify.nix
     ./modules/thunderbolt.nix
     ./modules/radeon.nix
+    ./modules/vm.nix
   ];
 
   builders = {
