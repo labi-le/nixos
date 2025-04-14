@@ -7,10 +7,9 @@
     settings = {
       font.size = 17.0;
       font.normal.family = "DejaVu Sans Mono";
-      window.opacity = 0.55;
+      window.opacity = 0.7;
     };
 
   };
 
 }
-

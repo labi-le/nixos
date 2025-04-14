@@ -52,7 +52,8 @@
       "mail.labile.cc" = proxy "http://127.0.0.1:7001";
       "torrent.labile.cc" = proxy "http://127.0.0.1:7000";
       "vaultwarden.labile.cc" = proxy "http://127.0.0.1:7005";
-      "sync.labile.cc" = proxy "http://127.0.0.1:7006";
+      "3x.labile.cc" = proxy "https://85.117.231.205";
+      "target.labile.cc" = proxy "https://85.117.231.205";
       "logs.labile.cc" = {
         locations."/" = {
           proxyPass = "http://127.0.0.1:8008";
