@@ -53,4 +53,7 @@
   };
 
   enablePrime = true;
+  audio = {
+    enable = true;
+  };
 }
