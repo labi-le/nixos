@@ -2,7 +2,7 @@
 
 HOSTNAME := $(shell hostname)
 CPUS := $(shell nproc)
-HARDWARE_FILE := system/hardware-$(HOSTNAME).nix
+HARDWARE_FILE := hosts/hardware-$(HOSTNAME).nix
 
 disko:
 	sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./disko.nix
