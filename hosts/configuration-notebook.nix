@@ -11,6 +11,7 @@
     ./modules/kernel-zen.nix
     ./modules/thunderbolt.nix
     ./modules/radeon.nix
+    ./modules/battery.nix
   ];
 
   services.xserver.xkb = {
@@ -55,4 +56,7 @@
       position = "center";
     };
   };
+
+  boot.kernelParams = [ "amd_pstate=passive" ];
+  boot.kernelModules = [ "amd-pstate" ];
 }
