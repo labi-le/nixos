@@ -26,6 +26,10 @@
     enableSSHSupport = true;
   };
 
+  audio = {
+    enable = true;
+  };
+
   services.openssh.enable = true;
 
   system.stateVersion = "24.11";

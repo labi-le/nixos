@@ -69,4 +69,8 @@
       position = "right";
     };
   };
+  audio = {
+    enable = true;
+    lowLatency = true;
+  };
 }
