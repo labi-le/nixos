@@ -24,13 +24,14 @@
   };
 
   outputs =
-    inputs@{ nixpkgs
-    , home-manager
-    , nixvim
-    , chaotic
-    , spicetify-nix
-    , musnix
-    , ...
+    inputs@{
+      nixpkgs,
+      home-manager,
+      nixvim,
+      chaotic,
+      spicetify-nix,
+      musnix,
+      ...
     }:
     let
       system = "x86_64-linux";
@@ -75,7 +76,7 @@
       nixosConfigurations = {
         pc = mkSystem "pc" ./hosts/configuration.nix;
         fx516 = mkSystem "fx516" ./hosts/configuration-fx516.nix;
-        thinkbook = mkSystem "thinkbook" ./hosts/configuration.nix;
+        notebook = mkSystem "notebook" ./hosts/configuration-notebook.nix;
         server = mkSystem "server" ./hosts/configuration-server.nix;
       };
     };

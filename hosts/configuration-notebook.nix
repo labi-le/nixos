@@ -10,7 +10,7 @@
     ./modules/thunar.nix
     ./modules/kernel-zen.nix
     ./modules/thunderbolt.nix
-    ./modules/nvidia
+    ./modules/radeon.nix
   ];
 
   services.xserver.xkb = {
@@ -51,6 +51,4 @@
       position = "center";
     };
   };
-
-  enablePrime = true;
 }

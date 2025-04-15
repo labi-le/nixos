@@ -44,7 +44,7 @@
 
       gpu-context = "wayland";
       hwdec = "auto-safe";
-      vo = "gpu-next";
+      vo = "vaapi";
       hwdec-codecs = "all";
       profile = "gpu-hq";
 
