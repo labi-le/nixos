@@ -19,6 +19,17 @@
     layout = "us";
   };
 
+  # asusctl profile -p
+  # asusctl profile -P Balanced
+  # asusctl profile -l
+  # services.asusd = {
+  #   enable = true;
+  #   enableUserService = true;
+  # };
+  systemd.tmpfiles.rules = [
+    "w /sys/class/power_supply/BAT0/charge_control_end_threshold - - - - 60"
+  ];
+
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [
     "nix-command"
