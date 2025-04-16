@@ -27,6 +27,22 @@
       treesitter.enable = true;
       lsp-lines.enable = true;
 
+      treesitter-textobjects = {
+        enable = true;
+
+        move = {
+          enable = true;
+          gotoNextStart = {
+            "]]" = "@block.outer";
+            "]m" = "@function.outer";
+          };
+          gotoPreviousStart = {
+            "[[" = "@block.outer";
+            "[m" = "@function.outer";
+          };
+        };
+      };
+
     };
     extraPlugins = with pkgs; [
       vimPlugins.vim-visual-multi
