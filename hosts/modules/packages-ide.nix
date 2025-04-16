@@ -2,6 +2,7 @@
 
 with pkgs;
 [
+  postman
   # jetbrains.rust-rover
   jetbrains.phpstorm
   # jetbrains.clion
