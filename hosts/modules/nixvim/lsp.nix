@@ -17,7 +17,7 @@
             "--quiet"
           ];
           nix = {
-            maxMemoryMB = 4096;
+            maxMemoryMB = 1024;
             flake = {
               autoEvalInputs = true;
               autoArchive = true;

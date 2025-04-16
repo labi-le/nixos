@@ -1,7 +1,5 @@
 {
   programs.nixvim.keymaps = [
-
-
     {
       key = "//";
       action = ":noh<CR>";
@@ -12,6 +10,15 @@
       action = ":t.<CR>";
       mode = "n";
 
+    }
+
+    {
+      key = "jj";
+      action = "<Esc>";
+      mode = [
+        "i"
+        "v"
+      ];
     }
   ];
 }
