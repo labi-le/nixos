@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 {
   imports = [
@@ -8,7 +8,7 @@
     ./modules/wayland.nix
     ./modules/sshfs.nix
     ./modules/thunar.nix
-    ./modules/kernel-zen.nix
+    ./modules/kernel.nix
     ./modules/thunderbolt.nix
     ./modules/radeon.nix
     ./modules/battery.nix
@@ -57,6 +57,4 @@
     };
   };
 
-  boot.kernelParams = [ "amd_pstate=passive" ];
-  boot.kernelModules = [ "amd-pstate" ];
 }
