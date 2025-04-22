@@ -6,7 +6,7 @@ with pkgs;
   # jetbrains.rust-rover
   jetbrains.phpstorm
   # jetbrains.clion
-  jetbrains.pycharm-professional
+  # jetbrains.pycharm-professional
   (jetbrains.goland.overrideAttrs (oldAttrs: {
     postFixup =
       (oldAttrs.postFixup or "")
