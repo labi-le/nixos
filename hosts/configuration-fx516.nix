@@ -30,9 +30,6 @@
 
   system.stateVersion = "24.11";
 
-  nix.gc.automatic = true;
-  nix.gc.dates = "daily";
-
   network.injectHosts = true;
   packages = {
     desktop = true;
