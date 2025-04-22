@@ -37,7 +37,7 @@ with pkgs;
   brightnessctl
   wf-recorder
 
-  (callPackage ../../pkgs/wl-uploader.nix { })
+  (callPackage ./pkgs/wl-uploader.nix { })
   belphegor
 
   (google-chrome.override {

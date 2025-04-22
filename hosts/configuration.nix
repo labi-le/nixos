@@ -2,17 +2,18 @@
 
 {
   imports = [
-    ./modules/home-drive.nix
-    ./modules/base.nix
-    ./modules/sound.nix
-    ./modules/greeter.nix
-    ./modules/uxplay.nix
-    ./modules/wayland.nix
-    ./modules/sshfs.nix
-    ./modules/thunar.nix
-    ./modules/kernel-cachyos.nix
-    ./modules/radeon.nix
-    ./modules/vm.nix
+    ./../modules/home-drive.nix
+    ./../modules/base.nix
+    ./../modules/sound.nix
+    ./../modules/greeter.nix
+    ./../modules/uxplay.nix
+    ./../modules/wayland.nix
+    ./../modules/sshfs.nix
+    ./../modules/thunar.nix
+    ./../modules/kernel-cachyos.nix
+    ./../modules/radeon.nix
+    ./../modules/vm.nix
+    # ./../modules/
   ];
 
   builders = {
