@@ -27,6 +27,7 @@
     EDITOR = "nvim";
     TERMINAL = "alacritty";
     XDG_TERMINAL_EXEC = "$TERMINAL";
+    NIXPKGS_ALLOW_UNFREE = "1";
   };
 
   environment.interactiveShellInit = ''

@@ -15,21 +15,6 @@ with pkgs;
   dconf
 
   wireshark
-  (php.buildEnv {
-    extensions =
-      { all, enabled }:
-        with all;
-        enabled
-        ++ [
-          xdebug
-          redis
-        ];
-    extraConfig = ''
-      xdebug.mode=debug
-      xdebug.discover_client_host=1
-      xdebug.start_with_request = yes
-    '';
-  })
   wl-clipboard
   slurp
   wayshot
