@@ -1,6 +1,5 @@
 { lib
 , pkgs
-, config
 , ...
 }:
 {
@@ -16,13 +15,13 @@
             (lib.getExe pkgs.nixfmt-rfc-style)
             "--quiet"
           ];
-          nix = {
-            maxMemoryMB = 1024;
-            flake = {
-              autoEvalInputs = true;
-              autoArchive = true;
-            };
-          };
+          # nix = {
+          #   maxMemoryMB = 1024;
+          #   flake = {
+          #     autoEvalInputs = true;
+          #     autoArchive = true;
+          #   };
+          # };
         };
       };
       # nixd = {
