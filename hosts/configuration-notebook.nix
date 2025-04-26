@@ -1,17 +1,17 @@
-{ config, ... }:
+{ ... }:
 
 {
   imports = [
-    ./modules/base.nix
-    ./modules/sound.nix
-    ./modules/greeter.nix
-    ./modules/wayland.nix
-    ./modules/sshfs.nix
-    ./modules/thunar.nix
-    ./modules/kernel.nix
-    ./modules/thunderbolt.nix
-    ./modules/radeon.nix
-    ./modules/battery.nix
+    ./../modules/base.nix
+    ./../modules/sound.nix
+    ./../modules/greeter.nix
+    ./../modules/wayland.nix
+    ./../modules/sshfs.nix
+    ./../modules/thunar.nix
+    ./../modules/kernel.nix
+    ./../modules/thunderbolt.nix
+    # ./../modules/radeon.nix
+    ./../modules/battery.nix
   ];
 
   services.xserver.xkb = {
