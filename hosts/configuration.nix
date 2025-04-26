@@ -13,18 +13,7 @@
     ./../modules/kernel-cachyos.nix
     ./../modules/radeon.nix
     ./../modules/vm.nix
-    # ./../modules/
   ];
-
-  builders = {
-    enableRemoteBuilding = false;
-    remoteBuilders = {
-      mainServer = {
-        host = "192.168.1.2";
-        keyFile = "/home/labile/.ssh/nix-builder";
-      };
-    };
-  };
 
   services.xserver.xkb = {
     layout = "us";

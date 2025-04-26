@@ -2,17 +2,12 @@
 
 {
   imports = [
-    ./modules/base.nix
-    ./modules/nginx.nix
-    ./modules/drive.nix
-    ./modules/kernel-zen.nix
-    ./modules/grafana.nix
+    ./../modules/base.nix
+    ./../modules/nginx.nix
+    ./../modules/drive.nix
+    ./../modules/kernel-zen.nix
+    ./../modules/grafana.nix
   ];
-
-  builders = {
-    useAsBuilder = true;
-    authorizedKeyFiles = [ ../keys/nixbuild-pc.pub ];
-  };
 
   # Configure keymap in X11
   services.xserver.xkb = {
