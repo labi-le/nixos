@@ -1,5 +1,6 @@
 { lib
 , pkgs
+, inputs
 , ...
 }:
 {
@@ -15,13 +16,13 @@
             (lib.getExe pkgs.nixfmt-rfc-style)
             "--quiet"
           ];
-          # nix = {
-          #   maxMemoryMB = 1024;
-          #   flake = {
-          #     autoEvalInputs = true;
-          #     autoArchive = true;
-          #   };
-          # };
+          nix = {
+            maxMemoryMB = 2048;
+            # flake = {
+            #   # autoEvalInputs = true;
+            #   autoArchive = true;
+            # };
+          };
         };
       };
       gopls.enable = true;
@@ -29,7 +30,7 @@
         enable = true;
       };
       pyright.enable = true;
-
+      dockerls.enable = true;
     };
     keymaps = {
 
