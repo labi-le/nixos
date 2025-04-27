@@ -8,6 +8,7 @@
       settings = {
         sources = [
           { name = "nvim_lsp"; }
+          { name = "cmp-dap"; }
           { name = "luasnip"; }
           { name = "path"; }
         ];
