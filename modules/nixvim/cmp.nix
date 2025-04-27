@@ -5,12 +5,10 @@
     cmp = {
       enable = true;
       autoEnableSources = true;
-
       settings = {
         sources = [
           { name = "nvim_lsp"; }
           { name = "luasnip"; }
-          { name = "treesitter"; }
           { name = "path"; }
         ];
 
@@ -37,18 +35,15 @@
             end, { 'i', 's' })'';
         };
 
-        # window = {
-        #   completion = {
-        #     border = "rounded";
-        #     winhighlight = "Normal:Pmenu,FloatBorder:Pmenu,CursorLine:PmenuSel,Search:None";
-        #   };
-        #   documentation = {
-        #     border = "rounded";
-        #     winhighlight = "Normal:Pmenu,FloatBorder:Pmenu,Search:None";
-        #     max_width = 80;
-        #     max_height = 20;
-        #   };
-        # };
+        extraConfig = ''
+          local cmp_autopairs = require('nvim-autopairs.completion.cmp')
+          local cmp = require('cmp')
+          cmp.event:on(
+            'confirm_done',
+            cmp_autopairs.on_confirm_done()
+          )
+        '';
+
       };
     };
   };
