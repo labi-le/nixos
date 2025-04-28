@@ -1,3 +1,4 @@
+{ lib, ... }:
 {
   security.acme = {
     acceptTerms = true;
@@ -35,23 +36,57 @@
         enableACME = true;
       };
       proxy =
-        addr:
+        { addr
+        , internal ? false
+        , ...
+        }@args:
         let
+          myIPs = [
+            "127.0.0.1"
+            "192.168.1.0/24"
+            "188.134.77.141/24"
+          ];
+          ipRestrictionsConfig =
+            if internal then
+              ''
+                ${lib.strings.concatMapStringsSep "\n      " (ip: "allow ${ip};") myIPs}
+                deny all;
+                error_page 403 @error404;
+              ''
+            else
+              "";
+          locationCfg = {
+            proxyPass = addr;
+            extraConfig = ipRestrictionsConfig;
+          };
           baseCfg = base {
-            "/" = {
-              proxyPass = addr;
-            };
+            "/" = locationCfg;
           };
         in
-        baseCfg // { kTLS = true; };
+        baseCfg
+        // (builtins.removeAttrs args [
+          "addr"
+          "internal"
+        ])
+        // {
+          kTLS = true;
+          extraConfig = lib.optionalString internal ''
+            location @error404 {
+              return 404;
+            }
+          '';
+        };
     in
     {
-      "labile.cc" = proxy "http://127.0.0.1:7004";
-      "local.labile.cc" = proxy "http://192.168.1.3:8080";
-      "obsidian.labile.cc" = proxy "http://127.0.0.1:7007";
-      "mail.labile.cc" = proxy "http://127.0.0.1:7001";
-      "torrent.labile.cc" = proxy "http://127.0.0.1:7000";
-      "vaultwarden.labile.cc" = proxy "http://127.0.0.1:7005";
+      "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
+      "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
+      "obsidian.labile.cc" = proxy { addr = "http://127.0.0.1:7007"; };
+      "mail.labile.cc" = proxy {
+        addr = "http://127.0.0.1:7001";
+        internal = true;
+      };
+      "torrent.labile.cc" = proxy { addr = "http://127.0.0.1:7000"; };
+      "vaultwarden.labile.cc" = proxy { addr = "http://127.0.0.1:7005"; };
       "logs.labile.cc" = {
         locations."/" = {
           proxyPass = "http://127.0.0.1:8008";
