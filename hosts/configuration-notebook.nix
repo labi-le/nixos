@@ -12,9 +12,8 @@
     ./../modules/thunderbolt.nix
     # ./../modules/radeon.nix
     ./../modules/battery.nix
+    ./../modules/adb.nix
   ];
-
-  programs.adb.enable = true;
 
   services.xserver.xkb = {
     layout = "us";

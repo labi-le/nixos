@@ -13,9 +13,8 @@
     ./../modules/kernel-cachyos.nix
     ./../modules/radeon.nix
     ./../modules/vm.nix
+    ./../modules/adb.nix
   ];
-
-  programs.adb.enable = true;
 
   services.xserver.xkb = {
     layout = "us";
