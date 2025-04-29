@@ -15,6 +15,8 @@
     ./../modules/vm.nix
   ];
 
+  programs.adb.enable = true;
+
   services.xserver.xkb = {
     layout = "us";
   };
