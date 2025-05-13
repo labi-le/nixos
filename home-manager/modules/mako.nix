@@ -5,15 +5,13 @@
     enable = true;
     settings = {
       font = "Inconsolata 14";
-      backgroundColor = "#151718";
-      textColor = "#9FCA56";
-      borderColor = "#151718";
+      background-color = "#151718";
+      text-color = "#9FCA56";
+      border-color = "#151718";
       anchor = "bottom-right";
-      defaultTimeout = 5000;
-    };
-    criteria = {
+      default-timeout = 5000;
       "urgency=high" = {
-        textColor = "#CD3F45";
+        text-color = "#CD3F45";
       };
     };
   };
