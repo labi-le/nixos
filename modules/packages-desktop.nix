@@ -32,6 +32,7 @@ with pkgs;
       "--enable-zero-copy"
     ];
   })
+  chromium
 
   pcsx2
   qbittorrent
