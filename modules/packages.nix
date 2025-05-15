@@ -79,6 +79,7 @@ in
         sshfs
 
         yt-dlp
+        aria2
 
         gdu
 

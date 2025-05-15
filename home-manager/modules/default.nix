@@ -13,6 +13,7 @@
     ./easyeffects.nix
     ./yazi.nix
     ./thunar.nix
+    ./yt-dlp.nix
   ];
 
 }
