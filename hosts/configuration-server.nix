@@ -7,6 +7,7 @@
     ./../modules/drive.nix
     ./../modules/kernel-zen.nix
     ./../modules/grafana.nix
+    ./../modules/gitlab.nix
   ];
 
   # Configure keymap in X11
