@@ -93,11 +93,12 @@ let
   activeRecordDeterministicKeyValue = getRequiredSecret "activeRecordDeterministicKey";
   activeRecordSaltValue = getRequiredSecret "activeRecordSalt";
 
+  host = "gitlab.labile.cc";
 in
 {
   services.gitlab = {
+    inherit host;
     enable = true;
-    host = "gitlab.labile.cc";
     https = true;
     port = 443;
     databasePasswordFile = pkgs.writeText "dbPassword" dbPassword;
@@ -110,6 +111,41 @@ in
       activeRecordPrimaryKeyFile = pkgs.writeText "activeRecordPrimaryKey" activeRecordPrimaryKeyValue;
       activeRecordDeterministicKeyFile = pkgs.writeText "activeRecordDeterministicKey" activeRecordDeterministicKeyValue;
       activeRecordSaltFile = pkgs.writeText "activeRecordSalt" activeRecordSaltValue;
+    };
+  };
+
+  environment.etc."gitlab-runner/nix-service.env" = {
+    text = ''
+      CI_SERVER_URL="https://gitlab.labile.cc"
+      CI_SERVER_TOKEN="glrt-dDoxCnU6Mr5raPc9L29gL7xeQKR3j_oQ.0w0uso899"
+    '';
+    mode = "0440";
+    user = "root";
+  };
+
+  services.gitlab-runner = {
+    enable = true;
+    settings = {
+      url = host;
+    };
+    services = {
+      nix = {
+        authenticationTokenConfigFile = "/etc/gitlab-runner/nix-service.env";
+        dockerImage = "alpine";
+        dockerVolumes = [
+          "/nix/store:/nix/store:ro"
+          "/nix/var/nix/db:/nix/var/nix/db:ro"
+          "/nix/var/nix/daemon-socket:/nix/var/nix/daemon-socket:ro"
+        ];
+        dockerDisableCache = false;
+        environmentVariables = {
+          ENV = "/etc/profile";
+          USER = "root";
+          NIX_REMOTE = "daemon";
+          PATH = "/nix/var/nix/profiles/default/bin:/nix/var/nix/profiles/default/sbin:/bin:/sbin:/usr/bin:/usr/sbin";
+          NIX_SSL_CERT_FILE = "/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt";
+        };
+      };
     };
   };
 }
