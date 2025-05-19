@@ -130,6 +130,7 @@ in
     settings = {
       url = host;
     };
+    gracefulTimeout = "1h";
     services = {
       nix = {
         authenticationTokenConfigFile = "/etc/gitlab-runner/nix-service.env";
