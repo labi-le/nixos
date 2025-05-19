@@ -44,4 +44,5 @@ with pkgs;
   alsa-utils
 
   ayugram-desktop
+  vlc
 ]
