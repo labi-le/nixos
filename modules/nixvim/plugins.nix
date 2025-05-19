@@ -82,6 +82,7 @@
       treesitter.enable = true;
       lsp-lines.enable = true;
 
+      precognition.enable = true;
       nvim-autopairs = {
         enable = true;
       };
