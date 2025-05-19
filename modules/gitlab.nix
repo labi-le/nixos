@@ -46,6 +46,8 @@ let
       name = "ar-salt";
       bytes = 32;
     };
+
+    runnerToken = { };
   };
 
   secretsData =
@@ -57,20 +59,18 @@ let
           (pkgs.formats.json { }).generate "gitlab-secrets-template.json" generatedSecretsData
         );
       in
-      throw (
-        ''
-          GitLab secrets JSON file not found at: ${configFilePath}.
-          To generate it, first ensure the directory exists:
+      throw (''
+        GitLab secrets JSON file not found at: ${configFilePath}.
+        To generate it, first ensure the directory exists:
 
-            mkdir -p "$(dirname "${configFilePath}")"
+          mkdir -p "$(dirname "${configFilePath}")"
 
-          Then, create the file with the following content by running this command:
+        Then, create the file with the following content by running this command:
 
-            echo '${generatedSecretsJSONContent}' > "${configFilePath}"
+          echo '${generatedSecretsJSONContent}' > "${configFilePath}"
 
-          Aborting Nix evaluation. The secrets file must exist to proceed.
-        ''
-      );
+        Aborting Nix evaluation. The secrets file must exist to proceed.
+      '');
 
   getRequiredSecret =
     keyName:
@@ -92,6 +92,8 @@ let
   activeRecordPrimaryKeyValue = getRequiredSecret "activeRecordPrimaryKey";
   activeRecordDeterministicKeyValue = getRequiredSecret "activeRecordDeterministicKey";
   activeRecordSaltValue = getRequiredSecret "activeRecordSalt";
+
+  runnerToken = getRequiredSecret "runnerToken";
 
   host = "gitlab.labile.cc";
 in
@@ -116,8 +118,8 @@ in
 
   environment.etc."gitlab-runner/nix-service.env" = {
     text = ''
-      CI_SERVER_URL="https://gitlab.labile.cc"
-      CI_SERVER_TOKEN="glrt-dDoxCnU6Mr5raPc9L29gL7xeQKR3j_oQ.0w0uso899"
+      CI_SERVER_URL="https://${host}"
+      CI_SERVER_TOKEN=${runnerToken}
     '';
     mode = "0440";
     user = "root";
