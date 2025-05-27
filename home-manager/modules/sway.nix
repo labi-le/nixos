@@ -440,6 +440,7 @@ in
         };
         background = "#ffffff";
       };
+
     };
     extraConfig = ''
       default_border none
@@ -447,6 +448,18 @@ in
 
       for_window [shell="xdg_shell"] title_format "%title (%app_id)"
       for_window [shell="x_wayland"] title_format "%class - %title"
+
+
+      bindgesture swipe:3:right workspace prev
+      bindgesture swipe:3:left workspace next
+
+      bindgesture pinch:3:outward fullscreen toggle
+
+      bindgesture swipe:4:down kill
+
+      bindgesture swipe:3:up exec ${pkgs.wtype}/bin/wtype -M ctrl -k t -m ctrl
+      bindgesture swipe:3:down exec ${pkgs.wtype}/bin/wtype -M ctrl -k w -m ctrl
+
     '';
     extraSessionCommands = ''
       export SDL_VIDEODRIVER=wayland
