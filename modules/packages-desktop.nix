@@ -45,3 +45,4 @@ with pkgs;
 
   ayugram-desktop
   vlc
+]
