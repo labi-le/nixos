@@ -59,18 +59,20 @@ let
           (pkgs.formats.json { }).generate "gitlab-secrets-template.json" generatedSecretsData
         );
       in
-      throw (''
-        GitLab secrets JSON file not found at: ${configFilePath}.
-        To generate it, first ensure the directory exists:
+      throw (
+        ''
+          GitLab secrets JSON file not found at: ${configFilePath}.
+          To generate it, first ensure the directory exists:
 
-          mkdir -p "$(dirname "${configFilePath}")"
+            mkdir -p "$(dirname "${configFilePath}")"
 
-        Then, create the file with the following content by running this command:
+          Then, create the file with the following content by running this command:
 
-          echo '${generatedSecretsJSONContent}' > "${configFilePath}"
+            echo '${generatedSecretsJSONContent}' > "${configFilePath}"
 
-        Aborting Nix evaluation. The secrets file must exist to proceed.
-      '');
+          Aborting Nix evaluation. The secrets file must exist to proceed.
+        ''
+      );
 
   getRequiredSecret =
     keyName:

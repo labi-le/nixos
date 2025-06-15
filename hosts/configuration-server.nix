@@ -27,6 +27,12 @@
   systemd.tmpfiles.rules = [
     "w /sys/class/power_supply/BAT0/charge_control_end_threshold - - - - 60"
   ];
+  boot.kernel.sysctl = {
+    "vm.dirty_background_ratio" = 3;
+    "vm.dirty_ratio" = 60;
+    "vm.dirty_expire_centisecs" = 3000;
+    "vm.dirty_writeback_centisecs" = 500;
+  };
 
   hardware.graphics.enable = true;
 
