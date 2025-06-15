@@ -2,7 +2,17 @@
   fileSystems."/drive" = {
     device = "/dev/disk/by-uuid/b631c90c-690f-4cf0-9775-56c53f69f5b5";
     fsType = "ext4";
-    options = [ "noatime" "nofail" ];
+    options = [
+      "noatime"
+      "nofail"
+    ];
+  };
+
+  systemd.services."set-readahead-drive" = {
+    description = "Set readahead for /dev/sda";
+    wantedBy = [ "local-fs.target" ];
+    serviceConfig.Type = "oneshot";
+    serviceConfig.ExecStart = "/usr/bin/blockdev --setra 1024 /dev/sda";
   };
 
   services.nfs.server = {
@@ -13,8 +23,7 @@
     '';
   };
   networking.firewall = {
-    allowedTCPPorts =
-      [ 2049 ];
+    allowedTCPPorts = [ 2049 ];
     allowedUDPPorts = [ 2049 ];
   };
 }
