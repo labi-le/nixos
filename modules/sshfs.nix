@@ -1,4 +1,5 @@
 {
+  # sudo ssh-copy-id labile@192.168.1.2
   fileSystems."/home/drive" = {
     device = "labile@192.168.1.2:/drive";
     fsType = "sshfs";
