@@ -14,6 +14,7 @@
     ./../modules/radeon.nix
     ./../modules/vm.nix
     ./../modules/adb.nix
+    ./../modules/vial.nix
   ];
 
   services.xserver.xkb = {
