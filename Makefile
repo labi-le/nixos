@@ -14,7 +14,7 @@ fix-flake:
 	@git add --intent-to-add .
 
 switch:
-	sudo nixos-rebuild switch --fast --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --show-trace
+	sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --show-trace
 
 generate-hardware: 
 	@echo "Generating hardware configuration for $(HOSTNAME)"
@@ -33,16 +33,8 @@ boot:
 cleanup: boot
 	sudo nix-collect-garbage -d && make switch
 
-install-hooks:
-	mkdir -p .git/hooks
-	echo '#!/bin/sh' > .git/hooks/pre-commit
-	echo 'echo "Running nixpkgs-fmt to format Nix files..."' >> .git/hooks/pre-commit
-	echo 'nix-shell -p nixpkgs-fmt --run "nixpkgs-fmt ."' >> .git/hooks/pre-commit
-	echo 'git diff --exit-code --quiet || {' >> .git/hooks/pre-commit
-	echo '    echo "Nix files were automatically formatted, adding changes to commit..."' >> .git/hooks/pre-commit
-	echo '    git add -u' >> .git/hooks/pre-commit
-	echo '}' >> .git/hooks/pre-commit
-	chmod +x .git/hooks/pre-commit
+optimise:
+	nix-store --optimise
 
 .PHONY: dump
 dump:
