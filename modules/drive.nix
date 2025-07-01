@@ -17,15 +17,23 @@
     serviceConfig.ExecStart = "${pkgs.util-linux}/bin/blockdev --setra 1024 /dev/sda";
   };
 
-  services.nfs.server = {
-    enable = true;
-    exports = ''
-      /drive/
-      192.168.1.0/24(rw,sync,no_subtree_check,root_squash)
-    '';
-    nproc = 16;
-
+  services.nfs = {
+    server = {
+      enable = true;
+      exports = ''
+        /drive 192.168.1.0/24(rw,sync,no_subtree_check,insecure)
+      '';
+      nproc = 16;
+    };
+    settings = {
+      nfsd = {
+        udp = false;
+        vers3 = false;
+        vers4 = true;
+      };
+    };
   };
+
   networking.firewall = {
     allowedTCPPorts = [ 2049 ];
   };
