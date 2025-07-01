@@ -20,10 +20,14 @@
       "auto"
       "nofail"
       "noatime"
-      "nolock"
-      "intr"
-      "tcp"
-      "actimeo=1800"
+      "_netdev"
+      "hard"
+      "nconnect=8"
+      "noresvport"
+      "rsize=65536"
+      "wsize=65536"
+      "actimeo=60"
+      "nfsvers=4.2"
     ];
   };
 
