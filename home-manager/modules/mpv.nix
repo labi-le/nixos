@@ -1,4 +1,59 @@
 { pkgs, ... }:
+
+let
+
+  # mpvShadersUnstable = pkgs.stdenv.mkDerivation rec {
+  #   pname = "mpv-shim-default-shaders";
+  #   version = "unstable-2025-03-17";
+  #
+  #   src = pkgs.fetchFromGitHub {
+  #     owner = "iwalton3";
+  #     repo = "default-shader-pack";
+  #     rev = "0fdea2adb33ae7112fac190eb826615622b08333";
+  #     sha256 = "16a9c3pqqa45fdvri694xikqka7n0hzs5ykyawlvgywj91i9z9nw";
+  #   };
+  #
+  #   installPhase = ''
+  #     mkdir -p $out/share/${pname}
+  #     cp -r shaders *.json $out/share/${pname}
+  #   '';
+  # };
+
+  mpvShaders = pkgs.stdenv.mkDerivation rec {
+    pname = "mpv-prescalers";
+    version = "2024-01-11";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "bjin";
+      repo = "mpv-prescalers";
+      rev = "b3f0a59d68f33b7162051ea5970a5169558f0ea2";
+      sha256 = "1vi233fjjglzgajbsqqc6v6l28p4nyjaimcw3gwmmw6sfx9qbw19";
+    };
+
+    installPhase = ''
+      mkdir -p $out/share/${pname}
+      cp -r ./* $out/share/${pname}/
+    '';
+  };
+
+  ravuShadersDir = "${mpvShaders}/share/mpv-prescalers/compute/";
+
+  # shadersDir = "${mpvShadersUnstable}/share/mpv-shim-default-shaders/shaders/";
+
+  # anime4kShaders =
+  #   "${pkgs.anime4k}/Anime4K_Clamp_Highlights.glsl:"
+  #   + "${pkgs.anime4k}/Anime4K_Restore_CNN_VL.glsl:"
+  #   + "${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_VL.glsl:"
+  #   + "${pkgs.anime4k}/Anime4K_AutoDownscalePre_x2.glsl:"
+  #   + "${pkgs.anime4k}/Anime4K_AutoDownscalePre_x4.glsl:"
+  #   + "${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_M.glsl";
+  # fsrcnnxShader = "${shadersDir}FSRCNNX_x2_16-0-4-1.glsl";
+  # nnedi3Shader = "${shadersDir}nnedi3-nns64-win8x6.hook";
+  ravuZoom = "${ravuShadersDir}ravu-zoom-ar-r3.hook";
+  ravuYuv = "${ravuShadersDir}ravu-zoom-r3-yuv.hook";
+
+  # combinedShaders = "${nnedi3Shader}:${fsrcnnxShader}:${anime4kShaders}";
+in
 {
   programs.mpv = {
     enable = true;
@@ -47,8 +102,7 @@
       fs = "no";
       osc = "yes";
       osd-bar = "yes";
-
-      glsl-shaders = "${pkgs.anime4k}/Anime4K_Clamp_Highlights.glsl:${pkgs.anime4k}/Anime4K_Restore_CNN_VL.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_VL.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x2.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x4.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_M.glsl";
+      # glsl-shaders = combinedShaders;
     };
     bindings = {
       "Ctrl+j" = "script-message load-chat";
@@ -87,8 +141,9 @@
       c = "script-binding videoclip-menu-open";
     };
     extraInput = ''
-      			CTRL+1 no-osd change-list glsl-shaders set "${pkgs.anime4k}/Anime4K_Clamp_Highlights.glsl:${pkgs.anime4k}/Anime4K_Restore_CNN_VL.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_VL.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x2.glsl:${pkgs.anime4k}/Anime4K_AutoDownscalePre_x4.glsl:${pkgs.anime4k}/Anime4K_Upscale_CNN_x2_M.glsl"; show-text "Anime4K: Mode A (HQ)"
-      			CTRL+0 no-osd change-list glsl-shaders clr ""; show-text "GLSL shaders cleared"
-          	'';
+      CTRL+1 no-osd change-list glsl-shaders set "${ravuZoom}"; show-text "Upscaler: ravu zoom Only"
+      CTRL+2 no-osd change-list glsl-shaders set "${ravuYuv}"; show-text "Upscaler: ravu yuv Only"
+      CTRL+0 no-osd change-list glsl-shaders clr ""; show-text "Upscalers: OFF"
+    '';
   };
 }
