@@ -14,12 +14,12 @@ with pkgs;
   (php.buildEnv {
     extensions =
       { all, enabled }:
-        with all;
-        enabled
-        ++ [
-          xdebug
-          redis
-        ];
+      with all;
+      enabled
+      ++ [
+        xdebug
+        redis
+      ];
     extraConfig = ''
       xdebug.mode=debug
       xdebug.discover_client_host=1

@@ -14,7 +14,6 @@ with pkgs;
   pavucontrol
   dconf
 
-  wireshark
   wl-clipboard
   slurp
   wayshot
@@ -37,7 +36,7 @@ with pkgs;
   pcsx2
   qbittorrent
 
-  audacity
+  # audacity
   alsa-scarlett-gui
   patchage
   qpwgraph

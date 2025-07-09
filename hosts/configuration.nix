@@ -12,7 +12,7 @@
     ./../modules/thunar.nix
     ./../modules/kernel-cachyos.nix
     ./../modules/radeon.nix
-    ./../modules/vm.nix
+    # ./../modules/vm.nix
     ./../modules/adb.nix
     ./../modules/vial.nix
   ];
