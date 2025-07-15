@@ -29,7 +29,8 @@
       DisableFirefoxStudies = true;
 
       # nix run github:tupakkatapa/mozid -- ''
-      ExtensionSettings = with builtins;
+      ExtensionSettings =
+        with builtins;
         let
           extension = shortId: uuid: {
             name = uuid;
@@ -46,6 +47,13 @@
           (extension "Return YouTube Dislike" "{762f9885-5a13-4abd-9c77-433dcd38b8fd}")
           (extension "Buster: Captcha Solver for Humans" "{e58d3966-3d76-4cd9-8552-1582fbc800c1}")
           (extension "DeepL" "{ea41402b-23b4-4ad1-97fb-7b6396789243}")
+          (extension "Botnadzor" "extension@botnadzor.org")
+          (extension "Github Repository Size" "github-repo-size@mattelrah.com")
+          (extension "SteamDB" "firefox-extension@steamdb.info")
+          (extension "SponsorBlock" "sponsorBlocker@ajay.app")
+          (extension "GitHub Account Switcher" "{4f24a46e-2eb9-42d6-a842-60c410b28b74}")
+          (extension "JSON Formatter" "{db8ff575-504f-4f3d-a910-07702998d21d}
+")
 
         ];
     };

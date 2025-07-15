@@ -15,6 +15,7 @@
     # ./../modules/vm.nix
     ./../modules/adb.nix
     ./../modules/vial.nix
+    ./../modules/firefox.nix
   ];
 
   services.xserver.xkb = {
