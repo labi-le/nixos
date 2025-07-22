@@ -1,8 +1,11 @@
 { pkgs, ... }:
 
+let
+  device = "/dev/disk/by-uuid/b631c90c-690f-4cf0-9775-56c53f69f5b5";
+in
 {
   fileSystems."/drive" = {
-    device = "/dev/disk/by-uuid/b631c90c-690f-4cf0-9775-56c53f69f5b5";
+    device = device;
     fsType = "ext4";
     options = [
       "noatime"
@@ -14,7 +17,7 @@
     description = "Set readahead for /dev/sda";
     wantedBy = [ "local-fs.target" ];
     serviceConfig.Type = "oneshot";
-    serviceConfig.ExecStart = "${pkgs.util-linux}/bin/blockdev --setra 1024 /dev/sda";
+    serviceConfig.ExecStart = "${pkgs.util-linux}/bin/blockdev --setra 1024 ${device}";
   };
 
   services.nfs = {
