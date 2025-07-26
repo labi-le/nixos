@@ -1,7 +1,6 @@
-{ config
-, pkgs
-, lib
-, ...
+{
+  pkgs,
+  ...
 }:
 
 {
@@ -11,7 +10,6 @@
     hide_scroll = "true";
     show = "drun";
     width = "25%";
-    lines = "10";
     line_wrap = "word";
     term = "$TERM";
     allow_markup = "true";
@@ -33,7 +31,7 @@
 
       entries="Logout Suspend Reboot Shutdown"
 
-      selected=$(printf '%s\n' $entries |  wofi -i --dmenu --hide_search --hide_scroll | awk '{print tolower($1)}')
+      selected=$(printf '%s\n' $entries |  wofi -i --dmenu --hide-search --hide-scroll | awk '{print tolower($1)}')
 
       case $selected in
         logout)
@@ -95,5 +93,7 @@
     #text:selected {
     	background: transparent;
     }
+
+
   '';
 }
