@@ -6,8 +6,8 @@
       START_CHARGE_THRESH_BAT0 = 40;
       STOP_CHARGE_THRESH_BAT0 = 80;
 
-      # PLATFORM_PROFILE_ON_AC = "balanced";
-      PLATFORM_PROFILE_ON_AC = "low-power";
+      PLATFORM_PROFILE_ON_AC = "balanced";
+      # PLATFORM_PROFILE_ON_AC = "low-power";
       PLATFORM_PROFILE_ON_BAT = "balanced";
 
       CPU_BOOST_ON_AC = 0;

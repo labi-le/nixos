@@ -13,6 +13,7 @@
     # ./../modules/radeon.nix
     ./../modules/battery.nix
     ./../modules/adb.nix
+    ./../modules/bluetooth.nix
   ];
 
   services.xserver.xkb = {
