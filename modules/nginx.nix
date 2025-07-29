@@ -87,6 +87,10 @@
       };
       "torrent.labile.cc" = proxy { addr = "http://127.0.0.1:7000"; };
       "vaultwarden.labile.cc" = proxy { addr = "http://127.0.0.1:7005"; };
+      "sync.labile.cc" = proxy {
+        addr = "http://127.0.0.1:8384";
+        internal = true;
+      };
       "gitlab.labile.cc" = proxy { addr = "http://unix:/run/gitlab/gitlab-workhorse.socket"; };
       "logs.labile.cc" = {
         locations."/" = {
