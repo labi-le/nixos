@@ -9,6 +9,7 @@
     # ./../modules/grafana.nix
     ./../modules/gitlab.nix
     ./../modules/syncthing.nix
+    ./../modules/fail2ban.nix
   ];
 
   # Configure keymap in X11
