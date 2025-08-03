@@ -35,10 +35,10 @@ in
   imports = [
     (mkIf cfg.enableProxy (import ./proxy.nix))
     (mkIf cfg.injectHosts (import ./hosts.nix))
+    (mkIf cfg.enableFirewall (import ./firewall.nix))
   ];
 
   config = {
     networking.networkmanager.enable = cfg.enableNetworkManager;
-    networking.firewall.enable = cfg.enableFirewall;
   };
 }
