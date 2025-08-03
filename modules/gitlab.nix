@@ -102,7 +102,7 @@ in
 {
   services.gitlab = {
     inherit host;
-    enable = false;
+    enable = true;
     https = true;
     port = 443;
     databasePasswordFile = pkgs.writeText "dbPassword" dbPassword;

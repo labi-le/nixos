@@ -6,8 +6,8 @@
     ./../modules/nginx.nix
     ./../modules/drive.nix
     ./../modules/kernel-zen.nix
-    # ./../modules/grafana.nix
-    ./../modules/gitlab.nix
+    ./../modules/grafana.nix
+    # ./../modules/gitlab.nix
     ./../modules/syncthing.nix
     ./../modules/network
   ];
