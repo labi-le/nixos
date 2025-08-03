@@ -1,4 +1,9 @@
 { lib, pkgs, ... }:
+
+let
+  ipWhiteList = "/var/lib/nginx/ip_whitelist.conf";
+in
+
 {
   networking.firewall.allowedTCPPorts = [
     80
@@ -48,7 +53,7 @@
           ipRestrictionsConfig =
             if internal then
               ''
-                include /etc/nginx/ip_whitelist.conf;
+                include ${ipWhiteList};
                 deny all;
                 error_page 403 @error404;
               ''
@@ -113,14 +118,18 @@
       };
     };
 
+  systemd.tmpfiles.rules = [
+    "f ${ipWhiteList} 0644 nginx nginx - allow 127.0.0.1;\nallow 192.168.1.0/24;"
+  ];
+
   systemd.services.updateNginxIP = {
     description = "Update Nginx IP whitelist using stunclient";
     wantedBy = [ "multi-user.target" ];
     script = ''
       #!/bin/sh
-      MY_IP=$(${pkgs.stuntman}/bin/stunclient stun.l.google.com 19302 | grep 'Mapped address' | awk '{print $3}' | cut -d':' -f1)
+      MY_IP=$(${pkgs.stuntman}/bin/stunclient stun.l.google.com 19302 | grep 'Mapped address' | ${pkgs.gawk}/bin/awk '{print $3}' | cut -d':' -f1)
 
-      cat <<EOF > /etc/nginx/ip_whitelist.conf
+      cat <<EOF > ${ipWhiteList}
       allow 127.0.0.1;
       allow 192.168.1.0/24;
       allow $MY_IP/32;
