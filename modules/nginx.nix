@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
   networking.firewall.allowedTCPPorts = [
     80
@@ -45,15 +45,10 @@
         , ...
         }@args:
         let
-          myIPs = [
-            "127.0.0.1"
-            "192.168.1.0/24"
-            "188.134.77.141/24"
-          ];
           ipRestrictionsConfig =
             if internal then
               ''
-                ${lib.strings.concatMapStringsSep "\n      " (ip: "allow ${ip};") myIPs}
+                include /etc/nginx/ip_whitelist.conf;
                 deny all;
                 error_page 403 @error404;
               ''
@@ -117,4 +112,33 @@
         };
       };
     };
+
+  systemd.services.updateNginxIP = {
+    description = "Update Nginx IP whitelist using stunclient";
+    wantedBy = [ "multi-user.target" ];
+    script = ''
+      #!/bin/sh
+      MY_IP=$(${pkgs.stuntman}/bin/stunclient stun.l.google.com 19302 | grep 'Mapped address' | awk '{print $3}' | cut -d':' -f1)
+
+      cat <<EOF > /etc/nginx/ip_whitelist.conf
+      allow 127.0.0.1;
+      allow 192.168.1.0/24;
+      allow $MY_IP/32;
+      EOF
+
+      systemctl reload nginx
+    '';
+    serviceConfig = {
+      Type = "oneshot";
+      User = "root";
+    };
+  };
+
+  systemd.timers.updateNginxIP = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "hourly";
+      Persistent = true;
+    };
+  };
 }
