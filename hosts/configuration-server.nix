@@ -9,10 +9,13 @@
     # ./../modules/grafana.nix
     ./../modules/gitlab.nix
     ./../modules/syncthing.nix
-    ./../modules/fail2ban.nix
+    ./../modules/network
   ];
 
-  # Configure keymap in X11
+  network = {
+    enableFirewall = true;
+  };
+
   services.xserver.xkb = {
     layout = "us";
   };
