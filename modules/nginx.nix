@@ -26,9 +26,15 @@ in
 
     clientMaxBodySize = "10G";
     commonHttpConfig = "
-          map $http_upgrade $connection_upgrade {
-          default upgrade;
-          '' close;
+      client_header_timeout 5s;
+      client_body_timeout   10s;
+      send_timeout          10s;
+      keepalive_timeout     15s 15s;
+      keepalive_requests    100;
+
+      map $http_upgrade $connection_upgrade {
+        default upgrade;
+      '' close;
       }
     ";
     appendHttpConfig = ''
