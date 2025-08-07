@@ -22,7 +22,7 @@
       "noatime"
       "_netdev"
       "hard"
-      "nconnect=32"
+      "nconnect=16"
       "noresvport"
       "actimeo=60"
       "nfsvers=4.2"
