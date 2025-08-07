@@ -53,10 +53,9 @@ in
         enableACME = true;
       };
       proxy =
-        {
-          addr,
-          internal ? false,
-          ...
+        { addr
+        , internal ? false
+        , ...
         }@args:
         let
           ipRestrictionsConfig =

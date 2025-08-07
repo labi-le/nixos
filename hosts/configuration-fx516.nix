@@ -6,7 +6,7 @@
     ./../modules/sound.nix
     ./../modules/greeter.nix
     ./../modules/wayland.nix
-    ./../modules/sshfs.nix
+    ./../modules/nfs.nix
     ./../modules/thunar.nix
     ./../modules/kernel-zen.nix
     ./../modules/thunderbolt.nix

@@ -8,7 +8,7 @@
     ./../modules/greeter.nix
     ./../modules/uxplay.nix
     ./../modules/wayland.nix
-    ./../modules/sshfs.nix
+    ./../modules/nfs.nix
     ./../modules/thunar.nix
     ./../modules/kernel-cachyos.nix
     ./../modules/radeon.nix
