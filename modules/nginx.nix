@@ -18,20 +18,22 @@ in
   services.nginx = {
     enable = true;
     recommendedGzipSettings = true;
-    recommendedOptimisation = true;
+    # recommendedOptimisation = true;
     recommendedProxySettings = true;
     recommendedTlsSettings = true;
 
     statusPage = true;
-
     clientMaxBodySize = "10G";
     commonHttpConfig = "
-      client_header_timeout 5s;
+      sendfile on;
+      tcp_nopush on;
+      tcp_nodelay on;
+    
+      client_header_timeout 1s;
       client_body_timeout   10s;
       send_timeout          10s;
-      keepalive_timeout     15s 15s;
+      keepalive_timeout     10s;
       keepalive_requests    100;
-
       map $http_upgrade $connection_upgrade {
         default upgrade;
       '' close;
@@ -51,9 +53,10 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
