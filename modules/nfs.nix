@@ -22,10 +22,8 @@
       "noatime"
       "_netdev"
       "hard"
-      "nconnect=8"
+      "nconnect=32"
       "noresvport"
-      "rsize=65536"
-      "wsize=65536"
       "actimeo=60"
       "nfsvers=4.2"
     ];
