@@ -39,6 +39,7 @@
   packages = {
     desktop = true;
     dev = true;
+    ide = true;
   };
 
   hotkeys = {
