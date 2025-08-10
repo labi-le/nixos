@@ -5,10 +5,11 @@ with pkgs;
   cmake
   go
   gcc
-  # rustup
+  rustup
   golangci-lint
   graphviz
   pgcli
+  nixpkgs-fmt
 
   wireshark
   (php.buildEnv {
