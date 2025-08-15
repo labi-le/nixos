@@ -31,6 +31,7 @@
   system.stateVersion = "24.11";
 
   network.injectHosts = true;
+  networking.firewall.allowedTCPPorts = [ 9003 ];
   packages = {
     desktop = true;
     dev = true;
