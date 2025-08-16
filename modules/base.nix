@@ -20,5 +20,6 @@
     ./ssh.nix
     ./builders.nix
     ./hotkeys.nix
+    ./nix-search-tv.nix
   ];
 }
