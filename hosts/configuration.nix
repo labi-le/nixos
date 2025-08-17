@@ -16,6 +16,7 @@
     ./../modules/adb.nix
     ./../modules/vial.nix
     ./../modules/firefox.nix
+    ./../modules/gamepad.nix
   ];
 
   services.xserver.xkb = {
