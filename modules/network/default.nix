@@ -33,9 +33,9 @@ in
   };
 
   imports = [
-    (mkIf cfg.enableProxy (import ./proxy.nix))
-    (mkIf cfg.injectHosts (import ./hosts.nix))
-    (mkIf cfg.enableFirewall (import ./firewall.nix))
+    ./proxy.nix
+    ./hosts.nix
+    ./firewall.nix
   ];
 
   config = {

@@ -17,6 +17,10 @@
   })
 
   (final: prev: {
+    deal = inputs.deal.packages.${system}.default;
+  })
+
+  (final: prev: {
     ayugram-desktop = inputs.ayugram-desktop.packages.${system}.ayugram-desktop;
   })
 ]

@@ -86,6 +86,8 @@ in
         nix-tree
         nix-prefetch-git
         tree
+
+        deal
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages
