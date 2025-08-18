@@ -12,6 +12,7 @@
     nixvim.url = "github:nix-community/nixvim";
     nix-gaming.url = "github:fufexan/nix-gaming";
     belphegor.url = "github:labi-le/belphegor";
+    deal.url = "github:labi-le/deal";
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
 
@@ -39,35 +40,34 @@
         hostname: configFile:
         nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs; };
-          modules =
-            [
-              configFile
-              ./hosts/hardware-${hostname}.nix
-              { networking.hostName = hostname; }
+          modules = [
+            configFile
+            ./hosts/hardware-${hostname}.nix
+            { networking.hostName = hostname; }
 
-              {
-                nixpkgs.overlays = import ./overlays.nix { inherit inputs system; };
-                nixpkgs.config.allowUnfree = true;
-              }
+            {
+              nixpkgs.overlays = import ./overlays.nix { inherit inputs system; };
+              nixpkgs.config.allowUnfree = true;
+            }
 
-              # Extra Modules
-              ./settings.nix
-              nixvim.nixosModules.nixvim
-              chaotic.nixosModules.default
-              spicetify-nix.nixosModules.default
-              musnix.nixosModules.musnix
-            ]
-            ++ nixpkgs.lib.optionals (hostname != "server") [
-              home-manager.nixosModules.home-manager
-              {
-                home-manager.users.labile = {
-                  imports = [ ./home-manager/home.nix ];
-                };
-                home-manager.useUserPackages = true;
-                home-manager.sharedModules = [ ];
-                home-manager.backupFileExtension = "hm-backup";
-              }
-            ];
+            # Extra Modules
+            ./settings.nix
+            nixvim.nixosModules.nixvim
+            chaotic.nixosModules.default
+            spicetify-nix.nixosModules.default
+            musnix.nixosModules.musnix
+          ]
+          ++ nixpkgs.lib.optionals (hostname != "server") [
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.users.labile = {
+                imports = [ ./home-manager/home.nix ];
+              };
+              home-manager.useUserPackages = true;
+              home-manager.sharedModules = [ ];
+              home-manager.backupFileExtension = "hm-backup";
+            }
+          ];
         };
 
     in

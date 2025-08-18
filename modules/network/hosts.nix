@@ -1,4 +1,6 @@
-{
+{ config, lib, ... }:
+
+lib.mkIf config.network.injectHosts {
   networking.hosts = {
     "172.16.0.11" = [ "forms.local.ru" ];
   };
@@ -12,7 +14,7 @@
   #   '';
   # };
 
-  services.resolved.enable = false;
+  services.resolved.enable = lib.mkForce false;
   networking.networkmanager.dns = "default";
   environment.etc."resolv.conf".text = ''
     nameserver 192.168.1.1
