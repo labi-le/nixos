@@ -83,6 +83,7 @@ in
         "type:touchpad" = {
           dwt = "enabled";
           tap = "enabled";
+          drag_lock = "disabled";
           natural_scroll = "enabled";
         };
         "*" = {
@@ -292,82 +293,81 @@ in
           };
         }
       ];
-      keybindings =
-        {
-          "${common}+Return" = "exec ${terminal}";
-          "${common}+Shift+e" = "exec wofi-powermenu";
-          "${common}+q" = "kill";
-          "BTN_MIDDLE" = "kill --border"; # bindcode
-          "${common}+z" = "exec pkill -SIGUSR1 ${bar}";
-          "${common}+x" = "mode resize";
-          "${common}+d" = "exec ${menu} -c ~/.config/wofi/config -I";
-          "${common}+Shift+c" = "reload";
-          "${common}+Left" = "focus left";
-          "${common}+Down" = "focus down";
-          "${common}+Up" = "focus up";
-          "${common}+Right" = "focus right";
-          "${common}+Shift+Left" = "move left";
-          "${common}+Shift+Down" = "move down";
-          "${common}+Shift+Up" = "move up";
-          "${common}+Shift+Right" = "move right";
-          "${common}+${additional}+Left" = "workspace prev";
-          "${common}+${additional}+Up" = "workspace prev";
-          "${common}+${additional}+Right" = "workspace next";
-          "${common}+${additional}+Down" = "workspace next";
-          "${common}+b" = "splith";
-          "${common}+v" = "splitv";
-          "${common}+s" = "layout stacking";
-          "${common}+w" = "layout tabbed";
-          "${common}+e" = "layout toggle split";
-          "${common}+f" = "fullscreen";
-          "${common}+Shift+space" = "floating toggle";
-          "${common}+Ctrl+Right" = "resize shrink width 20 ppt";
-          "${common}+Ctrl+Up" = "resize grow height 20 ppt";
-          "${common}+Ctrl+Down" = "resize shrink height 20 ppt";
-          "${common}+Ctrl+Left" = "resize grow width 20 ppt";
-          "XF86AudioLowerVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 -2%";
-          "XF86AudioRaiseVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 +2%";
-          "XF86AudioMute" =
-            ''exec ${pkgs.alsa-utils}/bin/amixer -c $(cat /proc/asound/cards | grep "Scarlett" | head -n1 | awk '{print $1}') cset numid=10 toggle'';
-          "XF86AudioPlay" = "exec playerctl play";
-          "XF86AudioPause" = "exec playerctl pause";
-          "XF86AudioNext" = "exec playerctl next";
-          "XF86AudioPrev" = "exec playerctl previous";
-          "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
-          "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
-          "${common}+r" = "exec ${filemanager}";
-          "${common}+o" = "exec ${browser}";
-          "${additional}+s" = "exec ${grimshot} copy area";
-          "${additional}+a" = "exec ${grimshot} copy active";
-          "${additional}+e" = "exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -";
-          "${additional}+p" = "exec wl-uploader";
-          "${common}+${additional}+Shift+Right" = "move workspace to output right";
-          "${common}+${additional}+Shift+Left" = "move workspace to output left";
-          "${common}+${additional}+Shift+Down" = "move workspace to output down";
-          "${common}+${additional}+Shift+Up" = "move workspace to output up";
-        }
-        // builtins.listToAttrs (
-          builtins.concatLists (
-            map
-              (n: [
-                {
-                  name = "${common}+shift+${n}";
-                  value = "move container to workspace ${n}";
-                }
-                {
-                  name = "${common}+${n}";
-                  value = "workspace ${n}";
-                }
-              ])
-              (
-                builtins.attrValues workspaces
+      keybindings = {
+        "${common}+Return" = "exec ${terminal}";
+        "${common}+Shift+e" = "exec wofi-powermenu";
+        "${common}+q" = "kill";
+        "BTN_MIDDLE" = "kill --border"; # bindcode
+        "${common}+z" = "exec pkill -SIGUSR1 ${bar}";
+        "${common}+x" = "mode resize";
+        "${common}+d" = "exec ${menu} -c ~/.config/wofi/config -I";
+        "${common}+Shift+c" = "reload";
+        "${common}+Left" = "focus left";
+        "${common}+Down" = "focus down";
+        "${common}+Up" = "focus up";
+        "${common}+Right" = "focus right";
+        "${common}+Shift+Left" = "move left";
+        "${common}+Shift+Down" = "move down";
+        "${common}+Shift+Up" = "move up";
+        "${common}+Shift+Right" = "move right";
+        "${common}+${additional}+Left" = "workspace prev";
+        "${common}+${additional}+Up" = "workspace prev";
+        "${common}+${additional}+Right" = "workspace next";
+        "${common}+${additional}+Down" = "workspace next";
+        "${common}+b" = "splith";
+        "${common}+v" = "splitv";
+        "${common}+s" = "layout stacking";
+        "${common}+w" = "layout tabbed";
+        "${common}+e" = "layout toggle split";
+        "${common}+f" = "fullscreen";
+        "${common}+Shift+space" = "floating toggle";
+        "${common}+Ctrl+Right" = "resize shrink width 20 ppt";
+        "${common}+Ctrl+Up" = "resize grow height 20 ppt";
+        "${common}+Ctrl+Down" = "resize shrink height 20 ppt";
+        "${common}+Ctrl+Left" = "resize grow width 20 ppt";
+        "XF86AudioLowerVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 -2%";
+        "XF86AudioRaiseVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 +2%";
+        "XF86AudioMute" =
+          ''exec ${pkgs.alsa-utils}/bin/amixer -c $(cat /proc/asound/cards | grep "Scarlett" | head -n1 | awk '{print $1}') cset numid=10 toggle'';
+        "XF86AudioPlay" = "exec playerctl play";
+        "XF86AudioPause" = "exec playerctl pause";
+        "XF86AudioNext" = "exec playerctl next";
+        "XF86AudioPrev" = "exec playerctl previous";
+        "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
+        "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
+        "${common}+r" = "exec ${filemanager}";
+        "${common}+o" = "exec ${browser}";
+        "${additional}+s" = "exec ${grimshot} copy area";
+        "${additional}+a" = "exec ${grimshot} copy active";
+        "${additional}+e" = "exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -";
+        "${additional}+p" = "exec wl-uploader";
+        "${common}+${additional}+Shift+Right" = "move workspace to output right";
+        "${common}+${additional}+Shift+Left" = "move workspace to output left";
+        "${common}+${additional}+Shift+Down" = "move workspace to output down";
+        "${common}+${additional}+Shift+Up" = "move workspace to output up";
+      }
+      // builtins.listToAttrs (
+        builtins.concatLists (
+          map
+            (n: [
+              {
+                name = "${common}+shift+${n}";
+                value = "move container to workspace ${n}";
+              }
+              {
+                name = "${common}+${n}";
+                value = "workspace ${n}";
+              }
+            ])
+            (
+              builtins.attrValues workspaces
                 ++ [
-                  "9"
-                  "0"
-                ]
-              )
-          )
-        );
+                "9"
+                "0"
+              ]
+            )
+        )
+      );
 
       bindkeysToCode = true;
       workspaceOutputAssign = [
