@@ -33,7 +33,6 @@
   network.injectHosts = true;
   packages = {
     desktop = true;
-    dev = true;
   };
 
   hotkeys = {

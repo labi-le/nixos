@@ -10,8 +10,6 @@ let
   cfg = config.packages;
   desktopPackages = import ./packages-desktop.nix { inherit pkgs; };
   serverPackages = import ./packages-server.nix { inherit pkgs; };
-  devPackages = import ./packages-dev.nix { inherit pkgs; };
-  idePackages = import ./packages-ide.nix { inherit pkgs; };
 in
 {
   options.packages = {
@@ -25,18 +23,6 @@ in
       type = types.bool;
       default = false;
       description = mdDoc "Enable desktop-specific packages.";
-    };
-
-    dev = mkOption {
-      type = types.bool;
-      default = false;
-      description = mdDoc "Enable dev-specific packages.";
-    };
-
-    ide = mkOption {
-      type = types.bool;
-      default = false;
-      description = mdDoc "Enable dev-specific packages.";
     };
 
   };
@@ -88,11 +74,13 @@ in
         tree
 
         deal
+        wireshark
+        python3
+        ffmpeg
+
       ]
       ++ optionals cfg.desktop desktopPackages
-      ++ optionals cfg.server serverPackages
-      ++ optionals cfg.dev devPackages
-      ++ optionals cfg.ide idePackages;
+      ++ optionals cfg.server serverPackages;
 
     fonts = {
       enableDefaultPackages = true;

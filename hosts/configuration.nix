@@ -32,10 +32,10 @@
   system.stateVersion = "24.11";
 
   network.injectHosts = true;
-  packages = {
-    desktop = true;
-    dev = true;
-    ide = true;
+  ide = {
+    goland.enable = true;
+    phpstorm.enable = true;
+    rustrover.enable = true;
   };
 
   networking.interfaces.enp37s0.wakeOnLan.enable = true;

@@ -38,8 +38,12 @@
   network.injectHosts = true;
   packages = {
     desktop = true;
-    dev = true;
-    ide = true;
+  };
+
+  ide = {
+    goland.enable = true;
+    phpstorm.enable = true;
+    rustrover.enable = true;
   };
 
   hotkeys = {

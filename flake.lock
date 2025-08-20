@@ -248,6 +248,22 @@
         "type": "github"
       }
     },
+    "goland-flake": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./modules/ide/goland",
+        "type": "path"
+      },
+      "original": {
+        "path": "./modules/ide/goland",
+        "type": "path"
+      },
+      "parent": []
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -639,6 +655,22 @@
         "type": "github"
       }
     },
+    "phpstorm-flake": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./modules/ide/phpstorm",
+        "type": "path"
+      },
+      "original": {
+        "path": "./modules/ide/phpstorm",
+        "type": "path"
+      },
+      "parent": []
+    },
     "root": {
       "inputs": {
         "agenix": "agenix",
@@ -647,11 +679,14 @@
         "chaotic": "chaotic",
         "deal": "deal",
         "flake-utils": "flake-utils_3",
+        "goland-flake": "goland-flake",
         "home-manager": "home-manager_3",
         "musnix": "musnix",
         "nix-gaming": "nix-gaming",
         "nixpkgs": "nixpkgs_8",
         "nixvim": "nixvim",
+        "phpstorm-flake": "phpstorm-flake",
+        "rustrover-flake": "rustrover-flake",
         "spicetify-nix": "spicetify-nix"
       }
     },
@@ -675,6 +710,22 @@
         "repo": "rust-overlay",
         "type": "github"
       }
+    },
+    "rustrover-flake": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./modules/ide/rustrover",
+        "type": "path"
+      },
+      "original": {
+        "path": "./modules/ide/rustrover",
+        "type": "path"
+      },
+      "parent": []
     },
     "spicetify-nix": {
       "inputs": {
