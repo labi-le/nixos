@@ -22,6 +22,19 @@
     musnix.url = "github:musnix/musnix";
 
     agenix.url = "github:ryantm/agenix";
+
+    goland-flake = {
+      url = "path:./modules/ide/goland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    phpstorm-flake = {
+      url = "path:./modules/ide/phpstorm";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    rustrover-flake = {
+      url = "path:./modules/ide/rustrover";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -31,6 +44,9 @@
     , chaotic
     , spicetify-nix
     , musnix
+    , goland-flake
+    , phpstorm-flake
+    , rustrover-flake
     , ...
     }:
     let
@@ -51,6 +67,7 @@
             }
 
             # Extra Modules
+            ./modules/ide/default.nix
             ./settings.nix
             nixvim.nixosModules.nixvim
             chaotic.nixosModules.default
