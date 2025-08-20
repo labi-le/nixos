@@ -40,5 +40,6 @@ in
 
   config = {
     networking.networkmanager.enable = cfg.enableNetworkManager;
+    networking.firewall.enable = cfg.enableFirewall;
   };
 }
