@@ -27,8 +27,6 @@
     enable = true;
   };
   programs.dconf.enable = true;
-  programs.amnezia-vpn.enable = true;
-
   system.stateVersion = "24.11";
 
   network.injectHosts = true;
