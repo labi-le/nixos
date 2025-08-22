@@ -42,7 +42,7 @@
 
   ide = {
     goland.enable = true;
-    phpstorm.enable = true;
+    # phpstorm.enable = true;
     rustrover.enable = true;
   };
 
