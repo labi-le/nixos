@@ -35,6 +35,7 @@
     phpstorm.enable = true;
     rustrover.enable = true;
   };
+  packages.desktop = true;
 
   networking.interfaces.enp37s0.wakeOnLan.enable = true;
   hotkeys = {
