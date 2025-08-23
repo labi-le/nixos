@@ -8,6 +8,7 @@
     };
 
     settings = {
+      download-buffer-size = 2 * 1024 * 1024 * 1024; # 2 GB
       # auto-optimise-store = true;
       http-connections = 500;
       max-substitution-jobs = 100;
