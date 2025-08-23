@@ -3,8 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
-
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,12 +13,9 @@
     deal.url = "github:labi-le/deal";
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
-
     ayugram-desktop.url = "github:ayugram-port/ayugram-desktop/release?submodules=1";
-
     flake-utils.url = "github:numtide/flake-utils";
     musnix.url = "github:musnix/musnix";
-
     agenix.url = "github:ryantm/agenix";
 
     goland-flake = {
@@ -44,59 +39,61 @@
     , chaotic
     , spicetify-nix
     , musnix
-    , goland-flake
-    , phpstorm-flake
-    , rustrover-flake
     , ...
     }:
     let
       system = "x86_64-linux";
 
+      commonModules = [
+        ./modules/ide/default.nix
+        ./settings.nix
+        nixvim.nixosModules.nixvim
+        chaotic.nixosModules.default
+        spicetify-nix.nixosModules.default
+        musnix.nixosModules.musnix
+      ];
+
+      baseConfig = {
+        nixpkgs.overlays = [ (import ./overlays.nix { inherit inputs system; }) ];
+        nixpkgs.config.allowUnfree = true;
+      };
+
+      homeManagerConfig = {
+        home-manager = {
+          users.labile = {
+            imports = [ ./home-manager/home.nix ];
+          };
+          useUserPackages = true;
+          useGlobalPkgs = true;
+          sharedModules = [ ];
+          backupFileExtension = "hm-backup";
+        };
+      };
+
       mkSystem =
-        hostname: configFile:
+        hostname: configFile: withHomeManager:
         nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs; };
           modules = [
             configFile
             ./hosts/hardware-${hostname}.nix
             { networking.hostName = hostname; }
-
-            {
-              nixpkgs.overlays = [ (import ./overlays.nix { inherit inputs system; }) ];
-              nixpkgs.config.allowUnfree = true;
-            }
-
-            # Extra Modules
-            ./modules/ide/default.nix
-            ./settings.nix
-            nixvim.nixosModules.nixvim
-            chaotic.nixosModules.default
-            spicetify-nix.nixosModules.default
-            musnix.nixosModules.musnix
+            baseConfig
           ]
-          ++ nixpkgs.lib.optionals (hostname != "server") [
+          ++ commonModules
+          ++ nixpkgs.lib.optionals withHomeManager [
             home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                users.labile = {
-                  imports = [ ./home-manager/home.nix ];
-                };
-                useUserPackages = true;
-                useGlobalPkgs = true;
-                sharedModules = [ ];
-                backupFileExtension = "hm-backup";
-              };
-            }
+            homeManagerConfig
           ];
         };
 
     in
     {
       nixosConfigurations = {
-        pc = mkSystem "pc" ./hosts/configuration.nix;
-        fx516 = mkSystem "fx516" ./hosts/configuration-fx516.nix;
-        notebook = mkSystem "notebook" ./hosts/configuration-notebook.nix;
-        server = mkSystem "server" ./hosts/configuration-server.nix;
+        pc = mkSystem "pc" ./hosts/configuration.nix true;
+        fx516 = mkSystem "fx516" ./hosts/configuration-fx516.nix true;
+        notebook = mkSystem "notebook" ./hosts/configuration-notebook.nix true;
+        server = mkSystem "server" ./hosts/configuration-server.nix false;
       };
     };
 }
