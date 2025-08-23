@@ -48,7 +48,7 @@ in
         }
       ];
       startup = [
-        { command = "belphegor"; }
+        { command = "${pkgs.belphegor}/bin/belphegor"; }
         {
           command = "import-gsettings";
           always = true;
@@ -475,9 +475,6 @@ in
   home.packages = with pkgs; [
     swaybg
     sway-contrib.grimshot
-    pulseaudio
-    alsa-utils
-    brightnessctl
     playerctl
     swappy
     wev
@@ -495,5 +492,11 @@ in
       gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
       gsettings set "$gnome_schema" font-name "$font_name"
     '')
+    wl-clipboard
+    slurp
+    wayshot
+    grim
+    brightnessctl
+    wf-recorder
   ];
 }

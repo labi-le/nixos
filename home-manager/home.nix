@@ -24,10 +24,6 @@ in
   # release notes.
   home.stateVersion = "23.11"; # Please read the comment before changing.
 
-  # The home.packages option allows you to install Nix packages into your
-  # environment.
-  home.packages = with pkgs; [ pulseaudio ];
-
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file."Downloads" = {
@@ -42,11 +38,4 @@ in
 
   programs.home-manager.enable = true;
   home.enableNixpkgsReleaseCheck = false;
-  nixpkgs = {
-    config = {
-      allowUnfree = true;
-      allowUnfreePredicate = (_: true);
-    };
-  };
-
 }
