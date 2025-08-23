@@ -62,7 +62,7 @@
             { networking.hostName = hostname; }
 
             {
-              nixpkgs.overlays = import ./overlays.nix { inherit inputs system; };
+              nixpkgs.overlays = [ (import ./overlays.nix { inherit inputs system; }) ];
               nixpkgs.config.allowUnfree = true;
             }
 
@@ -77,12 +77,15 @@
           ++ nixpkgs.lib.optionals (hostname != "server") [
             home-manager.nixosModules.home-manager
             {
-              home-manager.users.labile = {
-                imports = [ ./home-manager/home.nix ];
+              home-manager = {
+                users.labile = {
+                  imports = [ ./home-manager/home.nix ];
+                };
+                useUserPackages = true;
+                useGlobalPkgs = true;
+                sharedModules = [ ];
+                backupFileExtension = "hm-backup";
               };
-              home-manager.useUserPackages = true;
-              home-manager.sharedModules = [ ];
-              home-manager.backupFileExtension = "hm-backup";
             }
           ];
         };

@@ -56,7 +56,14 @@ in
       ];
     };
 
-    environment.systemPackages = with pkgs; [ pulseaudio ];
+    environment.systemPackages = with pkgs; [
+      pulseaudio
+      alsa-utils
+      qpwgraph
+      alsa-scarlett-gui
+
+      pavucontrol
+    ];
 
     services.actkbd =
       let

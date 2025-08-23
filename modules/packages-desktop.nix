@@ -9,20 +9,10 @@ with pkgs;
   gsettings-desktop-schemas
   libnotify
   home-manager
-  ipset
   xdg-utils
-  pavucontrol
   dconf
 
-  wl-clipboard
-  slurp
-  wayshot
-  grim
-  brightnessctl
-  wf-recorder
-
   (callPackage ./pkgs/wl-uploader.nix { })
-  belphegor
 
   (google-chrome.override {
     commandLineArgs = [
@@ -37,11 +27,6 @@ with pkgs;
   qbittorrent
 
   # audacity
-  alsa-scarlett-gui
-  patchage
-  qpwgraph
-  alsa-utils
-
   ayugram-desktop
   vlc
 ]
