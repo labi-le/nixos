@@ -18,40 +18,31 @@
     musnix.url = "github:musnix/musnix";
     agenix.url = "github:ryantm/agenix";
 
-    goland-flake = {
-      url = "github:labi-le/nixos?dir=modules/ide/goland";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    phpstorm-flake = {
-      url = "github:labi-le/nixos?dir=modules/ide/phpstorm";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    rustrover-flake = {
-      url = "github:labi-le/nixos?dir=modules/ide/rustrover";
-      inputs.nixpkgs.follows = "nixpkgs";
+    ide = {
+      url = "path:./modules/ide";
     };
   };
 
   outputs =
-    inputs@{
-      nixpkgs,
-      home-manager,
-      nixvim,
-      chaotic,
-      spicetify-nix,
-      musnix,
-      ...
+    inputs@{ nixpkgs
+    , home-manager
+    , nixvim
+    , chaotic
+    , spicetify-nix
+    , musnix
+    , ide
+    , ...
     }:
     let
       system = "x86_64-linux";
 
       commonModules = [
-        ./modules/ide/default.nix
         ./settings.nix
         nixvim.nixosModules.nixvim
         chaotic.nixosModules.default
         spicetify-nix.nixosModules.default
         musnix.nixosModules.musnix
+        ide.nixosModules.default
       ];
 
       baseConfig = {
