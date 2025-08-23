@@ -44,7 +44,7 @@ dump:
 		echo "=== PROJECT TREE ==="; \
 		nix run nixpkgs#tree -- . || echo "(tree failed)"; \
 		echo ""; \
-		find . -type f \( \
+		find modules/ide -type f \( \
 			-name "*.go" -o \
 			-name "*.yml" -o \
 			-name "*.yaml" -o \
