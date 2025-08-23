@@ -255,14 +255,20 @@
         ]
       },
       "locked": {
-        "path": "./modules/ide/goland",
-        "type": "path"
+        "dir": "modules/ide/goland",
+        "lastModified": 1755914795,
+        "narHash": "sha256-ngHVemjc7k3597imV0b4Usc/DOSh1mhfiwZZ+hE89TY=",
+        "owner": "labi-le",
+        "repo": "nixos",
+        "rev": "7e5455cb8617debe03da47c7c03cf10d8c49b15c",
+        "type": "github"
       },
       "original": {
-        "path": "./modules/ide/goland",
-        "type": "path"
-      },
-      "parent": []
+        "dir": "modules/ide/goland",
+        "owner": "labi-le",
+        "repo": "nixos",
+        "type": "github"
+      }
     },
     "home-manager": {
       "inputs": {
@@ -662,14 +668,20 @@
         ]
       },
       "locked": {
-        "path": "./modules/ide/phpstorm",
-        "type": "path"
+        "dir": "modules/ide/phpstorm",
+        "lastModified": 1755914795,
+        "narHash": "sha256-ngHVemjc7k3597imV0b4Usc/DOSh1mhfiwZZ+hE89TY=",
+        "owner": "labi-le",
+        "repo": "nixos",
+        "rev": "7e5455cb8617debe03da47c7c03cf10d8c49b15c",
+        "type": "github"
       },
       "original": {
-        "path": "./modules/ide/phpstorm",
-        "type": "path"
-      },
-      "parent": []
+        "dir": "modules/ide/phpstorm",
+        "owner": "labi-le",
+        "repo": "nixos",
+        "type": "github"
+      }
     },
     "root": {
       "inputs": {
@@ -718,14 +730,20 @@
         ]
       },
       "locked": {
-        "path": "./modules/ide/rustrover",
-        "type": "path"
+        "dir": "modules/ide/rustrover",
+        "lastModified": 1755914795,
+        "narHash": "sha256-ngHVemjc7k3597imV0b4Usc/DOSh1mhfiwZZ+hE89TY=",
+        "owner": "labi-le",
+        "repo": "nixos",
+        "rev": "7e5455cb8617debe03da47c7c03cf10d8c49b15c",
+        "type": "github"
       },
       "original": {
-        "path": "./modules/ide/rustrover",
-        "type": "path"
-      },
-      "parent": []
+        "dir": "modules/ide/rustrover",
+        "owner": "labi-le",
+        "repo": "nixos",
+        "type": "github"
+      }
     },
     "spicetify-nix": {
       "inputs": {
