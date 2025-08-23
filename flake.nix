@@ -19,27 +19,28 @@
     agenix.url = "github:ryantm/agenix";
 
     goland-flake = {
-      url = "path:./modules/ide/goland";
+      url = "github:labi-le/nixos?dir=modules/ide/goland";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     phpstorm-flake = {
-      url = "path:./modules/ide/phpstorm";
+      url = "github:labi-le/nixos?dir=modules/ide/phpstorm";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     rustrover-flake = {
-      url = "path:./modules/ide/rustrover";
+      url = "github:labi-le/nixos?dir=modules/ide/rustrover";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs =
-    inputs@{ nixpkgs
-    , home-manager
-    , nixvim
-    , chaotic
-    , spicetify-nix
-    , musnix
-    , ...
+    inputs@{
+      nixpkgs,
+      home-manager,
+      nixvim,
+      chaotic,
+      spicetify-nix,
+      musnix,
+      ...
     }:
     let
       system = "x86_64-linux";
