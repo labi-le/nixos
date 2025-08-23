@@ -11,7 +11,8 @@
     ./../modules/kernel.nix
     ./../modules/thunderbolt.nix
     # ./../modules/radeon.nix
-    # ./../modules/battery.nix
+    ./../modules/battery.nix
+    ./../modules/hibernation.nix
     ./../modules/adb.nix
     ./../modules/bluetooth.nix
   ];
