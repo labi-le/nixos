@@ -17,6 +17,7 @@
     ./../modules/vial.nix
     ./../modules/firefox.nix
     ./../modules/gamepad.nix
+    ./../modules/syncthing/pc.nix
   ];
 
   services.xserver.xkb = {
