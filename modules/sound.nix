@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 let
@@ -23,7 +24,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    security.rtkit.enable = false;
+    security.rtkit.enable = true;
 
     musnix = {
       enable = true;
