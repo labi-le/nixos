@@ -8,7 +8,8 @@
     ./../modules/kernel-zen.nix
     # ./../modules/grafana.nix
     # ./../modules/gitlab.nix
-    ./../modules/syncthing.nix
+    ./../modules/syncthing/server.nix
+
     ./../modules/network
   ];
 
