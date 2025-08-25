@@ -2,7 +2,12 @@
 
 lib.mkIf config.network.enableFirewall {
 
-  networking.firewall.enable = true;
+  networking.firewall = {
+    enable = true;
+    logRefusedConnections = false;
+    rejectPackets = false;
+
+  };
   services.fail2ban = {
     enable = true;
     maxretry = 5;
