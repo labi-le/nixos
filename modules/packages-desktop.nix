@@ -25,6 +25,7 @@ with pkgs;
 
   pcsx2
   qbittorrent
+  postman
 
   # audacity
   ayugram-desktop
