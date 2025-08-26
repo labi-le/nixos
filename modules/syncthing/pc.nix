@@ -15,6 +15,14 @@
           "phone"
         ];
       };
+
+      "/mnt/ssd2tb/sync" = {
+        id = "media";
+        sharesWith = [
+          "server"
+          "phone"
+        ];
+      };
     };
   };
 }

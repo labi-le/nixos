@@ -12,6 +12,7 @@
         id = "media";
         sharesWith = [
           "phone"
+          "pc"
         ];
       };
 
