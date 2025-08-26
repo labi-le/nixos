@@ -21,26 +21,12 @@
         "git"
         "dotenv"
         "history"
-        "golang"
         "z"
-        "github"
-        "yii2"
         "sudo"
-        "copybuffer"
-        "copyfile"
-        "copypath"
-        "zsh-interactive-cd"
         "ssh"
-        "git-auto-fetch"
         "git"
       ];
     };
     enableCompletion = true;
   };
-
-  environment.systemPackages = with pkgs; [
-    fzf
-  ];
-
 }
-
