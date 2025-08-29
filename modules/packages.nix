@@ -38,7 +38,6 @@ in
         unzip
         jq
         openssl
-        ranger
         yazi
 
         dig

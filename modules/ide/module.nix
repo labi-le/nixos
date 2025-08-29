@@ -80,7 +80,7 @@ in
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [ ];
-      example = "with pkgs; [ ranger gdb ]";
+      example = "with pkgs; [ gdb ]";
       description = "Additional packages to add to the IDE's environment PATH.";
     };
     extraVmOptions = lib.mkOption {
