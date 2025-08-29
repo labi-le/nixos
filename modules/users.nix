@@ -33,7 +33,7 @@
   environment.interactiveShellInit = ''
     alias n='nvim'
     alias m='make'
-    alias rr='ranger'
+    alias rr='yazi'
     alias y='yazi'
     alias ddu='docker update --restart=no $(docker ps -qa)'
     alias dsa='docker stop $(docker ps -qa)'
