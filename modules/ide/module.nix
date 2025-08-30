@@ -69,6 +69,19 @@ let
         --set LD_LIBRARY_PATH "${lib.makeLibraryPath [ openssl ]}" \
       '';
     }
+    {
+      name = "pycharm";
+      packageName = "pycharm-professional";
+      packageWithEnv = "pycharm-with-env";
+      executable = "pycharm-professional";
+      baseEnv = [
+        python3
+        poetry
+        black
+        mypy
+      ];
+      extraWrapperArgs = "";
+    }
   ];
 
   enabledIdes = builtins.filter (ide: cfg.${ide.name}.enable) ides;
