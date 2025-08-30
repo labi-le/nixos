@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 with lib;
@@ -32,7 +33,6 @@ in
       with pkgs;
       [
         wget
-        fastfetch
         gnumake
         lsof
         unzip
