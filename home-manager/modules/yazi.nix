@@ -1,13 +1,27 @@
 { pkgs, ... }:
-# https://github.com/nix-community/home-manager/blob/master/modules/programs/yazi.nix
+
 let
-  yazi-with-ueberzugpp = pkgs.symlinkJoin {
-    name = "yazi-with-ueberzugpp";
+  yazi-dependencies = with pkgs; [
+    ueberzugpp
+    ffmpeg
+    p7zip
+    jq
+    poppler_utils
+    fd
+    ripgrep
+    fzf
+    zoxide
+    librsvg
+    imagemagick
+  ];
+
+  yazi-with-deps = pkgs.symlinkJoin {
+    name = "yazi-with-dependencies";
     paths = [ pkgs.yazi ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/yazi \
-        --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ueberzugpp ]}
+        --prefix PATH : ${pkgs.lib.makeBinPath yazi-dependencies}
     '';
   };
 
@@ -16,7 +30,7 @@ in
   programs.yazi = {
     enable = true;
     enableZshIntegration = true;
-    package = yazi-with-ueberzugpp;
+    package = yazi-with-deps;
     settings = {
       preview = {
         image_protocol = "ueberzug";
@@ -33,9 +47,13 @@ in
           desc = "Delete files permanently without confirmation";
         }
         {
-          run = "hidden toggle";
-          on = [ "h" ];
-          desc = "Toggle show hidden files";
+          on = [ "y" ];
+          run = [
+            # ''shell --block -- sh -c 'for f in "$@"; do echo "file://$f"; done | wl-copy --type text/uri-list' yazi-placeholder "$@"''
+            ''shell --orphan -- sh -c 'for f in "$@"; do echo "file://$f"; done | wl-copy --type text/uri-list' yazi-placeholder "$@"''
+            "yank"
+          ];
+          desc = "Copy file URI to clipboard and yank (blocking)";
         }
       ];
     };
