@@ -135,7 +135,7 @@ in
     wantedBy = [ "multi-user.target" ];
     script = ''
       #!/bin/sh
-      MY_IP=$(${pkgs.stuntman}/bin/stunclient stun.l.google.com 19302 | grep 'Mapped address' | ${pkgs.gawk}/bin/awk '{print $3}' | cut -d':' -f1)
+      MY_IP=$(${pkgs.getmyip}/bin/getmyip)
 
       cat <<EOF > ${ipWhiteList}
       allow 127.0.0.1;

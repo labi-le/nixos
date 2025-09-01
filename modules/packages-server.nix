@@ -5,5 +5,5 @@ with pkgs;
   smartmontools
   hdparm
   nvme-cli
+  getmyip
 ]
-

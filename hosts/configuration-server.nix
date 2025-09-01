@@ -17,6 +17,19 @@
     enableFirewall = true;
   };
 
+  networking.firewall = {
+    allowedTCPPorts = [
+      2053
+
+      51827
+      51828
+    ];
+    allowedUDPPorts = [
+      51827
+      51828
+    ];
+  };
+
   services.xserver.xkb = {
     layout = "us";
   };

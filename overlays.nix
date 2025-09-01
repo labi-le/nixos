@@ -10,4 +10,6 @@ final: prev: {
   #   inherit system;
   #   config.allowUnfree = true;
   # };
+
+  getmyip = prev.callPackage ./pkgs/getmyip.nix { };
 }
