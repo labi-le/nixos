@@ -7,9 +7,6 @@ HARDWARE_FILE := hosts/hardware-$(HOSTNAME).nix
 disko:
 	sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./disko.nix
 
-prepare:
-	nix-shell -p git gnumake neovim
-
 fix-flake:
 	@git add --intent-to-add .
 
