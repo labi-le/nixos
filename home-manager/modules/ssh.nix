@@ -3,6 +3,7 @@
 {
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
 
     matchBlocks = {
       "pet".hostname = "192.168.1.2";

@@ -3,7 +3,6 @@
     ./boot.nix
     ./sudo.nix
     ./systemd.nix
-    ./logind.nix
     ./journald.nix
     ./shell.nix
     ./monitors.nix
