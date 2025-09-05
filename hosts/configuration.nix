@@ -35,6 +35,7 @@
     goland.enable = true;
     phpstorm.enable = true;
     rustrover.enable = true;
+    pycharm.enable = true;
   };
   packages.desktop = true;
 
