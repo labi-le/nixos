@@ -64,4 +64,6 @@
   packages = {
     server = true;
   };
+
+  services.logind.settings.Login.HandleLidSwitch = "ignore";
 }
