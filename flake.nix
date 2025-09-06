@@ -8,18 +8,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixvim.url = "github:nix-community/nixvim";
-    nix-gaming.url = "github:fufexan/nix-gaming";
     belphegor.url = "github:labi-le/belphegor";
     deal.url = "github:labi-le/deal";
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-    spicetify-nix.url = "github:Gerg-L/spicetify-nix";
     ayugram-desktop.url = "github:ayugram-port/ayugram-desktop/release?submodules=1";
     flake-utils.url = "github:numtide/flake-utils";
     musnix.url = "github:musnix/musnix";
-    agenix.url = "github:ryantm/agenix";
 
-    ide = {
-      url = "path:./modules/ide";
+    ide.url = "path:./modules/ide";
+    quickshell = {
+      url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -28,7 +27,6 @@
     , home-manager
     , nixvim
     , chaotic
-    , spicetify-nix
     , musnix
     , ide
     , ...
@@ -40,7 +38,6 @@
         ./settings.nix
         nixvim.nixosModules.nixvim
         chaotic.nixosModules.default
-        spicetify-nix.nixosModules.default
         musnix.nixosModules.musnix
         ide.nixosModules.default
       ];
