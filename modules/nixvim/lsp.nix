@@ -1,7 +1,7 @@
-{ lib
-, pkgs
-, inputs
-, ...
+{
+  lib,
+  pkgs,
+  ...
 }:
 {
   programs.nixvim.plugins.cmp-nvim-lsp.enable = true;
