@@ -10,7 +10,7 @@
     ./../modules/wayland.nix
     ./../modules/nfs.nix
     ./../modules/thunar.nix
-    ./../modules/kernel-cachyos.nix
+    ./../modules/kernel-zen.nix
     ./../modules/radeon.nix
     # ./../modules/vm.nix
     ./../modules/adb.nix
