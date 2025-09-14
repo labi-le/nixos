@@ -8,7 +8,7 @@
     ./../modules/wayland.nix
     ./../modules/nfs.nix
     ./../modules/thunar.nix
-    ./../modules/kernel.nix
+    ./../modules/kernel-zen.nix
     ./../modules/thunderbolt.nix
     # ./../modules/radeon.nix
     ./../modules/battery.nix

@@ -9,5 +9,8 @@
   boot.extraModulePackages = with pkgs; [
     linuxKernel.packages.linux_zen.cpupower
   ];
-  boot.blacklistedKernelModules = [ "snd_pcsp" "pcspkr" ];
+  boot.blacklistedKernelModules = [
+    "snd_pcsp"
+    "pcspkr"
+  ];
 }
