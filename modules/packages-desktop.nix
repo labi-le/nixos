@@ -26,7 +26,6 @@ with pkgs;
   pcsx2
   qbittorrent
   postman
-  shadps4
   mangohud
 
   # audacity
