@@ -4,7 +4,7 @@ final: prev: {
   nix-gaming = inputs.nix-gaming.packages.${system};
   belphegor = inputs.belphegor.packages.${system}.default;
   deal = inputs.deal.packages.${system}.default;
-  ayugram-desktop = inputs.ayugram-desktop.packages.${system}.ayugram-desktop;
+  # ayugram-desktop = inputs.ayugram-desktop.packages.${system}.ayugram-desktop;
 
   # stable = import inputs.nixpkgs-stable {
   #   inherit system;

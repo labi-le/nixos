@@ -11,7 +11,7 @@
     belphegor.url = "github:labi-le/belphegor";
     deal.url = "github:labi-le/deal";
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-    ayugram-desktop.url = "github:ayugram-port/ayugram-desktop/release?submodules=1";
+    # ayugram-desktop.url = "github:ayugram-port/ayugram-desktop/release?submodules=1";
     flake-utils.url = "github:numtide/flake-utils";
     musnix.url = "github:musnix/musnix";
 
