@@ -39,7 +39,7 @@
   };
   packages.desktop = true;
 
-  networking.interfaces.enp37s0.wakeOnLan.enable = true;
+  networking.interfaces.wlp11s0.wakeOnLan.enable = true;
   hotkeys = {
     common = "Mod1";
     additional = "Mod4";
