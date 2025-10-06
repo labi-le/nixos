@@ -1,6 +1,6 @@
 {
   fileSystems."/media/storage" = {
-    device = "/dev/disk/by-uuid/b5eb331a-08e3-4942-ac86-25974cf29e10";
+    device = "/dev/disk/by-uuid/fbd1306f-612b-4032-bd8c-445087dd7782";
     fsType = "f2fs";
     options = [
       "defaults"
