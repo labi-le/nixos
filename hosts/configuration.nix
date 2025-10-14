@@ -45,22 +45,22 @@
     additional = "Mod4";
   };
   monitors = {
-    "DP-2" = {
+    "DP-3" = {
       mode = "2560x1440@179.999Hz";
       geometry = "1920 0";
       position = "center";
     };
-    "DP-1" = {
+    "DP-2" = {
       mode = "1920x1080@165Hz";
       geometry = "0 0";
       position = "left";
     };
-    "DP-3" = {
-      mode = "--custom 2560x1440@83Hz";
-      transform = "270";
-      geometry = "4480 0";
-      position = "right";
-    };
+    # "DP-3" = {
+    #   mode = "--custom 2560x1440@83Hz";
+    #   transform = "270";
+    #   geometry = "4480 0";
+    #   position = "right";
+    # };
   };
   audio = {
     enable = true;
