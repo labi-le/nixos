@@ -11,9 +11,9 @@ let
   menu = "wofi";
   filemanager = "thunar";
 
-  left = "DP-1";
-  center = "DP-2";
-  right = "DP-3";
+  left = "DP-2";
+  center = "DP-3";
+  right = "DP-2";
 
   common = osConfig.hotkeys.common;
   additional = osConfig.hotkeys.additional;
