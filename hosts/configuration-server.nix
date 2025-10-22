@@ -11,6 +11,7 @@
     ./../modules/syncthing/server.nix
     ./../modules/nvidia/gt210.nix
     ./../modules/vaultwarden.nix
+    ./../modules/qbittorrent.nix
 
     ./../modules/network
   ];
