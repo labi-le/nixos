@@ -103,7 +103,7 @@ in
       };
       "torrent.labile.cc" = proxy { addr = "http://127.0.0.1:7000"; };
       "vaultwarden.labile.cc" = proxy {
-        addr = "http://127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}";
+        addr = "http://127.0.0.1:7005";
       };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";
