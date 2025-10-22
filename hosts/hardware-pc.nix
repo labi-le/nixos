@@ -39,6 +39,18 @@
     ];
   };
 
+  fileSystems."/mnt/ssd2tb" = {
+    device = "/dev/disk/by-uuid/68EF-024C";
+    fsType = "exfat";
+    options = [
+      "nofail"
+      "uid=1000"
+      "gid=100"
+      "dmask=022" # 755 (rwxr-xr-x)
+      "fmask=133" # 644 (rw-r--r--)
+    ];
+  };
+
   swapDevices = [ ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
