@@ -90,15 +90,30 @@
       treesitter-textobjects = {
         enable = true;
 
-        move = {
-          enable = true;
-          gotoNextStart = {
-            "]]" = "@block.outer";
-            "]m" = "@function.outer";
-          };
-          gotoPreviousStart = {
-            "[[" = "@block.outer";
-            "[m" = "@function.outer";
+        settings = {
+          move = {
+            enable = true;
+            set_jumps = true;
+            goto_next_start = {
+              "]]" = {
+                query = "@block.outer";
+                desc = "Next block start";
+              };
+              "]m" = {
+                query = "@function.outer";
+                desc = "Next function start";
+              };
+            };
+            goto_previous_start = {
+              "[[" = {
+                query = "@block.outer";
+                desc = "Previous block start";
+              };
+              "[m" = {
+                query = "@function.outer";
+                desc = "Previous function start";
+              };
+            };
           };
         };
       };
