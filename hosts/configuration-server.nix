@@ -49,7 +49,8 @@
   boot.kernel.sysctl = {
     "vm.dirty_background_ratio" = 15;
     "vm.dirty_ratio" = 30;
-    "vm.dirty_expire_centisecs" = 5 * (60 * 100); # 1m = 60*100;
+    "vm.dirty_expire_centisecs" = 30 * (60 * 100); # 1m = 60*100;
+    "vm.dirty_writeback_centisecs" = 30 * (60 * 100);
   };
 
   hardware.graphics.enable = true;
