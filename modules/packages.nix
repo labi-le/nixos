@@ -76,6 +76,7 @@ in
         python3
         ffmpeg
         agenix
+        age
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;
