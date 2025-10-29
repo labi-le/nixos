@@ -61,4 +61,40 @@ dump:
 
 
 agenix-rekey:
-	agenix -r
+	@echo "Rekeying agenix secrets accessible from $(HOSTNAME)..."
+	@find secrets -name '*.age' -type f ! -path 'secrets/keys/*' | while read secret; do \
+		echo "Checking $$secret..."; \
+		if agenix -r -i /etc/ssh/ssh_host_ed25519_key "$$secret" 2>&1 | grep -q "no identity matched"; then \
+			echo "⚠️  Skipping $$secret (not accessible from $(HOSTNAME))"; \
+		else \
+			echo "✅ Rekeyed $$secret"; \
+		fi; \
+	done
+
+
+restore-keys:
+	@echo "decrypt ssh key for $(HOSTNAME)..."
+	@if [ ! -f "secrets/keys/$(HOSTNAME)_ssh_host_ed25519_key.age" ]; then \
+		echo "key not found for $(HOSTNAME) in secrets/keys/"; \
+		echo "available keys:"; \
+		ls -1 secrets/keys/ 2>/dev/null | grep ed25519 || echo "no keys found"; \
+		exit 1; \
+	fi
+	@age -d secrets/keys/$(HOSTNAME)_ssh_host_ed25519_key.age | sudo tee /etc/ssh/ssh_host_ed25519_key > /dev/null
+	@sudo ssh-keygen -y -f /etc/ssh/ssh_host_ed25519_key | sudo tee /etc/ssh/ssh_host_ed25519_key.pub > /dev/null
+	@sudo chmod 600 /etc/ssh/ssh_host_ed25519_key
+	@sudo chmod 644 /etc/ssh/ssh_host_ed25519_key.pub
+	@sudo chown root:root /etc/ssh/ssh_host_ed25519_key*
+	@echo "key restored for $(HOSTNAME)"
+
+backup-keys:
+	@echo "backup ssh key from $(HOSTNAME)..."
+	@if [ ! -f "/etc/ssh/ssh_host_ed25519_key" ]; then \
+		echo "ed25519 key not found in /etc/ssh/"; \
+		exit 1; \
+	fi
+	@mkdir -p secrets/keys
+	@sudo cat /etc/ssh/ssh_host_ed25519_key | age -p > secrets/keys/$(HOSTNAME)_ssh_host_ed25519_key.age
+	@echo "key for $(HOSTNAME) encrypted and saved"
+	@echo "commit: git add secrets/keys/ && git commit -m 'Backup key for $(HOSTNAME)'"
+
