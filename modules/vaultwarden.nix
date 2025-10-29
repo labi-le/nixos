@@ -1,8 +1,16 @@
-{ ... }:
+{ config, ... }:
+
 {
+  age.secrets.vaultwarden-env = {
+    file = ../secrets/vaultwarden/env.age;
+    owner = "vaultwarden";
+    group = "vaultwarden";
+    mode = "0400";
+  };
+
   services.vaultwarden = {
     enable = true;
     backupDir = "/var/local/vaultwarden/backup";
-    environmentFile = "/var/local/vaultwarden/.env";
+    environmentFile = config.age.secrets.vaultwarden-env.path;
   };
 }

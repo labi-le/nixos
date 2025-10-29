@@ -59,3 +59,6 @@ dump:
 		done; \
 	} | wl-copy
 
+
+agenix-rekey:
+	agenix -r
