@@ -75,7 +75,7 @@ in
         wireshark
         python3
         ffmpeg
-
+        agenix
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;

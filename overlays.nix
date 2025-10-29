@@ -12,4 +12,5 @@ final: prev: {
   # };
 
   getmyip = prev.callPackage ./pkgs/getmyip.nix { };
+  agenix = inputs.agenix.packages.${system}.default;
 }

@@ -16,6 +16,7 @@
     musnix.url = "github:musnix/musnix";
 
     ide.url = "path:./modules/ide";
+    agenix.url = "github:ryantm/agenix";
   };
 
   outputs =
@@ -25,6 +26,7 @@
     , chaotic
     , musnix
     , ide
+    , agenix
     , ...
     }:
     let
@@ -36,6 +38,7 @@
         chaotic.nixosModules.default
         musnix.nixosModules.musnix
         ide.nixosModules.default
+        agenix.nixosModules.default
       ];
 
       baseConfig = {
