@@ -24,6 +24,7 @@ let
         go
         golangci-lint
         graphviz
+        gcc
       ];
       extraWrapperArgs = "";
     }

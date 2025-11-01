@@ -43,7 +43,7 @@
   };
 
   ide = {
-    # goland.enable = true;
+    goland.enable = true;
     # phpstorm.enable = true;
     pycharm = {
       enable = true;
