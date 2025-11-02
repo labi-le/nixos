@@ -9,6 +9,7 @@
     };
     nixvim.url = "github:nix-community/nixvim";
     belphegor.url = "github:labi-le/belphegor";
+    wl-uploader.url = "github:labi-le/wl-paste-uploader";
     deal.url = "github:labi-le/deal";
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     # ayugram-desktop.url = "github:ayugram-port/ayugram-desktop/release?submodules=1";

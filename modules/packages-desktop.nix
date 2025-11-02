@@ -12,7 +12,7 @@ with pkgs;
   xdg-utils
   dconf
 
-  (callPackage ./pkgs/wl-uploader.nix { })
+  wl-uploader
 
   (google-chrome.override {
     commandLineArgs = [
