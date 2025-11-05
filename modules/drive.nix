@@ -13,12 +13,12 @@ in
     ];
   };
 
-  systemd.services."set-readahead-drive" = {
-    description = "Set readahead for /dev/sda";
-    wantedBy = [ "local-fs.target" ];
-    serviceConfig.Type = "oneshot";
-    serviceConfig.ExecStart = "${pkgs.util-linux}/bin/blockdev --setra 1024 ${device}";
-  };
+  # systemd.services."set-readahead-drive" = {
+  #   description = "Set readahead for /dev/sda";
+  #   wantedBy = [ "local-fs.target" ];
+  #   serviceConfig.Type = "oneshot";
+  #   serviceConfig.ExecStart = "${pkgs.util-linux}/bin/blockdev --setra 1024 ${device}";
+  # };
 
   services.nfs = {
     server = {
