@@ -1,8 +1,7 @@
-{
-  lib,
-  pkgs,
-  config,
-  ...
+{ lib
+, pkgs
+, config
+, ...
 }:
 
 let
@@ -58,10 +57,9 @@ in
         enableACME = true;
       };
       proxy =
-        {
-          addr,
-          internal ? false,
-          ...
+        { addr
+        , internal ? false
+        , ...
         }@args:
         let
           ipRestrictionsConfig =

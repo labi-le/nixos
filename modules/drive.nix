@@ -24,7 +24,7 @@ in
     server = {
       enable = true;
       exports = ''
-        /drive 192.168.1.0/24(rw,sync,no_subtree_check,insecure)
+        /drive 192.168.1.0/24(rw,async,no_subtree_check,insecure)
       '';
       nproc = 16;
     };
