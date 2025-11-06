@@ -26,6 +26,7 @@
       "noresvport"
       "actimeo=60"
       "nfsvers=4.2"
+      "nordirplus"
     ];
   };
 
