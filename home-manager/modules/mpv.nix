@@ -93,6 +93,8 @@ in
       cache-secs = "600";
       cache-pause = "no";
 
+      demuxer-max-bytes = "10737418240";
+
       # gpu-context = "wayland";
       # hwdec = "auto-safe";
       # vo = "vaapi";
