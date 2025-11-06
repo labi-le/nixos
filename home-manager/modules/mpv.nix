@@ -93,7 +93,7 @@ in
       cache-secs = "600";
       cache-pause = "no";
 
-      demuxer-max-bytes = "5G";
+      demuxer-max-bytes = "512M";
 
       # gpu-context = "wayland";
       # hwdec = "auto-safe";
