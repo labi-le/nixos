@@ -40,4 +40,14 @@ in
   networking.firewall = {
     allowedTCPPorts = [ 2049 ];
   };
+
+  boot.kernelPatches = [
+    {
+      name = "disable-nfs-readplus";
+      patch = null;
+      extraConfig = ''
+        NFS_V4_2_READ_PLUS n
+      '';
+    }
+  ];
 }
