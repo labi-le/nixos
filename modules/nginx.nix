@@ -59,6 +59,7 @@ in
       proxy =
         { addr
         , internal ? false
+        , websockets ? false
         , ...
         }@args:
         let
@@ -74,6 +75,9 @@ in
           locationCfg = {
             proxyPass = addr;
             extraConfig = ipRestrictionsConfig;
+          }
+          // lib.optionalAttrs websockets {
+            proxyWebsockets = true;
           };
           baseCfg = base {
             "/" = locationCfg;
@@ -83,6 +87,7 @@ in
         // (builtins.removeAttrs args [
           "addr"
           "internal"
+          "websockets"
         ])
         // {
           kTLS = true;
@@ -101,22 +106,23 @@ in
         addr = "http://127.0.0.1:7001";
         internal = true;
       };
-      "torrent.labile.cc" = proxy { addr = "http://127.0.0.1:7000"; };
+      "torrent.labile.cc" = proxy {
+        addr = "http://127.0.0.1:7000";
+        internal = true;
+      };
       "vaultwarden.labile.cc" = proxy {
         addr = "http://127.0.0.1:7005";
+        internal = true;
       };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";
         internal = true;
       };
       # "gitlab.labile.cc" = proxy { addr = "http://unix:/run/gitlab/gitlab-workhorse.socket"; };
-      "logs.labile.cc" = {
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:8008";
-          proxyWebsockets = true;
-        };
-        forceSSL = true;
-        enableACME = true;
+      "logs.labile.cc" = proxy {
+        addr = "http://127.0.0.1:8008";
+        internal = true;
+        websockets = true;
       };
       "_" = {
         listen = [
