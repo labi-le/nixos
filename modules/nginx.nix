@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -20,6 +21,7 @@ in
   services.logrotate.settings.nginx.enable = false;
 
   services.nginx = {
+    package = pkgs.angie;
     enable = true;
     recommendedGzipSettings = true;
     # recommendedOptimisation = true;
@@ -57,10 +59,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
