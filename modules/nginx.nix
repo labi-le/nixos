@@ -1,8 +1,7 @@
-{
-  lib,
-  pkgs,
-  config,
-  ...
+{ lib
+, pkgs
+, config
+, ...
 }:
 
 let
@@ -59,11 +58,10 @@ in
         enableACME = true;
       };
       proxy =
-        {
-          addr,
-          internal ? false,
-          websockets ? false,
-          ...
+        { addr
+        , internal ? false
+        , websockets ? false
+        , ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -150,7 +148,7 @@ in
     wantedBy = [ "multi-user.target" ];
     script = ''
       #!/bin/sh
-      MY_IP=$(${pkgs.getmyip}/bin/getmyip)
+      MY_IP=$(${pkgs.dnsutils}/bin/dig +short external)
 
       cat <<EOF > ${ipWhiteList}
       allow 127.0.0.1;
