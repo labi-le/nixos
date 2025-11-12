@@ -12,6 +12,7 @@
     ./../modules/nvidia/gt210.nix
     ./../modules/vaultwarden.nix
     ./../modules/qbittorrent.nix
+    ./../modules/awg
 
     ./../modules/network
   ];
