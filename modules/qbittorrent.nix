@@ -1,6 +1,10 @@
 { ... }:
 
 {
+  networking.firewall = {
+    allowedTCPPorts = [ 6881 ];
+    allowedUDPPorts = [ 6881 ];
+  };
   services.qbittorrent = {
     enable = true;
     # user = "qbittorrent";
