@@ -16,5 +16,7 @@
     ];
   };
 
+  boot.kernelModules = [ "iptable_nat" ];
+
   imports = [ ./compose.nix ];
 }
