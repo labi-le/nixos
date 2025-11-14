@@ -11,13 +11,12 @@
     enable = true;
     settings = {
       interface = "wg0";
-      listen-address = "10.8.0.1";
+      except-interface = "lo";
       bind-interfaces = true;
       no-resolv = true;
       server = [ "192.168.1.1" ];
     };
   };
-
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [ 51821 ];

@@ -19,6 +19,7 @@
 
   network = {
     enableFirewall = true;
+    injectHosts = true;
   };
 
   networking.enableIPv6 = false;
