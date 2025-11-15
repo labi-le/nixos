@@ -60,4 +60,5 @@
   };
 
   services.logind.settings.Login.HandleLidSwitch = "ignore";
+  networking.interfaces.enp37s0.wakeOnLan.enable = true;
 }
