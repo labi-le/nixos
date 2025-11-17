@@ -125,6 +125,37 @@ in
         internal = true;
         websockets = true;
       };
+      "gachi-radio.labile.cc" = {
+        enableACME = true;
+        forceSSL = true;
+
+        locations."/" = {
+          proxyPass = "https://radio.gachibass.us.to";
+          extraConfig = ''
+            proxy_ssl_server_name on;
+            proxy_ssl_name radio.gachibass.us.to;
+            proxy_set_header Host radio.gachibass.us.to;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_set_header Accept-Encoding "";
+
+            sub_filter_types
+              text/html
+              application/javascript
+              text/css
+              application/json
+              text/plain;
+
+            sub_filter "https://radio.gachibass.us.to" "https://gachi-radio.labile.cc";
+            sub_filter "http://radio.gachibass.us.to"  "https://gachi-radio.labile.cc";
+            sub_filter "radio.gachibass.us.to"         "gachi-radio.labile.cc";
+
+            sub_filter_once off;
+          '';
+        };
+      };
       "_" = {
         listen = [
           {
