@@ -47,6 +47,9 @@ in
     appendHttpConfig = ''
       access_log /var/log/nginx/access.log;
       error_log /var/log/nginx/error.log;
+
+      proxy_headers_hash_max_size 1024;
+      proxy_headers_hash_bucket_size 128;
     '';
   };
 
@@ -142,17 +145,40 @@ in
             proxy_set_header Accept-Encoding "";
 
             sub_filter_types
-              text/html
               application/javascript
               text/css
               application/json
               text/plain;
+
 
             sub_filter "https://radio.gachibass.us.to" "https://gachi-radio.labile.cc";
             sub_filter "http://radio.gachibass.us.to"  "https://gachi-radio.labile.cc";
             sub_filter "radio.gachibass.us.to"         "gachi-radio.labile.cc";
 
             sub_filter_once off;
+          '';
+        };
+
+        locations."/fisting" = {
+          proxyPass = "https://radio.gachibass.us.to/fisting";
+          extraConfig = ''
+            proxy_ssl_server_name on;
+            proxy_ssl_name radio.gachibass.us.to;
+            proxy_set_header Host radio.gachibass.us.to;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_connect_timeout 5s;
+            proxy_send_timeout    30s;
+            proxy_read_timeout    600s;
+
+            proxy_buffering off;
+            proxy_request_buffering off;
+
+            proxy_set_header Accept-Encoding "";
+
+            proxy_intercept_errors on;
           '';
         };
       };
