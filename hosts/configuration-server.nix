@@ -17,6 +17,9 @@
     ./../modules/network
   ];
 
+  networking.firewall = {
+    allowedTCPPorts = [ 6901 ]; # todo move to package (work-wm.nix)
+  };
   network = {
     enableFirewall = true;
     injectHosts = true;
