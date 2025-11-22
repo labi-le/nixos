@@ -13,8 +13,8 @@
     ./../modules/vaultwarden.nix
     ./../modules/qbittorrent.nix
     ./../modules/awg
-
     ./../modules/network
+    ./../modules/dpi.nix
   ];
 
   networking.firewall = {
