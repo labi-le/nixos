@@ -28,6 +28,7 @@ let
       ];
       extraWrapperArgs = "";
     }
+
     {
       name = "phpstorm";
       packageName = "phpstorm";
@@ -54,6 +55,7 @@ let
       ];
       extraWrapperArgs = "";
     }
+
     {
       name = "rustrover";
       packageName = "rust-rover";
@@ -70,6 +72,7 @@ let
         --set LD_LIBRARY_PATH "${lib.makeLibraryPath [ openssl ]}" \
       '';
     }
+
     {
       name = "pycharm";
       packageName = "pycharm-professional";
@@ -80,6 +83,22 @@ let
         poetry
         black
         mypy
+      ];
+      extraWrapperArgs = "";
+    }
+
+    {
+      name = "idea";
+      packageName = "idea-ultimate";
+      packageWithEnv = "idea-ultimate-with-env";
+      executable = "idea-ultimate";
+      baseEnv = [
+        jdk
+        maven
+        gradle
+        gcc
+        gdb
+        lldb
       ];
       extraWrapperArgs = "";
     }
