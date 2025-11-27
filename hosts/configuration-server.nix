@@ -14,6 +14,7 @@
     ./../modules/qbittorrent.nix
     ./../modules/awg
     ./../modules/network
+    ./../modules/ngate-vm.nix
   ];
 
   network = {
