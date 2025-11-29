@@ -14,18 +14,12 @@
     ./../modules/qbittorrent.nix
     ./../modules/awg
     ./../modules/network
-    ./../modules/dpi.nix
   ];
 
-  networking.firewall = {
-    allowedTCPPorts = [ 6901 ]; # todo move to package (work-wm.nix)
-  };
   network = {
     enableFirewall = true;
     injectHosts = true;
   };
-
-  networking.enableIPv6 = false;
 
   services.xserver.xkb = {
     layout = "us";
