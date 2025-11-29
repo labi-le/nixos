@@ -22,6 +22,11 @@
     injectHosts = true;
   };
 
+  services.debian-sakura-vm = {
+    enable = true;
+    flakePath = "/home/labile/projects/ngate-wrapped/qcow2/";
+  };
+
   services.xserver.xkb = {
     layout = "us";
   };
