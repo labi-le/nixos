@@ -13,5 +13,6 @@ in
 
   "secrets/vaultwarden/env.age".publicKeys = [ server ];
   "secrets/awg/env.age".publicKeys = [ server ];
+  "secrets/ngate-env.age".publicKeys = [ server ];
 
 }

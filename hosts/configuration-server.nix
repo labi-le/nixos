@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 {
   imports = [
@@ -14,7 +14,6 @@
     ./../modules/qbittorrent.nix
     ./../modules/awg
     ./../modules/network
-    ./../modules/ngate-vm.nix
   ];
 
   network = {
@@ -22,9 +21,15 @@
     injectHosts = true;
   };
 
-  services.debian-sakura-vm = {
+  age.secrets.ngate-env = {
+    file = ../secrets/ngate-env.age;
+    mode = "600";
+    owner = "root";
+  };
+
+  services.ngate-wrapped-vm = {
     enable = true;
-    flakePath = "/home/labile/projects/ngate-wrapped/qcow2/";
+    envFile = config.age.secrets.ngate-env.path;
   };
 
   services.xserver.xkb = {

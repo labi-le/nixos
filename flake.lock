@@ -370,6 +370,26 @@
         "type": "github"
       }
     },
+    "ngate-wrapped": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_6"
+      },
+      "locked": {
+        "dir": "qcow2",
+        "lastModified": 1764451724,
+        "narHash": "sha256-mZKg0P2MraTgG33yfxSuIDcxIzcOk0fu12Qsd4khxFo=",
+        "ref": "refs/heads/master",
+        "rev": "8b8d6d6d6b0620be8d5fdffd8da01ae0e0707145",
+        "revCount": 20,
+        "type": "git",
+        "url": "ssh://git@github.com/labi-le/ngate-wrapped"
+      },
+      "original": {
+        "dir": "qcow2",
+        "type": "git",
+        "url": "ssh://git@github.com/labi-le/ngate-wrapped"
+      }
+    },
     "nix-github-actions": {
       "inputs": {
         "nixpkgs": [
@@ -475,6 +495,20 @@
     },
     "nixpkgs_6": {
       "locked": {
+        "lastModified": 1764384123,
+        "narHash": "sha256-UoliURDJFaOolycBZYrjzd9Cc66zULEyHqGFH3QHEq0=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "59b6c96beacc898566c9be1052ae806f3835f87d",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_7": {
+      "locked": {
         "lastModified": 1762596750,
         "narHash": "sha256-rXXuz51Bq7DHBlfIjN7jO8Bu3du5TV+3DSADBX7/9YQ=",
         "owner": "nixos",
@@ -489,7 +523,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_7": {
+    "nixpkgs_8": {
       "locked": {
         "lastModified": 1762482733,
         "narHash": "sha256-g/da4FzvckvbiZT075Sb1/YDNDr+tGQgh4N8i5ceYMg=",
@@ -505,7 +539,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_8": {
+    "nixpkgs_9": {
       "locked": {
         "lastModified": 1761907660,
         "narHash": "sha256-kJ8lIZsiPOmbkJypG+B5sReDXSD1KGu2VEPNqhRa/ew=",
@@ -524,7 +558,7 @@
     "nixvim": {
       "inputs": {
         "flake-parts": "flake-parts",
-        "nixpkgs": "nixpkgs_7",
+        "nixpkgs": "nixpkgs_8",
         "nuschtosSearch": "nuschtosSearch",
         "systems": "systems_6"
       },
@@ -575,7 +609,8 @@
         "home-manager": "home-manager_3",
         "ide": "ide",
         "musnix": "musnix",
-        "nixpkgs": "nixpkgs_6",
+        "ngate-wrapped": "ngate-wrapped",
+        "nixpkgs": "nixpkgs_7",
         "nixvim": "nixvim",
         "wl-uploader": "wl-uploader"
       }
@@ -709,7 +744,7 @@
     "wl-uploader": {
       "inputs": {
         "flake-utils": "flake-utils_5",
-        "nixpkgs": "nixpkgs_8"
+        "nixpkgs": "nixpkgs_9"
       },
       "locked": {
         "lastModified": 1762115544,

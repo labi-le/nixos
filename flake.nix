@@ -18,17 +18,21 @@
 
     ide.url = "path:./modules/ide";
     agenix.url = "github:ryantm/agenix";
+
+    ngate-wrapped.url = "git+ssh://git@github.com/labi-le/ngate-wrapped?dir=qcow2";
   };
 
   outputs =
-    inputs@{ nixpkgs
-    , home-manager
-    , nixvim
-    , chaotic
-    , musnix
-    , ide
-    , agenix
-    , ...
+    inputs@{
+      nixpkgs,
+      home-manager,
+      nixvim,
+      chaotic,
+      musnix,
+      ide,
+      agenix,
+      ngate-wrapped,
+      ...
     }:
     let
       system = "x86_64-linux";
@@ -40,6 +44,7 @@
         musnix.nixosModules.musnix
         ide.nixosModules.default
         agenix.nixosModules.default
+        ngate-wrapped.nixosModules.default
       ];
 
       baseConfig = {
