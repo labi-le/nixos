@@ -30,6 +30,12 @@ in
       default = true;
       description = "Enable or disable NetworkManager";
     };
+
+    enableIPv6 = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Enable or disable IPv6";
+    };
   };
 
   imports = [
@@ -41,5 +47,6 @@ in
   config = {
     networking.networkmanager.enable = cfg.enableNetworkManager;
     networking.firewall.enable = cfg.enableFirewall;
+    networking.enableIPv6 = cfg.enableIPv6;
   };
 }
