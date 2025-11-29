@@ -8,6 +8,9 @@
     autoLoad = true;
     enable = true;
     servers = {
+      bashls = {
+        enable = true;
+      };
       nil_ls = {
         enable = true;
         settings = {
