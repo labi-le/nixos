@@ -1,44 +1,101 @@
-{ config, pkgs, ... }:
+{ lib
+, pkgs
+, config
+, ...
+}:
+
+with lib;
 
 let
-  flakeVm = builtins.getFlake "/home/labile/projects/ngate-wrapped/qcow2";
+  cfg = config.services.debian-sakura-vm;
   system = pkgs.stdenv.hostPlatform.system;
+  flakeVm = builtins.getFlake cfg.flakePath;
 in
 {
+  options.services.debian-sakura-vm = {
+    enable = mkEnableOption "Debian Sakura VM service";
 
-  networking.firewall = {
-    allowedTCPPorts = [
-      6080
-      49157
-    ];
+    flakePath = mkOption {
+      type = types.path;
+      description = "Path to the flake that exposes apps.<system>.default.program for the VM runner";
+    };
+
+    ports = mkOption {
+      type = types.listOf types.port;
+      default = [
+        6080
+        49157
+      ];
+      description = "TCP ports to open in the firewall for the VM";
+    };
+
+    bridges = mkOption {
+      type = types.listOf types.str;
+      default = [ "br0" ];
+      description = "Bridge interfaces allowed in qemu bridge.conf";
+    };
+
+    stateDirectory = mkOption {
+      type = types.str;
+      default = "debian-sakura-vm";
+      description = "systemd StateDirectory for the VM";
+    };
+
+    workingDirectory = mkOption {
+      type = types.str;
+      default = "/var/lib/debian-sakura-vm";
+      description = "WorkingDirectory for the VM service";
+    };
+
+    user = mkOption {
+      type = types.str;
+      default = "root";
+      description = "User for the VM service";
+    };
+
+    group = mkOption {
+      type = types.str;
+      default = "root";
+      description = "Group for the VM service";
+    };
+
+    serviceName = mkOption {
+      type = types.str;
+      default = "debian-sakura-vm";
+      description = "Name of the systemd service";
+    };
   };
 
-  security.wrappers.qemu-bridge-helper = {
-    source = "${pkgs.qemu}/libexec/qemu-bridge-helper";
-    owner = "root";
-    group = "root";
-    setuid = true;
-    permissions = "u+xs,g+x,o-x";
-  };
+  config = mkIf cfg.enable {
+    networking.firewall.allowedTCPPorts = cfg.ports;
 
-  environment.etc."qemu/bridge.conf".text = ''
-    allow br0
-  '';
-  systemd.services.debian-sakura-vm = {
-    description = "Debian Sakura VM from flake";
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
+    security.wrappers.qemu-bridge-helper = {
+      source = "${pkgs.qemu}/libexec/qemu-bridge-helper";
+      owner = "root";
+      group = "root";
+      setuid = true;
+      permissions = "u+xs,g+x,o-x";
+    };
 
-    serviceConfig = {
-      Type = "simple";
-      User = "root";
-      Group = "root";
-      WorkingDirectory = "/var/lib/debian-sakura-vm";
-      StateDirectory = "debian-sakura-vm";
+    environment.etc."qemu/bridge.conf".text =
+      concatStringsSep "\n" (map (name: "allow ${name}") cfg.bridges) + "\n";
 
-      ExecStart = "${flakeVm.apps.${system}.default.program}";
-      Restart = "on-failure";
+    systemd.services."${cfg.serviceName}" = {
+      description = "Debian Sakura VM from flake";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      serviceConfig = {
+        Type = "simple";
+        User = cfg.user;
+        Group = cfg.group;
+        WorkingDirectory = cfg.workingDirectory;
+        StateDirectory = cfg.stateDirectory;
+
+        ExecStart = "${flakeVm.apps.${system}.default.program}";
+        Restart = "on-failure";
+      };
     };
   };
 }
