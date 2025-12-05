@@ -33,10 +33,17 @@
   network.injectHosts = true;
   ide = {
     goland.enable = true;
-    phpstorm.enable = true;
+    phpstorm = {
+      enable = true;
+      extraVmOptions = ''
+        -Xmx8192m
+        -Xms2048m
+      '';
+    };
     rustrover.enable = true;
     pycharm.enable = true;
   };
+
   packages.desktop = true;
 
   networking.interfaces.eno1.wakeOnLan.enable = true;
