@@ -8,8 +8,12 @@ in
     device = device;
     fsType = "ext4";
     options = [
-      "noatime"
+      "noauto"
+      "x-systemd.automount"
+      "x-systemd.device-timeout=5s"
+      "x-systemd.mount-timeout=10s"
       "nofail"
+      "_netdev"
     ];
   };
 
