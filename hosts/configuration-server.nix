@@ -30,6 +30,7 @@
   services.ngate-wrapped-vm = {
     enable = true;
     envFile = config.age.secrets.ngate-env.path;
+    routes = "79.137.220.62 10.0.0.0/8 185.129.100.112/32 10.206.185.123/32 10.89.58.17/32";
   };
 
   services.xserver.xkb = {
