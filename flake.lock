@@ -27,11 +27,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1763946483,
-        "narHash": "sha256-mLh6tLTvTWhgSduVVAajyswA7/m7hFYE0mVqUIhPs+E=",
+        "lastModified": 1765760889,
+        "narHash": "sha256-8AZqajNC8SD34XgkL2C9h+rbqBqDdXSIxy6FAl5qCt0=",
         "owner": "labi-le",
         "repo": "belphegor",
-        "rev": "84c2dc943f8d0459139bd9952a77e983f8aeb9a8",
+        "rev": "f4f0bca804afe9827bedeb040a767c8e9d2d12a6",
         "type": "github"
       },
       "original": {
@@ -91,11 +91,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1765178650,
-        "narHash": "sha256-k/Uu54ZB7hInyFTSFEJ93ryA+aTe6YQTTTvqzn3SwY8=",
+        "lastModified": 1765783389,
+        "narHash": "sha256-K/E3J0oNVXXTbKSkc1pFxhsLMCg87koKV8KQI1CxY8s=",
         "owner": "labi-le",
         "repo": "deal",
-        "rev": "738fa539235facd67e2c235c30ab82d7a813cd69",
+        "rev": "aa6ebf2d3e1c4c36e2ad83caa7dcab46b82bead0",
         "type": "github"
       },
       "original": {
@@ -260,11 +260,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1765606130,
-        "narHash": "sha256-KOP4QnkiRwiD5KEOr6ceF67rfTP1OqPmCCft6xDC3k4=",
+        "lastModified": 1765682243,
+        "narHash": "sha256-yeCxFV/905Wr91yKt5zrVvK6O2CVXWRMSrxqlAZnLp0=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "d787ec69c3216ea33be1c0424fe65cb23aa8fb31",
+        "rev": "58bf3ecb2d0bba7bdf363fc8a6c4d49b4d509d03",
         "type": "github"
       },
       "original": {
@@ -330,11 +330,11 @@
       },
       "locked": {
         "dir": "qcow2",
-        "lastModified": 1765208063,
-        "narHash": "sha256-ST8tKYi+XPJiDE2aoUm5kNcPMr1UOxJ9PUB+VcEfPZI=",
+        "lastModified": 1765791794,
+        "narHash": "sha256-RHIiOo06HvqvUJ0mMZw+OzaBoTWbZaBc2aGy9zWbXRQ=",
         "ref": "refs/heads/master",
-        "rev": "484f0c5c540b8abe077efd82359068621f938612",
-        "revCount": 25,
+        "rev": "303e9df821dae68349f466d6896c6953e7883a20",
+        "revCount": 32,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/ngate-wrapped"
       },
@@ -449,16 +449,18 @@
     },
     "nixpkgs_6": {
       "locked": {
-        "lastModified": 1765425892,
-        "narHash": "sha256-jlQpSkg2sK6IJVzTQBDyRxQZgKADC2HKMRfGCSgNMHo=",
+        "lastModified": 1765472234,
+        "narHash": "sha256-9VvC20PJPsleGMewwcWYKGzDIyjckEz8uWmT0vCDYK0=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "5d6bdbddb4695a62f0d00a3620b37a15275a5093",
+        "rev": "2fbfb1d73d239d2402a8fe03963e37aab15abe8b",
         "type": "github"
       },
       "original": {
-        "id": "nixpkgs",
-        "type": "indirect"
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
       }
     },
     "nixpkgs_7": {
@@ -516,11 +518,11 @@
         "systems": "systems_5"
       },
       "locked": {
-        "lastModified": 1765642928,
-        "narHash": "sha256-E9GkqwFEsdwvb8oknkqM7sk/PBLWb5pBpRGtG2HRrSI=",
+        "lastModified": 1765786970,
+        "narHash": "sha256-6q0qmgEwRLCEjhwubpIEdBy59PjiIwgoEroDAMajZrY=",
         "owner": "nix-community",
         "repo": "nixvim",
-        "rev": "74136352cf4156933249c5b83506b334fde2d596",
+        "rev": "e67b4d5896d863a7106c127005702767cda18a89",
         "type": "github"
       },
       "original": {
