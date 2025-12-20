@@ -98,3 +98,28 @@ backup-keys:
 	@echo "key for $(HOSTNAME) encrypted and saved"
 	@echo "commit: git add secrets/keys/ && git commit -m 'Backup key for $(HOSTNAME)'"
 
+backup-root-keys:
+	@echo "backing up root ssh key from /root/.ssh/id_rsa..."
+	@if ! sudo test -f "/root/.ssh/id_rsa"; then \
+		echo "root key not found in /root/.ssh/id_rsa"; \
+		exit 1; \
+	fi
+	@mkdir -p secrets/keys
+	@sudo cat /root/.ssh/id_rsa | age -p > secrets/keys/$(HOSTNAME)_root_id_rsa.age
+	@echo "root key for $(HOSTNAME) encrypted and saved"
+
+restore-root-keys:
+	@echo "decrypting root ssh key for $(HOSTNAME)..."
+	@if [ ! -f "secrets/keys/$(HOSTNAME)_root_id_rsa.age" ]; then \
+		echo "root key not found in secrets/keys/"; \
+		exit 1; \
+	fi
+	@sudo mkdir -p /root/.ssh
+	@sudo chmod 700 /root/.ssh
+	@age -d secrets/keys/$(HOSTNAME)_root_id_rsa.age | sudo tee /root/.ssh/id_rsa > /dev/null
+	@sudo ssh-keygen -y -f /root/.ssh/id_rsa | sudo tee /root/.ssh/id_rsa.pub > /dev/null
+	@sudo chmod 600 /root/.ssh/id_rsa
+	@sudo chmod 644 /root/.ssh/id_rsa.pub
+	@sudo chown -R root:root /root/.ssh
+	@echo "root key restored for $(HOSTNAME)"
+
