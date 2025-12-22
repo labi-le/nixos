@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 let
@@ -40,12 +41,12 @@ let
         (php.buildEnv {
           extensions =
             { all, enabled }:
-              with all;
-              enabled
-              ++ [
-                xdebug
-                redis
-              ];
+            with all;
+            enabled
+            ++ [
+              xdebug
+              redis
+            ];
           extraConfig = ''
             xdebug.mode=debug
             xdebug.client_port=9003
@@ -75,9 +76,9 @@ let
 
     {
       name = "pycharm";
-      packageName = "pycharm-professional";
+      packageName = "pycharm";
       packageWithEnv = "pycharm-with-env";
-      executable = "pycharm-professional";
+      executable = "pycharm";
       baseEnv = [
         python3
         poetry
@@ -128,45 +129,41 @@ in
     nixpkgs.overlays = [
       (
         final: prev:
-          let
-            mkIdeWrapper =
-              ide:
-              final.jetbrains.${ide.packageName}.overrideAttrs (oldAttrs: {
-                nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ prev.makeWrapper ];
-                postFixup = (oldAttrs.postFixup or "") + ''
-                  wrapProgram $out/bin/${ide.executable} \
-                    ${ide.extraWrapperArgs} \
-                    --prefix PATH : "${prev.lib.makeBinPath (ide.baseEnv ++ cfg.${ide.name}.extraPackages)}"
-                '';
-              });
-          in
-          {
-            jetbrains =
-              prev.jetbrains
-              // lib.listToAttrs (
-                map
-                  (ide: {
-                    name = ide.packageName;
-                    value = prev.jetbrains.${ide.packageName}.override {
-                      vmopts =
-                        (prev.jetbrains.${ide.packageName}.vmopts or "")
-                        + "\n"
-                        + customVmOptions
-                        + "\n"
-                        + cfg.${ide.name}.extraVmOptions;
-                    };
-                  })
-                  enabledIdes
-              );
-          }
-          // lib.listToAttrs (
-            map
-              (ide: {
-                name = ide.packageWithEnv;
-                value = mkIdeWrapper ide;
-              })
-              enabledIdes
-          )
+        let
+          mkIdeWrapper =
+            ide:
+            final.jetbrains.${ide.packageName}.overrideAttrs (oldAttrs: {
+              nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ prev.makeWrapper ];
+              postFixup = (oldAttrs.postFixup or "") + ''
+                wrapProgram $out/bin/${ide.executable} \
+                  ${ide.extraWrapperArgs} \
+                  --prefix PATH : "${prev.lib.makeBinPath (ide.baseEnv ++ cfg.${ide.name}.extraPackages)}"
+              '';
+            });
+        in
+        {
+          jetbrains =
+            prev.jetbrains
+            // lib.listToAttrs (
+              map (ide: {
+                name = ide.packageName;
+                value = prev.jetbrains.${ide.packageName}.override {
+                  vmopts =
+                    (prev.jetbrains.${ide.packageName}.vmopts or "")
+                    + "\n"
+                    + customVmOptions
+                    + "\n"
+                    + cfg.${ide.name}.extraVmOptions;
+                };
+              }) enabledIdes
+            );
+        }
+        // lib.listToAttrs (
+          map (ide: {
+            name = ide.packageWithEnv;
+            value = mkIdeWrapper ide;
+          }) enabledIdes
+        )
       )
     ];
 
