@@ -23,16 +23,15 @@
   };
 
   outputs =
-    inputs@{
-      nixpkgs,
-      home-manager,
-      nixvim,
-      chaotic,
-      musnix,
-      ide,
-      agenix,
-      ngate-wrapped,
-      ...
+    inputs@{ nixpkgs
+    , home-manager
+    , nixvim
+    , chaotic
+    , musnix
+    , ide
+    , agenix
+    , ngate-wrapped
+    , ...
     }:
     let
       system = "x86_64-linux";
