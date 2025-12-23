@@ -41,7 +41,7 @@ dump:
 		echo "=== PROJECT TREE ==="; \
 		nix run nixpkgs#tree -- . || echo "(tree failed)"; \
 		echo ""; \
-		find . -type f \( \
+		find modules/nixvim -type f \( \
 			-name "*.go" -o \
 			-name "*.yml" -o \
 			-name "*.yaml" -o \
@@ -52,9 +52,7 @@ dump:
 			-name "Makefile" \
 		\) | sort | while read file; do \
 			echo "=== FILE: $$file ==="; \
-			echo "=== START CODE ==="; \
 			cat "$$file"; \
-			echo "=== END CODE ==="; \
 			echo ""; \
 		done; \
 	} | wl-copy
