@@ -68,10 +68,4 @@
       position = "center";
     };
   };
-
-  age.secrets.testcode = {
-    file = ../secrets/testcode.age;
-    group = "users";
-    mode = "0440";
-  };
 }
