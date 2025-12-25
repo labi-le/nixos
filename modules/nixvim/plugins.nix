@@ -11,7 +11,6 @@
   ];
   programs.nixvim = {
     plugins = {
-      dap-ui.enable = true;
       dap-go.enable = true;
       cmp-dap.enable = true;
       dap = {
