@@ -14,4 +14,5 @@ final: prev: {
 
   getmyip = prev.callPackage ./pkgs/getmyip.nix { };
   agenix = inputs.agenix.packages.${system}.default;
+  nur = (inputs.nur.overlays.default final prev).nur;
 }
