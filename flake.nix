@@ -20,18 +20,24 @@
     agenix.url = "github:ryantm/agenix";
 
     ngate-wrapped.url = "git+ssh://git@github.com/labi-le/ngate-wrapped?dir=qcow2";
+    nur = {
+      url = "github:nix-community/NUR";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    inputs@{ nixpkgs
-    , home-manager
-    , nixvim
-    , chaotic
-    , musnix
-    , ide
-    , agenix
-    , ngate-wrapped
-    , ...
+    inputs@{
+      nixpkgs,
+      home-manager,
+      nixvim,
+      chaotic,
+      musnix,
+      ide,
+      agenix,
+      ngate-wrapped,
+      nur,
+      ...
     }:
     let
       system = "x86_64-linux";
@@ -44,6 +50,7 @@
         ide.nixosModules.default
         agenix.nixosModules.default
         ngate-wrapped.nixosModules.default
+        nur.modules.nixos.default
       ];
 
       baseConfig = {
