@@ -37,6 +37,8 @@
 
   system.stateVersion = "25.05";
 
+  networking.networkmanager.wifi.powersave = false;
+
   network.injectHosts = true;
   packages = {
     desktop = true;
