@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  customThunarArchivePlugin = pkgs.xfce.thunar-archive-plugin.overrideAttrs (oldAttrs: {
+  customThunarArchivePlugin = pkgs.thunar-archive-plugin.overrideAttrs (oldAttrs: {
     postInstall = (oldAttrs.postInstall or "") + ''
       rm -rf $out/libexec/thunar-archive-plugin
       mkdir -p $out/libexec/thunar-archive-plugin
@@ -10,21 +10,16 @@ let
   });
 in
 {
-  programs = {
-    thunar = {
-      enable = true;
-      plugins = [
-        customThunarArchivePlugin
-        pkgs.xfce.thunar-volman
-      ];
-
-    };
+  programs.thunar = {
+    enable = true;
+    plugins = [
+      customThunarArchivePlugin
+      pkgs.thunar-volman
+    ];
   };
 
-  services = {
-    tumbler.enable = true;
-    gvfs.enable = true;
-  };
+  services.tumbler.enable = true;
+  services.gvfs.enable = true;
 
   environment.systemPackages = [ pkgs.file-roller ];
 }

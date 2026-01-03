@@ -22,10 +22,8 @@
   };
 
   xdg.configFile = {
-    "Thunar/accels.scm".text =
-      ''(gtk_accel_path "<Actions>/ThunarActionManager/delete-2" "Delete")'';
-    "xfce4/helpers.rc".text =
-      "TerminalEmulator=${osConfig.environment.variables.TERMINAL}";
+    "Thunar/accels.scm".text = ''(gtk_accel_path "<Actions>/ThunarActionManager/delete-2" "Delete")'';
+    "xfce4/helpers.rc".text = "TerminalEmulator=${osConfig.environment.variables.TERMINAL}";
   };
 
   home.packages = with pkgs; [ xarchiver ];
