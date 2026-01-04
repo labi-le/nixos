@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -61,10 +62,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -120,6 +122,10 @@ in
       };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";
+        internal = true;
+      };
+      "cache.labile.cc" = proxy {
+        addr = "http://127.0.0.1:8501";
         internal = true;
       };
       # "gitlab.labile.cc" = proxy { addr = "http://unix:/run/gitlab/gitlab-workhorse.socket"; };
