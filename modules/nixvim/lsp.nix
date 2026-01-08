@@ -15,7 +15,7 @@
         enable = true;
         settings = {
           formatting.command = [
-            (lib.getExe pkgs.nixfmt-rfc-style)
+            (lib.getExe pkgs.nixfmt)
             "--quiet"
           ];
           nix = {
