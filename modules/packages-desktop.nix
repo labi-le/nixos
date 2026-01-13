@@ -22,7 +22,6 @@ with pkgs;
     ];
   })
   chromium
-  nur.repos.forkprince.waterfox-bin
 
   pcsx2
   qbittorrent
