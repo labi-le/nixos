@@ -48,8 +48,8 @@
 
   networking.interfaces.eno1.wakeOnLan.enable = true;
   hotkeys = {
-    common = "Mod4";
-    additional = "Mod1";
+    common = "Mod1";
+    additional = "Mod4";
   };
   monitors = {
     "DP-3" = {
