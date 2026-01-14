@@ -2,7 +2,7 @@
 {
 
   services.ncps = {
-    enable = true;
+    # enable = true;
     cache = {
       hostName = "cache.labile.cc";
 
