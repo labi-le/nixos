@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 with lib;
@@ -83,11 +84,19 @@ in
 
     fonts = {
       enableDefaultPackages = true;
-      packages =
-        with pkgs;
-        optionals cfg.desktop [
-          nerd-fonts.dejavu-sans-mono
-        ];
+      packages = with pkgs; [
+        apple-fonts.sf-pro
+        apple-fonts.sf-mono
+        apple-fonts.sf-pro-nerd
+
+      ];
+
+      fontconfig = {
+        defaultFonts = {
+          sansSerif = [ "SF Pro Display" ];
+          monospace = [ "SF Mono" ];
+        };
+      };
     };
   };
 

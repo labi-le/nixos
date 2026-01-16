@@ -9,12 +9,10 @@ let
     disable-scroll = true;
     format = "{icon}";
     format-icons = builtins.listToAttrs (
-      map
-        (n: {
-          name = n;
-          value = n;
-        })
-        (map toString (builtins.genList (x: x + 1) 8))
+      map (n: {
+        name = n;
+        value = n;
+      }) (map toString (builtins.genList (x: x + 1) 8))
     );
 
   };
@@ -25,20 +23,24 @@ in
     settings = [
       {
         output = first;
-        height = 15;
-        position = "bottom";
+        height = 0;
+        position = "top";
         modules-left = [ "sway/workspaces" ];
-        modules-center = [ "custom/spotify" ];
+        modules-center = [
+          "clock"
+
+        ];
         modules-right = [
+          "sway/language"
           "network"
           "custom/vpn"
-          "memory"
-          "cpu"
+          # "memory"
+          # "cpu"
           "pulseaudio"
           "backlight"
-          "sway/language"
           "battery"
-          "clock"
+
+          "tray"
         ];
         "sway/workspaces" = workspacesConfig;
         backlight = {
@@ -85,18 +87,11 @@ in
           format = "cpu {usage}%";
         };
         memory = {
-          format = "mem {}%";
+          format = "mem {used:0.1f}/{total:0.1f}";
         };
         disk = {
           format = "nvme {free}/{total}";
         };
-        # network = {
-        #   format-disconnected = "no internet";
-        #   format-linked = "{ifname}";
-        #   format-wifi = "<span size='13000' foreground='#F2CECF'> </span>{signaldBm}";
-        #   tooltip-format-wifi = "Signal Strenght: {signalStrength}%";
-        #   format-ethernet = "{ipaddr}";
-        # };
         network = {
           format = "";
           format-ethernet = "";
@@ -128,97 +123,73 @@ in
     ++ pkgs.lib.optionals (second != null) [
       {
         output = second;
-        height = 10;
-        position = "bottom";
+        height = 0;
+        position = "top";
         modules-left = [ "sway/workspaces" ];
         "sway/workspaces" = workspacesConfig;
       }
     ];
+
     style = ''
       * {
-          border-radius: 0;
-          font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+          border-radius: 10px;
+          font-family: 'SFProDisplay Nerd Font';
           font-size: 14pt;
           min-height: 0;
       }
 
       window#waybar {
+          background-color: transparent;
           color: #DADAE8;
-          background-color: rgba(0, 0, 0, 0.4);
       }
 
-      #workspaces {
-          margin-left: 5px;
-          margin-top: 5px;
-          margin-bottom: 5px;
-          border-radius: 15px;
+      .modules-left, .modules-right {
+          background-color: rgba(0, 0, 0, 0.6);
+          padding: 2px 5px;
+          border-radius: 20px;
+          margin: 2px 5px;
+      }
+
+      #workspaces, #memory, #cpu, #clock, #pulseaudio, #network, #battery, #custom-vpn, #backlight, #language {
+          background-color: transparent;
+          padding: 0;
+          margin: 0;
       }
 
       #workspaces button {
-          padding-left: 10px;
-          padding-right: 10px;
-          min-width: 0;
+          padding: 0 5px;
+          background-color: transparent;
           color: #DADAE8;
+          margin: 0 2px;
       }
 
       #workspaces button.focused {
           color: #A4B9EF;
-      }
-
-      #workspaces button.urgent {
-          color: #F9C096;
+          background-color: transparent; 
       }
 
       #workspaces button:hover {
-          background-color: rgba(0, 0, 0, 0);
-          color: #A4B9EF;
+          background-color: transparent;
+          color: #ffffff;
       }
 
-      #memory,
-      #disk,
-      #cpu,
-      #clock,
-      #battery,
-      #pulseaudio,
-      #backlight,
-      #workspaces,
-      #mpd,
-      #network,
-      #language,
-      #network {
-          padding-left: 15px;
-          padding-right: 2px;
-          border-radius: 15px 0px 0px 15px;
-          margin-top: 5px;
-          margin-bottom: 5px;
-      }
-
-      #custom-vpn {
-          padding-right: 10px;
-          margin-top: 5px;
-          margin-bottom: 5px;
-      }
-
+      .modules-right > widget > label,
+      #network, 
+      #custom-vpn, 
+      #memory, 
+      #cpu, 
+      #pulseaudio, 
+      #backlight, 
+      #language, 
+      #battery, 
       #clock {
-          padding-right: 15px;
+          margin-left: 5px;
           margin-right: 5px;
-          border-radius: 0px 15px 15px 0px;
       }
 
-      #custom-spotify {
-          background: #1DB954;
-          color: black;
-          margin-top: 5px;
-          margin-bottom: 5px;
-          padding-right: 15px;
-          padding-left: 15px;
-          border-radius: 15px;
-      }
-
-      #battery {
-          background-color: rgba(0, 0, 0, 0);
-      }
-
+      #clock { margin-right: 0; }
+      #network { margin-left: 0; }
     '';
+
   };
 }

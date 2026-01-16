@@ -1,7 +1,8 @@
-{ lib
-, osConfig
-, pkgs
-, ...
+{
+  lib,
+  osConfig,
+  pkgs,
+  ...
 }:
 
 let
@@ -34,6 +35,8 @@ let
 in
 {
   wayland.windowManager.sway = {
+    package = pkgs.swayfx;
+    checkConfig = false;
     enable = true;
     wrapperFeatures.gtk = true;
     config = {
@@ -48,7 +51,6 @@ in
         }
       ];
       startup = [
-        { command = "${pkgs.belphegor}/bin/belphegor"; }
         {
           command = "import-gsettings";
           always = true;
@@ -56,6 +58,7 @@ in
         {
           command = "${pkgs.swaybg}/bin/swaybg -i ~/Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
         }
+
       ];
       modes = {
         resize = {
@@ -67,18 +70,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (
-          name: monitor:
-            {
-              mode = monitor.mode;
-              pos = monitor.geometry;
-            }
-            // lib.optionalAttrs (monitor.transform != null) {
-              transform = monitor.transform;
-            }
-        )
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -96,8 +97,8 @@ in
         outer = 0;
       };
       fonts = {
-        names = [ "Noto Sans Regular" ];
-        size = 10.0;
+        names = [ "SF Pro Display" ];
+        size = 12.0;
       };
       window = {
         border = 1;
@@ -134,8 +135,8 @@ in
           { class = "Code"; }
           { class = "Postman"; }
         ];
-        ${workspaces.game} = [{ class = "steam"; }];
-        ${workspaces.private} = [{ app_id = "thunderbird"; }];
+        ${workspaces.game} = [ { class = "steam"; } ];
+        ${workspaces.private} = [ { app_id = "thunderbird"; } ];
       };
       window.commands = [
         {
@@ -361,7 +362,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-                ++ [
+              ++ [
                 "9"
                 "0"
               ]
@@ -404,41 +405,26 @@ in
 
       colors = {
         focused = {
-          border = "#000000";
-          background = "#FF000000";
+          border = "#00000000";
+          background = "#BD93F933";
           text = "#ffffff";
-          indicator = "#6272A4";
-          childBorder = "#6272A4";
+          indicator = "#BD93F9";
+          childBorder = "#00000000";
         };
         focusedInactive = {
-          border = "#44475A";
-          background = "#44475A";
-          text = "#ffffff";
-          indicator = "#44475A";
-          childBorder = "#44475A";
+          border = "#6272A444";
+          background = "#6272A411";
+          text = "#eeeeee";
+          indicator = "#6272A4";
+          childBorder = "#6272A444";
         };
         unfocused = {
-          border = "#FF000000";
-          background = "#FF000000";
-          text = "#ffffff";
+          border = "#282A3622";
+          background = "#282A3600";
+          text = "#bfbfbf";
           indicator = "#282A36";
-          childBorder = "#282A36";
+          childBorder = "#282A3622";
         };
-        urgent = {
-          border = "#44475A";
-          background = "#FF5555";
-          text = "#ffffff";
-          indicator = "#FF5555";
-          childBorder = "#FF5555";
-        };
-        placeholder = {
-          border = "#282A36";
-          background = "#282A36";
-          text = "#ffffff";
-          indicator = "#282A36";
-          childBorder = "#282A36";
-        };
-        background = "#ffffff";
       };
 
     };
@@ -446,7 +432,7 @@ in
       default_border none
       seat seat0 xcursor_theme "Adwaita" 26
 
-      for_window [shell="xdg_shell"] title_format "%title (%app_id)"
+      for_window [shell="xdg_shell"] title_format "%app_id: %title"
       for_window [shell="x_wayland"] title_format "%class - %title"
 
 
@@ -460,15 +446,36 @@ in
       bindgesture swipe:3:up exec ${pkgs.wtype}/bin/wtype -M ctrl -k t -m ctrl
       bindgesture swipe:3:down exec ${pkgs.wtype}/bin/wtype -M ctrl -k w -m ctrl
 
+      title_align center
+      titlebar_padding 10 5
+
+      for_window [app_id="Alacritty"] blur enable
+      layer_effects "mako" {
+        blur enable;
+        blur_ignore_transparent enable;
+        shadows enable;
+        corner_radius 15;
+      }
+
+      hide_edge_borders --i3 smart
+
+      blur enable
+      blur_xray disable
+      blur_passes 3
+      blur_radius 5
+      corner_radius 0
+      shadows disable
+
+      default_border pixel 2
+      default_floating_border normal 2
     '';
+
     extraSessionCommands = ''
       export SDL_VIDEODRIVER=wayland
       export QT_QPA_PLATFORM=wayland
       export QT_WAYLAND_DISABLE_WINDOWDECORATION="1"
       export _JAVA_AWT_WM_NONREPARENTING=1
       export MOZ_ENABLE_WAYLAND=1
-      export WLR_NO_HARDWARE_CURSORS=1
-      export WLR_RENDERER_ALLOW_SOFTWARE=1
     '';
   };
 

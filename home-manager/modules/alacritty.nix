@@ -3,13 +3,20 @@
 {
   programs.alacritty = {
     enable = true;
-    package = pkgs.alacritty;
     settings = {
-      font.size = 17.0;
-      font.normal.family = "DejaVu Sans Mono";
-      window.opacity = 0.7;
+      font = {
+        normal = {
+          family = "SF Mono";
+          style = "Regular";
+        };
+        bold = {
+          family = "SF Mono";
+          style = "Bold";
+        };
+        size = 16.0;
+      };
+      window.opacity = 0;
     };
-
   };
 
 }

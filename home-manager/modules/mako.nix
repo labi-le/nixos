@@ -1,18 +1,29 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   services.mako = {
     enable = true;
     settings = {
-      font = "Inconsolata 14";
-      background-color = "#151718";
-      text-color = "#9FCA56";
-      border-color = "#151718";
+      font = "SF Pro Display 12";
+      background-color = "#15171844";
+      text-color = "#BD93F9";
+
+      border-size = 1;
+      border-color = "#BD93F988";
+
+      border-radius = 10;
+      padding = 15;
+      margin = 20;
+      width = 400;
+      height = 180;
       anchor = "bottom-right";
-      default-timeout = 5000;
+      default-timeout = 3000;
+
       "urgency=high" = {
         text-color = "#CD3F45";
+        border-color = "#CD3F45";
       };
     };
+    extraConfig = "";
   };
 }

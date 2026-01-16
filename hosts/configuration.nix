@@ -24,6 +24,8 @@
     layout = "us";
   };
 
+  services.belphegor.enable = true;
+
   programs.gnupg.agent = {
     enable = true;
   };
