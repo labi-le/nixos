@@ -24,19 +24,23 @@
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    apple-fonts.url = "github:Lyndeno/apple-fonts.nix";
   };
 
   outputs =
-    inputs@{ nixpkgs
-    , home-manager
-    , nixvim
-    , chaotic
-    , musnix
-    , ide
-    , agenix
-    , ngate-wrapped
-    , nur
-    , ...
+    inputs@{
+      nixpkgs,
+      home-manager,
+      nixvim,
+      chaotic,
+      musnix,
+      ide,
+      agenix,
+      ngate-wrapped,
+      nur,
+      apple-fonts,
+      belphegor,
+      ...
     }:
     let
       system = "x86_64-linux";
@@ -50,6 +54,7 @@
         agenix.nixosModules.default
         ngate-wrapped.nixosModules.default
         nur.modules.nixos.default
+        belphegor.nixosModules.default
       ];
 
       baseConfig = {
