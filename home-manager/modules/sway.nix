@@ -98,7 +98,7 @@ in
       };
       fonts = {
         names = [ "SF Pro Display" ];
-        size = 12.0;
+        size = 16.0;
       };
       window = {
         border = 1;
