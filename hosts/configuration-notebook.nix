@@ -22,6 +22,8 @@
     layout = "us";
   };
 
+  services.belphegor.enable = true;
+
   hardware = {
     graphics.enable = true;
   };
