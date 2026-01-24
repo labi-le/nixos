@@ -63,9 +63,9 @@ agenix-rekey:
 	@find secrets -name '*.age' -type f ! -path 'secrets/keys/*' | while read secret; do \
 		echo "Checking $$secret..."; \
 		if agenix -r -i /etc/ssh/ssh_host_ed25519_key "$$secret" 2>&1 | grep -q "no identity matched"; then \
-			echo "⚠️  Skipping $$secret (not accessible from $(HOSTNAME))"; \
+			echo "Skipping $$secret (not accessible from $(HOSTNAME))"; \
 		else \
-			echo "✅ Rekeyed $$secret"; \
+			echo "Rekeyed $$secret"; \
 		fi; \
 	done
 
@@ -74,11 +74,14 @@ restore-keys:
 	@echo "decrypt ssh key for $(HOSTNAME)..."
 	@if [ ! -f "secrets/keys/$(HOSTNAME)_ssh_host_ed25519_key.age" ]; then \
 		echo "key not found for $(HOSTNAME) in secrets/keys/"; \
-		echo "available keys:"; \
-		ls -1 secrets/keys/ 2>/dev/null | grep ed25519 || echo "no keys found"; \
 		exit 1; \
 	fi
-	@age -d secrets/keys/$(HOSTNAME)_ssh_host_ed25519_key.age | sudo tee /etc/ssh/ssh_host_ed25519_key > /dev/null
+	@if ! age -d secrets/keys/$(HOSTNAME)_ssh_host_ed25519_key.age > /tmp/ssh_key_restored; then \
+		echo "Decryption failed! Host key NOT restored."; \
+		rm -f /tmp/ssh_key_restored; \
+		exit 1; \
+	fi
+	@sudo mv /tmp/ssh_key_restored /etc/ssh/ssh_host_ed25519_key
 	@sudo ssh-keygen -y -f /etc/ssh/ssh_host_ed25519_key | sudo tee /etc/ssh/ssh_host_ed25519_key.pub > /dev/null
 	@sudo chmod 600 /etc/ssh/ssh_host_ed25519_key
 	@sudo chmod 644 /etc/ssh/ssh_host_ed25519_key.pub
