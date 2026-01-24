@@ -37,6 +37,7 @@
   nixpkgs = {
     config = {
       allowUnfree = true;
+      replaceStdenv = { pkgs }: pkgs.stdenv;
     };
   };
 }
