@@ -53,11 +53,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1769635480,
-        "narHash": "sha256-JJPWtTYVPRNRBJskhSK/v8FkIZsRxyjE2jHnNtOUKo0=",
+        "lastModified": 1769637532,
+        "narHash": "sha256-2Mj+hd+EnMsn1KCjiEAvAYm+oTWjpARj354LSm2p21I=",
         "owner": "labi-le",
         "repo": "belphegor",
-        "rev": "022358e29376a306ce6e492d423d80b1daa5dce0",
+        "rev": "55a23e62deba5b9667116b6da20088a1125bfe56",
         "type": "github"
       },
       "original": {
@@ -464,11 +464,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1768564909,
-        "narHash": "sha256-Kell/SpJYVkHWMvnhqJz/8DqQg2b6PguxVWOuadbHCc=",
+        "lastModified": 1769461804,
+        "narHash": "sha256-msG8SU5WsBUfVVa/9RPLaymvi5bI8edTavbIq3vRlhI=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e4bae1bd10c9c57b2cf517953ab70060a828ee6f",
+        "rev": "bfc1b8a4574108ceef22f02bafcf6611380c100d",
         "type": "github"
       },
       "original": {
