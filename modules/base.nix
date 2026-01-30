@@ -6,7 +6,7 @@
     ./journald.nix
     ./shell.nix
     ./monitors.nix
-    ./nixvim
+    ./nvim.nix
     ./docker.nix
     ./polkit.nix
     ./nvme.nix

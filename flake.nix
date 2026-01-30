@@ -7,7 +7,6 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixvim.url = "github:nix-community/nixvim";
     belphegor.url = "github:labi-le/belphegor";
     wl-uploader.url = "github:labi-le/wl-paste-uploader";
     deal.url = "github:labi-le/deal";
@@ -31,7 +30,6 @@
     inputs@{
       nixpkgs,
       home-manager,
-      nixvim,
       chaotic,
       musnix,
       ide,
@@ -47,7 +45,6 @@
 
       commonModules = [
         ./settings.nix
-        nixvim.nixosModules.nixvim
         chaotic.nixosModules.default
         musnix.nixosModules.musnix
         ide.nixosModules.default
