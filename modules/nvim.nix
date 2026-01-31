@@ -4,6 +4,10 @@
     neovim
     fd
     ripgrep
+    go
+    php
+    nodejs
   ];
 
+  programs.nix-ld.enable = true;
 }
