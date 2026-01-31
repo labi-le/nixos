@@ -46,8 +46,8 @@
       "nofail"
       "uid=1000"
       "gid=100"
-      "dmask=022" # 755 (rwxr-xr-x)
-      "fmask=133" # 644 (rw-r--r--)
+      "umask=0000"
+      "exec"
     ];
   };
 
