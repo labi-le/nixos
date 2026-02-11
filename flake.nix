@@ -27,18 +27,17 @@
   };
 
   outputs =
-    inputs@{
-      nixpkgs,
-      home-manager,
-      chaotic,
-      musnix,
-      ide,
-      agenix,
-      ngate-wrapped,
-      nur,
-      apple-fonts,
-      belphegor,
-      ...
+    inputs@{ nixpkgs
+    , home-manager
+    , chaotic
+    , musnix
+    , ide
+    , agenix
+    , ngate-wrapped
+    , nur
+    , apple-fonts
+    , belphegor
+    , ...
     }:
     let
       system = "x86_64-linux";
