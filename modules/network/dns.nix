@@ -9,7 +9,7 @@
         Domains = [ "~." ];
 
         DNSSEC = "false";
-        FallbackDNS = [ ];
+        FallbackDNS = null;
       };
     };
   };
