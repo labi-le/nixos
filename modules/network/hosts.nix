@@ -10,7 +10,7 @@ lib.mkIf config.network.injectHosts {
 
     settings = {
       Resolve = {
-        DNS = [ "192.168.1.1" ];
+        # DNS = [ "192.168.1.1" ];
         Domains = [ "~." ];
 
         DNSSEC = "false";
@@ -21,4 +21,3 @@ lib.mkIf config.network.injectHosts {
 
   networking.networkmanager.dns = "systemd-resolved";
 }
-
