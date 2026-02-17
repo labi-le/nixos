@@ -5,19 +5,5 @@ lib.mkIf config.network.injectHosts {
     "172.16.0.11" = [ "forms.local.ru" ];
   };
 
-  services.resolved = {
-    enable = true;
-
-    settings = {
-      Resolve = {
-        # DNS = [ "192.168.1.1" ];
-        Domains = [ "~." ];
-
-        DNSSEC = "false";
-        FallbackDNS = [ ];
-      };
-    };
-  };
-
   networking.networkmanager.dns = "systemd-resolved";
 }

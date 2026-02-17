@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -61,10 +62,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -205,7 +207,7 @@ in
   ];
 
   systemd.services.updateNginxIP = {
-    description = "Update Nginx IP whitelist using stunclient";
+    description = "Update Nginx IP whitelist using dig";
     wantedBy = [ "multi-user.target" ];
     script = ''
       #!/bin/sh

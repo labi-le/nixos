@@ -42,6 +42,7 @@ in
     ./proxy.nix
     ./hosts.nix
     ./firewall.nix
+    ./dns.nix
   ];
 
   config = {
