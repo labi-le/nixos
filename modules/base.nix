@@ -6,7 +6,6 @@
     ./journald.nix
     ./shell.nix
     ./monitors.nix
-    ./nvim.nix
     ./docker.nix
     ./polkit.nix
     ./nvme.nix
@@ -20,5 +19,6 @@
     ./builders.nix
     ./hotkeys.nix
     ./nix-search-tv.nix
+    ./nixvim
   ];
 }
