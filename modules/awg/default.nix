@@ -15,6 +15,7 @@
       bind-interfaces = true;
       no-resolv = true;
       server = [ "192.168.1.1" ];
+      bind-dynamic = true;
     };
   };
   networking.firewall = {

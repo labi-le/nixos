@@ -209,7 +209,7 @@ in
     wantedBy = [ "multi-user.target" ];
     script = ''
       #!/bin/sh
-      MY_IP=$(${pkgs.dnsutils}/bin/dig +short external)
+      MY_IP=$(${pkgs.dnsutils}/bin/dig +short external.lan)
 
       cat <<EOF > ${ipWhiteList}
       allow 127.0.0.1;
