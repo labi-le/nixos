@@ -12,10 +12,10 @@
     settings = {
       interface = "wg0";
       except-interface = "lo";
-      bind-interfaces = true;
       no-resolv = true;
-      server = [ "192.168.1.1" ];
+      server = [ "127.0.0.53" ];
       bind-dynamic = true;
+      cache-size = 10000;
     };
   };
   networking.firewall = {

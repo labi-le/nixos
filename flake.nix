@@ -46,7 +46,7 @@
 
       commonModules = [
         ./settings.nix
-	nixvim.nixosModules.nixvim
+        nixvim.nixosModules.nixvim
         chaotic.nixosModules.default
         musnix.nixosModules.musnix
         ide.nixosModules.default
