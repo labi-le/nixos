@@ -23,6 +23,26 @@ lib.mkIf config.network.enableFirewall {
       maxtime = "168h";
       overalljails = true;
     };
-    jails = { };
+    jails = {
+
+      nginx-botsearch = {
+        settings = {
+          enabled = true;
+          filter = "nginx-botsearch";
+          logpath = "/var/log/nginx/access.log";
+          backend = "auto";
+          maxretry = 2;
+        };
+      };
+
+      nginx-bad-request = {
+        settings = {
+          enabled = true;
+          filter = "nginx-bad-request";
+          logpath = "/var/log/nginx/access.log";
+          backend = "auto";
+        };
+      };
+    };
   };
 }
