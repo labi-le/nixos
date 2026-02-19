@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -61,10 +62,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -106,6 +108,7 @@ in
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
       "obsidian.labile.cc" = proxy { addr = "http://127.0.0.1:7007"; };
+      "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };
       "mail.labile.cc" = proxy {
         addr = "http://127.0.0.1:7001";
         internal = true;
