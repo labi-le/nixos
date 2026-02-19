@@ -5,5 +5,4 @@ lib.mkIf config.network.injectHosts {
     "172.16.0.11" = [ "forms.local.ru" ];
   };
 
-  networking.networkmanager.dns = "systemd-resolved";
 }
