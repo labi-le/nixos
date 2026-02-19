@@ -18,6 +18,7 @@
     ./../modules/firefox.nix
     ./../modules/gamepad.nix
     ./../modules/syncthing/pc.nix
+    ./../modules/k3s.nix
   ];
 
   services.xserver.xkb = {
