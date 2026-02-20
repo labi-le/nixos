@@ -11,6 +11,7 @@
 
         DNSSEC = "false";
         FallbackDNS = null;
+        MulticastDNS = "false";
       };
     };
   };
