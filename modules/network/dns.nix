@@ -1,19 +1,23 @@
-{ ... }:
 {
-  networking.networkmanager.dns = "systemd-resolved";
-  services.resolved = {
-    enable = true;
-    settings = {
-      Resolve = {
-        # DNS = [ "192.168.1.1" ];
-        DNS = null;
-        Domains = [ "~." ];
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
-        DNSSEC = "false";
-        FallbackDNS = null;
-        MulticastDNS = "false";
-      };
+{
+  services.resolved.enable = false;
+
+  services.dnsmasq = {
+    enable = true;
+
+    settings = {
+      cache-size = 1000;
     };
   };
 
+  networking.networkmanager = {
+    enable = true;
+    dns = "default";
+  };
 }
