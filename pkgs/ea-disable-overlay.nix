@@ -1,4 +1,6 @@
-{ pkgs ? import <nixpkgs> { } }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 pkgs.writeShellScriptBin "ea-disable-overlay" ''
   #!/bin/sh
@@ -37,7 +39,7 @@ pkgs.writeShellScriptBin "ea-disable-overlay" ''
   echo "Ищем файл конфигурации EA Desktop..."
   config_dir="$compatdata_dir/pfx/drive_c/users/steamuser/AppData/Local/Electronic Arts/EA Desktop"
   file=$(find "$config_dir" -name "user_*.ini" 2>/dev/null | head -n 1)
-  
+
   if [ -z "$file" ]; then
     echo "Файл конфигурации EA Desktop не найден."
     echo "Проверенный путь: $config_dir"

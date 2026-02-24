@@ -1,7 +1,8 @@
-{ lib
-, osConfig
-, pkgs
-, ...
+{
+  lib,
+  osConfig,
+  pkgs,
+  ...
 }:
 
 let
@@ -11,9 +12,10 @@ let
   menu = "wofi";
   filemanager = "thunar";
 
-  left = "DP-2";
-  center = "DP-3";
-  right = "DP-2";
+  findMonitor = osConfig.monitorFinder;
+
+  left = findMonitor "left";
+  right = findMonitor "right";
 
   common = osConfig.hotkeys.common;
   additional = osConfig.hotkeys.additional;
@@ -69,18 +71,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (
-          name: monitor:
-            {
-              mode = monitor.mode;
-              pos = monitor.geometry;
-            }
-            // lib.optionalAttrs (monitor.transform != null) {
-              transform = monitor.transform;
-            }
-        )
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -136,10 +136,27 @@ in
           { class = "Code"; }
           { class = "Postman"; }
         ];
-        ${workspaces.game} = [{ class = "steam"; }];
-        ${workspaces.private} = [{ app_id = "thunderbird"; }];
+        ${workspaces.game} = [
+          { class = "steam"; }
+          { class = "com.faforever.client.FafClientApplication"; }
+          { app_id = "gamescope"; }
+        ];
+        ${workspaces.social} = [
+          { app_id = "vesktop"; }
+          { app_id = "obsidian"; }
+          { app_id = "com.ayugram.desktop"; }
+        ];
+        ${workspaces.browser} = [
+          { app_id = "google-chrome"; }
+        ];
       };
       window.commands = [
+        {
+          command = "fullscreen enable; inhibit_idle fullscreen; border none";
+          criteria = {
+            class = "gamescope";
+          };
+        }
         {
           command = "floating disable";
           criteria = {
@@ -181,36 +198,6 @@ in
           command = "floating enable; resize set width 65ppt height 70ppt; focus";
           criteria = {
             app_id = "com.github.wwmm.easyeffects";
-          };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = {
-            app_id = "org.telegram.desktop";
-          };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = {
-            app_id = "com.ayugram";
-          };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = {
-            class = "TelegramDesktop";
-          };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = {
-            class = "discord";
-          };
-        }
-        {
-          command = "move to workspace ${workspaces.social}; layout tabbed";
-          criteria = {
-            class = "vesktop";
           };
         }
         {
@@ -363,7 +350,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-                ++ [
+              ++ [
                 "9"
                 "0"
               ]
@@ -380,11 +367,11 @@ in
         }
         {
           workspace = workspaces.develop;
-          output = center;
+          output = right;
         }
         {
           workspace = workspaces.browser;
-          output = center;
+          output = right;
         }
         {
           workspace = workspaces.social;
@@ -392,7 +379,7 @@ in
         }
         {
           workspace = workspaces.game;
-          output = center;
+          output = right;
         }
         {
           workspace = workspaces.file;
@@ -400,7 +387,7 @@ in
         }
         {
           workspace = workspaces.private;
-          output = center;
+          output = right;
         }
       ];
 
