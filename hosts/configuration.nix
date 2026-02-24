@@ -19,6 +19,8 @@
     ./../modules/gamepad.nix
     ./../modules/syncthing/pc.nix
     ./../modules/k3s.nix
+    ./../modules/steam.nix
+    ./../modules/bluetooth.nix
   ];
 
   services.xserver.xkb = {
@@ -58,7 +60,7 @@
     "DP-3" = {
       mode = "2560x1440@179.999Hz";
       geometry = "1920 0";
-      position = "center";
+      position = "right";
     };
     "DP-2" = {
       mode = "1920x1080@165Hz";

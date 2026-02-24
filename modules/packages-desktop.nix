@@ -31,4 +31,6 @@ with pkgs;
   # audacity
   ayugram-desktop
   vlc
+
+  (callPackage ./pkgs/ea-disable-overlay.nix)
 ]
