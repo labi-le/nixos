@@ -32,5 +32,5 @@ with pkgs;
   ayugram-desktop
   vlc
 
-  (callPackage ./pkgs/ea-disable-overlay.nix)
+  ea-disable-overlay
 ]

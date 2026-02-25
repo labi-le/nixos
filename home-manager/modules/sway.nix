@@ -360,7 +360,6 @@ in
 
       bindkeysToCode = true;
       workspaceOutputAssign = [
-
         {
           workspace = workspaces.terminal;
           output = left;
@@ -371,11 +370,11 @@ in
         }
         {
           workspace = workspaces.browser;
-          output = right;
+          output = left;
         }
         {
           workspace = workspaces.social;
-          output = right;
+          output = left;
         }
         {
           workspace = workspaces.game;
@@ -417,6 +416,14 @@ in
 
     };
     extraConfig = ''
+      workspace ${workspaces.terminal} output ${left}
+      workspace ${workspaces.develop} output ${right}
+      workspace ${workspaces.browser} output ${left}
+      workspace ${workspaces.social} output ${left}
+      workspace ${workspaces.game} output ${right}
+      workspace ${workspaces.file} output ${left}
+      workspace ${workspaces.private} output ${right}
+
       default_border none
       seat seat0 xcursor_theme "Adwaita" 26
 
