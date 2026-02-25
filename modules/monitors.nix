@@ -29,8 +29,14 @@ with lib;
         let
           found = filterAttrs (n: v: v.position == pos) config.monitors;
           names = attrNames found;
+          allNames = attrNames config.monitors;
         in
-        if names == [ ] then builtins.throw "Monitor '${pos}' not found" else head names;
+        if names != [ ] then
+          head names
+        else if allNames != [ ] then
+          head allNames
+        else
+          builtins.throw "Monitor '${pos}' not found and no other monitors are defined";
     };
   };
 }
