@@ -24,10 +24,13 @@
   programs.gamescope = {
     enable = true;
     args = [
-      "-W 2560"
-      "-H 1440"
-      "-r 144"
+      "-w 2560"
+      "-h 1440"
+      "-r 180"
       "-f"
+      "--rt"
+      "--immediate-flips"
+      "--adaptive-sync"
     ];
   };
 
