@@ -18,7 +18,14 @@
           pkgsi686Linux.libxrandr
         ];
       };
+
+    extraCompatPackages = [ pkgs.steamtinkerlaunch ];
   };
+
+  environment.systemPackages = with pkgs; [
+    protontricks
+    steamtinkerlaunch
+  ];
 
   programs.gamemode.enable = true;
   programs.gamescope = {

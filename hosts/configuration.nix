@@ -10,13 +10,13 @@
     ./../modules/wayland.nix
     ./../modules/nfs.nix
     ./../modules/thunar.nix
-    ./../modules/kernel-zen.nix
+    ./../modules/kernel-cachyos.nix
     ./../modules/radeon.nix
     # ./../modules/vm.nix
     ./../modules/adb.nix
     ./../modules/vial.nix
     ./../modules/firefox.nix
-    ./../modules/gamepad.nix
+    # ./../modules/gamepad.nix
     ./../modules/syncthing/pc.nix
     ./../modules/k3s.nix
     ./../modules/steam.nix
