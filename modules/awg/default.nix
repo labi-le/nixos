@@ -7,25 +7,12 @@
     mode = "0400";
   };
 
-  services.dnsmasq = {
-    enable = true;
-    settings = {
-      interface = "wg0";
-      except-interface = "lo";
-      no-resolv = true;
-      server = [ "127.0.0.53" ];
-      bind-dynamic = true;
-      cache-size = 10000;
-    };
-  };
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [ 51821 ];
     allowedUDPPorts = [ 51820 ];
 
     extraCommands = ''
-      # fakeip
-      iptables -A FORWARD -i wg0 -d 10.9.1.2 -j ACCEPT
       # RFC1918
       iptables -A INPUT  -i wg0 -d 10.8.0.1 -p udp --dport 53 -j ACCEPT
       iptables -A INPUT  -i wg0 -d 10.0.0.0/8     -j DROP
