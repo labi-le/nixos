@@ -1,7 +1,8 @@
-{ lib
-, osConfig
-, pkgs
-, ...
+{
+  lib,
+  osConfig,
+  pkgs,
+  ...
 }:
 
 let
@@ -70,18 +71,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (
-          name: monitor:
-            {
-              mode = monitor.mode;
-              pos = monitor.geometry;
-            }
-            // lib.optionalAttrs (monitor.transform != null) {
-              transform = monitor.transform;
-            }
-        )
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -300,10 +299,6 @@ in
         "${common}+Shift+Down" = "move down";
         "${common}+Shift+Up" = "move up";
         "${common}+Shift+Right" = "move right";
-        "${common}+${additional}+Left" = "workspace prev";
-        "${common}+${additional}+Up" = "workspace prev";
-        "${common}+${additional}+Right" = "workspace next";
-        "${common}+${additional}+Down" = "workspace next";
         "${common}+b" = "splith";
         "${common}+v" = "splitv";
         "${common}+s" = "layout stacking";
@@ -351,7 +346,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-                ++ [
+              ++ [
                 "9"
                 "0"
               ]
