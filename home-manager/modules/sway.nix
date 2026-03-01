@@ -140,6 +140,7 @@ in
           { class = "steam"; }
           { class = "com.faforever.client.FafClientApplication"; }
           { app_id = "gamescope"; }
+          { class = "steam_app_9420"; }
         ];
         ${workspaces.social} = [
           { app_id = "vesktop"; }
