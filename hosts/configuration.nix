@@ -45,8 +45,8 @@
         -Xms2048m
       '';
     };
-    rustrover.enable = true;
-    pycharm.enable = true;
+    # rustrover.enable = true;
+    # pycharm.enable = true;
   };
 
   packages.desktop = true;
