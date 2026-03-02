@@ -1,4 +1,4 @@
-{ ... }:
+{ user, ... }:
 
 {
   networking.firewall = {
@@ -28,7 +28,7 @@
         Downloads.SavePath = "/drive/torrents";
 
         WebUI = {
-          Username = "labile";
+          Username = user.name;
           Password_PBKDF2 = "@ByteArray(bDNS6PvLzDjP0ifJ+jQwQw==:pj88WRhAEpZxan4Q1RhYT8bO8mHyrahxvbtgq0QM0nzKOHd9YTzY/O7eV4kQe4jp+am9G8l7qQIHmMm948OBpQ==)";
         };
 

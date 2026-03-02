@@ -1,6 +1,6 @@
-{ pkgs, ... }:
+{ pkgs, user, ... }:
 {
-  users.users.labile.extraGroups = [ "adbusers" ];
+  users.users.${user.name}.extraGroups = [ "adbusers" ];
 
   environment.systemPackages = with pkgs; [
     android-tools

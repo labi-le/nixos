@@ -1,7 +1,9 @@
+{ user, ... }:
 {
-  # sudo ssh-copy-id labile@192.168.1.2
-  # fileSystems."/home/drive" = {
-  #   device = "labile@192.168.1.2:/drive";
+  # sudo ssh-copy-id ${user.name}@192.168.1.2
+  # fileSystems."/drive" = {
+  #   device = "${user.name}@192.168.1.2:/drive";
+
   #   fsType = "sshfs";
   #   options = [
   #     "allow_other"

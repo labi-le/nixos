@@ -1,9 +1,9 @@
-{ pkgs, config, ... }:
+{ pkgs, config, user, ... }:
 
 let
 
-  username = "labile";
-  homeDirectory = "/home/labile";
+  username = user.name;
+  homeDirectory = "/home/${username}";
 
 in
 {

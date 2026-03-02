@@ -1,11 +1,11 @@
-{ ... }:
+{ user, ... }:
 {
   imports = [ ./default.nix ];
 
   sync = {
     enable = true;
     nodeName = "notebook";
-    user = "labile";
+    user = user.name;
 
     folders = {
       # "/var/sync/media" = {
@@ -16,7 +16,7 @@
       #   ];
       # };
 
-      "/home/labile/obsidian" = {
+      "/home/${user.name}/obsidian" = {
         id = "obsidian";
         sharesWith = [
           "server"

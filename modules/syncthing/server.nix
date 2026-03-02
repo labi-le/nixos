@@ -1,11 +1,11 @@
-{ ... }:
+{ user, ... }:
 {
   imports = [ ./default.nix ];
 
   sync = {
     enable = true;
     nodeName = "server";
-    user = "labile";
+    user = user.name;
 
     folders = {
       "/drive/sync/media" = {

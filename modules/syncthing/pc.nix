@@ -1,14 +1,14 @@
-{ ... }:
+{ user, ... }:
 {
   imports = [ ./default.nix ];
 
   sync = {
     enable = true;
     nodeName = "pc";
-    user = "labile";
+    user = user.name;
 
     folders = {
-      "/home/labile/obsidian" = {
+      "/home/${user.name}/obsidian" = {
         id = "obsidian";
         sharesWith = [
           "server"
