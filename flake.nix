@@ -51,9 +51,6 @@
 
       homeManagerConfig = {
         home-manager = {
-          users.labile = {
-            imports = [ ./home-manager/home.nix ];
-          };
           useUserPackages = true;
           useGlobalPkgs = true;
           sharedModules = [ ];

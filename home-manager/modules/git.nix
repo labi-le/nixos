@@ -1,12 +1,12 @@
-{ ... }:
+{ user, ... }:
 
 {
   programs.git = {
     enable = true;
     settings = {
       user = {
-        name = "labi-le";
-        email = "1a6i1e@gmail.com";
+        name = user.git.name;
+        email = user.git.email;
       };
       push = {
         autoSetupRemote = true;

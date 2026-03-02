@@ -1,9 +1,9 @@
-{ pkgs, ... }:
+{ pkgs, user, ... }:
 
 {
   programs.dconf.enable = true;
 
-  users.users.labile.extraGroups = [ "libvirtd" ];
+  users.users.${user.name}.extraGroups = [ "libvirtd" ];
 
   environment.systemPackages = with pkgs; [
     virt-manager

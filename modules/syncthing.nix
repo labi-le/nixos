@@ -1,4 +1,4 @@
-{ ... }:
+{ user, ... }:
 {
   services.syncthing = {
     enable = true;
@@ -52,5 +52,5 @@
     ];
   };
 
-  users.users.labile.extraGroups = [ "syncthing" ];
+  users.users.${user.name}.extraGroups = [ "syncthing" ];
 }

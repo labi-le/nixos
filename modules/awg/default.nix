@@ -1,8 +1,8 @@
-{ ... }:
+{ user, ... }:
 {
   age.secrets.awg-env = {
     file = ./../../secrets/awg/env.age;
-    owner = "labile";
+    owner = user.name;
     group = "docker";
     mode = "0400";
   };
