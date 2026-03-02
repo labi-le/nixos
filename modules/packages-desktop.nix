@@ -4,7 +4,7 @@ with pkgs;
 [
   obsidian
   vesktop
-  libreoffice-qt6-still
+  libreoffice-fresh
   glib
   gsettings-desktop-schemas
   libnotify
