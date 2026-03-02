@@ -49,15 +49,13 @@
   ide = {
     goland.enable = true;
     # phpstorm.enable = true;
-    pycharm = {
-      enable = true;
-    };
-    rustrover = {
-      enable = true;
-      extraPackages = with pkgs; [
-        libarchive
-      ];
-    };
+    # pycharm.enable = true;
+    # rustrover = {
+    #   enable = true;
+    #   extraPackages = with pkgs; [
+    #     libarchive
+    #   ];
+    # };
   };
 
   hotkeys = {
