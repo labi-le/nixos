@@ -28,32 +28,20 @@
   };
 
   outputs =
-    inputs@{ nixpkgs
-    , home-manager
-    , nixvim
-    , chaotic
-    , musnix
-    , ide
-    , agenix
-    , ngate-wrapped
-    , nur
-    , apple-fonts
-    , belphegor
-    , ...
-    }:
+    inputs:
     let
       system = "x86_64-linux";
 
       commonModules = [
         ./settings.nix
-        nixvim.nixosModules.nixvim
-        chaotic.nixosModules.default
-        musnix.nixosModules.musnix
-        ide.nixosModules.default
-        agenix.nixosModules.default
-        ngate-wrapped.nixosModules.default
-        nur.modules.nixos.default
-        belphegor.nixosModules.default
+        inputs.nixvim.nixosModules.nixvim
+        inputs.chaotic.nixosModules.default
+        inputs.musnix.nixosModules.musnix
+        inputs.ide.nixosModules.default
+        inputs.agenix.nixosModules.default
+        inputs.ngate-wrapped.nixosModules.default
+        inputs.nur.modules.nixos.default
+        inputs.belphegor.nixosModules.default
       ];
 
       baseConfig = {
@@ -75,7 +63,7 @@
 
       mkSystem =
         hostname: configFile: withHomeManager:
-        nixpkgs.lib.nixosSystem {
+        inputs.nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs; };
           modules = [
             configFile
@@ -84,8 +72,8 @@
             baseConfig
           ]
           ++ commonModules
-          ++ nixpkgs.lib.optionals withHomeManager [
-            home-manager.nixosModules.home-manager
+          ++ inputs.nixpkgs.lib.optionals withHomeManager [
+            inputs.home-manager.nixosModules.home-manager
             homeManagerConfig
           ];
         };
