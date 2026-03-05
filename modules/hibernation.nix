@@ -15,12 +15,12 @@
     };
   };
 
-  systemd.sleep.extraConfig = ''
-    HibernateMode=platform shutdown
-    HibernateDelaySec=15min
-    SuspendMode=mem standby freeze
-    SuspendState=mem standby freeze
-  '';
+  systemd.sleep.settings.Sleep = {
+    HibernateMode = "platform shutdown";
+    HibernateDelaySec = "15min";
+    SuspendMode = "mem standby freeze";
+    SuspendState = "mem standby freeze";
+  };
 
   boot.kernelParams = [
     "mem_sleep_default=deep"

@@ -16,6 +16,7 @@
     ./../modules/adb.nix
     ./../modules/bluetooth.nix
     ./../modules/syncthing/notebook.nix
+    ./../modules/steam.nix
   ];
 
   services.xserver.xkb = {
