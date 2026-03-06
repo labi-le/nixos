@@ -39,7 +39,6 @@ in
         jq
         openssl
         yazi
-        unrar
 
         dig
         nmap
