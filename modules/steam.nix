@@ -1,6 +1,7 @@
 { pkgs, lib, ... }:
 {
   programs.steam = {
+    protontricks.enable = true;
     enable = true;
     package =
       with pkgs;
@@ -23,7 +24,6 @@
   };
 
   environment.systemPackages = with pkgs; [
-    protontricks
     steamtinkerlaunch
   ];
 
