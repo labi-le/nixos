@@ -26,5 +26,14 @@
     "xfce4/helpers.rc".text = "TerminalEmulator=${osConfig.environment.variables.TERMINAL}";
   };
 
-  home.packages = with pkgs; [ xarchiver ];
+  home.packages = with pkgs; [
+    (xarchiver.overrideAttrs (old: {
+      postFixup = ''
+        wrapProgram $out/bin/xarchiver \
+          --prefix PATH : ${lib.makeBinPath [ unrar p7zip zip unzip ]}
+      '';
+    }))
+    p7zip
+    zip
+  ];
 }
