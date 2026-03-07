@@ -19,6 +19,8 @@
     ide.url = "path:./modules/ide";
     agenix.url = "github:ryantm/agenix";
 
+    sls-steam.url = "github:AceSLS/SLSsteam";
+
     ngate-wrapped.url = "git+ssh://git@github.com/labi-le/ngate-wrapped?dir=qcow2";
     nur = {
       url = "github:nix-community/NUR";
