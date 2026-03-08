@@ -20,9 +20,7 @@
           pkgsi686Linux.libxrandr
         ];
         extraEnv = {
-          # Use the libraries from the SLSsteam package directly.
-          # ld.so will use these for 64-bit processes (like RE4).
-          LD_AUDIT = "${inputs.sls-steam.packages.${pkgs.stdenv.hostPlatform.system}.default}/library-inject.so:${inputs.sls-steam.packages.${pkgs.stdenv.hostPlatform.system}.default}/SLSsteam.so";
+          LD_AUDIT = "${sls-steam}/library-inject.so:${sls-steam}/SLSsteam.so";
         };
       };
 
@@ -31,28 +29,10 @@
 
   environment.systemPackages = with pkgs; [
     steamtinkerlaunch
-    inputs.sls-steam.packages.${pkgs.stdenv.hostPlatform.system}.default
-    inputs.sls-steam.packages.${pkgs.stdenv.hostPlatform.system}.wrapped
+    sls-steam
+    sls-steam-wrapped
+    accela
   ];
-
-  # Add configuration for SLSsteam
-  home-manager.users.labile = {
-    xdg.configFile."SLSsteam/config.yaml".text = ''
-      # SLSsteam configuration
-      SafeMode: no
-      WarnHashMissmatch: no
-      DisableFamilyShareLock: yes
-      PlayNotOwnedGames: yes
-      UseWhitelist: no
-      AppIds: []
-      AdditionalApps: []
-      DlcData: {}
-      FakeAppIds: {}
-      LogLevel: 2
-      LogToFile: no
-      API: yes
-    '';
-  };
 
   programs.gamemode.enable = true;
   programs.gamescope = {
