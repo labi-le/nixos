@@ -20,6 +20,7 @@
     agenix.url = "github:ryantm/agenix";
 
     sls-steam.url = "github:AceSLS/SLSsteam";
+    accela.url = "github:labi-le/enter-the-wired";
 
     ngate-wrapped.url = "git+ssh://git@github.com/labi-le/ngate-wrapped?dir=qcow2";
     nur = {
