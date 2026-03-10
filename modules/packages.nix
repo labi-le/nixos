@@ -78,6 +78,8 @@ in
         ffmpeg
         agenix
         age
+
+        pgcli
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;
