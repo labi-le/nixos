@@ -1,4 +1,9 @@
-{ pkgs, config, user, ... }:
+{
+  pkgs,
+  config,
+  user,
+  ...
+}:
 
 let
 
@@ -13,8 +18,6 @@ in
   home.username = username;
   home.homeDirectory = homeDirectory;
 
-  xdg.userDirs.download = "/tmp";
-
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
   # introduces backwards incompatible changes.
@@ -28,12 +31,6 @@ in
   # plain files is through 'home.file'.
   home.file."Downloads" = {
     source = config.lib.file.mkOutOfStoreSymlink "/tmp";
-  };
-
-  home.sessionVariables = {
-    SDL_VIDEODRIVER = "wayland";
-    XDG_SESSION_TYPE = "wayland";
-    XDG_CURRENT_DESKTOP = "sway";
   };
 
   programs.home-manager.enable = true;

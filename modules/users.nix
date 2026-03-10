@@ -1,4 +1,9 @@
-{ config, lib, options, ... }:
+{
+  config,
+  lib,
+  options,
+  ...
+}:
 
 let
   cfg = config.mySystem.user;
@@ -26,7 +31,9 @@ in
 
   config = lib.mkMerge [
     {
-      _module.args = { user = cfg; };
+      _module.args = {
+        user = cfg;
+      };
 
       users.users.${cfg.name} = {
         isNormalUser = true;
@@ -46,14 +53,9 @@ in
 
       services.getty.autologinUser = cfg.name;
 
-      environment.sessionVariables = {
-        XDG_CONFIG_HOME = "${config.users.users.${cfg.name}.home}/.config";
-      };
-
       environment.variables = {
         EDITOR = "nvim";
         TERMINAL = "alacritty";
-        XDG_TERMINAL_EXEC = "$TERMINAL";
         NIXPKGS_ALLOW_UNFREE = "1";
       };
 
@@ -68,7 +70,9 @@ in
       '';
     }
     (lib.optionalAttrs (options ? home-manager) {
-      home-manager.extraSpecialArgs = { user = cfg; };
+      home-manager.extraSpecialArgs = {
+        user = cfg;
+      };
       home-manager.users.${cfg.name} = {
         imports = [ ../home-manager/home.nix ];
       };

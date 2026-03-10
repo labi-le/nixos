@@ -14,6 +14,7 @@
     ./yazi.nix
     ./thunar.nix
     ./yt-dlp.nix
+    ./xdg.nix
   ];
 
 }
