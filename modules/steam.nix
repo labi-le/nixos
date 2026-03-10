@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 {
   programs.nix-ld.enable = true;
   programs.steam = {
@@ -7,7 +7,7 @@
     package =
       with pkgs;
       steam.override {
-        extraPkgs = pkgs: [
+        extraPkgs = pkgs: with pkgs; [
           jq
           cabextract
           wget
@@ -19,9 +19,9 @@
           pkgsi686Linux.libxi
           pkgsi686Linux.libxrandr
         ];
-        extraEnv = {
-          LD_AUDIT = "${sls-steam}/library-inject.so:${sls-steam}/SLSsteam.so";
-        };
+        extraProfile = ''
+          export LD_AUDIT="${sls-steam}/library-inject.so:${sls-steam}/SLSsteam.so"
+        '';
       };
 
     extraCompatPackages = [ pkgs.steamtinkerlaunch ];

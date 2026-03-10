@@ -807,11 +807,11 @@
         "nixpkgs": "nixpkgs_11"
       },
       "locked": {
-        "lastModified": 1769361037,
-        "narHash": "sha256-dWnjQpGNKEwIMPNoUp765q2QlVRCX58KbNm0ZBrTL80=",
+        "lastModified": 1773139650,
+        "narHash": "sha256-lTzwHjwgzXpV0loeMShR6a/bhx6uJq+cM61av6rLF/A=",
         "owner": "AceSLS",
         "repo": "SLSsteam",
-        "rev": "6aae05be2fa2f8d5f1c5906658a3d41ad30d6352",
+        "rev": "d85028aef70128a17d26afb1f2af27d1375355c9",
         "type": "github"
       },
       "original": {
