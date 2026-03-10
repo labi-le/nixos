@@ -18,5 +18,10 @@
       window.opacity = 0;
     };
   };
+  xdg.terminal-exec = {
+    settings = {
+      default = [ "alacritty.desktop" ];
+    };
+  };
 
 }

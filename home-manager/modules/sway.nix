@@ -1,7 +1,8 @@
-{ lib
-, osConfig
-, pkgs
-, ...
+{
+  lib,
+  osConfig,
+  pkgs,
+  ...
 }:
 
 let
@@ -70,18 +71,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (
-          name: monitor:
-            {
-              mode = monitor.mode;
-              pos = monitor.geometry;
-            }
-            // lib.optionalAttrs (monitor.transform != null) {
-              transform = monitor.transform;
-            }
-        )
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -348,7 +347,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-                ++ [
+              ++ [
                 "9"
                 "0"
               ]
@@ -499,4 +498,10 @@ in
     brightnessctl
     wf-recorder
   ];
+
+  home.sessionVariables = {
+    SDL_VIDEODRIVER = "wayland";
+    XDG_SESSION_TYPE = "wayland";
+    XDG_CURRENT_DESKTOP = "sway";
+  };
 }
