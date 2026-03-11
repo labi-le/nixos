@@ -27,6 +27,7 @@
 
 ## How to Add a Package
 
+### From flake input
 1. Add input in `flake.nix`:
 ```nix
 opencode.url = "github:numtide/llm-agents.nix";
@@ -35,6 +36,24 @@ opencode.url = "github:numtide/llm-agents.nix";
 2. Add in `overlays.nix`:
 ```nix
 opencode = inputs.opencode.packages.${system}.opencode;
+```
+
+### Local package
+1. Create package in `pkgs/name.nix`:
+```nix
+{ pkgs ? import <nixpkgs> { }
+,
+}:
+
+pkgs.writeShellScriptBin "my-script" ''
+  #!/bin/sh
+  echo "Hello"
+'';
+```
+
+2. Add in `overlays.nix`:
+```nix
+my-script = prev.callPackage ./pkgs/my-script.nix { };
 ```
 
 3. Add to package list:
