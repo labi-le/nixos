@@ -80,6 +80,8 @@ in
         age
 
         pgcli
+
+        generate-context
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;

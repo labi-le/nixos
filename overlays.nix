@@ -17,6 +17,7 @@ final: prev: {
 
   getmyip = prev.callPackage ./pkgs/getmyip.nix { };
   ea-disable-overlay = prev.callPackage ./pkgs/ea-disable-overlay.nix { };
+  generate-context = prev.callPackage ./pkgs/generate-context.nix { };
   agenix = inputs.agenix.packages.${system}.default;
   nur = (inputs.nur.overlays.default final prev).nur;
   apple-fonts = inputs.apple-fonts.packages.${system};
