@@ -20,4 +20,5 @@ final: prev: {
   agenix = inputs.agenix.packages.${system}.default;
   nur = (inputs.nur.overlays.default final prev).nur;
   apple-fonts = inputs.apple-fonts.packages.${system};
+  opencode = inputs.opencode.packages.${system}.opencode;
 }

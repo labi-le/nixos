@@ -28,6 +28,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     apple-fonts.url = "github:Lyndeno/apple-fonts.nix";
+    opencode.url = "github:numtide/llm-agents.nix";
   };
 
   outputs =

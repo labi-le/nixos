@@ -33,4 +33,6 @@ with pkgs;
   vlc
 
   ea-disable-overlay
+
+  opencode
 ]
