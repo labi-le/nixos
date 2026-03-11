@@ -1,5 +1,5 @@
-{ pkgs ? import <nixpkgs> { }
-,
+{
+  pkgs ? import <nixpkgs> { },
 }:
 
 pkgs.writeShellScriptBin "generate-context" ''
@@ -50,6 +50,7 @@ pkgs.writeShellScriptBin "generate-context" ''
           *.php) echo "php" ;;
           *.js) echo "js" ;;
           *.html) echo "html" ;;
+          *.css) echo "css" ;;
           *.xml) echo "xml" ;;
           Dockerfile) echo "dockerfile" ;;
           *.ps1) echo "powershell" ;;
@@ -115,6 +116,7 @@ pkgs.writeShellScriptBin "generate-context" ''
           -name "*.rs" -o \
           -name "*.js" -o \
           -name "*.html" -o \
+          -name "*.css" -o \
           -name "*.yaml" -o \
           -name "*.proto" -o \
           -name "*.nix" -o \
