@@ -15,7 +15,7 @@ pkgs.writeShellScriptBin "generate-context" ''
       case "$1" in
           -e)
               if [[ -n ''${2-} ]]; then
-                  USER_EXCLUDES+=("''$2")
+                  USER_EXCLUDES+=("$2")
                   shift 2
               else
                   echo "Error: -e requires an argument" >&2
@@ -61,7 +61,7 @@ pkgs.writeShellScriptBin "generate-context" ''
   }
 
   print_tree() {
-      local ignore_list=".git|node_modules|vendor"
+      local ignore_list=".git|node_modules|vendor|.idea"
 
       for excl in "''${USER_EXCLUDES[@]}"; do
           local clean_excl="''${excl%/}"
@@ -96,7 +96,7 @@ pkgs.writeShellScriptBin "generate-context" ''
           if [ "$is_first" = true ]; then is_first=false; else find_cmd+=( -o ); fi
           local clean_excl="''${excl%/}"
           if [[ "$clean_excl" == *"/"* ]]; then
-               find_cmd+=( -path "$clean_excl" )
+               find_cmd+=( \( -path "*/$clean_excl" -o -path "$clean_excl" \) )
           else
                find_cmd+=( -name "$clean_excl" )
           fi
@@ -124,7 +124,7 @@ pkgs.writeShellScriptBin "generate-context" ''
           -name "Makefile" \
       \) -print )
 
-      "''${find_cmd[@]}" | sort | while read -r file; do
+      "''${find_cmd[@]}" | sort | while IFS= read -r file; do
           local lang
           lang=$(get_syntax "$file")
 
