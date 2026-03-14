@@ -1,5 +1,13 @@
 { config, ... }:
+
 {
+  age.secrets.grafana = {
+    file = ../secrets/grafana.age;
+    owner = "grafana";
+    group = "grafana";
+    mode = "0400";
+  };
+
   services.grafana = {
     enable = true;
     settings = {
@@ -10,6 +18,7 @@
         domain = "logs.labile.cc";
       };
       analytics.reporting_enabled = false;
+      security.secret_key = config.age.secrets.grafana.path;
 
     };
     provision = {
