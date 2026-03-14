@@ -48,14 +48,18 @@ pkgs.writeShellScriptBin "generate-context" ''
           *.nix) echo "nix" ;;
           *Makefile) echo "makefile" ;;
           *.php) echo "php" ;;
-          *.js) echo "js" ;;
+          *.js|*.jsx) echo "javascript" ;;
+          *.ts|*.tsx) echo "typescript" ;;
+          *.svelte) echo "svelte" ;;
+          *.json) echo "json" ;;
+          *.md) echo "markdown" ;;
           *.html) echo "html" ;;
           *.css) echo "css" ;;
           *.xml) echo "xml" ;;
           Dockerfile) echo "dockerfile" ;;
           *.ps1) echo "powershell" ;;
           *.c|*.h) echo "c" ;;
-          *.rs) echo "rs" ;;
+          *.rs) echo "rust" ;;
           *) echo "text" ;;
       esac
   }
@@ -108,6 +112,7 @@ pkgs.writeShellScriptBin "generate-context" ''
           -name "*.go" -o \
           -name "*.txt" -o \
           -name "*.yml" -o \
+          -name "*.yaml" -o \
           -name "*.php" -o \
           -name "*.c" -o \
           -name "*.h" -o \
@@ -115,9 +120,14 @@ pkgs.writeShellScriptBin "generate-context" ''
           -name "*.ps1" -o \
           -name "*.rs" -o \
           -name "*.js" -o \
+          -name "*.jsx" -o \
+          -name "*.ts" -o \
+          -name "*.tsx" -o \
+          -name "*.svelte" -o \
+          -name "*.json" -o \
+          -name "*.md" -o \
           -name "*.html" -o \
           -name "*.css" -o \
-          -name "*.yaml" -o \
           -name "*.proto" -o \
           -name "*.nix" -o \
           -name "Dockerfile" -o \
