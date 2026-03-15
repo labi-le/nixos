@@ -60,12 +60,13 @@ pkgs.writeShellScriptBin "generate-context" ''
           *.ps1) echo "powershell" ;;
           *.c|*.h) echo "c" ;;
           *.rs) echo "rust" ;;
+          *.py) echo "python" ;;
           *) echo "text" ;;
       esac
   }
 
   print_tree() {
-      local ignore_list=".git|node_modules|vendor|.idea"
+      local ignore_list=".git|node_modules|vendor|.idea|context.md"
 
       for excl in "''${USER_EXCLUDES[@]}"; do
           local clean_excl="''${excl%/}"
@@ -87,7 +88,7 @@ pkgs.writeShellScriptBin "generate-context" ''
       local find_cmd=(find "''${SOURCE_DIRS[@]}")
 
       local is_first=true
-      local base_excludes=(".git" "node_modules" "vendor" ".idea")
+      local base_excludes=(".git" "node_modules" "vendor" ".idea" "context.md")
 
       find_cmd+=( \( )
 
@@ -110,6 +111,7 @@ pkgs.writeShellScriptBin "generate-context" ''
 
       find_cmd+=( -type f \( \
           -name "*.go" -o \
+          -name "*.py" -o \
           -name "*.txt" -o \
           -name "*.yml" -o \
           -name "*.yaml" -o \
