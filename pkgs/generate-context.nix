@@ -61,6 +61,7 @@ pkgs.writeShellScriptBin "generate-context" ''
           *.c|*.h) echo "c" ;;
           *.rs) echo "rust" ;;
           *.py) echo "python" ;;
+          *.cs) echo "csharp" ;;
           *) echo "text" ;;
       esac
   }
@@ -132,6 +133,7 @@ pkgs.writeShellScriptBin "generate-context" ''
           -name "*.css" -o \
           -name "*.proto" -o \
           -name "*.nix" -o \
+          -name "*.cs" -o \
           -name "Dockerfile" -o \
           -name "Makefile" \
       \) -print )
