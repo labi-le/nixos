@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -61,10 +62,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -117,7 +119,7 @@ in
       };
       "vaultwarden.labile.cc" = proxy {
         addr = "http://127.0.0.1:7005";
-        internal = true;
+        # internal = true;
       };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";
