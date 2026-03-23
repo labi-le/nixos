@@ -1,15 +1,17 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
+  stylix.targets.mako.enable = false;
+
   services.mako = {
     enable = true;
     settings = {
       font = "SF Pro Display 12";
-      background-color = "#15171844";
-      text-color = "#BD93F9";
+      background-color = "#${config.lib.stylix.colors.base00}44";
+      text-color = "#${config.lib.stylix.colors.base05}";
 
       border-size = 1;
-      border-color = "#BD93F988";
+      border-color = "#${config.lib.stylix.colors.base0D}88";
 
       border-radius = 10;
       padding = 15;
@@ -20,8 +22,8 @@
       default-timeout = 3000;
 
       "urgency=high" = {
-        text-color = "#CD3F45";
-        border-color = "#CD3F45";
+        text-color = "#${config.lib.stylix.colors.base08}";
+        border-color = "#${config.lib.stylix.colors.base08}";
       };
     };
     extraConfig = "";

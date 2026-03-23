@@ -20,5 +20,6 @@
     ./hotkeys.nix
     ./nix-search-tv.nix
     ./nixvim
+    ./stylix.nix
   ];
 }

@@ -1,8 +1,8 @@
-{ pkgs
-, ...
-}:
+{ pkgs, ... }:
 
 {
+  stylix.targets.wofi.enable = false;
+
   programs.wofi.enable = true;
 
   programs.wofi.settings = {
