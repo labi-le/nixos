@@ -29,6 +29,7 @@
     };
     apple-fonts.url = "github:Lyndeno/apple-fonts.nix";
     opencode.url = "github:numtide/llm-agents.nix";
+    stylix.url = "github:danth/stylix";
   };
 
   outputs =
@@ -38,6 +39,7 @@
 
       commonModules = [
         ./settings.nix
+        inputs.stylix.nixosModules.stylix
         inputs.nixvim.nixosModules.nixvim
         inputs.chaotic.nixosModules.default
         inputs.musnix.nixosModules.musnix

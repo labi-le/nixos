@@ -6,7 +6,6 @@
     ./mako.nix
     ./git.nix
     ./alacritty.nix
-    ./theme.nix
     ./ssh.nix
     ./mimeapps.nix
     ./mpv.nix

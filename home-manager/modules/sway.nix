@@ -1,8 +1,8 @@
-{
-  lib,
-  osConfig,
-  pkgs,
-  ...
+{ lib
+, osConfig
+, pkgs
+, config
+, ...
 }:
 
 let
@@ -53,13 +53,15 @@ in
       ];
       startup = [
         {
+          command = "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_DATA_DIRS";
+        }
+        {
           command = "import-gsettings";
           always = true;
         }
         {
           command = "${pkgs.swaybg}/bin/swaybg -i ~/Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
         }
-
       ];
       modes = {
         resize = {
@@ -71,16 +73,18 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs (
-        name: monitor:
-        {
-          mode = monitor.mode;
-          pos = monitor.geometry;
-        }
-        // lib.optionalAttrs (monitor.transform != null) {
-          transform = monitor.transform;
-        }
-      ) osConfig.monitors;
+      output = lib.mapAttrs
+        (
+          name: monitor:
+            {
+              mode = monitor.mode;
+              pos = monitor.geometry;
+            }
+            // lib.optionalAttrs (monitor.transform != null) {
+              transform = monitor.transform;
+            }
+        )
+        osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -96,10 +100,6 @@ in
       gaps = {
         inner = 2;
         outer = 0;
-      };
-      fonts = {
-        names = [ "SF Pro Display" ];
-        size = 14.0;
       };
       window = {
         border = 1;
@@ -118,7 +118,6 @@ in
             class = "Bluetooth-sendto";
             instance = "bluetooth-sendto";
           }
-
           { window_role = "About"; }
           { window_role = "pop-up"; }
           { window_role = "bubble"; }
@@ -126,7 +125,6 @@ in
           { window_role = "Preferences"; }
           { window_type = "dialog"; }
           { window_type = "menu"; }
-          { window_role = "About"; }
         ];
       };
 
@@ -244,7 +242,6 @@ in
             app_id = "mpv";
           };
         }
-
         {
           command = "sticky enable; resize set width 40 ppt height 30 ppt; floating enable";
           criteria = {
@@ -287,7 +284,7 @@ in
         "${common}+Return" = "exec ${terminal}";
         "${common}+Shift+e" = "exec wofi-powermenu";
         "${common}+q" = "kill";
-        "BTN_MIDDLE" = "kill --border"; # bindcode
+        "BTN_MIDDLE" = "kill --border";
         "${common}+z" = "exec pkill -SIGUSR1 ${bar}";
         "${common}+x" = "mode resize";
         "${common}+d" = "exec ${menu} -c ~/.config/wofi/config -I";
@@ -347,7 +344,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-              ++ [
+                ++ [
                 "9"
                 "0"
               ]
@@ -387,27 +384,27 @@ in
         }
       ];
 
-      colors = {
+      colors = lib.mkForce {
         focused = {
           border = "#00000000";
-          background = "#BD93F933";
-          text = "#ffffff";
-          indicator = "#BD93F9";
+          background = "#${config.lib.stylix.colors.base0D}33";
+          text = "#${config.lib.stylix.colors.base05}";
+          indicator = "#${config.lib.stylix.colors.base0D}";
           childBorder = "#00000000";
         };
         focusedInactive = {
-          border = "#6272A444";
-          background = "#6272A411";
-          text = "#eeeeee";
-          indicator = "#6272A4";
-          childBorder = "#6272A444";
+          border = "#${config.lib.stylix.colors.base03}44";
+          background = "#${config.lib.stylix.colors.base03}11";
+          text = "#${config.lib.stylix.colors.base05}";
+          indicator = "#${config.lib.stylix.colors.base03}";
+          childBorder = "#${config.lib.stylix.colors.base03}44";
         };
         unfocused = {
-          border = "#282A3622";
-          background = "#282A3600";
-          text = "#bfbfbf";
-          indicator = "#282A36";
-          childBorder = "#282A3622";
+          border = "#${config.lib.stylix.colors.base01}22";
+          background = "#${config.lib.stylix.colors.base00}00";
+          text = "#${config.lib.stylix.colors.base04}";
+          indicator = "#${config.lib.stylix.colors.base01}";
+          childBorder = "#${config.lib.stylix.colors.base01}22";
         };
       };
 
