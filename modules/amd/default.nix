@@ -1,0 +1,7 @@
+{ lib, pkgs, ... }:
+
+{
+  boot.kernelParams = [
+    "amdgpu.ppfeaturemask=0xffffffff"
+  ];
+}

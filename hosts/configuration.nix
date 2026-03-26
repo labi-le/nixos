@@ -21,6 +21,7 @@
     ./../modules/k3s.nix
     ./../modules/steam.nix
     ./../modules/bluetooth.nix
+    ./../modules/amd
   ];
 
   services.xserver.xkb = {
