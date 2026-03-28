@@ -1,20 +1,20 @@
 { pkgs, osConfig, ... }:
 let
-  monitors = builtins.attrNames osConfig.monitors;
-  first = builtins.elemAt monitors 0;
-  second = if (builtins.length monitors) > 1 then builtins.elemAt monitors 1 else null;
+  findMonitor = osConfig.monitorFinder;
+
+  first = findMonitor "left";
+  rightMonitor = findMonitor "right";
+  second = if rightMonitor != first then rightMonitor else null;
 
   workspacesConfig = {
     all-outputs = false;
     disable-scroll = true;
     format = "{icon}";
     format-icons = builtins.listToAttrs (
-      map
-        (n: {
-          name = n;
-          value = n;
-        })
-        (map toString (builtins.genList (x: x + 1) 8))
+      map (n: {
+        name = n;
+        value = n;
+      }) (map toString (builtins.genList (x: x + 1) 8))
     );
 
   };

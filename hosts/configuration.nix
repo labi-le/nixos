@@ -58,7 +58,7 @@
     additional = "Mod1";
   };
   monitors = {
-    "DP-3" = {
+    "DP-1" = {
       mode = "2560x1440@179.999Hz";
       geometry = "1920 0";
       position = "right";
