@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   programs.nix-ld.enable = true;
   programs.steam = {
@@ -25,6 +25,19 @@
       };
 
     extraCompatPackages = [ pkgs.steamtinkerlaunch ];
+  };
+
+  home-manager.users.labile = {
+    xdg.desktopEntries.steam = {
+      name = "Steam";
+      genericName = "Game Store";
+      comment = "Application for managing and playing games on Steam";
+      exec = "${pkgs.steam}/bin/steam -no-big-picture %U";
+      icon = "steam";
+      terminal = false;
+      categories = [ "Network" "FileTransfer" "Game" ];
+      mimeType = [ "x-scheme-handler/steam" "x-scheme-handler/steamlink" ];
+    };
   };
 
   environment.systemPackages = with pkgs; [
