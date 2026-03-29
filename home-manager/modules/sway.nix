@@ -1,8 +1,9 @@
-{ lib
-, osConfig
-, pkgs
-, config
-, ...
+{
+  lib,
+  osConfig,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -73,18 +74,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (
-          name: monitor:
-            {
-              mode = monitor.mode;
-              pos = monitor.geometry;
-            }
-            // lib.optionalAttrs (monitor.transform != null) {
-              transform = monitor.transform;
-            }
-        )
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -320,10 +319,10 @@ in
         "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
         "${common}+r" = "exec ${filemanager}";
         "${common}+o" = "exec ${browser}";
-        "${additional}+s" = "exec ${grimshot} copy area";
-        "${additional}+a" = "exec ${grimshot} copy active";
-        "${additional}+e" = "exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -";
-        "${additional}+p" = "exec wl-uploader";
+        "Print" = "exec ${grimshot} copy area";
+        "${additional}+Print" = "exec ${grimshot} copy active";
+        "${common}+Print" = "exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -";
+        "Print+Home" = "exec wl-uploader";
         "${common}+${additional}+Shift+Right" = "move workspace to output right";
         "${common}+${additional}+Shift+Left" = "move workspace to output left";
         "${common}+${additional}+Shift+Down" = "move workspace to output down";
@@ -344,7 +343,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-                ++ [
+              ++ [
                 "9"
                 "0"
               ]
