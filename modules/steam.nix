@@ -7,18 +7,19 @@
     package =
       with pkgs;
       steam.override {
-        extraPkgs = pkgs: with pkgs; [
-          jq
-          cabextract
-          wget
-          git
-          pkgsi686Linux.libpulseaudio
-          pkgsi686Linux.freetype
-          pkgsi686Linux.libxcursor
-          pkgsi686Linux.libxcomposite
-          pkgsi686Linux.libxi
-          pkgsi686Linux.libxrandr
-        ];
+        extraPkgs =
+          pkgs: with pkgs; [
+            jq
+            cabextract
+            wget
+            git
+            pkgsi686Linux.libpulseaudio
+            pkgsi686Linux.freetype
+            pkgsi686Linux.libxcursor
+            pkgsi686Linux.libxcomposite
+            pkgsi686Linux.libxi
+            pkgsi686Linux.libxrandr
+          ];
         extraProfile = ''
           export LD_AUDIT="${sls-steam}/library-inject.so:${sls-steam}/SLSsteam.so"
         '';
@@ -35,8 +36,15 @@
       exec = "${pkgs.steam}/bin/steam -no-big-picture %U";
       icon = "steam";
       terminal = false;
-      categories = [ "Network" "FileTransfer" "Game" ];
-      mimeType = [ "x-scheme-handler/steam" "x-scheme-handler/steamlink" ];
+      categories = [
+        "Network"
+        "FileTransfer"
+        "Game"
+      ];
+      mimeType = [
+        "x-scheme-handler/steam"
+        "x-scheme-handler/steamlink"
+      ];
     };
   };
 
@@ -45,6 +53,7 @@
     sls-steam
     sls-steam-wrapped
     accela
+    lutris
   ];
 
   programs.gamemode.enable = true;
