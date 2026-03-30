@@ -20,6 +20,7 @@
     ./../modules/syncthing/pc.nix
     ./../modules/k3s.nix
     ./../modules/steam.nix
+    ./../modules/esync.nix
     ./../modules/bluetooth.nix
     ./../modules/amd
   ];
