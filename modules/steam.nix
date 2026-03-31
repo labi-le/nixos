@@ -2,7 +2,6 @@
 {
   programs.nix-ld.enable = true;
   programs.steam = {
-    protontricks.enable = true;
     enable = true;
     package =
       with pkgs;
