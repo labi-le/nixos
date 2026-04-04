@@ -49,6 +49,7 @@
     };
     # rustrover.enable = true;
     # pycharm.enable = true;
+    rider.enable = true;
   };
 
   packages.desktop = true;

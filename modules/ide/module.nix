@@ -103,6 +103,17 @@ let
       ];
       extraWrapperArgs = "";
     }
+
+    {
+      name = "rider";
+      packageName = "rider";
+      packageWithEnv = "rider-with-env";
+      executable = "rider";
+      baseEnv = [
+        dotnet-sdk
+      ];
+      extraWrapperArgs = "";
+    }
   ];
 
   enabledIdes = builtins.filter (ide: cfg.${ide.name}.enable) ides;
