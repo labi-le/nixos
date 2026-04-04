@@ -11,10 +11,12 @@ let
     disable-scroll = true;
     format = "{icon}";
     format-icons = builtins.listToAttrs (
-      map (n: {
-        name = n;
-        value = n;
-      }) (map toString (builtins.genList (x: x + 1) 8))
+      map
+        (n: {
+          name = n;
+          value = n;
+        })
+        (map toString (builtins.genList (x: x + 1) 8))
     );
 
   };
