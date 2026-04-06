@@ -51,7 +51,6 @@
     steamtinkerlaunch
     sls-steam
     sls-steam-wrapped
-    accela
     lutris
   ];
 
