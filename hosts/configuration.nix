@@ -30,6 +30,7 @@
   };
 
   services.belphegor.enable = true;
+  services.hardware.openrgb.enable = true;
 
   programs.gnupg.agent = {
     enable = true;
