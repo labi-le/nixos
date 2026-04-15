@@ -1,8 +1,13 @@
-{ user, ... }:
+{ user, config, ... }:
 
 {
   programs.git = {
     enable = true;
+    signing = {
+      format = "ssh";
+      key = "${config.home.homeDirectory}/.ssh/id_rsa.pub";
+      signByDefault = true;
+    };
     settings = {
       user = {
         name = user.git.name;

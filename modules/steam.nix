@@ -52,6 +52,8 @@
     sls-steam
     sls-steam-wrapped
     lutris
+    winetricks
+    wineWow64Packages.stable
   ];
 
   programs.gamemode.enable = true;

@@ -1,5 +1,10 @@
 # Nix Configuration Project
 
+## General Rules
+
+- **Use Context7 MCP** — Always use `context7_resolve-library-id` and `context7_query-docs` for library/framework documentation before implementing any feature or answering programming questions.
+- **Use using-superpowers skill** — Always invoke the `using-superpowers` skill when available to follow proper workflow (check for relevant skills first).
+
 ## Project Structure
 
 ```
