@@ -26,6 +26,13 @@ in
       '';
       example = "myuser";
     };
+
+    enableCaddy = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Enable Caddy reverse proxy with HTTPS for syncthing UI";
+    };
+
     folders = mkOption {
       type = types.attrsOf (
         types.submodule {
@@ -57,46 +64,48 @@ in
   config = mkIf cfg.enable (
     let
       sharedWithNodes = unique (concatMap (folder: folder.sharesWith) (attrValues cfg.folders));
+      portMatch = lib.strings.match ".*:([0-9]+)" config.services.syncthing.guiAddress;
+      syncthingPort = lib.strings.toInt (lib.head portMatch);
     in
     mkMerge [
+      (mkIf cfg.enableCaddy (import ./caddy.nix { inherit config lib; }))
       {
         services.syncthing = {
           enable = true;
-          guiAddress = "0.0.0.0:8384";
-
-          overrideDevices = true;
-          overrideFolders = true;
+          guiAddress = "127.0.0.1:8384";
 
           settings = {
+            gui = {
+              insecureSkipHostCheck = true;
+            };
             devices = listToAttrs (
-              map
-                (nodeName: {
-                  name = nodeName;
-                  value = {
-                    id = allDevices.${nodeName}.id;
-                  };
-                })
-                sharedWithNodes
+              map (nodeName: {
+                name = nodeName;
+                value = {
+                  id = allDevices.${nodeName}.id;
+                };
+              }) sharedWithNodes
             );
 
-            folders = mapAttrs
-              (path: folderCfg: {
-                inherit (folderCfg) id;
-                type = "sendreceive";
-                devices = folderCfg.sharesWith;
-              })
-              cfg.folders;
+            folders = mapAttrs (path: folderCfg: {
+              inherit (folderCfg) id;
+              type = "sendreceive";
+              devices = folderCfg.sharesWith;
+            }) cfg.folders;
           };
         };
 
         networking.firewall.allowedTCPPorts = [
           22000
-          8384
+          syncthingPort
         ];
         networking.firewall.allowedUDPPorts = [
           22000
           21027
         ];
+        networking.hosts = {
+          "127.0.0.1" = [ "syncthing" ];
+        };
       }
 
       (mkIf (cfg.user != null) {

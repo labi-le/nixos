@@ -3,7 +3,8 @@
 ## General Rules
 
 - **Use Context7 MCP** — Always use `context7_resolve-library-id` and `context7_query-docs` for library/framework documentation before implementing any feature or answering programming questions.
-- **Use using-superpowers skill** — Always invoke the `using-superpowers` skill when available to follow proper workflow (check for relevant skills first).
+- **Use using-superpowers skill** — Always invoke the `using-superpowers` skill when available to follow relevant workflow (check for skills first).
+- **Always verify dry-run before switch** — Always run `nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run` (or the equivalent for the target host) and confirm it builds successfully before asking user to run `make switch`.
 
 ## Project Structure
 
@@ -93,11 +94,9 @@ age.secrets.mysecret = {
 };
 ```
 
-### Backup/restore SSH keys for host
+### SSH keys
 ```bash
-make backup-keys      # save keys for current host
-make restore-keys     # restore keys for current host
-make backup-root-keys # backup root keys
+# SSH key management commands
 ```
 
 ## Monitor Configuration

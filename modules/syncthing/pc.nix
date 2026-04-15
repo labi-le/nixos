@@ -4,6 +4,7 @@
 
   sync = {
     enable = true;
+    enableCaddy = true;
     nodeName = "pc";
     user = user.name;
 
