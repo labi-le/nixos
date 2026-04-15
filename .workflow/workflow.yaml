@@ -20,24 +20,11 @@ phases:
       - Test locally with nixos-rebuild dry-run before pushing
       - Use make fmt before testing
     gate:
-      - nixos-rebuild --dry-run succeeds
-
-  - id: switch
-    name: Switch
-    description: Apply configuration to current system
-    conventions:
-      - Use make switch from the project root
-      - Ensure backup-keys ran before major changes
-    gate:
-      - make switch completes without error
+      - nix build .#nixosConfigurations.<host>.config.system.build.toplevel --dry-run succeeds
 
 transitions:
   - from: edit
     to: test
-  - from: test
-    to: switch
-  - from: switch
-    to: edit
 
 project_conventions:
   branching:

@@ -10,6 +10,9 @@ disko:
 fix-flake:
 	@git add --intent-to-add .
 
+dry-run:
+	@nix build .#nixosConfigurations.$(HOSTNAME).config.system.build.toplevel --dry-run
+
 switch:
 	sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --show-trace
 
