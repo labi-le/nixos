@@ -40,14 +40,12 @@
   };
 
   fileSystems."/mnt/ssd2tb" = {
-    device = "/dev/disk/by-uuid/68EF-024C";
-    fsType = "exfat";
+    device = "/dev/disk/by-uuid/3553b4a1-44a2-4e89-b5b7-f2209e977e3a";
+    fsType = "xfs";
     options = [
       "nofail"
-      "uid=1000"
-      "gid=100"
-      "umask=0000"
-      "exec"
+      "inode64"
+      "logbsize=256k"
     ];
   };
 

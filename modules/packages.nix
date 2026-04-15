@@ -55,8 +55,9 @@ in
         git
         lazygit
 
-        gparted
-        f2fs-tools
+        (gparted.override {
+          withAllTools = true;
+        })
 
         psmisc # killall
         ncurses

@@ -14,6 +14,7 @@
     ./thunar.nix
     ./yt-dlp.nix
     ./xdg.nix
+    ./opencode.nix
   ];
 
 }

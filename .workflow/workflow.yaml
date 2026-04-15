@@ -1,0 +1,51 @@
+version: 1
+metadata:
+  last_indexed: "2026-04-16T00:00:00Z"
+
+phases:
+  - id: edit
+    name: Edit
+    description: Make changes to nix configuration files
+    conventions:
+      - Use nixpkgs-fmt to format .nix files before committing
+      - Add new packages via overlays.nix following existing patterns
+      - Use agenix for secrets management
+    gate:
+      - nixpkgs-fmt passes on edited files
+
+  - id: test
+    name: Test
+    description: Validate configuration with nixos-rebuild
+    conventions:
+      - Test locally with nixos-rebuild dry-run before pushing
+      - Use make fmt before testing
+    gate:
+      - nixos-rebuild --dry-run succeeds
+
+  - id: switch
+    name: Switch
+    description: Apply configuration to current system
+    conventions:
+      - Use make switch from the project root
+      - Ensure backup-keys ran before major changes
+    gate:
+      - make switch completes without error
+
+transitions:
+  - from: edit
+    to: test
+  - from: test
+    to: switch
+  - from: switch
+    to: edit
+
+project_conventions:
+  branching:
+    pattern: "main"
+    main_branch: main
+  commits:
+    format: conventional
+  code_style:
+    language: Nix
+    linter: nixpkgs-fmt
+    formatter: nixpkgs-fmt
