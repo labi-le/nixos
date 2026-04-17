@@ -54,6 +54,7 @@
     lutris
     winetricks
     wineWow64Packages.stable
+    mangohud
   ];
 
   programs.gamemode.enable = true;

@@ -26,12 +26,8 @@ with pkgs;
   pcsx2
   qbittorrent
   postman
-  mangohud
 
   # audacity
   ayugram-desktop
   vlc
-
-  ea-disable-overlay
-
 ]

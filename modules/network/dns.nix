@@ -1,11 +1,12 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 {
-  services.resolved.enable = false;
+  services.resolved.enable = lib.mkForce false;
 
   services.dnsmasq = {
     enable = true;
