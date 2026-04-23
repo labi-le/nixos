@@ -30,4 +30,5 @@ with pkgs;
   # audacity
   ayugram-desktop
   vlc
+  quickemu
 ]
