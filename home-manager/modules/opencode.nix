@@ -38,6 +38,19 @@
     };
 
     settings = {
+      permission = {
+        external_directory = {
+          "/tmp/**" = "allow";
+          "/nix/store/**" = "allow";
+        };
+        edit = {
+          "/tmp/**" = "allow";
+        };
+        read = "allow";
+        glob = "allow";
+        grep = "allow";
+        list = "allow";
+      };
       plugin = [
         "opencode-gemini-auth@latest"
         "superpowers@git+https://github.com/obra/superpowers.git"
