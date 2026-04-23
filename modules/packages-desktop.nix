@@ -30,6 +30,4 @@ with pkgs;
   # audacity
   ayugram-desktop
   vlc
-
-  lmstudio
 ]
