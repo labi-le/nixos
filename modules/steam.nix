@@ -12,6 +12,7 @@
             cabextract
             wget
             git
+            bubblewrap
             pkgsi686Linux.libpulseaudio
             pkgsi686Linux.freetype
             pkgsi686Linux.libxcursor
