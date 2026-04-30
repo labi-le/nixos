@@ -1088,11 +1088,11 @@
         "nixpkgs": "nixpkgs_11"
       },
       "locked": {
-        "lastModified": 1775666900,
-        "narHash": "sha256-yXtD1fBEvL13RelIN2zp+1PdK2Ki+OexXHpqIqbWTPQ=",
+        "lastModified": 1777454249,
+        "narHash": "sha256-BylCmB2DFgUL+f0JmY50GMuUIaB+Avj52BNs7sd1rrs=",
         "owner": "AceSLS",
         "repo": "SLSsteam",
-        "rev": "6b23d6c3fda7e88efd917d110f898cfb1e39498a",
+        "rev": "fd38c03f9e667bf7b74127c4fc5b5c75e1bff521",
         "type": "github"
       },
       "original": {
