@@ -4,7 +4,7 @@ with pkgs;
 [
   obsidian
   vesktop
-  libreoffice-fresh
+  libreoffice
   glib
   gsettings-desktop-schemas
   libnotify
