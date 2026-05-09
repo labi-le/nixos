@@ -1,8 +1,9 @@
-{ lib
-, osConfig
-, pkgs
-, config
-, ...
+{
+  lib,
+  osConfig,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -73,18 +74,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (
-          name: monitor:
-            {
-              mode = monitor.mode;
-              pos = monitor.geometry;
-            }
-            // lib.optionalAttrs (monitor.transform != null) {
-              transform = monitor.transform;
-            }
-        )
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -130,7 +129,8 @@ in
 
       assigns = {
         ${workspaces.develop} = [
-          { class = "^jetbrains-[^\\s]+$"; }
+          { class = "^jetbrains-[^\\s]+$"; } # old
+          { app_id = "^jetbrains-[^\\s]+$"; } # after 2026
           { class = "Code"; }
           { class = "Postman"; }
         ];
@@ -344,7 +344,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-                ++ [
+              ++ [
                 "9"
                 "0"
               ]
