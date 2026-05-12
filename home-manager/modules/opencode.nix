@@ -53,6 +53,7 @@
       };
       plugin = [
         "opencode-gemini-auth@latest"
+        "opencode-openai-codex-auth@latest"
         "superpowers@git+https://github.com/obra/superpowers.git"
         "opencode-agent-skills@git+https://github.com/NickCao/agent-skills.git"
       ];
@@ -76,14 +77,18 @@
           hash = "sha256-KVCt9loGSzsOaYSLNzpyUCi/TpCDQ4b6BxEydQTRNcA=";
         }
       }/docs";
-      plantuml-rendering = "${
-        pkgs.fetchFromGitHub {
-          owner = "asolfre";
-          repo = "plantuml-rendering-skill";
-          rev = "5191edd2b30b8729a3ada1b61db381f3132d6764";
-          hash = "sha256-SOkpdeAkC68unov70AseGrK3GB0FK/HdR9MxgsqaNr0=";
-        }
-      }";
+      plantuml-rendering = "${pkgs.fetchFromGitHub {
+        owner = "asolfre";
+        repo = "plantuml-rendering-skill";
+        rev = "5191edd2b30b8729a3ada1b61db381f3132d6764";
+        hash = "sha256-SOkpdeAkC68unov70AseGrK3GB0FK/HdR9MxgsqaNr0=";
+      }}";
+      caveman = "${pkgs.fetchFromGitHub {
+        owner = "JuliusBrussee";
+        repo = "caveman";
+        rev = "754795ada42dea54adf061d42a61e560caa4f9ce";
+        hash = "sha256-fT5eFkqZVp1fgwM6iO0d2ER42XaPtLqHlO+TG9cHB74=";
+      }}/skills/caveman";
     };
   };
 }
