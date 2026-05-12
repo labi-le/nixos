@@ -79,19 +79,23 @@ in
               insecureSkipHostCheck = true;
             };
             devices = listToAttrs (
-              map (nodeName: {
-                name = nodeName;
-                value = {
-                  id = allDevices.${nodeName}.id;
-                };
-              }) sharedWithNodes
+              map
+                (nodeName: {
+                  name = nodeName;
+                  value = {
+                    id = allDevices.${nodeName}.id;
+                  };
+                })
+                sharedWithNodes
             );
 
-            folders = mapAttrs (path: folderCfg: {
-              inherit (folderCfg) id;
-              type = "sendreceive";
-              devices = folderCfg.sharesWith;
-            }) cfg.folders;
+            folders = mapAttrs
+              (path: folderCfg: {
+                inherit (folderCfg) id;
+                type = "sendreceive";
+                devices = folderCfg.sharesWith;
+              })
+              cfg.folders;
           };
         };
 
