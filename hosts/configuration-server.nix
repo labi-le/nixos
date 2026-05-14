@@ -7,6 +7,7 @@
     ./../modules/drive.nix
     ./../modules/kernel-cachyos.nix
     ./../modules/grafana.nix
+    ./../modules/frp.nix
     # ./../modules/gitlab.nix
     ./../modules/syncthing/server.nix
     ./../modules/nvidia/gt210.nix
