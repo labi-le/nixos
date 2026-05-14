@@ -86,7 +86,7 @@ in
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;
 
-    fonts = {
+    fonts = mkIf cfg.desktop {
       enableDefaultPackages = true;
       packages = with pkgs; [
         apple-fonts.sf-pro
