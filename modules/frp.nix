@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   frpPort = 38392;
@@ -26,4 +31,5 @@ in
   };
 
   networking.firewall.allowedTCPPorts = [ frpPort ];
+  networking.firewall.allowedUDPPorts = [ frpPort ];
 }
