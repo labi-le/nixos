@@ -15,5 +15,6 @@ in
   "secrets/awg/env.age".publicKeys = [ server ];
   "secrets/ngate-env.age".publicKeys = [ server ];
   "secrets/grafana.age".publicKeys = [ server ];
+  "secrets/frp.age".publicKeys = [ server ];
 
 }
