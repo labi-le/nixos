@@ -1,12 +1,11 @@
 {
   config,
-  lib,
-  pkgs,
   ...
 }:
 
 let
   frpPort = 38392;
+  awgBYPort = 27748;
 in
 {
   age.secrets.frp = {
@@ -29,5 +28,8 @@ in
   };
 
   networking.firewall.allowedTCPPorts = [ frpPort ];
-  networking.firewall.allowedUDPPorts = [ frpPort ];
+  networking.firewall.allowedUDPPorts = [
+    frpPort
+    awgBYPort
+  ];
 }
