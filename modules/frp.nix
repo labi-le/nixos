@@ -11,8 +11,6 @@ in
 {
   age.secrets.frp = {
     file = ../secrets/frp.age;
-    owner = "frp";
-    group = "frp";
     mode = "0400";
   };
 
