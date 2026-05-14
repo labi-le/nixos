@@ -11,9 +11,10 @@ in
     mode = "0400";
   };
 
-  services.frp = {
+  services.frp.instances.server = {
     enable = true;
     role = "server";
+    environmentFiles = [ config.age.secrets.frp.path ];
     settings = {
       bindAddr = "0.0.0.0";
       bindPort = frpPort;
@@ -23,8 +24,6 @@ in
       };
     };
   };
-
-  systemd.services.frp.serviceConfig.EnvironmentFile = config.age.secrets.frp.path;
 
   networking.firewall.allowedTCPPorts = [ frpPort ];
 }
