@@ -1,6 +1,6 @@
 { ... }:
 {
-  hardware.xpadneo.enable = true;
+  # hardware.xpadneo.enable = true;
 
   # https://steamcommunity.com/sharedfiles/filedetails/?id=3608372415
   services.udev.extraRules = ''
