@@ -16,7 +16,7 @@
     ./../modules/adb.nix
     ./../modules/vial.nix
     ./../modules/firefox.nix
-    # ./../modules/gamepad.nix
+    ./../modules/gamepad.nix
     ./../modules/syncthing/pc.nix
     ./../modules/k3s.nix
     ./../modules/steam.nix
