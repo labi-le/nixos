@@ -12,10 +12,12 @@ let
   menu = "wofi";
   filemanager = "thunar";
 
-  findMonitor = osConfig.monitorFinder;
+  getMonitorNameByPosition = osConfig.monitorNameByPosition;
+  getPrimaryMonitor = osConfig.primaryMonitor;
 
-  left = findMonitor "left";
-  right = findMonitor "right";
+  left = getMonitorNameByPosition "left";
+  right = getMonitorNameByPosition "right";
+  primaryMonitor = getPrimaryMonitor;
 
   common = osConfig.hotkeys.common;
   additional = osConfig.hotkeys.additional;
@@ -475,9 +477,13 @@ in
     swappy
     wev
     (writeShellScriptBin "import-gsettings" ''
-      #!/bin/sh
+      #!${pkgs.runtimeShell}
       config="$HOME/.config/gtk-3.0/settings.ini"
       if [ ! -f "$config" ]; then exit 1; fi
+      PRIMARY="${if primaryMonitor != null then primaryMonitor.name else ""}"
+      if [ -n "$PRIMARY" ]; then
+        ${pkgs.xrandr}/bin/xrandr --output "$PRIMARY" --primary
+      fi
       gnome_schema="org.gnome.desktop.interface"
       gtk_theme="$(grep 'gtk-theme-name' "$config" | cut -d'=' -f2)"
       icon_theme="$(grep 'gtk-icon-theme-name' "$config" | cut -d'=' -f2)"

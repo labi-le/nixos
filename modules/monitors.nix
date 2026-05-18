@@ -15,13 +15,17 @@ with lib;
               type = types.nullOr types.str;
               default = null;
             };
+            primary = mkOption {
+              type = types.bool;
+              default = false;
+            };
           };
         }
       );
       default = { };
     };
 
-    monitorFinder = mkOption {
+    monitorNameByPosition = mkOption {
       type = types.raw;
       readOnly = true;
       default =
@@ -38,5 +42,33 @@ with lib;
         else
           builtins.throw "Monitor '${pos}' not found and no other monitors are defined";
     };
+
+    primaryMonitor = mkOption {
+      type = types.raw;
+      readOnly = true;
+      default =
+        let
+          found = filterAttrs (_: monitor: monitor.primary or false) config.monitors;
+          names = attrNames found;
+          monitorName = if names != [ ] then head names else null;
+        in
+        if monitorName != null then {
+          name = monitorName;
+        } // config.monitors.${monitorName} else null;
+    };
   };
+
+  config =
+    let
+      primaryMonitors = filterAttrs (_: monitor: monitor.primary or false) config.monitors;
+      primaryMonitorNames = attrNames primaryMonitors;
+    in
+    {
+      assertions = [
+        {
+          assertion = builtins.length primaryMonitorNames <= 1;
+          message = "Only one monitor can have primary = true. Found: ${concatStringsSep ", " primaryMonitorNames}";
+        }
+      ];
+    };
 }

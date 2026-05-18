@@ -1,9 +1,9 @@
 { pkgs, osConfig, ... }:
 let
-  findMonitor = osConfig.monitorFinder;
+  getMonitorNameByPosition = osConfig.monitorNameByPosition;
 
-  first = findMonitor "left";
-  rightMonitor = findMonitor "right";
+  first = getMonitorNameByPosition "left";
+  rightMonitor = getMonitorNameByPosition "right";
   second = if rightMonitor != first then rightMonitor else null;
 
   workspacesConfig = {

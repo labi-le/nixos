@@ -65,6 +65,7 @@
       mode = "2560x1440@179.999Hz";
       geometry = "1920 0";
       position = "right";
+      primary = true;
     };
     "DP-2" = {
       mode = "1920x1080@165Hz";
