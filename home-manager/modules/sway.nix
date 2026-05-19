@@ -1,8 +1,9 @@
-{ lib
-, osConfig
-, pkgs
-, config
-, ...
+{
+  lib,
+  osConfig,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -58,6 +59,10 @@ in
           command = "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_DATA_DIRS";
         }
         {
+          command = "set-primary-monitor";
+          always = true;
+        }
+        {
           command = "import-gsettings";
           always = true;
         }
@@ -75,18 +80,16 @@ in
           Up = "resize shrink height 10 ppt";
         };
       };
-      output = lib.mapAttrs
-        (
-          name: monitor:
-            {
-              mode = monitor.mode;
-              pos = monitor.geometry;
-            }
-            // lib.optionalAttrs (monitor.transform != null) {
-              transform = monitor.transform;
-            }
-        )
-        osConfig.monitors;
+      output = lib.mapAttrs (
+        name: monitor:
+        {
+          mode = monitor.mode;
+          pos = monitor.geometry;
+        }
+        // lib.optionalAttrs (monitor.transform != null) {
+          transform = monitor.transform;
+        }
+      ) osConfig.monitors;
       input = {
         "type:touchpad" = {
           dwt = "enabled";
@@ -347,7 +350,7 @@ in
             ])
             (
               builtins.attrValues workspaces
-                ++ [
+              ++ [
                 "9"
                 "0"
               ]
@@ -476,14 +479,20 @@ in
     playerctl
     swappy
     wev
+    (writeShellScriptBin "set-primary-monitor" ''
+      PRIMARY="${if primaryMonitor != null then primaryMonitor.name else ""}"
+      if [ -z "$PRIMARY" ]; then exit 0; fi
+      while true; do
+        if ${pkgs.xrandr}/bin/xrandr | grep "$PRIMARY" >/dev/null; then
+          ${pkgs.xrandr}/bin/xrandr --output "$PRIMARY" --primary
+          exit 0
+        fi
+        sleep 1
+      done
+    '')
     (writeShellScriptBin "import-gsettings" ''
-      #!${pkgs.runtimeShell}
       config="$HOME/.config/gtk-3.0/settings.ini"
       if [ ! -f "$config" ]; then exit 1; fi
-      PRIMARY="${if primaryMonitor != null then primaryMonitor.name else ""}"
-      if [ -n "$PRIMARY" ]; then
-        ${pkgs.xrandr}/bin/xrandr --output "$PRIMARY" --primary
-      fi
       gnome_schema="org.gnome.desktop.interface"
       gtk_theme="$(grep 'gtk-theme-name' "$config" | cut -d'=' -f2)"
       icon_theme="$(grep 'gtk-icon-theme-name' "$config" | cut -d'=' -f2)"
