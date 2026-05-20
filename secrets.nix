@@ -16,5 +16,6 @@ in
   "secrets/ngate-env.age".publicKeys = [ server ];
   "secrets/grafana.age".publicKeys = [ server ];
   "secrets/frp.age".publicKeys = [ server ];
+  "secrets/opencode/grafana-mcp.age".publicKeys = [ pc ];
 
 }
