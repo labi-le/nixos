@@ -1,4 +1,13 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, osConfig, ... }:
+
+let
+  opencodeMcpGrafana = pkgs.writeShellScriptBin "opencode-mcp-grafana" ''
+    set -a
+    . "${osConfig.age.secrets.opencode-grafana-mcp.path}"
+    set +a
+    exec ${pkgs.uv}/bin/uvx mcp-grafana
+  '';
+in
 
 {
   home.shellAliases = {
@@ -65,6 +74,10 @@
         gh_grep = {
           type = "remote";
           url = "https://mcp.grep.app";
+        };
+        grafana = {
+          type = "local";
+          command = [ "${opencodeMcpGrafana}/bin/opencode-mcp-grafana" ];
         };
       };
     };
