@@ -382,7 +382,7 @@ in
         }
         {
           workspace = workspaces.file;
-          output = left;
+          output = right;
         }
         {
           workspace = workspaces.private;
