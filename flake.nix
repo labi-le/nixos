@@ -30,6 +30,10 @@
     apple-fonts.url = "github:Lyndeno/apple-fonts.nix";
     opencode.url = "github:numtide/llm-agents.nix";
     stylix.url = "github:danth/stylix";
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

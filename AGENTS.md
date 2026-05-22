@@ -69,6 +69,21 @@ Before generating any response, evaluate its Uncertainty Score from 0.0 to 1.0.
 - Add new packages via overlays.nix following existing patterns
 - Use agenix for secrets management
 
+## Architecture and Decision Rules
+
+- **Overlay-first package wiring** — If a package comes from a flake input and is used in NixOS modules, expose it in `overlays.nix` first, then consume it as `pkgs.<name>` in modules. Avoid direct `inputs.<name>...` package references inside modules.
+- **Measure before and after optimization** — For performance-related changes, record a baseline measurement and a post-change measurement with the same command.
+- **Use minimal sufficient data scope** — Prefer the narrowest dataset/index that satisfies the runtime use-case; use broader datasets only for exploratory/debug workflows.
+- **Warning policy** — Treat evaluation and deprecation warnings as defects in the same task; do not leave them unresolved.
+- **Module merge order for shell hooks** — When overriding shell handlers, use explicit merge ordering (`lib.mkAfter`/`lib.mkBefore`) to avoid accidental override by other modules.
+- **Input change side effects are expected** — If `flake.nix` inputs change, include the corresponding `flake.lock` update in the same change set.
+
+## Verification Gate
+
+- Run formatting and dry-run build before requesting `make switch`.
+- Verification is successful only when the dry-run passes and no new eval/deprecation warnings are present (excluding expected `Git tree is dirty`).
+- For performance-sensitive changes, include a quick benchmark check in verification output.
+
 ## Project Structure
 
 ```

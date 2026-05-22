@@ -21,4 +21,5 @@ final: prev: {
   nur = (inputs.nur.overlays.default final prev).nur;
   apple-fonts = inputs.apple-fonts.packages.${system};
   opencode = inputs.opencode.packages.${system}.opencode;
+  nix-index-with-small-db = inputs.nix-index-database.packages.${system}.nix-index-with-small-db;
 }
