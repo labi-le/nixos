@@ -5,22 +5,22 @@
     enable = true;
     enableDefaultConfig = false;
 
-    matchBlocks = {
-      "pet".hostname = "192.168.1.2";
+    settings = {
+      "pet".HostName = "192.168.1.2";
 
-      "pc".hostname = "192.168.1.3";
+      "pc".HostName = "192.168.1.3";
 
       "vpn" = {
-        hostname = "185.224.250.119";
-        user = "root";
+        HostName = "185.224.250.119";
+        User = "root";
       };
 
       "router" = {
-        hostname = "192.168.1.1";
-        user = "root";
+        HostName = "192.168.1.1";
+        User = "root";
       };
 
-      "work".hostname = "10.89.1.20";
+      "work".HostName = "10.89.1.20";
     };
   };
 }

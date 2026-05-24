@@ -1,6 +1,11 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
+  disabledModules = [
+    "${inputs.stylix}/modules/neovim/nixos.nix"
+    "${inputs.stylix}/modules/neovim/nixvim.nix"
+  ];
+
   stylix = {
     enable = true;
     image = ../assets/wallpaper.jpg;
