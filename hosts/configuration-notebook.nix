@@ -40,6 +40,13 @@
 
   system.stateVersion = "25.05";
 
+  age.secrets.opencode-grafana-mcp = {
+    file = ../secrets/opencode/grafana-mcp.age;
+    owner = "labile";
+    group = "users";
+    mode = "0400";
+  };
+
   networking.networkmanager.wifi.powersave = false;
 
   network.injectHosts = true;
