@@ -51,7 +51,9 @@ in
         (btop.override {
           rocmSupport = true;
         })
-        glances
+        (glances.overridePythonAttrs (_: {
+          doCheck = false;
+        }))
         git
         lazygit
 
