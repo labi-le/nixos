@@ -1,8 +1,7 @@
-{
-  pkgs,
-  lib,
-  osConfig,
-  ...
+{ pkgs
+, lib
+, osConfig
+, ...
 }:
 
 let
@@ -91,8 +90,8 @@ in
         pkgs.fetchFromGitHub {
           owner = "peteromallet";
           repo = "desloppify";
-          rev = "a084a7cbb4b47c83782b3160f8bd8f10151e789f";
-          hash = "sha256-KVCt9loGSzsOaYSLNzpyUCi/TpCDQ4b6BxEydQTRNcA=";
+          rev = "3a7735d531a96b6a226bfbdc9fd662b14195f857";
+          hash = "sha256-USFofGy0SUZV0oeh5x5KAWeFReD45GxlyYqpmc23NFM=";
         }
       }/docs";
       plantuml-rendering = "${pkgs.fetchFromGitHub {
@@ -105,8 +104,8 @@ in
         pkgs.fetchFromGitHub {
           owner = "JuliusBrussee";
           repo = "caveman";
-          rev = "754795ada42dea54adf061d42a61e560caa4f9ce";
-          hash = "sha256-fT5eFkqZVp1fgwM6iO0d2ER42XaPtLqHlO+TG9cHB74=";
+          rev = "655b7d9c5431f822264b7732e9901c5578ac84cf";
+          hash = "sha256-BydREt/vai3j7kO5+e1OxsjXf6Vy+jSY1yA/yyxjHbI=";
         }
       }/skills/caveman";
     };
