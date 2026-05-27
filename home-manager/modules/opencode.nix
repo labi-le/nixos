@@ -6,9 +6,11 @@
 
 let
   opencodeMcpGrafana = pkgs.writeShellScriptBin "opencode-mcp-grafana" ''
-    set -a
-    . "${osConfig.age.secrets.opencode-grafana-mcp.path}"
-    set +a
+    ${lib.optionalString (osConfig.age.secrets ? opencode-grafana-mcp) ''
+      set -a
+      . "${osConfig.age.secrets.opencode-grafana-mcp.path}"
+      set +a
+    ''}
     exec ${pkgs.uv}/bin/uvx mcp-grafana
   '';
 in
@@ -79,6 +81,7 @@ in
           type = "remote";
           url = "https://mcp.grep.app";
         };
+      } // lib.optionalAttrs (osConfig.age.secrets ? opencode-grafana-mcp) {
         grafana = {
           type = "local";
           command = [ "${opencodeMcpGrafana}/bin/opencode-mcp-grafana" ];
