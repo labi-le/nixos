@@ -13,6 +13,11 @@ let
     ''}
     exec ${pkgs.uv}/bin/uvx mcp-grafana
   '';
+  opencodeMcpOpendataloaderPdf = pkgs.writeShellScriptBin "opencode-mcp-opendataloader-pdf" ''
+    export JAVA_HOME="${pkgs.jre}"
+    export PATH="${lib.makeBinPath [ pkgs.jre pkgs.uv ]}:$PATH"
+    exec ${pkgs.uv}/bin/uvx opendataloader-pdf-mcp
+  '';
 in
 
 {
@@ -80,6 +85,10 @@ in
         gh_grep = {
           type = "remote";
           url = "https://mcp.grep.app";
+        };
+        opendataloader-pdf = {
+          type = "local";
+          command = [ "${opencodeMcpOpendataloaderPdf}/bin/opencode-mcp-opendataloader-pdf" ];
         };
       } // lib.optionalAttrs (osConfig.age.secrets ? opencode-grafana-mcp) {
         grafana = {
