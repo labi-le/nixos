@@ -5,6 +5,12 @@
 }:
 
 let
+  rtkSource = pkgs.fetchFromGitHub {
+    owner = "rtk-ai";
+    repo = "rtk";
+    tag = "v0.40.0";
+    hash = "sha256-xWHIOZRpSyyOPQe/db9dxoODcnheBlpXrnKET010vVg=";
+  };
   opencodeWrapped = pkgs.writeShellScriptBin "opencode" ''
     ${lib.optionalString (osConfig.age.secrets ? litellm-env) ''
       set -a
@@ -65,6 +71,7 @@ in
   programs.opencode = {
     enable = true;
     package = opencodeWrapped;
+    extraPackages = [ pkgs.rtk ];
 
     tui = {
       theme = lib.mkForce "opencode";
@@ -108,6 +115,10 @@ in
           };
           prompt = ''
             Delegation Policy (mandatory)
+
+            Language policy (mandatory)
+            - Communicate with the user in Russian.
+            - Communicate with subagents in English.
 
             1) Before implementation, produce a dependency map:
             - List subtasks slave-1..slave-n.
@@ -330,4 +341,6 @@ in
       }/skills/caveman";
     };
   };
+
+  xdg.configFile."opencode/plugins/rtk.ts".source = "${rtkSource}/hooks/opencode/rtk.ts";
 }
