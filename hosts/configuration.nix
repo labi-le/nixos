@@ -4,6 +4,7 @@
   imports = [
     ./../modules/home-drive.nix
     ./../modules/base.nix
+    ./../modules/litellm.nix
     ./../modules/sound.nix
     ./../modules/greeter.nix
     ./../modules/uxplay.nix
@@ -40,6 +41,13 @@
 
   age.secrets.opencode-grafana-mcp = {
     file = ../secrets/opencode/grafana-mcp.age;
+    owner = "labile";
+    group = "users";
+    mode = "0400";
+  };
+
+  age.secrets.litellm-env = {
+    file = ../secrets/litellm-env.age;
     owner = "labile";
     group = "users";
     mode = "0400";

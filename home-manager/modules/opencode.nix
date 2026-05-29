@@ -1,11 +1,18 @@
-{
-  pkgs,
-  lib,
-  osConfig,
-  ...
+{ pkgs
+, lib
+, osConfig
+, ...
 }:
 
 let
+  opencodeWrapped = pkgs.writeShellScriptBin "opencode" ''
+    ${lib.optionalString (osConfig.age.secrets ? litellm-env) ''
+      set -a
+      . "${osConfig.age.secrets.litellm-env.path}"
+      set +a
+    ''}
+    exec ${pkgs.opencode}/bin/opencode "$@"
+  '';
   opencodeMcpGrafana = pkgs.writeShellScriptBin "opencode-mcp-grafana" ''
     ${lib.optionalString (osConfig.age.secrets ? opencode-grafana-mcp) ''
       set -a
@@ -57,7 +64,7 @@ in
 
   programs.opencode = {
     enable = true;
-    package = pkgs.opencode;
+    package = opencodeWrapped;
 
     tui = {
       theme = lib.mkForce "opencode";
@@ -72,6 +79,21 @@ in
       tool_output = {
         max_lines = 120;
         max_bytes = 12288;
+      };
+      provider = {
+        litellm = {
+          npm = "@ai-sdk/openai-compatible";
+          name = "LiteLLM";
+          options = {
+            baseURL = "http://127.0.0.1:27015/v1";
+            apiKey = "{env:LITELLM_MASTER_KEY}";
+          };
+          models = {
+            "research-free" = {
+              name = "research-free";
+            };
+          };
+        };
       };
       agent = {
         orchestrator = {
@@ -163,7 +185,7 @@ in
         researcher = {
           description = "Performs any research task and returns concise evidence";
           mode = "subagent";
-          model = "opencode/deepseek-v4-flash-free";
+          model = "litellm/research-free";
           permission = {
             read = "allow";
             glob = "allow";
