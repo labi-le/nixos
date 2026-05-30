@@ -52,6 +52,10 @@ Before generating any response, evaluate its Uncertainty Score from 0.0 to 1.0.
 
 # Nix Configuration Project
 
+## Module Routing
+
+- **Use `nix-routing` skill** — determines target file via `docs/routes.md` in one action, forbids glob/grep for module discovery, and ensures the routing table stays updated.
+
 ## General Rules
 
 - **Use Context7 MCP** — Always use `context7_resolve-library-id` and `context7_query-docs` for library/framework documentation before implementing any feature or answering programming questions.
