@@ -104,7 +104,14 @@ in
     in
     {
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
-      "llm.labile.cc" = proxy { addr = "http://127.0.0.1:27015"; };
+      "llm.labile.cc" =
+        lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:27015"; }) {
+          locations."/".extraConfig = lib.mkAfter ''
+            proxy_read_timeout 300s;
+            proxy_connect_timeout 10s;
+            proxy_send_timeout 60s;
+          '';
+        };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
       "obsidian.labile.cc" = proxy { addr = "http://127.0.0.1:7007"; };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };

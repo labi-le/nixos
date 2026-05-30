@@ -5,7 +5,7 @@
     enable = true;
     host = "127.0.0.1";
     port = 27015;
-    openFirewall = false;
+    openFirewall = true;
     environmentFile = config.age.secrets.litellm-env.path;
     settings = {
       model_list = [
@@ -45,51 +45,18 @@
         {
           model_name = "research-free";
           litellm_params = {
-            model = "openai/z-ai/glm-4.5-air:free";
-            api_base = "https://openrouter.ai/api/v1";
-            api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/meta-llama/llama-3.3-70b-instruct:free";
-            api_base = "https://openrouter.ai/api/v1";
-            api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/openai/gpt-oss-120b:free";
-            api_base = "https://openrouter.ai/api/v1";
-            api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/nousresearch/hermes-3-llama-3.1-405b:free";
-            api_base = "https://openrouter.ai/api/v1";
-            api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
             model = "openai/google/gemini-3.1-flash-lite-preview";
+            api_base = "https://openrouter.ai/api/v1";
+            api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
+            timeout = 15;
+            stream_timeout = 15;
+            max_retries = 0;
+          };
+        }
+        {
+          model_name = "research-free";
+          litellm_params = {
+            model = "openai/deepseek/deepseek-v4-flash:free";
             api_base = "https://openrouter.ai/api/v1";
             api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
             timeout = 15;

@@ -15,6 +15,7 @@
     ${lib.optionalString (osConfig.age.secrets ? opencode-litellm-master-key) ''
       . "${osConfig.age.secrets.opencode-litellm-master-key.path}"
       export LITELLM_MASTER_KEY
+      export LITELLM_POLLINATIONS_API_KEY
     ''}
     exec ${pkgs.opencode}/bin/opencode "$@"
   '';
