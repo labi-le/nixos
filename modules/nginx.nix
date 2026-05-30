@@ -104,6 +104,7 @@ in
     in
     {
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
+      "llm.labile.cc" = proxy { addr = "http://127.0.0.1:27015"; };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
       "obsidian.labile.cc" = proxy { addr = "http://127.0.0.1:7007"; };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };

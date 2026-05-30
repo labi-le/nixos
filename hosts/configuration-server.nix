@@ -4,6 +4,7 @@
   imports = [
     ./../modules/base.nix
     ./../modules/nginx.nix
+    ./../modules/litellm.nix
     ./../modules/drive.nix
     ./../modules/kernel-cachyos.nix
     ./../modules/grafana.nix
@@ -26,6 +27,13 @@
     file = ../secrets/ngate-env.age;
     mode = "600";
     owner = "root";
+  };
+
+  age.secrets.litellm-env = {
+    file = ../secrets/litellm-env.age;
+    owner = "labile";
+    group = "users";
+    mode = "0400";
   };
 
   services.ngate-wrapped-vm = {

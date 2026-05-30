@@ -3,9 +3,9 @@
 {
   services.litellm = {
     enable = true;
-    host = "0.0.0.0";
+    host = "127.0.0.1";
     port = 27015;
-    openFirewall = true;
+    openFirewall = false;
     environmentFile = config.age.secrets.litellm-env.path;
     settings = {
       model_list = [

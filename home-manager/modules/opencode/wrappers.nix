@@ -12,10 +12,9 @@
   };
 
   opencodeWrapped = pkgs.writeShellScriptBin "opencode" ''
-    ${lib.optionalString (osConfig.age.secrets ? litellm-env) ''
-      set -a
-      . "${osConfig.age.secrets.litellm-env.path}"
-      set +a
+    ${lib.optionalString (osConfig.age.secrets ? opencode-litellm-master-key) ''
+      . "${osConfig.age.secrets.opencode-litellm-master-key.path}"
+      export LITELLM_MASTER_KEY
     ''}
     exec ${pkgs.opencode}/bin/opencode "$@"
   '';

@@ -4,7 +4,6 @@
   imports = [
     ./../modules/home-drive.nix
     ./../modules/base.nix
-    ./../modules/litellm.nix
     ./../modules/sound.nix
     ./../modules/greeter.nix
     ./../modules/uxplay.nix
@@ -46,7 +45,7 @@
     mode = "0400";
   };
 
-  age.secrets.litellm-env = {
+  age.secrets.opencode-litellm-master-key = {
     file = ../secrets/litellm-env.age;
     owner = "labile";
     group = "users";

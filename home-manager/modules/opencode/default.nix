@@ -39,7 +39,7 @@ in
           npm = "@ai-sdk/openai-compatible";
           name = "LiteLLM";
           options = {
-            baseURL = "http://127.0.0.1:27015/v1";
+            baseURL = "https://llm.labile.cc/v1";
             apiKey = "{env:LITELLM_MASTER_KEY}";
           };
           models = {
