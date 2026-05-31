@@ -2,12 +2,15 @@
 
 STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task. Open the listed file directly. You already have the answer.
 
+If any repository file is created, renamed, deleted, or modified in a way that changes its purpose, routing, or ownership, update this file in the same change set.
+
 ## How to use
 
 1. Find your task in the table below
 2. Read the indicated file with Read tool
 3. Make your changes
-4. Do NOT search — the path is already given
+4. Update this file if the change affects routing or file ownership
+5. Do NOT search — the path is already given
 
 ## Host Legend
 
