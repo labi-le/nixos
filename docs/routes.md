@@ -35,13 +35,22 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | Locale, timezone | `modules/locale.nix` | |
 | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | |
 | Environment variables | `modules/env.nix` | |
-| Network (DNS, firewall, hosts, proxy) | `modules/network/default.nix` | Sub-modules in `modules/network/` |
+| Network entry point | `modules/network/default.nix` | Imports DNS, firewall, hosts, proxy sub-modules |
+| Network DNS | `modules/network/dns.nix` | Imported by `modules/network/default.nix` |
+| Network firewall | `modules/network/firewall.nix` | Imported by `modules/network/default.nix` |
+| Network hosts injection | `modules/network/hosts.nix` | Imported by `modules/network/default.nix` |
+| Network proxy | `modules/network/proxy.nix` | Imported by `modules/network/default.nix` |
 | System packages (all hosts) | `modules/packages.nix` | |
 | OpenSSH daemon | `modules/ssh.nix` | |
 | Remote Nix builders | `modules/builders.nix` | |
 | Sway hotkeys | `modules/hotkeys.nix` | |
 | nix-search-tv | `modules/nix-search-tv.nix` | |
-| Neovim (nixvim) | `modules/nixvim/default.nix` | Sub-modules in `modules/nixvim/` |
+| Neovim (nixvim) entry point | `modules/nixvim/default.nix` | Imports plugin and keymap sub-modules |
+| Neovim plugins | `modules/nixvim/plugins.nix` | Imports/uses plugin component files in `modules/nixvim/` |
+| Neovim keymaps | `modules/nixvim/keymaps.nix` | Imported by `modules/nixvim/default.nix` |
+| Neovim completion | `modules/nixvim/cmp.nix`, `modules/nixvim/blink.nix` | Plugin component files |
+| Neovim LSP/debug/format/search | `modules/nixvim/lsp.nix`, `modules/nixvim/dap.nix`, `modules/nixvim/conform.nix`, `modules/nixvim/telescope.nix` | Plugin component files |
+| Neovim UI tabs | `modules/nixvim/barbar.nix` | Plugin component file |
 | Stylix theming | `modules/stylix.nix` | |
 
 ## Desktop-Only Modules (per-host config)
@@ -54,6 +63,7 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | Greeter (SDDM) | `modules/greeter.nix` | pc, fx516, notebook |
 | NFS mounts | `modules/nfs.nix` | pc, fx516, notebook |
 | Thunar file manager | `modules/thunar.nix` | pc, fx516, notebook |
+| JetBrains IDE wrapper module | `modules/ide/module.nix` | flake common module; enabled by host `ide.*` options on pc/notebook |
 
 ## PC-Specific Modules (`hosts/configuration.nix`)
 
@@ -64,6 +74,7 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | AMD GPU (Radeon) | `modules/radeon.nix` |
 | AMD GPU (extra) | `modules/amd/default.nix` |
 | UxPlay (AirPlay) | `modules/uxplay.nix` |
+| Virtual machines / libvirt (disabled) | `modules/vm.nix` |
 | Kernel (CachyOS) | `modules/kernel-cachyos.nix` |
 | Steam | `modules/steam.nix` |
 | Esync | `modules/esync.nix` |
@@ -74,7 +85,9 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | K3s | `modules/k3s.nix` |
 | Firefox | `modules/firefox.nix` |
 | Syncthing (pc) | `modules/syncthing/pc.nix` |
-| IDE configuration | `modules/ide/module.nix` |
+| Syncthing common module | `modules/syncthing/default.nix` |
+| Syncthing device IDs | `modules/syncthing/devices.nix` |
+| Syncthing Caddy reverse proxy | `modules/syncthing/caddy.nix` |
 | Monitor values (pc) | `hosts/configuration.nix` (monitors attrset) |
 | Hardware (pc) | `hosts/hardware-pc.nix` |
 | belphegor, openrgb, gnupg, dconf | `hosts/configuration.nix` |
@@ -104,6 +117,7 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | Bluetooth | `modules/bluetooth.nix` |
 | Steam | `modules/steam.nix` |
 | Syncthing (notebook) | `modules/syncthing/notebook.nix` |
+| IDE host options (notebook) | `hosts/configuration-notebook.nix` (ide attrset) |
 | Monitor values (notebook) | `hosts/configuration-notebook.nix` (monitors attrset) |
 | Hardware (notebook) | `hosts/hardware-notebook.nix` |
 
@@ -120,11 +134,16 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | Grafana | `modules/grafana.nix` |
 | FRP (Fast Reverse Proxy) | `modules/frp.nix` |
 | Syncthing (server) | `modules/syncthing/server.nix` |
+| Syncthing common module | `modules/syncthing/default.nix` |
+| Syncthing device IDs | `modules/syncthing/devices.nix` |
+| Syncthing Caddy reverse proxy | `modules/syncthing/caddy.nix` |
 | NVIDIA GT 210 | `modules/nvidia/gt210.nix` |
 | Vaultwarden | `modules/vaultwarden.nix` |
 | qBittorrent | `modules/qbittorrent.nix` |
 | AmneziaWG | `modules/awg/default.nix` |
+| AmneziaWG compose stack | `modules/awg/compose.nix` |
 | Network (server) | `modules/network/default.nix` |
+| GitLab (disabled) | `modules/gitlab.nix` |
 | Hardware (server) | `hosts/hardware-server.nix` |
 
 ## Home Manager Modules (desktop only, `home-manager/modules/default.nix`)
@@ -146,7 +165,11 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | Thunar (user config) | `home-manager/modules/thunar.nix` |
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
-| OpenCode (LLM agents) | `home-manager/modules/opencode/default.nix` |
+| OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
+| OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
+| OpenCode agents | `home-manager/modules/opencode/agents.nix` |
+| OpenCode integrations | `home-manager/modules/opencode/integrations.nix` |
+| OpenCode wrapper scripts | `home-manager/modules/opencode/wrappers.nix` |
 
 ## Cross-Cutting Tasks
 
@@ -157,6 +180,17 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | Add AGenix secret | `secrets/<name>.age` (encrypt) | host config (add `age.secrets.<name>`) | |
 | Add new NixOS module | `modules/<name>.nix` (create) | `modules/base.nix` or per-host config (add import) | |
 | Add new HM module | `home-manager/modules/<name>.nix` (create) | `home-manager/modules/default.nix` (add import) | |
+
+## Optional / Currently Unimported Modules
+
+| Task / Concern | File | Notes |
+|---|---|---|
+| Generic latest kernel | `modules/kernel.nix` | Not imported by active host configs |
+| Virtual machines / libvirt | `modules/vm.nix` | Commented in `hosts/configuration.nix` |
+| Spicetify | `modules/spicetify.nix` | Not imported by active host configs |
+| DPI bypass proxy | `modules/dpi.nix` | Not imported by active host configs |
+| EarlyOOM | `modules/earlyoom.nix` | Not imported by active host configs |
+| GitLab | `modules/gitlab.nix` | Commented in `hosts/configuration-server.nix` |
 
 ## Other Files
 
