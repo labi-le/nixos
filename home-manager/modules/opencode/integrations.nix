@@ -41,9 +41,9 @@ in
         type = "local";
         command = [ "${wrappers.opencodeMcpOpendataloaderPdf}/bin/opencode-mcp-opendataloader-pdf" ];
       };
-      chrome-devtools = {
+      playwright = {
         type = "local";
-        command = [ "${wrappers.opencodeMcpChromeDevtools}/bin/opencode-mcp-chrome-devtools" "--isolated" "--headless" "--executablePath" "${pkgs.chromium}/bin/chromium" ];
+        command = [ "${wrappers.opencodeMcpPlaywright}/bin/opencode-mcp-playwright" "--isolated" "--headless" "--executable-path" "${pkgs.chromium}/bin/chromium" ];
       };
     }
     // lib.optionalAttrs (osConfig.age.secrets ? opencode-grafana-mcp) {
