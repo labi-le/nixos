@@ -54,17 +54,14 @@ Before generating any response, evaluate its Uncertainty Score from 0.0 to 1.0.
 
 ## Module Routing
 
-- **Use `nix-routing` skill** — determines target file via `docs/routes.md` in one action, forbids glob/grep for module discovery, and ensures the routing table stays updated.
+- **Use `nix-routing` skill** — determines target file via `docs/routes.md` in one action, forbids glob/grep for module discovery, and ensures the routing table stays updated. Note: `docs/routes.md` is for file navigation; for external NixOS/Home Manager package/option documentation, use MCP tools (`nixos_nix`, etc.).
 
 ## General Rules
 
 - **Use Context7 MCP** — Always use `context7_resolve-library-id` and `context7_query-docs` for library/framework documentation before implementing any feature or answering programming questions.
 - **Use using-superpowers skill** — Always invoke the `using-superpowers` skill when available to follow relevant workflow (check for skills first).
-- **Always fetch fresh context** — When writing/modifying Nix files, always search for current documentation. Find the input in `flake.nix` and use `gh_grep_searchGitHub` to search in its repo:
-  ```bash
-  gh_grep_searchGitHub --path <path> --query "<query>" --language "Nix" --repo "<repo>"
-  ```
-  Always fetch fresh context BEFORE implementing any option.
+- **Use mcp-nixos for Nix documentation** — For NixOS/Home Manager options and packages, use `nixos_nix` (search → info) and `nixos_nix_versions` tools directly. No need to scrape web pages or search GitHub for nixpkgs docs.
+- **Always fetch fresh context** — When writing/modifying Nix files, always check current options before implementing. For non-Nix libraries, use `context7_resolve-library-id` and `context7_query-docs`.
 - **Always verify dry-run before switch** — Always run `nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt path/to/file.nix' && nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run` (or the equivalent for the target host) and confirm it builds successfully before asking user to run `make switch`.
 
 ## Conventions
