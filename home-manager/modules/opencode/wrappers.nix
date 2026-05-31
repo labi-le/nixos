@@ -39,4 +39,13 @@
     }:$PATH"
     exec ${pkgs.uv}/bin/uvx opendataloader-pdf-mcp
   '';
+
+  opencodeMcpChromeDevtools = pkgs.writeShellScriptBin "opencode-mcp-chrome-devtools" ''
+    export PATH="${
+      lib.makeBinPath [
+        pkgs.nodejs
+      ]
+    }:$PATH"
+    exec npx -y chrome-devtools-mcp@latest "$@"
+  '';
 }
