@@ -55,7 +55,6 @@ Before generating any response, evaluate its Uncertainty Score from 0.0 to 1.0.
 ## Module Routing
 
 - **Use `nix-routing` skill** — determines target file via `docs/routes.md` in one action, forbids glob/grep for module discovery, and ensures the routing table stays updated.
-- **Keep `docs/routes.md` current** — If any repository file is created, renamed, deleted, or modified in a way that changes its purpose, routing, or ownership, update `docs/routes.md` in the same change set.
 
 ## General Rules
 
