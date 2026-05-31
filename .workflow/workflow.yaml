@@ -7,11 +7,7 @@ phases:
     name: Edit
     description: Make changes to nix configuration files
     conventions:
-      - Use nixpkgs-fmt to format .nix files before committing
-      - Add new packages via overlays.nix following existing patterns
-      - Use agenix for secrets management
-    gate:
-      - "nixpkgs-fmt passes on edited files"
+      - Read docs/nix-project-rules.md
 
   - id: test
     name: Test
