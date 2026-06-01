@@ -166,6 +166,7 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | Thunar (user config) | `home-manager/modules/thunar.nix` |
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
+| PiDev coding agent | `home-manager/modules/pidev.nix` |
 | OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
 | OpenCode agents | `home-manager/modules/opencode/agents.nix` |
