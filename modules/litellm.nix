@@ -45,9 +45,8 @@
         {
           model_name = "research-free";
           litellm_params = {
-            model = "openai/google/gemini-3.1-flash-lite-preview";
-            api_base = "https://openrouter.ai/api/v1";
-            api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
+            model = "gemini/gemini-3.1-flash-lite-preview";
+            api_key = "os.environ/LITELLM_GOOGLE_API_KEY";
             timeout = 15;
             stream_timeout = 15;
             max_retries = 0;

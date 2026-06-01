@@ -22,6 +22,7 @@ in
   ];
   "secrets/litellm-env.age".publicKeys = [
     pc
+    notebook
     server
   ];
 }
