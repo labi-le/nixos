@@ -19,6 +19,7 @@
     ./builders.nix
     ./hotkeys.nix
     ./nix-search-tv.nix
+    ./opencode-secrets.nix
     ./nixvim
     ./stylix.nix
   ];

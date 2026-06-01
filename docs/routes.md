@@ -34,6 +34,7 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | GNOME keyring | `modules/keyring.nix` | |
 | Locale, timezone | `modules/locale.nix` | |
 | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | |
+| OpenCode secrets for Home Manager hosts | `modules/opencode-secrets.nix` | Enabled for hosts listed in the module |
 | Environment variables | `modules/env.nix` | |
 | Network entry point | `modules/network/default.nix` | Imports DNS, firewall, hosts, proxy sub-modules |
 | Network DNS | `modules/network/dns.nix` | Imported by `modules/network/default.nix` |

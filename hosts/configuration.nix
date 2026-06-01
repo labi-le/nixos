@@ -45,13 +45,6 @@
     mode = "0400";
   };
 
-  age.secrets.opencode-litellm-master-key = {
-    file = ../secrets/litellm-env.age;
-    owner = "labile";
-    group = "users";
-    mode = "0400";
-  };
-
   network.injectHosts = true;
   ide = {
     goland.enable = true;
