@@ -1,7 +1,8 @@
-{ pkgs
-, lib
-, osConfig
-, ...
+{
+  pkgs,
+  lib,
+  osConfig,
+  ...
 }:
 
 let
@@ -166,6 +167,8 @@ in
       list = "allow";
     };
     plugin = [
+      "@tarquinen/opencode-dcp@latest"
+      "@darrenhinde/OpenAgentsControl@latest"
       "opencode-gemini-auth@latest"
     ];
     mcp = {
@@ -183,7 +186,13 @@ in
       };
       playwright = {
         type = "local";
-        command = [ "${wrappers.opencodeMcpPlaywright}/bin/opencode-mcp-playwright" "--isolated" "--headless" "--executable-path" "${pkgs.chromium}/bin/chromium" ];
+        command = [
+          "${wrappers.opencodeMcpPlaywright}/bin/opencode-mcp-playwright"
+          "--isolated"
+          "--headless"
+          "--executable-path"
+          "${pkgs.chromium}/bin/chromium"
+        ];
       };
     }
     // lib.optionalAttrs (osConfig.age.secrets ? opencode-grafana-mcp) {
