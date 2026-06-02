@@ -10,7 +10,8 @@ This file is intentionally short. Read the reference files before work:
   diagnostics, and coding standards.
 - For Nix project work, read `docs/nix-project-rules.md` for workflow, tooling,
   architecture, and verification gates.
-- For project details, read `docs/nix-reference.md` for structure, package
-  recipes, secrets, monitors, hosts, and common commands.
+- Read `docs/nix-reference.md` only when task-specific project details are
+  needed, such as structure, package recipes, secrets, monitors, hosts, or
+  common commands.
 
 For Nix module routing, read `docs/routes.md`.

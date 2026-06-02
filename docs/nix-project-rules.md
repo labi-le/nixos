@@ -13,8 +13,8 @@
 - Use Context7 MCP for library and framework documentation before implementing
   any feature or answering programming questions. Call
   `context7_resolve-library-id`, then `context7_query-docs`.
-- Use the `using-superpowers` skill when available. Check relevant skills before
-  work.
+- Check available skills before work and use only the ones that are relevant to
+  the current task.
 - Use `nixos_nix` and `nixos_nix_versions` for NixOS/Home Manager packages,
   options, and version history. Do not scrape web pages or search GitHub for
   nixpkgs documentation.
