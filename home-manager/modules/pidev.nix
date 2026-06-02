@@ -11,13 +11,14 @@ in
   home.file.".pi/agent/settings.json".text = builtins.toJSON {
     lastChangelogVersion = "0.78.0";
     defaultProvider = "llamacpp";
-    defaultModel = "Qwen3-Coder-30B-A3B-Instruct-Q3_K_M.gguf";
+    defaultModel = "Qwen3.5-9B-Q8_0.gguf";
+    # defaultModel = "Qwen3-Coder-30B-A3B-Instruct-Q3_K_M.gguf";
     npmCommand = [
       "${pkgs.nodejs}/bin/npm"
     ];
     packages = [
-      "pi-skills"
       "npm:pi-subagents"
+      "npm:pi-web-access"
     ];
   };
 
@@ -35,8 +36,8 @@ in
         };
         models = [
           {
-            id = "Qwen3-Coder-30B-A3B-Instruct-Q3_K_M.gguf";
-            name = "Qwen3 Coder 30B A3B Local";
+            id = "Qwen3.5-9B-Q8_0.gguf";
+            name = "Qwen3.5 Local";
             reasoning = false;
             contextWindow = 16384;
             maxTokens = 4096;
