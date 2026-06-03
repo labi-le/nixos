@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -61,10 +62,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -105,15 +107,19 @@ in
     {
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
       "llm.labile.cc" =
-        lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:27015"; }) {
-          locations."/".extraConfig = lib.mkAfter ''
-            proxy_read_timeout 300s;
-            proxy_connect_timeout 10s;
-            proxy_send_timeout 60s;
-          '';
-        };
+        lib.recursiveUpdate
+          (proxy {
+            addr = "http://127.0.0.1:27015";
+            internal = true;
+          })
+          {
+            locations."/".extraConfig = lib.mkAfter ''
+              proxy_read_timeout 300s;
+              proxy_connect_timeout 10s;
+              proxy_send_timeout 60s;
+            '';
+          };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
-      "obsidian.labile.cc" = proxy { addr = "http://127.0.0.1:7007"; };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };
       "mail.labile.cc" = proxy {
         addr = "http://127.0.0.1:7001";
@@ -129,10 +135,6 @@ in
       };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";
-        internal = true;
-      };
-      "cache.labile.cc" = proxy {
-        addr = "http://127.0.0.1:8501";
         internal = true;
       };
       # "gitlab.labile.cc" = proxy { addr = "http://unix:/run/gitlab/gitlab-workhorse.socket"; };
