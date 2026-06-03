@@ -24,7 +24,6 @@
   build for the target host. For `pc`, use:
 
 ```bash
-nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt path/to/file.nix'
 nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run
 ```
 
