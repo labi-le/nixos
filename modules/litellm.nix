@@ -21,7 +21,7 @@
           };
         }
         {
-          model_name = "aigate-deepseek-v4-flash";
+          model_name = "research-free";
           litellm_params = {
             model = "deepseek/deepseek-v4-flash";
             api_base = "https://api.aigate.shop/v1";
@@ -32,7 +32,7 @@
           };
         }
         {
-          model_name = "aigate-mimo-v2.5";
+          model_name = "research-free";
           litellm_params = {
             model = "xiaomi/mimo-v2.5";
             api_base = "https://api.aigate.shop/v1";
@@ -43,7 +43,7 @@
           };
         }
         {
-          model_name = "zen-deepseek-v4-flash";
+          model_name = "research-free";
           litellm_params = {
             model = "deepseek-v4-flash";
             api_base = "https://opencode.ai/zen/v1";
@@ -54,7 +54,7 @@
           };
         }
         {
-          model_name = "zen-mimo-v2.5-free";
+          model_name = "research-free";
           litellm_params = {
             model = "mimo-v2.5-free";
             api_base = "https://opencode.ai/zen/v1";
@@ -65,7 +65,7 @@
           };
         }
         {
-          model_name = "zen-qwen3.6-plus-free";
+          model_name = "research-free";
           litellm_params = {
             model = "qwen3.6-plus-free";
             api_base = "https://opencode.ai/zen/v1";
@@ -84,6 +84,8 @@
       router_settings = {
         timeout = 15;
         cooldown_time = 60;
+        routing_strategy = "simple-shuffle";
+        enable_weighted_failover = true;
         allowed_fails_policy = {
           AuthenticationErrorAllowedFails = 0;
           TimeoutErrorAllowedFails = 0;
