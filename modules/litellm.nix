@@ -12,39 +12,6 @@
         {
           model_name = "research-free";
           litellm_params = {
-            model = "openai/nemotron-3-super-free";
-            api_base = "https://opencode.ai/zen/v1";
-            api_key = "os.environ/LITELLM_ZEN_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/deepseek-v4-flash-free";
-            api_base = "https://opencode.ai/zen/v1";
-            api_key = "os.environ/LITELLM_ZEN_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/mimo-v2.5-free";
-            api_base = "https://opencode.ai/zen/v1";
-            api_key = "os.environ/LITELLM_ZEN_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
             model = "openai/qwen/qwen3.7-max";
             api_base = "https://api.aigate.shop/v1";
             api_key = "os.environ/LITELLM_AIGATE_API_KEY";
