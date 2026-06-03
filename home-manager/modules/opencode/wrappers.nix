@@ -1,7 +1,13 @@
 { pkgs
 , lib
 , osConfig
+, providerDefs ? [ ]
 }:
+
+let
+  providerEnv = lib.unique (lib.concatMap (item: item.env or [ ]) providerDefs);
+  exportProviderEnv = lib.concatMapStringsSep "\n" (name: "      export ${name}") providerEnv;
+in
 
 {
   rtkSource = pkgs.fetchFromGitHub {
@@ -12,12 +18,11 @@
   };
 
   opencodeWrapped = pkgs.writeShellScriptBin "opencode" ''
-    ${lib.optionalString (osConfig.age.secrets ? opencode-litellm-master-key) ''
-      . "${osConfig.age.secrets.opencode-litellm-master-key.path}"
-      export LITELLM_MASTER_KEY
-      export LITELLM_POLLINATIONS_API_KEY
-    ''}
-    exec ${pkgs.opencode}/bin/opencode "$@"
+        ${lib.optionalString (osConfig.age.secrets ? opencode-litellm-master-key) ''
+          . "${osConfig.age.secrets.opencode-litellm-master-key.path}"
+    ${exportProviderEnv}
+        ''}
+        exec ${pkgs.opencode}/bin/opencode "$@"
   '';
 
   opencodeMcpGrafana = pkgs.writeShellScriptBin "opencode-mcp-grafana" ''
