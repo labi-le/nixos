@@ -5,6 +5,7 @@
 }:
 
 let
+  aigateProvider = import ./aigate.nix;
   wrappers = import ./wrappers.nix { inherit pkgs lib osConfig; };
 in
 
@@ -70,6 +71,7 @@ in
             "nova" = { name = "nova"; };
           };
         };
+        aigate = aigateProvider;
       };
     };
   };

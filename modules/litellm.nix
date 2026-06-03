@@ -45,9 +45,9 @@
         {
           model_name = "research-free";
           litellm_params = {
-            model = "openai/deepseek/deepseek-v4-flash:free";
-            api_base = "https://openrouter.ai/api/v1";
-            api_key = "os.environ/LITELLM_OPENROUTER_API_KEY";
+            model = "openai/qwen/qwen3.7-max";
+            api_base = "https://api.aigate.shop/v1";
+            api_key = "os.environ/LITELLM_AIGATE_API_KEY";
             timeout = 15;
             stream_timeout = 15;
             max_retries = 0;
