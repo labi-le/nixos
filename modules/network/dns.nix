@@ -12,6 +12,8 @@
 
     settings = {
       cache-size = 1000;
+      interface = "lo";
+      bind-interfaces = true;
     };
   };
 

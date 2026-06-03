@@ -31,6 +31,7 @@
 
   services.belphegor.enable = true;
   services.hardware.openrgb.enable = true;
+  virtualisation.waydroid.enable = true;
 
   programs.gnupg.agent = {
     enable = true;
