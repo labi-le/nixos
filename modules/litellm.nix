@@ -20,6 +20,61 @@
             max_retries = 0;
           };
         }
+        {
+          model_name = "aigate-deepseek-v4-flash";
+          litellm_params = {
+            model = "deepseek/deepseek-v4-flash";
+            api_base = "https://api.aigate.shop/v1";
+            api_key = "os.environ/LITELLM_AIGATE_API_KEY";
+            timeout = 15;
+            stream_timeout = 15;
+            max_retries = 0;
+          };
+        }
+        {
+          model_name = "aigate-mimo-v2.5";
+          litellm_params = {
+            model = "xiaomi/mimo-v2.5";
+            api_base = "https://api.aigate.shop/v1";
+            api_key = "os.environ/LITELLM_AIGATE_API_KEY";
+            timeout = 15;
+            stream_timeout = 15;
+            max_retries = 0;
+          };
+        }
+        {
+          model_name = "zen-deepseek-v4-flash";
+          litellm_params = {
+            model = "deepseek-v4-flash";
+            api_base = "https://opencode.ai/zen/v1";
+            api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
+            timeout = 15;
+            stream_timeout = 15;
+            max_retries = 0;
+          };
+        }
+        {
+          model_name = "zen-mimo-v2.5-free";
+          litellm_params = {
+            model = "mimo-v2.5-free";
+            api_base = "https://opencode.ai/zen/v1";
+            api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
+            timeout = 15;
+            stream_timeout = 15;
+            max_retries = 0;
+          };
+        }
+        {
+          model_name = "zen-qwen3.6-plus-free";
+          litellm_params = {
+            model = "qwen3.6-plus-free";
+            api_base = "https://opencode.ai/zen/v1";
+            api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
+            timeout = 15;
+            stream_timeout = 15;
+            max_retries = 0;
+          };
+        }
       ];
       general_settings = {
         master_key = "os.environ/LITELLM_MASTER_KEY";
