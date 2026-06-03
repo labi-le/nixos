@@ -45,7 +45,7 @@
         {
           model_name = "research-free";
           litellm_params = {
-            model = "deepseek-v4-flash";
+            model = "deepseek-v4-flash-free";
             api_base = "https://opencode.ai/zen/v1";
             api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
             timeout = 15;
@@ -78,18 +78,21 @@
       ];
       general_settings = {
         master_key = "os.environ/LITELLM_MASTER_KEY";
-        background_health_checks = false;
-        enable_health_check_routing = false;
+        background_health_checks = true;
+        enable_health_check_routing = true;
       };
       router_settings = {
         timeout = 15;
         cooldown_time = 60;
+        disable_cooldowns = true;
         routing_strategy = "simple-shuffle";
         enable_weighted_failover = true;
+        num_retries = 3;
         allowed_fails_policy = {
           AuthenticationErrorAllowedFails = 0;
-          TimeoutErrorAllowedFails = 0;
-          RateLimitErrorAllowedFails = 0;
+          TimeoutErrorAllowedFails = 1;
+          RateLimitErrorAllowedFails = 1;
+          InternalServerErrorAllowedFails = 1;
         };
       };
       litellm_settings = {
