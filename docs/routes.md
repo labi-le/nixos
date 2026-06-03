@@ -168,6 +168,7 @@ STOP. Do NOT use glob, grep, or any search tool. Read this file. Find your task.
 | XDG user dirs | `home-manager/modules/xdg.nix` |
 | PiDev coding agent | `home-manager/modules/pidev.nix` |
 | OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
+| OpenCode AIGate provider | `home-manager/modules/opencode/aigate.nix` |
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
 | OpenCode agents | `home-manager/modules/opencode/agents.nix` |
 | OpenCode integrations | `home-manager/modules/opencode/integrations.nix` |
