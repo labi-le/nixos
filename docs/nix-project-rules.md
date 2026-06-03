@@ -20,7 +20,7 @@
   nixpkgs documentation.
 - Fetch fresh context before writing or modifying Nix files. Check current
   options first. For non-Nix libraries, use Context7.
-- Before asking the user to run `make switch`, run formatting and a dry-run
+- Before asking the user to run `make switch`, dry-run
   build for the target host. For `pc`, use:
 
 ```bash
@@ -30,7 +30,6 @@ nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run
 
 ## Conventions
 
-- Format `.nix` files with `nixpkgs-fmt` before committing.
 - Add new packages through `overlays.nix` following existing patterns.
 - Use agenix for secrets management.
 
@@ -52,7 +51,6 @@ nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run
 
 ## Verification Gate
 
-- Run formatting and a dry-run build before requesting `make switch`.
 - Verification succeeds only when the dry-run passes and no new evaluation or
   deprecation warnings are present. The expected `Git tree is dirty` warning is
   excluded.
