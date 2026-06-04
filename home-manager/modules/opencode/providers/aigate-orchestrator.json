@@ -1,0 +1,42 @@
+{
+  "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
+  "preset": "aigate",
+  "presets": {
+    "aigate": {
+      "orchestrator": {
+        "model": "aigate/deepseek/deepseek-v4-pro",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "oracle": {
+        "model": "aigate/deepseek/deepseek-v4-pro",
+        "variant": "medium",
+        "mcps": []
+      },
+      "council": {
+        "model": "aigate/deepseek/deepseek-v4-pro",
+        "variant": "medium",
+        "mcps": []
+      },
+      "librarian": {
+        "model": "aigate/deepseek/deepseek-v4-flash",
+        "mcps": ["websearch", "context7", "gh_grep"]
+      },
+      "explorer": {
+        "model": "aigate/deepseek/deepseek-v4-flash",
+        "mcps": []
+      },
+      "designer": {
+        "model": "aigate/moonshotai/kimi-k2.6",
+        "variant": "medium",
+        "mcps": []
+      },
+      "fixer": {
+        "model": "aigate/deepseek/deepseek-v4-flash",
+        "variant": "high",
+        "mcps": []
+      }
+    }
+  },
+  "disabled_agents": ["observer"]
+}

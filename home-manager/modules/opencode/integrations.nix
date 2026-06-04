@@ -1,7 +1,8 @@
-{ pkgs
-, lib
-, osConfig
-, ...
+{
+  pkgs,
+  lib,
+  osConfig,
+  ...
 }:
 
 let
@@ -171,6 +172,7 @@ in
       "@tarquinen/opencode-dcp@latest"
       "opencode-gemini-auth@latest"
       "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
+      "oh-my-opencode-slim@latest"
     ];
     mcp = {
       context7 = {
@@ -223,4 +225,6 @@ in
 
   xdg.configFile."opencode/plugins/system-prompt-override.ts".source = systemPromptOverride;
   xdg.configFile."opencode/plugins/rtk.ts".source = "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
+
+  xdg.configFile."opencode/oh-my-opencode-slim.json".source = ./providers/aigate-orchestrator.json;
 }
