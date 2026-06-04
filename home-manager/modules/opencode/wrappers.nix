@@ -1,7 +1,8 @@
-{ pkgs
-, lib
-, osConfig
-, providerDefs ? [ ]
+{
+  pkgs,
+  lib,
+  osConfig,
+  providerDefs ? [ ],
 }:
 
 let
@@ -18,11 +19,11 @@ in
   };
 
   opencodeWrapped = pkgs.writeShellScriptBin "opencode" ''
-        ${lib.optionalString (osConfig.age.secrets ? opencode-litellm-master-key) ''
-          . "${osConfig.age.secrets.opencode-litellm-master-key.path}"
-    ${exportProviderEnv}
-        ''}
-        exec ${pkgs.opencode}/bin/opencode "$@"
+    ${lib.optionalString (osConfig.age.secrets ? opencode-litellm-master-key) ''
+            . "${osConfig.age.secrets.opencode-litellm-master-key.path}"
+      ${exportProviderEnv}
+    ''}
+    exec ${pkgs.opencode}/bin/opencode "$@"
   '';
 
   opencodeMcpGrafana = pkgs.writeShellScriptBin "opencode-mcp-grafana" ''
@@ -34,16 +35,16 @@ in
     exec ${pkgs.uv}/bin/uvx mcp-grafana
   '';
 
-  opencodeMcpOpendataloaderPdf = pkgs.writeShellScriptBin "opencode-mcp-opendataloader-pdf" ''
-    export JAVA_HOME="${pkgs.jre}"
-    export PATH="${
-      lib.makeBinPath [
-        pkgs.jre
-        pkgs.uv
-      ]
-    }:$PATH"
-    exec ${pkgs.uv}/bin/uvx opendataloader-pdf-mcp
-  '';
+  # opencodeMcpOpendataloaderPdf = pkgs.writeShellScriptBin "opencode-mcp-opendataloader-pdf" ''
+  #   export JAVA_HOME="${pkgs.jre}"
+  #   export PATH="${
+  #     lib.makeBinPath [
+  #       pkgs.jre
+  #       pkgs.uv
+  #     ]
+  #   }:$PATH"
+  #   exec ${pkgs.uv}/bin/uvx opendataloader-pdf-mcp
+  # '';
 
   opencodeMcpPlaywright = pkgs.writeShellScriptBin "opencode-mcp-playwright" ''
     export PATH="${

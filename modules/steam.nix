@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 {
   programs.nix-ld.enable = true;
   programs.steam = {
@@ -28,7 +28,7 @@
     extraCompatPackages = [ pkgs.steamtinkerlaunch ];
   };
 
-  home-manager.users.labile = {
+  home-manager.users.${config.mySystem.user.name} = {
     xdg.desktopEntries.steam = {
       name = "Steam";
       genericName = "Game Store";
