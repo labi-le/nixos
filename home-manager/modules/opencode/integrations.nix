@@ -183,10 +183,10 @@ in
         type = "remote";
         url = "https://mcp.grep.app";
       };
-      opendataloader-pdf = {
-        type = "local";
-        command = [ "${wrappers.opencodeMcpOpendataloaderPdf}/bin/opencode-mcp-opendataloader-pdf" ];
-      };
+      # opendataloader-pdf = {
+      #   type = "local";
+      #   command = [ "${wrappers.opencodeMcpOpendataloaderPdf}/bin/opencode-mcp-opendataloader-pdf" ];
+      # };
       playwright = {
         type = "local";
         command = [
