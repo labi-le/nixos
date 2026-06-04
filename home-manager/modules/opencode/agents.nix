@@ -8,6 +8,7 @@
       permission = {
         task = {
           "*" = "ask";
+          "coder" = "allow";
           "researcher" = "allow";
           "api-verifier" = "allow";
         };
@@ -27,6 +28,7 @@
 
         Delegate aggressively:
         - If there are 2+ INDEPENDENT subtasks, delegate each independent cluster.
+        - Implementation or file-editing work -> coder.
         - Research-only work or broad exploration (>= 3 files, external docs, or web lookup) -> researcher.
         - Runtime API validation, endpoint reproduction, or curl-based fact checks -> api-verifier.
         - Tiny lookup (<= 2 files and <= 1 grep) may stay local.
@@ -95,6 +97,37 @@
         - Evidence (exact paths/line numbers/links, max 2 per finding)
         - Unknowns (max 3)
         - Suggested next action for orchestrator (exactly 1)
+      '';
+    };
+    coder = {
+      description = "Implements scoped code changes and reports concrete results";
+      mode = "subagent";
+      model = "aigate/deepseek/deepseek-v4-flash";
+      permission = {
+        read = "allow";
+        glob = "allow";
+        grep = "allow";
+        list = "allow";
+        skill = "allow";
+        bash = "ask";
+        edit = "allow";
+        task = "deny";
+      };
+      prompt = ''
+        You are a coding subagent.
+        Scope: implement only the requested change within the files named by the orchestrator.
+        Allowed: read the codebase, edit files in scope, and run only the verification commands requested by the orchestrator.
+        Hard limits:
+        - no autonomous scope expansion
+        - no unrelated refactors
+        - no delegation
+        - if requirements are ambiguous or blocked, stop and report it
+
+        Return:
+        - Changes made
+        - Files touched
+        - Verification run
+        - Open issues or blockers
       '';
     };
     api-verifier = {
