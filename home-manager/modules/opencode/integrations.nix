@@ -151,7 +151,9 @@ in
 {
   programs.opencode.settings = {
     skills = lib.mkForce {
-      paths = [ "${superpowersSkills}/skills" ];
+      paths = [
+        "${superpowersSkills}/skills"
+      ];
     };
     permission = {
       external_directory = {
@@ -168,8 +170,8 @@ in
     };
     plugin = [
       "@tarquinen/opencode-dcp@latest"
-      "@darrenhinde/OpenAgentsControl@latest"
       "opencode-gemini-auth@latest"
+      "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
     ];
     mcp = {
       context7 = {
