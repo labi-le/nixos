@@ -1,7 +1,8 @@
-{ pkgs
-, lib
-, osConfig
-, ...
+{
+  pkgs,
+  lib,
+  osConfig,
+  ...
 }:
 
 let
@@ -11,14 +12,19 @@ let
     (import ./providers/aigate.nix)
   ];
   wrappers = import ./wrappers.nix {
-    inherit pkgs lib osConfig providerDefs;
+    inherit
+      pkgs
+      lib
+      osConfig
+      providerDefs
+      ;
   };
 in
 
 {
   imports = [
     ./packages.nix
-    ./agents.nix
+    # ./agents.nix
     ./integrations.nix
   ];
 
@@ -41,12 +47,12 @@ in
         max_lines = 120;
         max_bytes = 12288;
       };
-      provider = lib.listToAttrs (map
-        (item: {
+      provider = lib.listToAttrs (
+        map (item: {
           name = item.id;
           value = item.provider;
-        })
-        providerDefs);
+        }) providerDefs
+      );
     };
   };
 }
