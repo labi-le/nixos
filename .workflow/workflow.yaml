@@ -1,0 +1,50 @@
+version: 1
+metadata:
+  last_indexed: "2026-06-04T00:00:00Z"
+
+phases:
+  - id: work
+    name: Work
+    description: Implement the requested Nix changes conservatively.
+    conventions:
+      - Edit only what is required for the task.
+      - Keep changes minimal and preserve existing behavior.
+      - Before handing work off, state which files changed, what was implemented, which verification commands were run, and what remains unverified.
+    gate:
+      - Requested change is implemented.
+      - No unrelated files were changed.
+
+  - id: self-check
+    name: Self Check
+    description: Run cheap verification first and prepare evidence for review.
+    conventions:
+      - Start with cheap checks before any expensive Nix command.
+      - Inspect changed files and choose the narrowest verification that matches the change.
+      - Always capture command results in the handoff to review.
+      - If no .nix files were changed, say that explicitly and do not invent Nix verification.
+      - If .nix files were changed, run `nix build .#nixosConfigurations.$(hostname).config.system.build.toplevel --dry-run` before review.
+    gate:
+      - Changed files are listed.
+      - Verification commands and outcomes are recorded.
+      - Applicable cheap checks completed successfully.
+
+  - id: nix-review
+    name: Nix Review
+    description: Review the change set and require stronger evidence only when Nix files were touched.
+    conventions:
+      - Run the review as the `@workflow-review` subagent, not in the main agent.
+      - Require verification evidence before approval.
+      - If no .nix files were changed, verify the skip rationale and approve without forcing Nix-only checks.
+      - If .nix files were changed, review only the changed .nix files and require `nix build .#nixosConfigurations.$(hostname).config.system.build.toplevel --dry-run` evidence.
+      - Treat new evaluation or deprecation warnings as defects.
+      - Escalate to a broader or full `nix build` only for high-risk changes such as shared modules, overlays, flake inputs, or cross-host wiring.
+    gate:
+      - Review evidence matches the changed files.
+      - Either no .nix files changed, or the required Nix dry-run completed successfully.
+      - No new evaluation or deprecation warnings were introduced.
+
+transitions:
+  - from: work
+    to: self-check
+  - from: self-check
+    to: nix-review
