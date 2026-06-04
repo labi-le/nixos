@@ -78,8 +78,8 @@
       ];
       general_settings = {
         master_key = "os.environ/LITELLM_MASTER_KEY";
-        background_health_checks = true;
-        enable_health_check_routing = true;
+        background_health_checks = false;
+        enable_health_check_routing = false;
       };
       router_settings = {
         timeout = 15;
