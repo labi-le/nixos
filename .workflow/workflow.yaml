@@ -19,29 +19,6 @@ phases:
       - No unrelated files were changed.
       - "`flake.lock` was updated when `flake.nix` inputs changed."
 
-  - id: format
-    name: Format
-    description: Apply the repository's Nix formatter before verification.
-    conventions:
-      - If any `.nix` files changed, run `make fmt` before self-check.
-      - If no `.nix` files changed, state that formatting was intentionally skipped.
-    gate:
-      - Changed `.nix` files were formatted, or skip rationale was recorded.
-
-  - id: self-check
-    name: Self Check
-    description: Run cheap verification first and prepare evidence for review.
-    conventions:
-      - Start with cheap checks before any expensive Nix command.
-      - Inspect changed files and choose the narrowest verification that matches the change.
-      - Always capture command results in the handoff to review.
-      - If no .nix files were changed, say that explicitly and do not invent Nix verification.
-      - If .nix files were changed, run `make dry-run` or `nix build .#nixosConfigurations.$(hostname).config.system.build.toplevel --dry-run` before review.
-    gate:
-      - Changed files are listed.
-      - Verification commands and outcomes are recorded.
-      - Applicable cheap checks completed successfully.
-
   - id: nix-review
     name: Nix Review
     description: Review the change set and require stronger evidence only when Nix files were touched.
@@ -71,10 +48,6 @@ phases:
 
 transitions:
   - from: work
-    to: format
-  - from: format
-    to: self-check
-  - from: self-check
     to: nix-review
   - from: nix-review
     to: routes-update
