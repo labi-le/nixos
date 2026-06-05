@@ -39,13 +39,6 @@
   programs.dconf.enable = true;
   system.stateVersion = "24.11";
 
-  age.secrets.opencode-grafana-mcp = {
-    file = ../secrets/opencode/grafana-mcp.age;
-    owner = "labile";
-    group = "users";
-    mode = "0400";
-  };
-
   network.injectHosts = true;
   ide = {
     goland.enable = true;
