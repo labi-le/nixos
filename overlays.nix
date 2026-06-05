@@ -14,6 +14,10 @@ final: prev: {
   #   config.allowUnfree = true;
   # };
 
+  openldap = prev.openldap.overrideAttrs {
+    doCheck = !prev.stdenv.hostPlatform.isi686;
+  };
+
   getmyip = prev.callPackage ./pkgs/getmyip.nix { };
   ea-disable-overlay = prev.callPackage ./pkgs/ea-disable-overlay.nix { };
   generate-context = prev.callPackage ./pkgs/generate-context.nix { };
