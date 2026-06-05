@@ -66,7 +66,7 @@ let
     };
   };
 
-  # --- Генерация списка строк сборщиков ---
+  # --- Generate builder strings list ---
   builderStringsList =
     let
       enabledBuilders = filterAttrs (name: builderCfg: builderCfg.enable) cfg.remoteBuilders;
