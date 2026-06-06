@@ -14,6 +14,14 @@ let
     -javaagent:${plugin}=jetbrains
   '';
 
+  patchJetBrainsDownloadHost = package:
+    package.overrideAttrs (oldAttrs: {
+      src = pkgs.fetchurl {
+        url = lib.replaceStrings [ "https://download.jetbrains.com/" ] [ "https://download-cdn.jetbrains.com/" ] oldAttrs.src.url;
+        hash = oldAttrs.src.outputHash;
+      };
+    });
+
   ides = with pkgs; [
     {
       name = "goland";
@@ -159,14 +167,16 @@ in
                 map
                   (ide: {
                     name = ide.packageName;
-                    value = prev.jetbrains.${ide.packageName}.override {
-                      vmopts =
-                        (prev.jetbrains.${ide.packageName}.vmopts or "")
-                        + "\n"
-                        + customVmOptions
-                        + "\n"
-                        + cfg.${ide.name}.extraVmOptions;
-                    };
+                    value = patchJetBrainsDownloadHost (
+                      prev.jetbrains.${ide.packageName}.override {
+                        vmopts =
+                          (prev.jetbrains.${ide.packageName}.vmopts or "")
+                          + "\n"
+                          + customVmOptions
+                          + "\n"
+                          + cfg.${ide.name}.extraVmOptions;
+                      }
+                    );
                   })
                   enabledIdes
               );
