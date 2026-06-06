@@ -131,6 +131,7 @@ in
         addr = "http://127.0.0.1:7005";
         # internal = true;
       };
+      "ip.labile.cc" = proxy { addr = "http://127.0.0.1:7006"; };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";
         internal = true;
