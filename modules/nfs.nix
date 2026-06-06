@@ -19,7 +19,8 @@
     device = "192.168.1.2:/drive";
     fsType = "nfs";
     options = [
-      "auto"
+      "noauto"
+      "x-systemd.automount"
       "nofail"
       "noatime"
       "_netdev"

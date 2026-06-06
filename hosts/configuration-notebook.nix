@@ -41,6 +41,7 @@
   system.stateVersion = "25.05";
 
   networking.networkmanager.wifi.powersave = false;
+  systemd.services.NetworkManager-wait-online.enable = false;
 
   network.injectHosts = true;
   packages = {
