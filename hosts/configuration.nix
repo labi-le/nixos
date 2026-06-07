@@ -25,6 +25,11 @@
     ./../modules/amd
   ];
 
+  networking.firewall = {
+    allowedTCPPorts = [ 10808 ];
+    allowedUDPPorts = [ 10808 ];
+  };
+
   services.xserver.xkb = {
     layout = "us";
   };
