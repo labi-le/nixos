@@ -185,19 +185,23 @@ in
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
 
-            proxy_connect_timeout 5s;
-            proxy_send_timeout    30s;
-            proxy_read_timeout    600s;
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
 
-            proxy_buffering on;
-            proxy_buffer_size 16k;
-            proxy_buffers 16 64k;
-            proxy_busy_buffers_size 128k;
-            proxy_request_buffering off;
+            proxy_buffering off;
+            proxy_cache off;
+            chunked_transfer_encoding on;
+
+            send_timeout 30m;
+
+            proxy_connect_timeout 10s;
+            proxy_read_timeout    30m;
+            proxy_send_timeout    30m;
+
+            keepalive_timeout 30m;
 
             proxy_set_header Accept-Encoding "";
-
-            proxy_intercept_errors on;
+            proxy_intercept_errors off;
           '';
         };
       };
