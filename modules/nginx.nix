@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -61,10 +62,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -187,7 +189,10 @@ in
             proxy_send_timeout    30s;
             proxy_read_timeout    600s;
 
-            proxy_buffering off;
+            proxy_buffering on;
+            proxy_buffer_size 16k;
+            proxy_buffers 16 64k;
+            proxy_busy_buffers_size 128k;
             proxy_request_buffering off;
 
             proxy_set_header Accept-Encoding "";
