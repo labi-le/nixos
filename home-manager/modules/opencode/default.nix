@@ -38,15 +38,15 @@ in
     };
 
     settings = {
-      default_agent = "orchestrator";
-      compaction = {
-        auto = true;
-        tail_turns = 14;
-      };
-      tool_output = {
-        max_lines = 120;
-        max_bytes = 12288;
-      };
+      # default_agent = "orchestrator";
+      # compaction = {
+      #   auto = true;
+      #   tail_turns = 14;
+      # };
+      # tool_output = {
+      #   max_lines = 120;
+      #   max_bytes = 12288;
+      # };
       provider = lib.listToAttrs (
         map (item: {
           name = item.id;
