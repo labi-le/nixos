@@ -3,9 +3,5 @@
 }:
 
 {
-  home.shellAliases = {
-    oo = "opencode";
-  };
-
   home.packages = [ ];
 }

@@ -36,6 +36,9 @@
       ];
     };
     enableCompletion = true;
+    shellAliases = {
+      oo = "opencode";
+    };
     interactiveShellInit = lib.mkAfter (builtins.readFile ./zsh-command-not-found.sh);
   };
 }
