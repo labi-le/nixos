@@ -25,4 +25,8 @@ in
     notebook
     server
   ];
+  "secrets/jira.age".publicKeys = [
+    pc
+    notebook
+  ];
 }
