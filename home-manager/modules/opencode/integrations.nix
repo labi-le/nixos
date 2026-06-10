@@ -55,7 +55,7 @@ in
     };
     plugin = [
       "@tarquinen/opencode-dcp@latest"
-      "opencode-gemini-auth@latest"
+      # "opencode-gemini-auth@latest"
       "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
       "oh-my-opencode-slim@latest"
     ];

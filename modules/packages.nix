@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 with lib;
@@ -84,7 +85,7 @@ in
         pgcli
 
         generate-context
-        screen
+        zellij
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;

@@ -14,7 +14,7 @@
         "mcps": []
       },
       "council": {
-        "model": "aigate/deepseek/deepseek-v4-pro",
+        "model": "aigate/qwen/qwen3.7-max",
         "variant": "medium",
         "mcps": []
       },
