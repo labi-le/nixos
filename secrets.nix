@@ -25,7 +25,7 @@ in
     notebook
     server
   ];
-  "secrets/jira.age".publicKeys = [
+  "secrets/opencode/jira-mcp.age".publicKeys = [
     pc
     notebook
   ];

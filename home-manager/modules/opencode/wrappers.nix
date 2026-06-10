@@ -26,15 +26,6 @@ in
     exec ${pkgs.opencode}/bin/opencode "$@"
   '';
 
-  opencodeMcpGrafana = pkgs.writeShellScriptBin "opencode-mcp-grafana" ''
-    ${lib.optionalString (osConfig.age.secrets ? opencode-grafana-mcp) ''
-      set -a
-      . "${osConfig.age.secrets.opencode-grafana-mcp.path}"
-      set +a
-    ''}
-    exec ${pkgs.uv}/bin/uvx mcp-grafana
-  '';
-
   # opencodeMcpOpendataloaderPdf = pkgs.writeShellScriptBin "opencode-mcp-opendataloader-pdf" ''
   #   export JAVA_HOME="${pkgs.jre}"
   #   export PATH="${
