@@ -72,16 +72,6 @@ in
       #   type = "local";
       #   command = [ "${wrappers.opencodeMcpOpendataloaderPdf}/bin/opencode-mcp-opendataloader-pdf" ];
       # };
-      playwright = {
-        type = "local";
-        command = [
-          "${wrappers.opencodeMcpPlaywright}/bin/opencode-mcp-playwright"
-          "--isolated"
-          "--headless"
-          "--executable-path"
-          "${pkgs.chromium}/bin/chromium"
-        ];
-      };
     }
     // lib.optionalAttrs (osConfig.age.secrets ? opencode-grafana-mcp) {
       grafana = {

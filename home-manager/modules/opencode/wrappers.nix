@@ -46,12 +46,4 @@ in
   #   exec ${pkgs.uv}/bin/uvx opendataloader-pdf-mcp
   # '';
 
-  opencodeMcpPlaywright = pkgs.writeShellScriptBin "opencode-mcp-playwright" ''
-    export PATH="${
-      lib.makeBinPath [
-        pkgs.nodejs
-      ]
-    }:$PATH"
-    exec npx -y @playwright/mcp@latest "$@"
-  '';
 }
