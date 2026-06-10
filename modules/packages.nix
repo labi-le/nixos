@@ -85,7 +85,6 @@ in
         pgcli
 
         generate-context
-        zellij
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;
