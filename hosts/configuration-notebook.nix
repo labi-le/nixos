@@ -17,6 +17,7 @@
     ./../modules/bluetooth.nix
     ./../modules/syncthing/notebook.nix
     ./../modules/steam.nix
+    ./../modules/jira.nix
   ];
 
   services.xserver.xkb = {

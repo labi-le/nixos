@@ -64,20 +64,10 @@ in
         type = "remote";
         url = "https://mcp.context7.com/mcp";
       };
-      gh_grep = {
-        type = "remote";
-        url = "https://mcp.grep.app";
-      };
       # opendataloader-pdf = {
       #   type = "local";
       #   command = [ "${wrappers.opencodeMcpOpendataloaderPdf}/bin/opencode-mcp-opendataloader-pdf" ];
       # };
-    }
-    // lib.optionalAttrs (osConfig.age.secrets ? opencode-grafana-mcp) {
-      grafana = {
-        type = "local";
-        command = [ "${wrappers.opencodeMcpGrafana}/bin/opencode-mcp-grafana" ];
-      };
     };
   };
 

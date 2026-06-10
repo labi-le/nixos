@@ -23,6 +23,7 @@
     ./../modules/esync.nix
     ./../modules/bluetooth.nix
     ./../modules/amd
+    ./../modules/jira.nix
   ];
 
   networking.firewall = {

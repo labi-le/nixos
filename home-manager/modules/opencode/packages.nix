@@ -3,5 +3,8 @@
 }:
 
 {
-  home.packages = [ ];
+  home.packages = [
+    pkgs.nodejs
+    pkgs.uv
+  ];
 }

@@ -20,7 +20,7 @@
       },
       "librarian": {
         "model": "aigate/deepseek/deepseek-v4-flash",
-        "mcps": ["websearch", "context7", "gh_grep"]
+        "mcps": ["websearch", "context7", "grep_app"]
       },
       "explorer": {
         "model": "aigate/deepseek/deepseek-v4-flash",
