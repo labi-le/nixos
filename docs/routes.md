@@ -130,6 +130,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Server host config entry point | `hosts/configuration-server.nix` |
 | Server packages | `modules/packages-server.nix` |
 | Nginx | `modules/nginx.nix` |
+| ZeroSSL ACME for nginx | `modules/zerossl.nix` |
 | LiteLLM | `modules/litellm.nix` |
 | Drive mounts | `modules/drive.nix` |
 | Kernel (CachyOS) | `modules/kernel-cachyos.nix` |

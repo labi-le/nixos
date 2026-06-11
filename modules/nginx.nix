@@ -10,14 +10,12 @@ let
 in
 
 {
+  imports = [ ./zerossl.nix ];
+
   networking.firewall.allowedTCPPorts = [
     80
     443
   ];
-  security.acme = {
-    acceptTerms = true;
-    defaults.email = "i@labile.cc";
-  };
   services.logrotate.settings.nginx.enable = false;
 
   services.nginx = {
