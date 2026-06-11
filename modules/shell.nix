@@ -37,6 +37,7 @@
     };
     enableCompletion = true;
     shellAliases = {
+      eh = "grep -o '^[^=]*'";
       oo = "opencode";
     };
     interactiveShellInit = lib.mkAfter (builtins.readFile ./zsh-command-not-found.sh);
