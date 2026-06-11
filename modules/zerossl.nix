@@ -9,6 +9,7 @@ let
   acmeServiceNames = builtins.concatMap (
     cert: [
       "acme-${cert}"
+      "acme-order-renew-${cert}"
       "acme-renew-${cert}"
     ]
   ) certNames;
