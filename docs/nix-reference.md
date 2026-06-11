@@ -160,3 +160,11 @@ make disko               # run disko for disk partitioning
 make cleanup             # remove old generations and apply configuration
 make optimise            # optimise nix store
 ```
+
+## Nginx / ACME Operations
+
+Force restart all ACME order-renew units on the server:
+
+```bash
+sudo systemctl start $(systemctl list-units --all --plain --no-legend 'acme-order-renew-*.service' | awk '{print $1}')
+```
