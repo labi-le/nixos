@@ -3,13 +3,14 @@ let
   pc = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMmj4DhtDs5bZhqTK6NiolqRgNCnGWyxty4LRixuU77Z labile@pc";
   server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIrOmpc2RqBzvSgNAIr2FFQzteuHu9JsnSocX7tFnYPA labile@server";
 
-in
-{
-  "testcode.age".publicKeys = [
+  all = [
     notebook
     pc
     server
   ];
+
+in
+{
 
   "secrets/vaultwarden/env.age".publicKeys = [ server ];
   "secrets/awg/env.age".publicKeys = [ server ];
@@ -20,13 +21,10 @@ in
     pc
     notebook
   ];
-  "secrets/litellm-env.age".publicKeys = [
-    pc
-    notebook
-    server
-  ];
+  "secrets/litellm-env.age".publicKeys = [ all ];
   "secrets/opencode/jira-mcp.age".publicKeys = [
     pc
     notebook
   ];
+  "secrets/zerossl.age".publicKeys = [ server ];
 }
