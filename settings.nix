@@ -34,9 +34,4 @@
   };
 
   chaotic.nyx.cache.enable = true;
-  nixpkgs = {
-    config = {
-      replaceStdenv = { pkgs }: pkgs.stdenv;
-    };
-  };
 }
