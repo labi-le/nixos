@@ -10,6 +10,7 @@ let
     (import ./providers/litellm.nix)
     (import ./providers/pollinations.nix)
     (import ./providers/aigate.nix)
+    (import ./providers/aerolink.nix)
   ];
   wrappers = import ./wrappers.nix {
     inherit

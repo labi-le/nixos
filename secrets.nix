@@ -21,7 +21,7 @@ in
     pc
     notebook
   ];
-  "secrets/litellm-env.age".publicKeys = [ all ];
+  "secrets/litellm-env.age".publicKeys = all;
   "secrets/opencode/jira-mcp.age".publicKeys = [
     pc
     notebook
