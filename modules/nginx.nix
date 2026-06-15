@@ -15,6 +15,7 @@ in
   networking.firewall.allowedTCPPorts = [
     80
     443
+    38264
   ];
   services.logrotate.settings.nginx.enable = false;
 
@@ -168,6 +169,72 @@ in
             sub_filter "https://radio.gachibass.us.to" "https://gachi-radio.labile.cc";
             sub_filter "http://radio.gachibass.us.to"  "https://gachi-radio.labile.cc";
             sub_filter "radio.gachibass.us.to"         "gachi-radio.labile.cc";
+
+            sub_filter_once off;
+          '';
+        };
+
+        locations."/fisting" = {
+          proxyPass = "https://radio.gachibass.us.to/fisting";
+          extraConfig = ''
+            proxy_ssl_server_name on;
+            proxy_ssl_name radio.gachibass.us.to;
+            proxy_set_header Host radio.gachibass.us.to;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+
+            proxy_buffering off;
+            proxy_cache off;
+            chunked_transfer_encoding on;
+
+            send_timeout 30m;
+
+            proxy_connect_timeout 10s;
+            proxy_read_timeout    30m;
+            proxy_send_timeout    30m;
+
+            keepalive_timeout 30m;
+
+            proxy_set_header Accept-Encoding "";
+            proxy_intercept_errors off;
+          '';
+        };
+      };
+      "93.100.194.40" = {
+        listen = [
+          {
+            addr = "0.0.0.0";
+            port = 38264;
+          }
+        ];
+        serverName = "93.100.194.40";
+
+        locations."/" = {
+          proxyPass = "https://radio.gachibass.us.to";
+          extraConfig = ''
+            proxy_ssl_server_name on;
+            proxy_ssl_name radio.gachibass.us.to;
+            proxy_set_header Host radio.gachibass.us.to;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_set_header Accept-Encoding "";
+
+            sub_filter_types
+              application/javascript
+              text/css
+              application/json
+              text/plain;
+
+
+            sub_filter "https://radio.gachibass.us.to" "http://93.100.194.40:38264";
+            sub_filter "http://radio.gachibass.us.to"  "http://93.100.194.40:38264";
+            sub_filter "radio.gachibass.us.to"         "93.100.194.40:38264";
 
             sub_filter_once off;
           '';
