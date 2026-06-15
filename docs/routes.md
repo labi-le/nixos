@@ -65,7 +65,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | NFS mounts | `modules/nfs.nix` | pc, fx516, notebook |
 | Thunar file manager | `modules/thunar.nix` | pc, fx516, notebook |
 | JetBrains IDE wrapper module | `modules/ide/module.nix` | flake common module; enabled by host `ide.*` options on pc/notebook |
-| Jira API secret | `modules/jira.nix` | pc, notebook |
+| Work mount secrets | `modules/work-mount.nix` | pc, notebook |
 
 ## PC-Specific Modules (`hosts/configuration.nix`)
 

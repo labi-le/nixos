@@ -23,7 +23,7 @@
     ./../modules/esync.nix
     ./../modules/bluetooth.nix
     ./../modules/amd
-    ./../modules/jira.nix
+    ./../modules/work-mount.nix
   ];
 
   networking.firewall = {

@@ -17,14 +17,20 @@ in
   "secrets/ngate-env.age".publicKeys = [ server ];
   "secrets/grafana.age".publicKeys = [ server ];
   "secrets/frp.age".publicKeys = [ server ];
+  "secrets/zerossl.age".publicKeys = [ server ];
+
+  "secrets/litellm-env.age".publicKeys = all;
+
+  "secrets/opencode/gitlab-work.age".publicKeys = [
+    pc
+    notebook
+  ];
   "secrets/opencode/grafana-mcp.age".publicKeys = [
     pc
     notebook
   ];
-  "secrets/litellm-env.age".publicKeys = all;
   "secrets/opencode/jira-mcp.age".publicKeys = [
     pc
     notebook
   ];
-  "secrets/zerossl.age".publicKeys = [ server ];
 }
