@@ -58,6 +58,7 @@ in
       "opencode-gemini-auth@latest"
       "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
       "oh-my-opencode-slim@latest"
+      "superpowers@git+https://github.com/obra/superpowers.git"
     ];
     mcp = {
       context7 = {
@@ -72,6 +73,14 @@ in
   };
 
   programs.opencode.skills = {
+    desloppify = "${
+      pkgs.fetchFromGitHub {
+        owner = "peteromallet";
+        repo = "desloppify";
+        rev = "3a7735d531a96b6a226bfbdc9fd662b14195f857";
+        hash = "sha256-USFofGy0SUZV0oeh5x5KAWeFReD45GxlyYqpmc23NFM=";
+      }
+    }/docs";
     plantuml-rendering = "${pkgs.fetchFromGitHub {
       owner = "asolfre";
       repo = "plantuml-rendering-skill";
