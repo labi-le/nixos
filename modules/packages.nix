@@ -81,6 +81,7 @@ in
         ffmpeg
         agenix
         age
+        tmux
 
         pgcli
 
