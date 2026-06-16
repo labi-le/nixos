@@ -161,6 +161,48 @@ make cleanup             # remove old generations and apply configuration
 make optimise            # optimise nix store
 ```
 
+## ChromaDB As Persistent Memory
+
+ChromaDB runs at `192.168.1.2:8000` and is connected via MCP. Data persists
+between sessions.
+
+### Collections
+
+- `code-<project>` — codebase index (e.g. `code-nixos`). Auto-managed.
+- `memory-nixos` — agent memory: decisions, context, progress.
+
+### Session Start
+
+Query recent memory to restore context:
+
+```
+chroma_query_documents(
+  collection: "memory-nixos",
+  query_texts: ["recent decisions and progress"],
+  n_results: 10
+)
+```
+
+### Session End
+
+Save key decisions and progress:
+
+```
+chroma_add_documents(
+  collection: "memory-nixos",
+  documents: ["<description>"],
+  ids: ["<type>-<topic>-<YYYY-MM-DD>"],
+  metadatas: [{"type": "decision|progress|problem|pattern", "date": "<YYYY-MM-DD>"}]
+)
+```
+
+### What To Save
+
+- Architectural decisions and reasoning.
+- Current task context and progress.
+- Known problems and workarounds.
+- Project patterns the agent must follow.
+
 ## Nginx / ACME Operations
 
 Force restart all ACME order-renew units on the server:
