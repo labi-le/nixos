@@ -176,7 +176,8 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
 | OpenCode agents | `home-manager/modules/opencode/agents.nix` |
 | OpenCode integrations | `home-manager/modules/opencode/integrations.nix` |
-| OpenCode wrapper scripts | `home-manager/modules/opencode/wrappers.nix` |
+| OpenCode wrapper scripts (also launches the code-indexer daemon in the background and reaps it on exit) | `home-manager/modules/opencode/wrappers.nix` |
+| OpenCode code-indexer Python CLI (one-shot incremental + `--daemon` inotify live-index; daemon launched by wrappers.nix) | `home-manager/modules/opencode/scripts/index_repo.py` |
 
 ## Cross-Cutting Tasks
 

@@ -2,50 +2,107 @@
   pkgs,
   lib,
   osConfig,
+  indexerPkg,
   ...
 }:
 
 let
-  wrappers = import ./wrappers.nix { inherit pkgs lib osConfig; };
-  systemPromptOverride = pkgs.writeText "system-prompt-override.ts" ''
+  wrappers = import ./wrappers.nix { inherit pkgs lib osConfig indexerPkg; };
+  chromaGate = pkgs.writeText "chroma-gate.ts" ''
     import type { Plugin } from "@opencode-ai/plugin"
 
-    const DEFAULT_PREFIX = "You are OpenCode, You and the user share the same workspace and collaborate to achieve the user's goals."
-    const DEFAULT_REPLACEMENT = [
-      "You are OpenCode.",
-      "Work with the user on software engineering tasks in the current workspace.",
-      "Be accurate, concise, and pragmatic.",
-      "Use tools when needed, avoid unnecessary output, and follow project instructions.",
-    ].join("\n")
-
-    const ENV_MARKER = "\nYou are powered by the model named "
-
     const CHROMA_SEARCH_RULE = [
-      "Code search priority:",
-      "The project's Chroma collection is named code-<root-folder-name>, the basename of the workspace root (e.g. /home/labile/nixos -> code-nixos).",
-      "For codebase search, query that collection with chroma_query_documents before grep or glob.",
-      "If the collection is missing or returns only irrelevant results (high distance), fall back to grep/glob.",
-      "Semantic/exploratory queries (architecture, related modules, 'where is X'): Chroma first.",
-      "Exact pattern matching (specific string, variable, error): grep.",
-      "File discovery by name/extension: glob.",
+      "MANDATORY codebase search: call chroma_query_documents FIRST. Collection: code-<basename of workspace root> (this workspace: code-nixos).",
+      "Use grep/glob only after a chroma call, when you already know the exact file path, or when chroma is empty/missing.",
+      "Never bypass chroma with bash search (rg/grep/find). 'I'll just grep quickly' / 'too simple for search' are not valid reasons — chroma first.",
+      "Enforced by the chroma-gate plugin: grep/glob without a prior chroma call are blocked.",
     ].join("\n")
+
+    const chromaCalled = new Set<string>()
+    const sessionAgent = new Map<string, string>()
+
+    const ENFORCED_AGENTS = new Set<string>([
+      "build",
+      "orchestrator",
+      "general",
+      "explore",
+      "explorer",
+      "plan",
+    ])
+
+    const isChromaQuery = (name: string) =>
+      name === "chroma_query_documents" ||
+      name.endsWith("_chroma_query_documents") ||
+      (name.toLowerCase().includes("chroma") && name.toLowerCase().includes("query"))
+
+    const isGrep = (name: string) => name === "grep" || name.endsWith("_grep")
+    const isGlob = (name: string) => name === "glob" || name.endsWith("_glob")
+
+    const isNarrowedGrep = (args: any) => {
+      if (!args || typeof args !== "object") return false
+      const hasInclude = typeof args.include === "string" && args.include.length > 0
+      const path = typeof args.path === "string" ? args.path : ""
+      const hasConcretePath =
+        path.length > 0 && path !== "." && path !== "/" && !path.endsWith("/**")
+      return hasInclude && hasConcretePath
+    }
+
+    const isNarrowedGlob = (args: any) => {
+      if (!args || typeof args !== "object") return false
+      const path = typeof args.path === "string" ? args.path : ""
+      const pattern = typeof args.pattern === "string" ? args.pattern : ""
+      if (path.length > 0 && path !== "." && path !== "/") return true
+      if (pattern && !pattern.startsWith("**") && !pattern.startsWith("/**")) return true
+      return false
+    }
+
+    const rememberAgent = (sessionID: unknown, agent: unknown) => {
+      const sid = typeof sessionID === "string" ? sessionID : ""
+      const ag = typeof agent === "string" ? agent : ""
+      if (sid && ag) sessionAgent.set(sid, ag)
+    }
+
+    const blockMessage = (tool: string) =>
+      [
+        "BLOCKED by chroma-gate: " + tool + " requires a prior chroma_query_documents call in this session.",
+        "Action: call chroma_query_documents first (collection name: code-<basename of workspace root>, e.g. code-nixos).",
+        "Exception: " + tool + " is allowed without chroma only when narrowed by both args.path AND args.include (grep) or args.path/args.pattern targeting a specific subtree (glob).",
+      ].join(" ")
 
     export default (async () => ({
       "experimental.chat.system.transform": async (_input, output) => {
         if (!Array.isArray(output.system) || output.system.length === 0) return
-
-        const header = output.system[0]
-        if (typeof header === "string" && header.startsWith(DEFAULT_PREFIX)) {
-          const envIndex = header.indexOf(ENV_MARKER)
-          output.system[0] =
-            envIndex === -1
-              ? DEFAULT_REPLACEMENT
-              : DEFAULT_REPLACEMENT + header.slice(envIndex)
-        }
-
         if (!output.system.includes(CHROMA_SEARCH_RULE)) {
-          output.system.push(CHROMA_SEARCH_RULE)
+          output.system.splice(1, 0, CHROMA_SEARCH_RULE)
         }
+      },
+      "chat.message": async (input) => {
+        rememberAgent(input.sessionID, (input as any).agent)
+      },
+      "chat.params": async (input) => {
+        rememberAgent(input.sessionID, (input as any).agent)
+      },
+      "tool.execute.before": async (input, output) => {
+        const tool = String(input.tool ?? "")
+        const sessionID = String(input.sessionID ?? "")
+
+        if (isChromaQuery(tool)) {
+          if (sessionID) chromaCalled.add(sessionID)
+          return
+        }
+
+        if (!isGrep(tool) && !isGlob(tool)) return
+
+        const agent = sessionAgent.get(sessionID)
+        if (!agent || !ENFORCED_AGENTS.has(agent)) return
+
+        if (chromaCalled.has(sessionID)) return
+
+        const args = output?.args
+        if (isGrep(tool) && isNarrowedGrep(args)) return
+        if (isGlob(tool) && isNarrowedGlob(args)) return
+
+        throw new Error(blockMessage(tool))
       },
     })) satisfies Plugin
   '';
@@ -128,7 +185,7 @@ in
     }/skills/caveman";
   };
 
-  xdg.configFile."opencode/plugins/system-prompt-override.ts".source = systemPromptOverride;
+  xdg.configFile."opencode/plugins/chroma-gate.ts".source = chromaGate;
   xdg.configFile."opencode/plugins/rtk.ts".source = "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
 
   xdg.configFile."opencode/oh-my-opencode-slim.json".source = ./providers/anthropic-orchestrator.json;
