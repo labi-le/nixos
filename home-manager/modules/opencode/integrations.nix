@@ -2,12 +2,17 @@
   pkgs,
   lib,
   osConfig,
-  indexerPkg,
   ...
 }:
 
 let
-  wrappers = import ./wrappers.nix { inherit pkgs lib osConfig indexerPkg; };
+  wrappers = import ./wrappers.nix {
+    inherit
+      pkgs
+      lib
+      osConfig
+      ;
+  };
   chromaGate = pkgs.writeText "chroma-gate.ts" ''
     import type { Plugin } from "@opencode-ai/plugin"
 
@@ -127,8 +132,8 @@ in
       "@tarquinen/opencode-dcp@latest"
       "opencode-gemini-auth@latest"
       "opencode-claude-auth@latest"
-      "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
-      "oh-my-opencode-slim@2.0.3"
+      # "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
+      "oh-my-openagent@latest"
       "superpowers@git+https://github.com/obra/superpowers.git"
     ];
     mcp = {
@@ -190,10 +195,22 @@ in
 
   xdg.configFile."opencode/oh-my-opencode-slim.json".source = ./providers/anthropic-orchestrator.json;
 
+  xdg.configFile."opencode/oh-my-openagent.jsonc".text = builtins.toJSON {
+    team_mode = {
+      enabled = true;
+      max_parallel_members = 8;
+      tmux_visualization = true;
+    };
+    background_task = {
+      defaultConcurrency = 10;
+    };
+  };
+
   xdg.configFile."opencode/dcp.jsonc".text = builtins.toJSON {
-    "$schema" = "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json";
+    "$schema" =
+      "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json";
     compress = {
-      maxContextLimit = 200000;
+      maxContextLimit = 300000;
     };
   };
 }

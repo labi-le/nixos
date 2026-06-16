@@ -177,8 +177,8 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
 | OpenCode agents | `home-manager/modules/opencode/agents.nix` |
 | OpenCode integrations | `home-manager/modules/opencode/integrations.nix` |
-| OpenCode wrapper scripts (also launches the code-indexer daemon in the background and reaps it on exit) | `home-manager/modules/opencode/wrappers.nix` |
-| OpenCode code-indexer Python CLI (one-shot incremental + `--daemon` inotify live-index; daemon launched by wrappers.nix) | `home-manager/modules/opencode/scripts/index_repo.py` |
+| OpenCode wrapper scripts (splices the `index-repo` opencode hook: registers `$PWD` with the shared indexer service on launch, unregisters on exit) | `home-manager/modules/opencode/wrappers.nix` |
+| Code indexer (`index-repo`) — Rust crate + Nix modules; lives in its own repo `git+ssh://git@github.com/labi-le/index-repo` | external flake input (`flake.nix`); see "Code indexer wiring" below |
 
 ## Cross-Cutting Tasks
 
@@ -189,6 +189,18 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Add AGenix secret | `secrets/<name>.age` (encrypt) | host config (add `age.secrets.<name>`) | |
 | Add new NixOS module | `modules/<name>.nix` (create) | `modules/base.nix` or per-host config (add import) | |
 | Add new HM module | `home-manager/modules/<name>.nix` (create) | `home-manager/modules/default.nix` (add import) | |
+
+## Code indexer wiring (`index-repo`)
+
+The indexer is an external flake (`index-repo.url` in `flake.nix`) that ships its own Nix modules. Wiring lives in three places:
+
+| Concern | File | What |
+|---|---|---|
+| Package overlay | `overlays.nix` | `index-repo = inputs.index-repo.packages.${system}.default` (→ `pkgs.index-repo`) |
+| System service | `flake.nix` (`mkSystem` `withHomeManager` list) | imports `inputs.index-repo.nixosModules.default` + sets `services.index-repo.enable = true` (HM hosts only, not server) |
+| Opencode glue | `flake.nix` (`homeManagerConfig.sharedModules`) + `home-manager/modules/opencode/{default,wrappers}.nix` | imports `inputs.index-repo.homeManagerModules.default`; the wrapper splices `config.services.index-repo.opencode.hook` |
+
+Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{host,port,ssl,debounce}` on the NixOS module. The systemd user unit (`index-repo serve`) is defined by the module — do NOT hand-write it.
 
 ## Optional / Currently Unimported Modules
 
