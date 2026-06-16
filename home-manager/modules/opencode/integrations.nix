@@ -58,7 +58,7 @@ in
       "opencode-gemini-auth@latest"
       "opencode-claude-auth@latest"
       "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
-      "oh-my-opencode-slim@latest"
+      "oh-my-opencode-slim@2.0.3"
       "superpowers@git+https://github.com/obra/superpowers.git"
     ];
     mcp = {
@@ -101,5 +101,5 @@ in
   xdg.configFile."opencode/plugins/system-prompt-override.ts".source = systemPromptOverride;
   xdg.configFile."opencode/plugins/rtk.ts".source = "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
 
-  xdg.configFile."opencode/oh-my-opencode-slim.json".source = ./providers/aigate-orchestrator.json;
+  xdg.configFile."opencode/oh-my-opencode-slim.json".source = ./providers/anthropic-orchestrator.json;
 }
