@@ -23,6 +23,7 @@
     # accela.url = "github:labi-le/enter-the-wired";
 
     ngate-wrapped.url = "git+ssh://git@github.com/labi-le/ngate-wrapped?dir=qcow2";
+    index-repo.url = "git+ssh://git@github.com/labi-le/index-repo";
     nur = {
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -69,7 +70,7 @@
         home-manager = {
           useUserPackages = true;
           useGlobalPkgs = true;
-          sharedModules = [ ];
+          sharedModules = [ inputs.index-repo.homeManagerModules.default ];
           backupFileExtension = "hm-backup";
         };
       };
@@ -88,6 +89,8 @@
           ++ inputs.nixpkgs.lib.optionals withHomeManager [
             inputs.home-manager.nixosModules.home-manager
             homeManagerConfig
+            inputs.index-repo.nixosModules.default
+            { services.index-repo.enable = true; }
           ];
         };
 
