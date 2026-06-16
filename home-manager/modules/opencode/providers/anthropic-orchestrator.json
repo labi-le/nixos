@@ -23,8 +23,9 @@
         "mcps": ["websearch", "context7", "grep_app"]
       },
       "explorer": {
-        "model": "anthropic/claude-haiku-4-5",
-        "mcps": []
+        "model": "anthropic/claude-sonnet-4-6",
+        "variant": "high",
+        "mcps": ["chroma"]
       },
       "designer": {
         "model": "anthropic/claude-sonnet-4-6",

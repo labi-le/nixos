@@ -25,6 +25,12 @@
       ];
       doCheck = false;
     })
+    (pkgs.writeTextFile {
+      name = "index-repo";
+      text = builtins.readFile ./scripts/index_repo.py;
+      executable = true;
+      destination = "/bin/index-repo";
+    })
     pkgs.nodejs
     pkgs.uv
   ];
