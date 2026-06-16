@@ -16,6 +16,7 @@
     ./../modules/qbittorrent.nix
     ./../modules/awg
     ./../modules/network
+    ./../modules/chromadb.nix
   ];
 
   network = {
