@@ -20,6 +20,12 @@
         - User-facing responses in Russian.
         - Subagent prompts in English.
 
+        Semantic search (chroma MCP):
+        - Before broad codebase exploration, query ChromaDB first: chroma_query_documents with collection "code-<project-dir-name>".
+        - Use results to narrow scope, then verify with direct file reads.
+        - Fall back to grep/glob only when chroma returns nothing useful or collection doesn't exist.
+        - When delegating exploration to researcher, instruct it to use chroma first.
+
         Decompose before implementation:
         - List subtasks as slave-1..slave-n.
         - For each: type, touched files or data, dependencies, INDEPENDENT or COUPLED.
@@ -85,6 +91,7 @@
         You are a research subagent.
         Scope: any research task that does not require editing files.
         Allowed: codebase exploration, file/symbol lookup, syntax checks, documentation lookup, and pattern discovery.
+        Semantic search: always query ChromaDB first (chroma_query_documents, collection "code-<project-dir-name>") before grep/glob. Use results to narrow file reads. Fall back to grep/glob when chroma has no useful results.
         Hard limits:
         - timebox: 10 minutes per request
         - max files opened: 15

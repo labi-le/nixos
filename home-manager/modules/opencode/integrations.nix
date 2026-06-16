@@ -20,19 +20,32 @@ let
 
     const ENV_MARKER = "\nYou are powered by the model named "
 
+    const CHROMA_SEARCH_RULE = [
+      "Code search priority:",
+      "The project's Chroma collection is named code-<root-folder-name>, the basename of the workspace root (e.g. /home/labile/nixos -> code-nixos).",
+      "For codebase search, query that collection with chroma_query_documents before grep or glob.",
+      "If the collection is missing or returns only irrelevant results (high distance), fall back to grep/glob.",
+      "Semantic/exploratory queries (architecture, related modules, 'where is X'): Chroma first.",
+      "Exact pattern matching (specific string, variable, error): grep.",
+      "File discovery by name/extension: glob.",
+    ].join("\n")
+
     export default (async () => ({
       "experimental.chat.system.transform": async (_input, output) => {
         if (!Array.isArray(output.system) || output.system.length === 0) return
-        const header = output.system[0]
-        if (typeof header !== "string" || !header.startsWith(DEFAULT_PREFIX)) return
 
-        const envIndex = header.indexOf(ENV_MARKER)
-        if (envIndex === -1) {
-          output.system[0] = DEFAULT_REPLACEMENT
-          return
+        const header = output.system[0]
+        if (typeof header === "string" && header.startsWith(DEFAULT_PREFIX)) {
+          const envIndex = header.indexOf(ENV_MARKER)
+          output.system[0] =
+            envIndex === -1
+              ? DEFAULT_REPLACEMENT
+              : DEFAULT_REPLACEMENT + header.slice(envIndex)
         }
 
-        output.system[0] = DEFAULT_REPLACEMENT + header.slice(envIndex)
+        if (!output.system.includes(CHROMA_SEARCH_RULE)) {
+          output.system.push(CHROMA_SEARCH_RULE)
+        }
       },
     })) satisfies Plugin
   '';
@@ -65,6 +78,23 @@ in
       context7 = {
         type = "remote";
         url = "https://mcp.context7.com/mcp";
+      };
+      chroma = {
+        type = "local";
+        command = [
+          "uvx"
+          "chroma-mcp"
+          "--client-type"
+          "http"
+          "--host"
+          "192.168.1.2"
+          "--port"
+          "8000"
+          "--ssl"
+          "false"
+        ];
+        timeout = 30000;
+        enabled = true;
       };
       # opendataloader-pdf = {
       #   type = "local";
@@ -102,4 +132,11 @@ in
   xdg.configFile."opencode/plugins/rtk.ts".source = "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
 
   xdg.configFile."opencode/oh-my-opencode-slim.json".source = ./providers/anthropic-orchestrator.json;
+
+  xdg.configFile."opencode/dcp.jsonc".text = builtins.toJSON {
+    "$schema" = "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json";
+    compress = {
+      maxContextLimit = 200000;
+    };
+  };
 }
