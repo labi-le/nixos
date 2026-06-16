@@ -60,6 +60,7 @@ in
 
       environment.interactiveShellInit = ''
         alias n='nvim'
+        alias nd='nix develop'
         alias m='make'
         alias rr='yazi'
         alias y='yazi'

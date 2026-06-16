@@ -41,6 +41,11 @@
     let
       system = "x86_64-linux";
 
+      pkgs = import inputs.nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+
       commonModules = [
         ./settings.nix
         inputs.stylix.nixosModules.stylix
@@ -52,6 +57,7 @@
         inputs.ngate-wrapped.nixosModules.default
         inputs.nur.modules.nixos.default
         inputs.belphegor.nixosModules.default
+        ./modules/shell/registry.nix
       ];
 
       baseConfig = {
@@ -92,6 +98,10 @@
         fx516 = mkSystem "fx516" ./hosts/configuration-fx516.nix true;
         notebook = mkSystem "notebook" ./hosts/configuration-notebook.nix true;
         server = mkSystem "server" ./hosts/configuration-server.nix false;
+      };
+
+      devShells.${system} = import ./modules/shell/devshells.nix {
+        inherit pkgs inputs system;
       };
     };
 }

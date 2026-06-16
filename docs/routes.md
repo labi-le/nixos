@@ -54,6 +54,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Neovim LSP/debug/format/search | `modules/nixvim/lsp.nix`, `modules/nixvim/dap.nix`, `modules/nixvim/conform.nix`, `modules/nixvim/telescope.nix` | Plugin component files |
 | Neovim UI tabs | `modules/nixvim/barbar.nix` | Plugin component file |
 | Stylix theming | `modules/stylix.nix` | |
+| Flake registry `dev` (global dev shell access) | `modules/shell/registry.nix` | Added to `commonModules` in `flake.nix` |
 
 ## Desktop-Only Modules (per-host config)
 
@@ -205,6 +206,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | File | Purpose |
 |---|---|
 | `flake.nix` | Flake inputs, outputs, host wiring |
+| `modules/shell/devshells.nix` | Per-language dev shells (`nix develop dev#<lang>`); imported by `flake.nix` outputs |
 | `overlays.nix` | Custom package overlays |
 | `settings.nix` | Common settings (nix settings, allowed packages) |
 | `Makefile` | Convenience targets: `switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise` |
