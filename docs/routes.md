@@ -46,6 +46,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Remote Nix builders | `modules/builders.nix` | |
 | Sway hotkeys | `modules/hotkeys.nix` | |
 | nix-search-tv | `modules/nix-search-tv.nix` | |
+| nix-ld dynamic loader (FHS shim) | `modules/nix-ld.nix` | Libraries for prebuilt Python wheels / ML runtimes |
 | Neovim (nixvim) entry point | `modules/nixvim/default.nix` | Imports plugin and keymap sub-modules |
 | Neovim plugins | `modules/nixvim/plugins.nix` | Imports/uses plugin component files in `modules/nixvim/` |
 | Neovim keymaps | `modules/nixvim/keymaps.nix` | Imported by `modules/nixvim/default.nix` |
@@ -147,6 +148,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | AmneziaWG compose stack | `modules/awg/compose.nix` |
 | Network (server) | `modules/network/default.nix` |
 | GitLab (disabled) | `modules/gitlab.nix` |
+| ChromaDB vector database service | `modules/chromadb.nix` |
 | Hardware (server) | `hosts/hardware-server.nix` |
 
 ## Home Manager Modules (desktop only, `home-manager/modules/default.nix`)

@@ -1,6 +1,6 @@
 { pkgs, lib, config, ... }:
 {
-  programs.nix-ld.enable = true;
+  # nix-ld is enabled system-wide via modules/nix-ld.nix (imported by base.nix).
   programs.steam = {
     enable = true;
     package =
