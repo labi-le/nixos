@@ -18,13 +18,14 @@
         "variant": "medium",
         "mcps": []
       },
-      "librarian": {
-        "model": "anthropic/claude-haiku-4-5",
-        "mcps": ["websearch", "context7", "grep_app"]
-      },
+       "librarian": {
+         "model": "anthropic/claude-haiku-4-5",
+         "variant": "max",
+         "mcps": ["websearch", "context7", "grep_app"]
+       },
       "explorer": {
         "model": "anthropic/claude-sonnet-4-6",
-        "variant": "max",
+        "variant": "medium",
         "mcps": ["chroma"]
       },
       "designer": {
@@ -33,7 +34,7 @@
         "mcps": []
       },
       "fixer": {
-        "model": "anthropic/claude-sonnet-4-6",
+        "model": "anthropic/claude-opus-4-8",
         "variant": "low",
         "mcps": []
       }
