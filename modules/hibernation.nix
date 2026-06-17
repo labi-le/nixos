@@ -5,12 +5,11 @@
     settings = {
       Login = {
         HandleLidSwitch = lib.mkForce "suspend-then-hibernate";
-        HandleLidSwitchExternalPower = lib.mkForce "suspend";
+        HandleLidSwitchExternalPower = lib.mkForce "ignore";
         HandlePowerKey = "suspend-then-hibernate";
         HandleSuspendKey = "suspend-then-hibernate";
         HandleHibernateKey = "hibernate";
-        IdleAction = "suspend-then-hibernate";
-        IdleActionSec = "15min";
+        IdleAction = "ignore";
       };
     };
   };

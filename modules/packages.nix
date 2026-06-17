@@ -82,6 +82,7 @@ in
         agenix
         age
         tmux
+        screen
 
         pgcli
 
