@@ -27,6 +27,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Systemd services | `modules/systemd.nix` | |
 | Journald logging | `modules/journald.nix` | |
 | ZSH configuration | `modules/shell.nix` | |
+| tmux terminal multiplexer (prefix `Ctrl+a`) | `modules/tmux.nix` | |
 | Display monitors (declarations) | `modules/monitors.nix` | Values set in per-host config |
 | Docker daemon | `modules/docker.nix` | |
 | Polkit rules | `modules/polkit.nix` | |
