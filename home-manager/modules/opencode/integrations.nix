@@ -131,8 +131,9 @@ in
     plugin = [
       "@tarquinen/opencode-dcp@latest"
       "opencode-gemini-auth@latest"
-      "opencode-claude-auth@latest"
-      # "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
+      # "opencode-claude-auth@latest"
+      "@ex-machina/opencode-anthropic-auth@latest"
+      "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
       "oh-my-openagent@latest"
       "superpowers@git+https://github.com/obra/superpowers.git"
     ];
