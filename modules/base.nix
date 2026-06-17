@@ -5,6 +5,7 @@
     ./systemd.nix
     ./journald.nix
     ./shell.nix
+    ./tmux.nix
     ./monitors.nix
     ./docker.nix
     ./polkit.nix

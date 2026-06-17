@@ -5,7 +5,7 @@
     enable = true;
     settings = {
       font = {
-        size = lib.mkForce 17;
+        size = lib.mkForce 15;
       };
     };
   };
