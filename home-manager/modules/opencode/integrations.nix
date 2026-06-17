@@ -205,10 +205,10 @@ in
 
     agents = {
       sisyphus = {
-        model = "anthropic/claude-opus-4-7";
+        model = "anthropic/claude-opus-4-8";
       };
       prometheus = {
-        model = "anthropic/claude-opus-4-7";
+        model = "anthropic/claude-opus-4-8";
       };
       metis = {
         model = "anthropic/claude-sonnet-4-6";
@@ -217,16 +217,16 @@ in
         model = "anthropic/claude-sonnet-4-6";
       };
       multimodal-looker = {
-        model = "openai/gpt-5.5";
+        model = "anthropic/claude-opus-4-8";
       };
       hephaestus = {
-        model = "openai/gpt-5.5";
+        model = "anthropic/claude-opus-4-8";
       };
       oracle = {
-        model = "openai/gpt-5.5";
+        model = "anthropic/claude-opus-4-8";
       };
       momus = {
-        model = "openai/gpt-5.5";
+        model = "anthropic/claude-opus-4-8";
       };
       explore = {
         model = "openai/gpt-5.4-mini-fast";
@@ -241,10 +241,12 @@ in
         model = "anthropic/claude-sonnet-4-6";
       };
       ultrabrain = {
-        model = "openai/gpt-5.5";
+        model = "anthropic/claude-opus-4-8";
+        variant = "max";
       };
       deep = {
-        model = "openai/gpt-5.5-codex";
+        model = "anthropic/claude-opus-4-8";
+        variant = "max";
       };
       quick = {
         model = "openai/gpt-5.4-mini-fast";
