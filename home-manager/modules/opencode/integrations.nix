@@ -205,6 +205,57 @@ in
     background_task = {
       defaultConcurrency = 10;
     };
+
+    agents = {
+      sisyphus = {
+        model = "anthropic/claude-opus-4-7";
+      };
+      prometheus = {
+        model = "anthropic/claude-opus-4-7";
+      };
+      metis = {
+        model = "anthropic/claude-sonnet-4-6";
+      };
+      atlas = {
+        model = "anthropic/claude-sonnet-4-6";
+      };
+      multimodal-looker = {
+        model = "openai/gpt-5.5";
+      };
+      hephaestus = {
+        model = "openai/gpt-5.5";
+      };
+      oracle = {
+        model = "openai/gpt-5.5";
+      };
+      momus = {
+        model = "openai/gpt-5.5";
+      };
+      explore = {
+        model = "openai/gpt-5.4-mini-fast";
+      };
+      librarian = {
+        model = "openai/gpt-5.4-mini-fast";
+      };
+    };
+
+    categories = {
+      visual-engineering = {
+        model = "anthropic/claude-sonnet-4-6";
+      };
+      ultrabrain = {
+        model = "openai/gpt-5.5";
+      };
+      deep = {
+        model = "openai/gpt-5.5-codex";
+      };
+      quick = {
+        model = "openai/gpt-5.4-mini-fast";
+      };
+      writing = {
+        model = "anthropic/claude-sonnet-4-6";
+      };
+    };
   };
 
   xdg.configFile."opencode/dcp.jsonc".text = builtins.toJSON {
