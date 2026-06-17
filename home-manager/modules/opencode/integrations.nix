@@ -131,7 +131,6 @@ in
     plugin = [
       "@tarquinen/opencode-dcp@latest"
       "opencode-gemini-auth@latest"
-      # "opencode-claude-auth@latest"
       "@ex-machina/opencode-anthropic-auth@latest"
       "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
       "oh-my-openagent@latest"
@@ -193,8 +192,6 @@ in
 
   xdg.configFile."opencode/plugins/chroma-gate.ts".source = chromaGate;
   xdg.configFile."opencode/plugins/rtk.ts".source = "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
-
-  xdg.configFile."opencode/oh-my-opencode-slim.json".source = ./providers/anthropic-orchestrator.json;
 
   xdg.configFile."opencode/oh-my-openagent.jsonc".text = builtins.toJSON {
     team_mode = {
