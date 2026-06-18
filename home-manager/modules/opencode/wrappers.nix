@@ -21,6 +21,7 @@ in
 
   opencodeWrapped = pkgs.writeShellScriptBin "opencode" ''
     export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
+    export OPENCODE_DISABLE_LSP_DOWNLOAD=true
     ${lib.optionalString (osConfig.age.secrets ? opencode-litellm-master-key) ''
             . "${osConfig.age.secrets.opencode-litellm-master-key.path}"
       ${exportProviderEnv}
