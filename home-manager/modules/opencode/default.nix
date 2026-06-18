@@ -33,6 +33,7 @@ in
     ./packages.nix
     # ./agents.nix
     ./integrations.nix
+    ./lsp
   ];
 
   programs.opencode = {

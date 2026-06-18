@@ -178,6 +178,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
 | OpenCode agents | `home-manager/modules/opencode/agents.nix` |
 | OpenCode integrations | `home-manager/modules/opencode/integrations.nix` |
+| OpenCode LSP servers (per-language) | `home-manager/modules/opencode/lsp/default.nix` imports `go.nix`, `php.nix`, `nix.nix` |
 | OpenCode wrapper scripts (splices the `index-repo` opencode hook: registers `$PWD` with the shared indexer service on launch, unregisters on exit) | `home-manager/modules/opencode/wrappers.nix` |
 | Code indexer (`index-repo`) — Rust crate + Nix modules; lives in its own repo `git+ssh://git@github.com/labi-le/index-repo` | external flake input (`flake.nix`); see "Code indexer wiring" below |
 
