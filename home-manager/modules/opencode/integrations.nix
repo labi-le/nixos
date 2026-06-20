@@ -189,8 +189,8 @@ in
       pkgs.fetchFromGitHub {
         owner = "JuliusBrussee";
         repo = "caveman";
-        rev = "655b7d9c5431f822264b7732e9901c5578ac84cf";
-        hash = "sha256-BydREt/vai3j7kO5+e1OxsjXf6Vy+jSY1yA/yyxjHbI=";
+        rev = "25d22f864ad68cc447a4cb93aefde918aa4aec9f";
+        hash = "sha256-FbmfhFaPs/SnSZdfNdErdIUHXt1FfBzErpPpLy8kdIc=";
       }
     }/skills/caveman";
   };

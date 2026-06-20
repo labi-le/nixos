@@ -15,8 +15,8 @@ in
   rtkSource = pkgs.fetchFromGitHub {
     owner = "rtk-ai";
     repo = "rtk";
-    tag = "v0.40.0";
-    hash = "sha256-xWHIOZRpSyyOPQe/db9dxoODcnheBlpXrnKET010vVg=";
+    tag = "v0.42.4";
+    hash = "sha256-8nLJ5PVefXmoXQyw6HERfCP06C+l4I+7XLwKFNVNpew=";
   };
 
   opencodeWrapped = pkgs.writeShellScriptBin "opencode" ''
