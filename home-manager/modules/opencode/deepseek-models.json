@@ -1,0 +1,63 @@
+{
+  "agents": {
+    "Sisyphus - ultraworker": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "Hephaestus - Deep Agent": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "oracle": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "Metis - Plan Consultant": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "Momus - Plan Critic": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "Atlas - Plan Executor": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "Sisyphus-Junior": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "multimodal-looker": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "Prometheus - Plan Builder": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "explore": {
+      "model": "aigate/deepseek/deepseek-v4-flash"
+    },
+    "librarian": {
+      "model": "aigate/deepseek/deepseek-v4-flash"
+    }
+  },
+  "categories": {
+    "artistry": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "deep": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "quick": {
+      "model": "aigate/deepseek/deepseek-v4-flash"
+    },
+    "ultrabrain": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "unspecified-high": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "unspecified-low": {
+      "model": "aigate/deepseek/deepseek-v4-flash"
+    },
+    "visual-engineering": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    },
+    "writing": {
+      "model": "aigate/deepseek/deepseek-v4-pro"
+    }
+  }
+}

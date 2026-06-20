@@ -1,0 +1,56 @@
+{
+  "agents": {
+    "Sisyphus - ultraworker": {
+      "model": "opencode/claude-opus-4-8"
+    },
+    "Hephaestus - Deep Agent": {
+      "model": "opencode/claude-opus-4-8"
+    },
+    "oracle": {
+      "model": "opencode/claude-opus-4-8"
+    },
+    "Metis - Plan Consultant": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "Momus - Plan Critic": {
+      "model": "opencode/claude-opus-4-7"
+    },
+    "Atlas - Plan Executor": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "Sisyphus-Junior": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "multimodal-looker": {
+      "model": "opencode/claude-opus-4-7"
+    },
+    "Prometheus - Plan Builder": {
+      "model": "opencode/claude-sonnet-4-6"
+    }
+  },
+  "categories": {
+    "visual-engineering": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "ultrabrain": {
+      "model": "opencode/claude-opus-4-8",
+      "variant": "max"
+    },
+    "deep": {
+      "model": "opencode/claude-opus-4-8",
+      "variant": "max"
+    },
+    "artistry": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "unspecified-low": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "unspecified-high": {
+      "model": "opencode/claude-opus-4-7"
+    },
+    "writing": {
+      "model": "opencode/claude-sonnet-4-6"
+    }
+  }
+}
