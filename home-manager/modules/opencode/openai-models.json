@@ -1,0 +1,63 @@
+{
+  "agents": {
+    "Sisyphus - ultraworker": {
+      "model": "openai/gpt-5.4"
+    },
+    "Hephaestus - Deep Agent": {
+      "model": "openai/gpt-5.4"
+    },
+    "oracle": {
+      "model": "openai/gpt-5.4"
+    },
+    "Metis - Plan Consultant": {
+      "model": "openai/gpt-5.4"
+    },
+    "Momus - Plan Critic": {
+      "model": "openai/gpt-5.4"
+    },
+    "Atlas - Plan Executor": {
+      "model": "openai/gpt-5.4"
+    },
+    "Sisyphus-Junior": {
+      "model": "openai/gpt-5.4"
+    },
+    "multimodal-looker": {
+      "model": "openai/gpt-5.4"
+    },
+    "Prometheus - Plan Builder": {
+      "model": "openai/gpt-5.4"
+    },
+    "explore": {
+      "model": "openai/gpt-5.4-mini-fast"
+    },
+    "librarian": {
+      "model": "openai/gpt-5.4"
+    }
+  },
+  "categories": {
+    "artistry": {
+      "model": "openai/gpt-5.4"
+    },
+    "deep": {
+      "model": "openai/gpt-5.4"
+    },
+    "quick": {
+      "model": "openai/gpt-5.4-mini-fast"
+    },
+    "ultrabrain": {
+      "model": "openai/gpt-5.4"
+    },
+    "unspecified-high": {
+      "model": "openai/gpt-5.4"
+    },
+    "unspecified-low": {
+      "model": "openai/gpt-5.4-mini-fast"
+    },
+    "visual-engineering": {
+      "model": "openai/gpt-5.4"
+    },
+    "writing": {
+      "model": "openai/gpt-5.4"
+    }
+  }
+}

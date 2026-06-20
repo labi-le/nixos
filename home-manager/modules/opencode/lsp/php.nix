@@ -5,6 +5,8 @@
 # We prefer it over opencode's built-in `intelephense` (unfree) and disable the
 # built-in to avoid two language servers racing on `.php`.
 {
+  home.packages = [ pkgs.phpactor ];
+
   programs.opencode.settings.lsp = {
     "php intelephense".disabled = true;
     phpactor = {

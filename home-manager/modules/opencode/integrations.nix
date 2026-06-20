@@ -13,6 +13,11 @@ let
       osConfig
       ;
   };
+  activeModels = builtins.fromJSON (builtins.readFile ./deepseek-models.json);
+  agentModels = {
+    agents = activeModels.agents;
+    categories = activeModels.categories;
+  };
   chromaGate = pkgs.writeText "chroma-gate.ts" ''
     import type { Plugin } from "@opencode-ai/plugin"
 
@@ -193,67 +198,20 @@ in
   xdg.configFile."opencode/plugins/chroma-gate.ts".source = chromaGate;
   xdg.configFile."opencode/plugins/rtk.ts".source = "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
 
-  xdg.configFile."opencode/oh-my-openagent.jsonc".text = builtins.toJSON {
-    team_mode = {
-      enabled = true;
-      max_parallel_members = 8;
-      tmux_visualization = true;
-    };
-    background_task = {
-      defaultConcurrency = 10;
-    };
+  xdg.configFile."opencode/oh-my-openagent.jsonc" = {
+    force = true;
+    text = builtins.toJSON {
+      team_mode = {
+        enabled = true;
+        max_parallel_members = 8;
+        tmux_visualization = true;
+      };
+      background_task = {
+        defaultConcurrency = 10;
+      };
 
-    agents = {
-      sisyphus = {
-        model = "anthropic/claude-opus-4-8";
-      };
-      prometheus = {
-        model = "anthropic/claude-opus-4-8";
-      };
-      metis = {
-        model = "anthropic/claude-sonnet-4-6";
-      };
-      atlas = {
-        model = "anthropic/claude-sonnet-4-6";
-      };
-      multimodal-looker = {
-        model = "anthropic/claude-opus-4-8";
-      };
-      hephaestus = {
-        model = "anthropic/claude-opus-4-8";
-      };
-      oracle = {
-        model = "anthropic/claude-opus-4-8";
-      };
-      momus = {
-        model = "anthropic/claude-opus-4-8";
-      };
-      explore = {
-        model = "openai/gpt-5.4-mini-fast";
-      };
-      librarian = {
-        model = "openai/gpt-5.4-mini-fast";
-      };
-    };
-
-    categories = {
-      visual-engineering = {
-        model = "anthropic/claude-sonnet-4-6";
-      };
-      ultrabrain = {
-        model = "anthropic/claude-opus-4-8";
-        variant = "max";
-      };
-      deep = {
-        model = "anthropic/claude-opus-4-8";
-        variant = "max";
-      };
-      quick = {
-        model = "openai/gpt-5.4-mini-fast";
-      };
-      writing = {
-        model = "anthropic/claude-sonnet-4-6";
-      };
+      agents = agentModels.agents;
+      categories = agentModels.categories;
     };
   };
 
@@ -261,7 +219,7 @@ in
     "$schema" =
       "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json";
     compress = {
-      maxContextLimit = 300000;
+      maxContextLimit = 200000;
     };
   };
 }
