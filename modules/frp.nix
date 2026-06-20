@@ -1,10 +1,12 @@
-{ config
-, ...
+{
+  config,
+  ...
 }:
 
 let
-  frpPort = 38392;
-  awgBYPort = 27748;
+  listenPort = 38392;
+  awgBY = 27748;
+  danyaVNC = 16666;
 in
 {
   age.secrets.frp = {
@@ -18,7 +20,7 @@ in
     environmentFiles = [ config.age.secrets.frp.path ];
     settings = {
       bindAddr = "0.0.0.0";
-      bindPort = frpPort;
+      bindPort = listenPort;
       auth = {
         method = "token";
         token = "{{ .Envs.FRP_TOKEN }}";
@@ -26,9 +28,12 @@ in
     };
   };
 
-  networking.firewall.allowedTCPPorts = [ frpPort ];
+  networking.firewall.allowedTCPPorts = [
+    listenPort
+    danyaVNC
+  ];
   networking.firewall.allowedUDPPorts = [
-    frpPort
-    awgBYPort
+    listenPort
+    awgBY
   ];
 }
