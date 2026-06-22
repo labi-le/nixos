@@ -138,7 +138,7 @@ in
       "opencode-gemini-auth@latest"
       "@ex-machina/opencode-anthropic-auth@latest"
       "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
-      "oh-my-openagent@4.12.1"
+      "oh-my-openagent@latest"
       "superpowers@git+https://github.com/obra/superpowers.git"
     ];
     mcp = {
