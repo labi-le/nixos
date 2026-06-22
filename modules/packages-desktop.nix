@@ -3,7 +3,6 @@
 with pkgs;
 [
   obsidian
-  vesktop
   libreoffice
   glib
   gsettings-desktop-schemas
@@ -31,4 +30,6 @@ with pkgs;
   ayugram-desktop
   vlc
   quickemu
+
+  discord-canary
 ]
