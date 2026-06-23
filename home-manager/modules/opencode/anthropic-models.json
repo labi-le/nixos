@@ -1,7 +1,8 @@
 {
   "agents": {
     "Sisyphus - ultraworker": {
-      "model": "opencode/claude-opus-4-8"
+      "model": "opencode/claude-opus-4-8",
+      "variant": "max"
     },
     "Hephaestus - Deep Agent": {
       "model": "opencode/claude-opus-4-8"
@@ -10,22 +11,24 @@
       "model": "opencode/claude-opus-4-8"
     },
     "Metis - Plan Consultant": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "opencode/claude-sonnet-4-8"
     },
     "Momus - Plan Critic": {
-      "model": "opencode/claude-opus-4-7"
+      "model": "opencode/claude-opus-4-8",
+      "variant": "max"
     },
     "Atlas - Plan Executor": {
       "model": "opencode/claude-sonnet-4-6"
     },
     "Sisyphus-Junior": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "opencode/claude-sonnet-4-7",
+      "variant": "max"
     },
     "multimodal-looker": {
       "model": "opencode/claude-opus-4-7"
     },
     "Prometheus - Plan Builder": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "opencode/claude-sonnet-4-8"
     }
   },
   "categories": {

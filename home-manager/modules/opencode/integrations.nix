@@ -13,7 +13,7 @@ let
       osConfig
       ;
   };
-  activeModels = builtins.fromJSON (builtins.readFile ./deepseek-models.json);
+  activeModels = builtins.fromJSON (builtins.readFile ./anthropic-models.json);
   agentModels = {
     agents = activeModels.agents;
     categories = activeModels.categories;
