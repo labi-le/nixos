@@ -5,7 +5,7 @@
     enable = true;
     settings = {
       font = {
-        size = lib.mkForce 15;
+        size = lib.mkForce 14;
       };
       # Make Shift+Enter emit the kitty keyboard-protocol sequence (CSI-u:
       # ESC[13;2u) for Return+Shift, so TUI apps (e.g. opencode) receive a
