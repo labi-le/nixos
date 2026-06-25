@@ -138,6 +138,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Drive mounts | `modules/drive.nix` |
 | Kernel (CachyOS) | `modules/kernel-cachyos.nix` |
 | Grafana | `modules/grafana.nix` |
+| Prometheus, Loki, Alloy (nginx/angie log shipping to Loki) | `modules/grafana.nix` |
 | FRP (Fast Reverse Proxy) | `modules/frp.nix` |
 | Syncthing (server) | `modules/syncthing/server.nix` |
 | Syncthing common module | `modules/syncthing/default.nix` |

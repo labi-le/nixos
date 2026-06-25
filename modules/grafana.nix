@@ -147,4 +147,36 @@
       };
     };
   };
+
+  # Ship angie/nginx file logs into Loki so they are viewable/greppable in Grafana.
+  # angie writes /var/log/nginx/{access,error}.log (see modules/nginx.nix); Loki has
+  # no built-in scraper, so Grafana Alloy tails those files and pushes to Loki :3100.
+  # (services.promtail was removed in NixOS 26.05 — Alloy is the supported replacement.)
+  services.alloy.enable = true;
+
+  environment.etc."alloy/nginx.alloy".text = ''
+    local.file_match "nginx" {
+      path_targets = [
+        { __path__ = "/var/log/nginx/access.log", job = "nginx", logtype = "access" },
+        { __path__ = "/var/log/nginx/error.log",  job = "nginx", logtype = "error"  },
+      ]
+    }
+
+    loki.source.file "nginx" {
+      targets       = local.file_match.nginx.targets
+      forward_to    = [loki.write.local.receiver]
+      tail_from_end = true
+    }
+
+    loki.write "local" {
+      endpoint {
+        url = "http://127.0.0.1:3100/loki/api/v1/push"
+      }
+    }
+  '';
+
+  # Alloy runs as a systemd DynamicUser. The nginx log dir is 0750 nginx:nginx and the
+  # files are 0640 nginx:nginx, so Alloy must join the nginx group or it silently reads
+  # nothing (no error, zero log lines). nginx uses its default group "nginx" here.
+  systemd.services.alloy.serviceConfig.SupplementaryGroups = [ "nginx" ];
 }
