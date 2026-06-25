@@ -13,6 +13,11 @@ let
       osConfig
       ;
   };
+  # anthropic-models.json provides the `agents` + `categories` sections of the
+  # oh-my-openagent plugin config (merged into oh-my-openagent.jsonc below).
+  # Config JSON Schema (full config: agents, categories, git_master, ...):
+  #   https://unpkg.com/oh-my-openagent@latest/dist/oh-my-opencode.schema.json
+  #   canonical $id: https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json
   activeModels = builtins.fromJSON (builtins.readFile ./anthropic-models.json);
   agentModels = {
     agents = activeModels.agents;
@@ -201,6 +206,7 @@ in
   xdg.configFile."opencode/oh-my-openagent.jsonc" = {
     force = true;
     text = builtins.toJSON {
+      "$schema" = "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
       team_mode = {
         enabled = true;
         max_parallel_members = 8;
@@ -208,6 +214,10 @@ in
       };
       background_task = {
         defaultConcurrency = 10;
+      };
+
+      git_master = {
+        include_co_authored_by = false;
       };
 
       agents = agentModels.agents;

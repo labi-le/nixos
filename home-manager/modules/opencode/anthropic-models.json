@@ -21,7 +21,7 @@
       "model": "opencode/claude-sonnet-4-6"
     },
     "Sisyphus-Junior": {
-      "model": "opencode/claude-sonnet-4-7",
+      "model": "opencode/claude-opus-4-8",
       "variant": "max"
     },
     "multimodal-looker": {
@@ -29,6 +29,12 @@
     },
     "Prometheus - Plan Builder": {
       "model": "opencode/claude-sonnet-4-8"
+    },
+    "explore": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "librarian": {
+      "model": "opencode/claude-sonnet-4-6"
     }
   },
   "categories": {
@@ -53,6 +59,9 @@
       "model": "opencode/claude-opus-4-7"
     },
     "writing": {
+      "model": "opencode/claude-sonnet-4-6"
+    },
+    "quick": {
       "model": "opencode/claude-sonnet-4-6"
     }
   }
