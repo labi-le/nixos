@@ -142,7 +142,7 @@ in
       "@tarquinen/opencode-dcp@latest"
       "opencode-gemini-auth@latest"
       "@ex-machina/opencode-anthropic-auth@latest"
-      "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
+      # "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
       "oh-my-openagent@latest"
       "superpowers@git+https://github.com/obra/superpowers.git"
     ];
@@ -206,7 +206,8 @@ in
   xdg.configFile."opencode/oh-my-openagent.jsonc" = {
     force = true;
     text = builtins.toJSON {
-      "$schema" = "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
+      "$schema" =
+        "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
       team_mode = {
         enabled = true;
         max_parallel_members = 8;
