@@ -4,6 +4,7 @@
   programs.tmux = {
     enable = true;
     shortcut = "a";
+    baseIndex = 1; # start window & pane numbering at 1 (0 is awkward to reach)
     escapeTime = 10; # NixOS default is 500ms, which makes Esc/double-Esc sluggish
     extraConfig = ''
       # close current window with prefix + x

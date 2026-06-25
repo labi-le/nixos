@@ -1,68 +1,75 @@
 {
   "agents": {
     "Sisyphus - ultraworker": {
-      "model": "opencode/claude-opus-4-8",
+      "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
-    "Hephaestus - Deep Agent": {
-      "model": "opencode/claude-opus-4-8"
+    "hephaestus": {
+      "model": "anthropic/claude-opus-4-8",
+      "allow_non_gpt_model": true,
+      "variant": "max"
     },
     "oracle": {
-      "model": "opencode/claude-opus-4-8"
+      "model": "anthropic/claude-opus-4-8",
+      "variant": "max"
     },
     "Metis - Plan Consultant": {
-      "model": "opencode/claude-sonnet-4-8"
+      "model": "anthropic/claude-opus-4-8",
+      "variant": "max"
     },
     "Momus - Plan Critic": {
-      "model": "opencode/claude-opus-4-8",
+      "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
     "Atlas - Plan Executor": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-sonnet-4-6"
     },
     "Sisyphus-Junior": {
-      "model": "opencode/claude-opus-4-8",
+      "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
     "multimodal-looker": {
-      "model": "opencode/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-7"
     },
     "Prometheus - Plan Builder": {
-      "model": "opencode/claude-sonnet-4-8"
+      "model": "anthropic/claude-opus-4-8",
+      "variant": "max"
     },
     "explore": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-sonnet-4-6"
     },
     "librarian": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-sonnet-4-6"
     }
   },
   "categories": {
     "visual-engineering": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-sonnet-4-6"
     },
     "ultrabrain": {
-      "model": "opencode/claude-opus-4-8",
+      "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
     "deep": {
-      "model": "opencode/claude-opus-4-8",
+      "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
     "artistry": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-8"
     },
     "unspecified-low": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-sonnet-4-6"
     },
     "unspecified-high": {
-      "model": "opencode/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8",
+      "variant": "max"
     },
     "writing": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-8",
+      "variant": "low"
     },
     "quick": {
-      "model": "opencode/claude-sonnet-4-6"
+      "model": "anthropic/claude-sonnet-4-6"
     }
   }
 }
