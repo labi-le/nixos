@@ -13,10 +13,15 @@ script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
 target="$script_dir/../home-manager/modules/opencode/integrations.nix"
 
 # name | owner | repo   (owner is the unique anchor inside integrations.nix)
+# customize-opencode is intentionally absent: it has no upstream repo (its body
+# is extracted from the opencode binary into skills/customize-opencode/SKILL.md).
 skills=(
   "desloppify|peteromallet|desloppify"
   "plantuml-rendering|asolfre|plantuml-rendering-skill"
   "caveman|JuliusBrussee|caveman"
+  "superpowers|obra|superpowers"
+  "agent-skills|labi-le|agent-skills"
+  "oh-my-openagent|code-yeongyu|oh-my-openagent"
 )
 
 prefetch() {
