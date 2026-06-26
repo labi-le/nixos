@@ -23,6 +23,50 @@ let
     agents = activeModels.agents;
     categories = activeModels.categories;
   };
+
+  # Vendored skill collections. oh-my-openagent's `skill` tool only discovers
+  # folder-skills under its scan dirs (here: ~/.config/opencode/skills via
+  # programs.opencode.skills) plus its own hardcoded builtins -- it never sees
+  # opencode core's embedded skills nor other plugins' skills. So to invoke the
+  # superpowers + agent-skills plugin skills (and core's customize-opencode)
+  # through that tool, we materialize each upstream skill as a folder-skill.
+  superpowersSrc = pkgs.fetchFromGitHub {
+    owner = "obra";
+    repo = "superpowers";
+    rev = "896224c4b1879920ab573417e68fd51d2ccc9072";
+    hash = "sha256-+lT2a/qq0SF4k0PgnEDKiuidVlZX2p0vEso4d/5T1os=";
+  };
+  agentSkillsSrc = pkgs.fetchFromGitHub {
+    owner = "labi-le";
+    repo = "agent-skills";
+    rev = "57c9f2cf09ba23fe7962e73f0026dc545c4c6bc3";
+    hash = "sha256-DUqUjWDqJk828se7ChbsZaflXfbvRNyQM+zU2psoDYU=";
+  };
+  ohMyOpenAgentSrc = pkgs.fetchFromGitHub {
+    owner = "code-yeongyu";
+    repo = "oh-my-openagent";
+    rev = "f31c735a5c5318226510e5755dcb5425ddc94352";
+    hash = "sha256-9OQ+/uU7K4uCzhj9CeGp5kqT3iKyPScrFpHNKVUwFqA=";
+  };
+  # { <name> = "<dir>/<name>"; } for every <name>/SKILL.md under `dir`. readDir
+  # (IFD) auto-tracks the upstream skill set, so an update-skills.sh rev bump
+  # that adds/removes a skill needs no edit here.
+  skillsFromDir =
+    dir:
+    lib.mapAttrs (name: _: "${dir}/${name}") (
+      lib.filterAttrs (name: type: type == "directory" && builtins.pathExists "${dir}/${name}/SKILL.md") (
+        builtins.readDir dir
+      )
+    );
+  vendoredPluginSkills =
+    skillsFromDir "${superpowersSrc}/skills"
+    // skillsFromDir "${agentSkillsSrc}/skills"
+    // skillsFromDir "${ohMyOpenAgentSrc}/packages/skills-loader-core/src/features/builtin-skills"
+    // skillsFromDir "${ohMyOpenAgentSrc}/packages/shared-skills/skills"
+    // skillsFromDir "${ohMyOpenAgentSrc}/packages/omo-codex/plugin/skills"
+    // skillsFromDir "${ohMyOpenAgentSrc}/packages/omo-codex/plugin/components/ulw-loop/skills"
+    // skillsFromDir "${ohMyOpenAgentSrc}/.agents/skills"
+    // skillsFromDir "${ohMyOpenAgentSrc}/.opencode/skills";
 in
 
 {
@@ -71,7 +115,12 @@ in
     };
   };
 
-  programs.opencode.skills = {
+  programs.opencode.skills = vendoredPluginSkills // {
+    # opencode core's only built-in skill, embedded in the binary (no upstream
+    # repo). Refresh after an opencode upgrade with:
+    #   scripts/extract-customize-opencode-skill.py
+    customize-opencode = "${./skills/customize-opencode}";
+
     desloppify = "${
       pkgs.fetchFromGitHub {
         owner = "peteromallet";

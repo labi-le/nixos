@@ -1,6 +1,6 @@
 {
   "agents": {
-    "Sisyphus - ultraworker": {
+    "sisyphus": {
       "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
@@ -13,25 +13,25 @@
       "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
-    "Metis - Plan Consultant": {
+    "metis": {
       "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
-    "Momus - Plan Critic": {
+    "momus": {
       "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
-    "Atlas - Plan Executor": {
+    "atlas": {
       "model": "anthropic/claude-sonnet-4-6"
     },
-    "Sisyphus-Junior": {
+    "sisyphus-junior": {
       "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
     "multimodal-looker": {
       "model": "anthropic/claude-opus-4-7"
     },
-    "Prometheus - Plan Builder": {
+    "prometheus": {
       "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
