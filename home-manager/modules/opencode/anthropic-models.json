@@ -22,7 +22,7 @@
       "variant": "max"
     },
     "atlas": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-7"
     },
     "sisyphus-junior": {
       "model": "anthropic/claude-opus-4-8",
@@ -36,15 +36,15 @@
       "variant": "max"
     },
     "explore": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-7"
     },
     "librarian": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-7"
     }
   },
   "categories": {
     "visual-engineering": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-7"
     },
     "ultrabrain": {
       "model": "anthropic/claude-opus-4-8",
@@ -58,7 +58,7 @@
       "model": "anthropic/claude-opus-4-8"
     },
     "unspecified-low": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-7"
     },
     "unspecified-high": {
       "model": "anthropic/claude-opus-4-8",
@@ -69,7 +69,7 @@
       "variant": "low"
     },
     "quick": {
-      "model": "anthropic/claude-sonnet-4-6"
+      "model": "anthropic/claude-opus-4-7"
     }
   }
 }
