@@ -45,8 +45,8 @@ let
   ohMyOpenAgentSrc = pkgs.fetchFromGitHub {
     owner = "code-yeongyu";
     repo = "oh-my-openagent";
-    rev = "f31c735a5c5318226510e5755dcb5425ddc94352";
-    hash = "sha256-9OQ+/uU7K4uCzhj9CeGp5kqT3iKyPScrFpHNKVUwFqA=";
+    rev = "ad4d2dfcc9049d764fb0ee737ca2f4558e0719a6";
+    hash = "sha256-8gdNOgdnCvatfk1DsPQjNla1n64sy16w7s8l6DILsoU=";
   };
   # { <name> = "<dir>/<name>"; } for every <name>/SKILL.md under `dir`. readDir
   # (IFD) auto-tracks the upstream skill set, so an update-skills.sh rev bump
