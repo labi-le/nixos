@@ -14,6 +14,10 @@ let
     (import ./providers/aerolink.nix)
   ];
   indexerPkg = pkgs.index-repo;
+  variantConfigDirs = {
+    claude = "opencode-claude";
+    gpt = "opencode-gpt";
+  };
 
   wrappers = import ./wrappers.nix {
     inherit
@@ -21,6 +25,7 @@ let
       lib
       osConfig
       providerDefs
+      variantConfigDirs
       ;
     indexHook = config.services.index-repo.opencode.hook;
   };
@@ -28,6 +33,8 @@ in
 
 {
   _module.args.indexerPkg = indexerPkg;
+  _module.args.opencodeWrappers = wrappers;
+  _module.args.opencodeVariantConfigDirs = variantConfigDirs;
 
   imports = [
     ./packages.nix
