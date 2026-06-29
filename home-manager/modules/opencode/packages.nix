@@ -1,5 +1,6 @@
 { pkgs
 , indexerPkg
+, opencodeWrappers
 , ...
 }:
 
@@ -28,6 +29,7 @@
     })
     indexerPkg
     pkgs.nodejs
+    opencodeWrappers.opencodeGpt
     pkgs.uv
   ];
 }

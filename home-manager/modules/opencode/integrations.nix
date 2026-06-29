@@ -2,6 +2,7 @@
   pkgs,
   lib,
   osConfig,
+  opencodeVariantConfigDirs,
   ...
 }:
 
@@ -13,15 +14,45 @@ let
       osConfig
       ;
   };
-  # anthropic-models.json provides the `agents` + `categories` sections of the
-  # oh-my-openagent plugin config (merged into oh-my-openagent.jsonc below).
   # Config JSON Schema (full config: agents, categories, git_master, ...):
   #   https://unpkg.com/oh-my-openagent@latest/dist/oh-my-opencode.schema.json
   #   canonical $id: https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json
-  activeModels = builtins.fromJSON (builtins.readFile ./anthropic-models.json);
-  agentModels = {
-    agents = activeModels.agents;
-    categories = activeModels.categories;
+  mkAgentModels =
+    modelsFile:
+    let
+      activeModels = builtins.fromJSON (builtins.readFile modelsFile);
+    in
+    {
+      agents = activeModels.agents;
+      categories = activeModels.categories;
+    };
+  claudeAgentModels = mkAgentModels ./anthropic-models.json;
+  gptAgentModels = mkAgentModels ./openai-models.json;
+  mkOhMyOpenAgentConfig = agentModels: {
+    "$schema" =
+      "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
+    team_mode = {
+      enabled = true;
+      max_parallel_members = 8;
+      tmux_visualization = true;
+    };
+    background_task = {
+      defaultConcurrency = 10;
+    };
+
+    git_master = {
+      include_co_authored_by = false;
+    };
+
+    agents = agentModels.agents;
+    categories = agentModels.categories;
+  };
+  dcpConfig = {
+    "$schema" =
+      "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json";
+    compress = {
+      maxContextLimit = 200000;
+    };
   };
 
   # Vendored skill collections. oh-my-openagent's `skill` tool only discovers
@@ -146,35 +177,28 @@ in
   };
 
   xdg.configFile."opencode/plugins/rtk.ts".source = "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
+  xdg.configFile."${opencodeVariantConfigDirs.claude}/plugins/rtk.ts".source =
+    "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
+  xdg.configFile."${opencodeVariantConfigDirs.gpt}/plugins/rtk.ts".source =
+    "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
 
   xdg.configFile."opencode/oh-my-openagent.jsonc" = {
     force = true;
-    text = builtins.toJSON {
-      "$schema" =
-        "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
-      team_mode = {
-        enabled = true;
-        max_parallel_members = 8;
-        tmux_visualization = true;
-      };
-      background_task = {
-        defaultConcurrency = 10;
-      };
-
-      git_master = {
-        include_co_authored_by = false;
-      };
-
-      agents = agentModels.agents;
-      categories = agentModels.categories;
-    };
+    text = builtins.toJSON (mkOhMyOpenAgentConfig claudeAgentModels);
   };
 
-  xdg.configFile."opencode/dcp.jsonc".text = builtins.toJSON {
-    "$schema" =
-      "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json";
-    compress = {
-      maxContextLimit = 200000;
-    };
+  xdg.configFile."${opencodeVariantConfigDirs.claude}/oh-my-openagent.jsonc" = {
+    force = true;
+    text = builtins.toJSON (mkOhMyOpenAgentConfig claudeAgentModels);
   };
+
+  xdg.configFile."${opencodeVariantConfigDirs.gpt}/oh-my-openagent.jsonc" = {
+    force = true;
+    text = builtins.toJSON (mkOhMyOpenAgentConfig gptAgentModels);
+  };
+
+  xdg.configFile."opencode/dcp.jsonc".text = builtins.toJSON dcpConfig;
+  xdg.configFile."${opencodeVariantConfigDirs.claude}/dcp.jsonc".text = builtins.toJSON dcpConfig;
+  xdg.configFile."${opencodeVariantConfigDirs.gpt}/dcp.jsonc".text = builtins.toJSON dcpConfig;
+
 }
