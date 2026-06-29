@@ -7,6 +7,9 @@
     baseIndex = 1; # start window & pane numbering at 1 (0 is awkward to reach)
     escapeTime = 10; # NixOS default is 500ms, which makes Esc/double-Esc sluggish
     extraConfig = ''
+      # enable mouse support: scroll, click to select pane/window, drag to resize
+      set -g mouse on
+
       # close current window with prefix + x
       bind x kill-window
 
