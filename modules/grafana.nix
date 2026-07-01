@@ -23,24 +23,39 @@
     };
     provision = {
       enable = true;
-      datasources.settings.datasources = [
-        {
-          name = "Prometheus";
-          type = "prometheus";
-          access = "proxy";
-          url = "http://127.0.0.1:${toString config.services.prometheus.port}";
-        }
-        {
-          name = "Loki";
-          # Stable uid so provisioned alert rules can target this datasource by
-          # uid (see modules/monitoring/grafana.nix). Without it Grafana assigns
-          # a random uid the rules cannot reference.
-          uid = "loki";
-          type = "loki";
-          access = "proxy";
-          url = "http://127.0.0.1:3100";
-        }
-      ];
+      datasources.settings = {
+        # Grafana 13's datasource provisioner cannot CHANGE the uid of an
+        # already-provisioned datasource. Once Loki has been provisioned with
+        # its original random uid, adding the fixed `uid = "loki"` below makes
+        # provisioning abort with `Datasource provisioning error: data source
+        # not found`, crashing grafana on every boot (start-limit-hit). Deleting
+        # Loki first lets it be recreated with the stable uid; this is idempotent
+        # (delete is a no-op when absent) and self-heals any future uid change.
+        deleteDatasources = [
+          {
+            name = "Loki";
+            orgId = 1;
+          }
+        ];
+        datasources = [
+          {
+            name = "Prometheus";
+            type = "prometheus";
+            access = "proxy";
+            url = "http://127.0.0.1:${toString config.services.prometheus.port}";
+          }
+          {
+            name = "Loki";
+            # Stable uid so provisioned alert rules can target this datasource by
+            # uid (see modules/monitoring/tidal-syncer.nix). Without it Grafana
+            # assigns a random uid the rules cannot reference.
+            uid = "loki";
+            type = "loki";
+            access = "proxy";
+            url = "http://127.0.0.1:3100";
+          }
+        ];
+      };
     };
   };
 
