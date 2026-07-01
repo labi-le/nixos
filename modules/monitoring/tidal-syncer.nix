@@ -7,8 +7,10 @@
 # with a green healthcheck — so a log alert is the only reliable signal.
 #
 # Nothing to collect here: Alloy (see ../grafana.nix) already tails every docker
-# container's stdout into Loki with container="tidal-syncer". Routes to the
-# shared "telegram" contact point (./contact-points.nix).
+# container's stdout into Loki labelled container=<docker name>. The daemon runs
+# under docker-compose, so its real label is "tidal-syncer-tidal-syncer-1"
+# (<project>-<service>-<idx>) — hence the container=~"tidal-syncer.*" match below.
+# Routes to the shared "telegram" contact point (./contact-points.nix).
 {
   services.grafana.provision.alerting.rules.settings = {
     apiVersion = 1;
@@ -43,7 +45,7 @@
                     uid = "loki";
                   };
                   editorMode = "code";
-                  expr = ''count_over_time({container="tidal-syncer", job="docker"} |= `re-authentication required` [5m])'';
+                  expr = ''count_over_time({container=~"tidal-syncer.*", job="docker"} |= `re-authentication required` [5m])'';
                   queryType = "instant";
                   intervalMs = 1000;
                   maxDataPoints = 43200;
