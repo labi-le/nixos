@@ -32,6 +32,10 @@
         }
         {
           name = "Loki";
+          # Stable uid so provisioned alert rules can target this datasource by
+          # uid (see modules/monitoring/grafana.nix). Without it Grafana assigns
+          # a random uid the rules cannot reference.
+          uid = "loki";
           type = "loki";
           access = "proxy";
           url = "http://127.0.0.1:3100";

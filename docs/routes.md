@@ -139,6 +139,9 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Kernel (CachyOS) | `modules/kernel-cachyos.nix` |
 | Grafana | `modules/grafana.nix` |
 | Prometheus, Loki, Alloy (ships nginx/angie + docker container + fail2ban logs to Loki) | `modules/grafana.nix` |
+| Grafana monitoring aggregator (imports shared contact points + per-service alert files) | `modules/monitoring/default.nix` |
+| Grafana shared notification channels (Telegram contact point + agenix secret, reused by all alerts) | `modules/monitoring/contact-points.nix` |
+| Grafana alert: tidal-syncer TIDAL re-login required (Loki log alert) | `modules/monitoring/tidal-syncer.nix` |
 | FRP (Fast Reverse Proxy) | `modules/frp.nix` |
 | Syncthing (server) | `modules/syncthing/server.nix` |
 | Syncthing common module | `modules/syncthing/default.nix` |
@@ -191,6 +194,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Add local package | `pkgs/<name>.nix` (create) | `overlays.nix` (add) | `modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix` |
 | Add AGenix secret | `secrets/<name>.age` (encrypt) | host config (add `age.secrets.<name>`) | |
 | Add new NixOS module | `modules/<name>.nix` (create) | `modules/base.nix` or per-host config (add import) | |
+| Add a Grafana alert for a service | `modules/monitoring/<service>.nix` (create, with `services.grafana.provision.alerting.rules`) | `modules/monitoring/default.nix` (add import) | route to the `telegram` contact point via `notification_settings.receiver` |
 | Add new HM module | `home-manager/modules/<name>.nix` (create) | `home-manager/modules/default.nix` (add import) | |
 
 ## Code indexer wiring (`index-repo`)

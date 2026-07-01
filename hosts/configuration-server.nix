@@ -8,6 +8,7 @@
     ./../modules/drive.nix
     ./../modules/kernel-cachyos.nix
     ./../modules/grafana.nix
+    ./../modules/monitoring
     ./../modules/frp.nix
     # ./../modules/gitlab.nix
     ./../modules/syncthing/server.nix
