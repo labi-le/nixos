@@ -148,7 +148,7 @@ in
         ];
         ${workspaces.social} = [
           { app_id = "vesktop"; }
-          { app_id = "discord-canary"; }
+          { class = "discord-canary"; }
           { app_id = "obsidian"; }
           { app_id = "com.ayugram.desktop"; }
         ];
