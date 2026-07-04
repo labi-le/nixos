@@ -25,6 +25,19 @@ let
 
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
 
+  # If a tmux server already has a session, add a new window (tab) to it;
+  # otherwise launch a terminal with a fresh tmux session. Uses the tmux on
+  # PATH (system tmux from modules/tmux.nix) on purpose: a tmux client must
+  # match the running server's version, so we must not pin a separate
+  # pkgs.tmux build here.
+  tmuxTabOrSession = pkgs.writeShellScript "tmux-tab-or-session" ''
+    if tmux list-sessions >/dev/null 2>&1; then
+      exec tmux new-window
+    else
+      exec ${terminal} -e tmux new-session
+    fi
+  '';
+
   workspaces = {
     terminal = "1";
     develop = "2";
@@ -288,8 +301,8 @@ in
         }
       ];
       keybindings = {
-        "${common}+Return" = "exec ${terminal} -e tmux new-session";
-        "${common}+Shift+Return" = "exec ${pkgs.wtype}/bin/wtype -M ctrl -k a -m ctrl -k c";
+        "${common}+Return" = "exec ${terminal}";
+        "${common}+Shift+Return" = "exec ${tmuxTabOrSession}";
         "${common}+Shift+e" = "exec wofi-powermenu";
         "${common}+q" = "kill";
         "BTN_MIDDLE" = "kill --border";
