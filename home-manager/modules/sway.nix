@@ -288,7 +288,8 @@ in
         }
       ];
       keybindings = {
-        "${common}+Return" = "exec ${terminal}";
+        "${common}+Return" = "exec ${terminal} -e tmux new-session";
+        "${common}+Shift+Return" = "exec ${pkgs.wtype}/bin/wtype -M ctrl -k a -m ctrl -k c";
         "${common}+Shift+e" = "exec wofi-powermenu";
         "${common}+q" = "kill";
         "BTN_MIDDLE" = "kill --border";
