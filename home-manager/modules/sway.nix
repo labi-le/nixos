@@ -38,6 +38,17 @@ let
     fi
   '';
 
+  # Blank both outputs after 20 min of inactivity (DPMS off); any input wakes
+  # them and swayidle's resume turns them back on. Launched from sway `startup`
+  # (not a systemd user unit) so it inherits SWAYSOCK from the running session —
+  # the startup env import below only exports WAYLAND_DISPLAY, not SWAYSOCK.
+  # swaymsg is taken from the same swayfx package to match the compositor.
+  idleDpms = pkgs.writeShellScript "sway-idle-dpms" ''
+    exec ${pkgs.swayidle}/bin/swayidle -w \
+      timeout 1200 '${pkgs.swayfx}/bin/swaymsg "output * dpms off"' \
+      resume       '${pkgs.swayfx}/bin/swaymsg "output * dpms on"'
+  '';
+
   workspaces = {
     terminal = "1";
     develop = "2";
@@ -81,6 +92,9 @@ in
         }
         {
           command = "${pkgs.swaybg}/bin/swaybg -i ~/Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
+        }
+        {
+          command = "${idleDpms}";
         }
       ];
       modes = {
