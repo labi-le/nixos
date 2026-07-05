@@ -133,6 +133,7 @@ in
       # "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
       "oh-my-openagent@latest"
       "superpowers@git+https://github.com/obra/superpowers.git"
+      "shekohex/opencode-pty@latest"
     ];
     mcp = {
       context7 = {

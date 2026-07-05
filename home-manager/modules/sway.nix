@@ -49,6 +49,18 @@ let
       resume       '${pkgs.swayfx}/bin/swaymsg "output * dpms on"'
   '';
 
+  # Toggle all outputs' power (DPMS) with one key: if any active output is on,
+  # blank them all; otherwise power them back on. Input still reaches sway while
+  # blanked, so the same key powers them on again. swaymsg from swayfx to match
+  # the running compositor (same reason as idleDpms above).
+  toggleDpms = pkgs.writeShellScript "sway-toggle-dpms" ''
+    if ${pkgs.swayfx}/bin/swaymsg -t get_outputs | ${pkgs.jq}/bin/jq -e 'any(.[]; .active and .dpms)' >/dev/null; then
+      ${pkgs.swayfx}/bin/swaymsg "output * dpms off"
+    else
+      ${pkgs.swayfx}/bin/swaymsg "output * dpms on"
+    fi
+  '';
+
   workspaces = {
     terminal = "1";
     develop = "2";
@@ -324,6 +336,7 @@ in
         "${common}+x" = "mode resize";
         "${common}+d" = "exec ${menu} -c ~/.config/wofi/config -I";
         "${common}+Shift+c" = "reload";
+        "${common}+Shift+i" = "exec ${toggleDpms}";
         "${common}+Left" = "focus left";
         "${common}+Down" = "focus down";
         "${common}+Up" = "focus up";
