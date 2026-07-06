@@ -22,29 +22,29 @@
       "variant": "max"
     },
     "atlas": {
-      "model": "anthropic/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8"
     },
     "sisyphus-junior": {
       "model": "anthropic/claude-opus-4-8",
-      "variant": "max"
+      "variant": "low"
     },
     "multimodal-looker": {
-      "model": "anthropic/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8"
     },
     "prometheus": {
       "model": "anthropic/claude-opus-4-8",
       "variant": "max"
     },
     "explore": {
-      "model": "anthropic/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8"
     },
     "librarian": {
-      "model": "anthropic/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8"
     }
   },
   "categories": {
     "visual-engineering": {
-      "model": "anthropic/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8"
     },
     "ultrabrain": {
       "model": "anthropic/claude-opus-4-8",
@@ -58,7 +58,8 @@
       "model": "anthropic/claude-opus-4-8"
     },
     "unspecified-low": {
-      "model": "anthropic/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8",
+      "variant" : "low"
     },
     "unspecified-high": {
       "model": "anthropic/claude-opus-4-8",
@@ -69,7 +70,8 @@
       "variant": "low"
     },
     "quick": {
-      "model": "anthropic/claude-opus-4-7"
+      "model": "anthropic/claude-opus-4-8",
+      "variant": "low"
     }
   }
 }
