@@ -25,19 +25,6 @@ let
 
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
 
-  # If a tmux server already has a session, add a new window (tab) to it;
-  # otherwise launch a terminal with a fresh tmux session. Uses the tmux on
-  # PATH (system tmux from modules/tmux.nix) on purpose: a tmux client must
-  # match the running server's version, so we must not pin a separate
-  # pkgs.tmux build here.
-  tmuxTabOrSession = pkgs.writeShellScript "tmux-tab-or-session" ''
-    if tmux list-sessions >/dev/null 2>&1; then
-      exec tmux new-window
-    else
-      exec ${terminal} -e tmux new-session
-    fi
-  '';
-
   # Blank both outputs after 20 min of inactivity (DPMS off); any input wakes
   # them and swayidle's resume turns them back on. Launched from sway `startup`
   # (not a systemd user unit) so it inherits SWAYSOCK from the running session —
@@ -246,6 +233,12 @@ in
           };
         }
         {
+          command = "floating enable; resize set width 50 ppt height 40 ppt; focus";
+          criteria = {
+            app_id = "tmux-switcher";
+          };
+        }
+        {
           command = "floating enable; sticky enable";
           criteria = {
             title = "\\ -\\ Sharing\\ Indicator$";
@@ -327,8 +320,8 @@ in
         }
       ];
       keybindings = {
-        "${common}+Return" = "exec ${terminal}";
-        "${common}+Shift+Return" = "exec ${tmuxTabOrSession}";
+        "${common}+Return" = "exec ${terminal} --class tmux-switcher -e tmux-session-switcher";
+        "${common}+Shift+Return" = "exec ${terminal}";
         "${common}+Shift+e" = "exec wofi-powermenu";
         "${common}+q" = "kill";
         "BTN_MIDDLE" = "kill --border";
@@ -470,6 +463,7 @@ in
 
       for_window [shell="xdg_shell"] title_format "%app_id: %title"
       for_window [shell="x_wayland"] title_format "%class - %title"
+      for_window [app_id="tmux-switcher"] title_format "%title"
 
 
       bindgesture swipe:3:right workspace prev
@@ -549,6 +543,7 @@ in
       gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
       gsettings set "$gnome_schema" font-name "$font_name"
     '')
+    tmux-session-switcher
     wl-clipboard
     slurp
     wayshot
