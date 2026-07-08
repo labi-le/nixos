@@ -30,6 +30,7 @@
     indexerPkg
     pkgs.nodejs
     opencodeWrappers.opencodeGpt
+    opencodeWrappers.opencodeDeepseek
     pkgs.uv
   ];
 }
