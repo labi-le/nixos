@@ -14,6 +14,7 @@ let
     {
       binName,
       configDir ? null,
+      model ? null,
     }:
     pkgs.writeShellScriptBin binName ''
       export PATH="${lib.makeBinPath [ pkgs.rtk ]}:$PATH"
@@ -27,8 +28,9 @@ let
         ${exportProviderEnv}
       ''}
       ${indexHook}
-      ${pkgs.opencode}/bin/opencode "$@"
+      ${pkgs.opencode}/bin/opencode ${lib.optionalString (model != null) "--model ${model}"} "$@"
     '';
+
 in
 
 {
@@ -47,7 +49,11 @@ in
     binName = "opencode-gpt";
     configDir = variantConfigDirs.gpt;
   };
-
+  opencodeDeepseek = mkOpencodeWrapper {
+    binName = "opencode-deepseek";
+    configDir = variantConfigDirs.deepseek;
+    model = "aigate/deepseek/deepseek-v4-pro";
+  };
   # opencodeMcpOpendataloaderPdf = pkgs.writeShellScriptBin "opencode-mcp-opendataloader-pdf" ''
   #   export JAVA_HOME="${pkgs.jre}"
   #   export PATH="${

@@ -28,6 +28,7 @@ let
     };
   claudeAgentModels = mkAgentModels ./anthropic-models.json;
   gptAgentModels = mkAgentModels ./openai-models.json;
+  deepseekAgentModels = mkAgentModels ./deepseek-models.json;
   mkOhMyOpenAgentConfig = agentModels: {
     "$schema" =
       "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/dev/assets/oh-my-opencode.schema.json";
@@ -98,21 +99,10 @@ let
     // skillsFromDir "${ohMyOpenAgentSrc}/packages/omo-codex/plugin/components/ulw-loop/skills"
     // skillsFromDir "${ohMyOpenAgentSrc}/.agents/skills"
     // skillsFromDir "${ohMyOpenAgentSrc}/.opencode/skills";
-in
 
-{
-  # chroma-gate opencode plugin + `chroma` MCP server are provided by the
-  # index-repo home-manager module (services.index-repo.opencode.*); the plugin
-  # source lives in that repo instead of being inlined here.
-  services.index-repo.opencode = {
-    chromaGate.enable = true;
-    chromaMcp = {
-      enable = true;
-      host = "192.168.1.2";
-    };
-  };
-
-  programs.opencode.settings = {
+  # Shared opencode settings — single source of truth for all variants.
+  # Used by programs.opencode.settings (→ ~/.config/opencode/opencode.json).
+  sharedOpenCodeSettings = {
     permission = {
       external_directory = {
         "/tmp/**" = "allow";
@@ -130,7 +120,6 @@ in
       "@tarquinen/opencode-dcp@latest"
       "opencode-gemini-auth@latest"
       "@ex-machina/opencode-anthropic-auth@latest"
-      # "opencode-agent-skills@git+https://github.com/labi-le/agent-skills.git"
       "oh-my-openagent@latest"
       "superpowers@git+https://github.com/obra/superpowers.git"
       "shekohex/opencode-pty@latest"
@@ -140,12 +129,23 @@ in
         type = "remote";
         url = "https://mcp.context7.com/mcp";
       };
-      # opendataloader-pdf = {
-      #   type = "local";
-      #   command = [ "${wrappers.opencodeMcpOpendataloaderPdf}/bin/opencode-mcp-opendataloader-pdf" ];
-      # };
     };
   };
+in
+
+{
+  # chroma-gate opencode plugin + `chroma` MCP server are provided by the
+  # index-repo home-manager module (services.index-repo.opencode.*); the plugin
+  # source lives in that repo instead of being inlined here.
+  services.index-repo.opencode = {
+    chromaGate.enable = true;
+    chromaMcp = {
+      enable = true;
+      host = "192.168.1.2";
+    };
+  };
+
+  programs.opencode.settings = sharedOpenCodeSettings;
 
   programs.opencode.skills = vendoredPluginSkills // {
     # opencode core's only built-in skill, embedded in the binary (no upstream
@@ -182,6 +182,8 @@ in
     "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
   xdg.configFile."${opencodeVariantConfigDirs.gpt}/plugins/rtk.ts".source =
     "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
+  xdg.configFile."${opencodeVariantConfigDirs.deepseek}/plugins/rtk.ts".source =
+    "${wrappers.rtkSource}/hooks/opencode/rtk.ts";
 
   xdg.configFile."opencode/oh-my-openagent.jsonc" = {
     force = true;
@@ -198,8 +200,14 @@ in
     text = builtins.toJSON (mkOhMyOpenAgentConfig gptAgentModels);
   };
 
+  xdg.configFile."${opencodeVariantConfigDirs.deepseek}/oh-my-openagent.jsonc" = {
+    force = true;
+    text = builtins.toJSON (mkOhMyOpenAgentConfig deepseekAgentModels);
+  };
+
   xdg.configFile."opencode/dcp.jsonc".text = builtins.toJSON dcpConfig;
   xdg.configFile."${opencodeVariantConfigDirs.claude}/dcp.jsonc".text = builtins.toJSON dcpConfig;
   xdg.configFile."${opencodeVariantConfigDirs.gpt}/dcp.jsonc".text = builtins.toJSON dcpConfig;
+  xdg.configFile."${opencodeVariantConfigDirs.deepseek}/dcp.jsonc".text = builtins.toJSON dcpConfig;
 
 }

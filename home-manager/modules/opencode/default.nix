@@ -17,6 +17,7 @@ let
   variantConfigDirs = {
     claude = "opencode-claude";
     gpt = "opencode-gpt";
+    deepseek = "opencode-deepseek";
   };
 
   wrappers = import ./wrappers.nix {
