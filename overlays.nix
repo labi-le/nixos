@@ -28,4 +28,5 @@ final: prev: {
   opencode = inputs.opencode.packages.${system}.opencode;
   nix-index-with-small-db = inputs.nix-index-database.packages.${system}.nix-index-with-small-db;
   index-repo = inputs.index-repo.packages.${system}.default;
+  omp = inputs.omp-flake.packages.${system}.default;
 }

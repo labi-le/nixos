@@ -35,6 +35,7 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    omp-flake.url = "github:labi-le/omp-flake";
   };
 
   outputs =
@@ -70,7 +71,7 @@
         home-manager = {
           useUserPackages = true;
           useGlobalPkgs = true;
-          sharedModules = [ inputs.index-repo.homeManagerModules.default ];
+          sharedModules = [ inputs.index-repo.homeManagerModules.default inputs.omp-flake.homeManagerModules.default ];
           backupFileExtension = "hm-backup";
         };
       };
