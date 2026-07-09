@@ -16,6 +16,7 @@
     ./xdg.nix
     ./pidev.nix
     ./opencode
+    ./omp.nix
   ];
 
 }

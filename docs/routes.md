@@ -177,6 +177,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
 | PiDev coding agent | `home-manager/modules/pidev.nix` |
+| Oh My Pi (omp) coding agent + undo-redo extension | `home-manager/modules/omp.nix` | omp-flake HM module loaded in `flake.nix` sharedModules |
 | OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
 | OpenCode provider definitions | `home-manager/modules/opencode/providers/*.nix` |
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
