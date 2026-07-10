@@ -2,3 +2,5 @@
 context.md
 .playwright-mcp/
 .omo/
+result
+result-*
