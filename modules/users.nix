@@ -67,6 +67,16 @@ in
         alias ddu='docker update --restart=no $(docker ps -qa)'
         alias dsa='docker stop $(docker ps -qa)'
         alias lz='lazygit'
+        if command -v zellij >/dev/null 2>&1; then
+          alias zza='zellij attach'
+          zz() {
+            if [ $# -eq 0 ]; then
+              zellij
+            else
+              zellij attach -c "$1"
+            fi
+          }
+        fi
       '';
     }
     (lib.optionalAttrs (options ? home-manager) {
