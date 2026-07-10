@@ -168,6 +168,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Mako notifications | `home-manager/modules/mako.nix` |
 | Git user config | `home-manager/modules/git.nix` |
 | Alacritty terminal | `home-manager/modules/alacritty.nix` |
+| Zellij multiplexer (parallel to tmux; direct Ctrl+a/d/x chords) | `home-manager/modules/zellij.nix` |
 | SSH user config | `home-manager/modules/ssh.nix` |
 | MIME type associations | `home-manager/modules/mimeapps.nix` |
 | mpv media player | `home-manager/modules/mpv.nix` |
