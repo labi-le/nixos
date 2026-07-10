@@ -299,5 +299,9 @@ in
     };
 
     models.default = "deepseek/deepseek-v4-pro";
+
+    # On launch, resume the cwd's most-recent session in full (conversation +
+    # its last model) instead of a fresh session that resets to models.default.
+    settings.autoResume = true;
   };
 }
