@@ -1,29 +1,5 @@
-{ pkgs, ... }:
+{ ... }:
 
-let
-  openrgbApplyOff = pkgs.writeShellScript "openrgb-apply-off" ''
-    set -u
-    port=6742
-    profile=/home/labile/.config/OpenRGB/off.orp
-    orgb=${pkgs.openrgb}/bin/openrgb
-
-    prev=""
-    stable=0
-    for ((i = 0; i < 40; i++)); do
-      count=$("$orgb" --client "127.0.0.1:$port" --nodetect --list-devices 2>/dev/null | grep -cE '^[0-9]+: ')
-      if [ "''${count:-0}" -gt 0 ] && [ "$count" = "$prev" ]; then
-        stable=$((stable + 1))
-        [ "$stable" -ge 2 ] && break
-      else
-        stable=0
-      fi
-      prev="$count"
-      sleep 1
-    done
-
-    exec "$orgb" --client "127.0.0.1:$port" --nodetect --profile "$profile"
-  '';
-in
 {
   imports = [
     ./../modules/home-drive.nix
@@ -61,18 +37,6 @@ in
 
   services.belphegor.enable = true;
   services.hardware.openrgb.enable = true;
-  systemd.services.openrgb-apply-off = {
-    description = "Apply OpenRGB 'off' profile once the SDK server is ready";
-    after = [ "openrgb.service" ];
-    requires = [ "openrgb.service" ];
-    partOf = [ "openrgb.service" ];
-    wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.coreutils pkgs.gnugrep ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${openrgbApplyOff}";
-    };
-  };
   virtualisation.waydroid.enable = true;
 
   programs.gnupg.agent = {

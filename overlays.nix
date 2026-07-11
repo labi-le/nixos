@@ -22,6 +22,7 @@ final: prev: {
   ea-disable-overlay = prev.callPackage ./pkgs/ea-disable-overlay.nix { };
   generate-context = prev.callPackage ./pkgs/generate-context.nix { };
   tmux-session-switcher = prev.callPackage ./pkgs/tmux-session-switcher.nix { };
+  openrgb-apply-off = prev.callPackage ./pkgs/openrgb-apply-off.nix { };
   agenix = inputs.agenix.packages.${system}.default;
   nur = (inputs.nur.overlays.default final prev).nur;
   apple-fonts = inputs.apple-fonts.packages.${system};
