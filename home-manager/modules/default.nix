@@ -15,7 +15,6 @@
     ./thunar.nix
     ./yt-dlp.nix
     ./xdg.nix
-    ./pidev.nix
     ./opencode
     ./omp.nix
   ];
