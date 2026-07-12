@@ -304,4 +304,27 @@ in
     # its last model) instead of a fresh session that resets to models.default.
     settings.autoResume = true;
   };
+
+  # Global MCP servers for omp (~/.omp/mcp.json), merged with any project-level
+  # <cwd>/.omp/mcp.json. chroma = semantic code search over the ChromaDB the
+  # index-repo daemon builds (same server opencode uses via chromaMcp). Needs
+  # `uvx` (uv) on PATH.
+  home.file.".omp/mcp.json".text = builtins.toJSON {
+    "$schema" = "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json";
+    mcpServers.chroma = {
+      type = "stdio";
+      command = "uvx";
+      args = [
+        "chroma-mcp"
+        "--client-type"
+        "http"
+        "--host"
+        "192.168.1.2"
+        "--port"
+        "8000"
+        "--ssl"
+        "false"
+      ];
+    };
+  };
 }
