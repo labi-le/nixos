@@ -2,7 +2,6 @@
 
 final: prev: {
   belphegor = inputs.belphegor.packages.${system}.default;
-  wl-uploader = inputs.wl-uploader.packages.${system}.default;
   deal = inputs.deal.packages.${system}.default;
   # accela = inputs.accela.packages.${system}.default;
   sls-steam = inputs.sls-steam.packages.${system}.sls-steam;

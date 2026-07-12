@@ -368,6 +368,7 @@ in
         "${additional}+Print" = "exec ${grimshot} copy active";
         "${common}+Print" = "exec ${grimshot} save area - | ${pkgs.swappy}/bin/swappy -f -";
         "Print+Home" = "exec wl-uploader";
+        "Print+End" = "exec wl-uploader --ocr";
         "${common}+${additional}+Shift+Right" = "move workspace to output right";
         "${common}+${additional}+Shift+Left" = "move workspace to output left";
         "${common}+${additional}+Shift+Down" = "move workspace to output down";
