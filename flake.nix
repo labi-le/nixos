@@ -48,6 +48,20 @@
         config.allowUnfree = true;
       };
 
+      # Build index-repo from the flake source (latest main) instead of the pinned
+      # release binary, wrapped with the ORT dylib + model dir exactly like the
+      # flake's release package. Lets `nix flake update index-repo` deploy source
+      # changes without cutting a release.
+      indexRepoFromSource =
+        let
+          ir = inputs.index-repo.packages.${system};
+        in
+        pkgs.runCommand "index-repo-fromsrc" { nativeBuildInputs = [ pkgs.makeWrapper ]; } ''
+          makeWrapper ${ir.fromSource}/bin/index-repo $out/bin/index-repo \
+            --set ORT_DYLIB_PATH ${pkgs.onnxruntime}/lib/libonnxruntime.so \
+            --set INDEX_REPO_MODEL_DIR ${ir.model}
+        '';
+
       commonModules = [
         ./settings.nix
         inputs.stylix.nixosModules.stylix
@@ -91,7 +105,11 @@
             inputs.home-manager.nixosModules.home-manager
             homeManagerConfig
             inputs.index-repo.nixosModules.default
-            { services.index-repo.enable = true; }
+            {
+              services.index-repo.enable = true;
+              services.index-repo.host = "192.168.1.2";
+              services.index-repo.package = indexRepoFromSource;
+            }
           ];
         };
 
