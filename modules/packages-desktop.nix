@@ -11,8 +11,6 @@ with pkgs;
   xdg-utils
   dconf
 
-  wl-uploader
-
   (google-chrome.override {
     commandLineArgs = [
       "--enable-features=AcceleratedVideoEncoder"

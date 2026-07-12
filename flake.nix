@@ -73,6 +73,7 @@
         inputs.ngate-wrapped.nixosModules.default
         inputs.nur.modules.nixos.default
         inputs.belphegor.nixosModules.default
+        inputs.wl-uploader.nixosModules.default
         ./modules/shell/registry.nix
       ];
 

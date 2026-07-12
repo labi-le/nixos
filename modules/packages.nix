@@ -90,6 +90,11 @@ in
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;
 
+    programs.wl-paste-uploader = mkIf cfg.desktop {
+      enable = true;
+      ocr = true;
+    };
+
     fonts = mkIf cfg.desktop {
       enableDefaultPackages = true;
       packages = with pkgs; [
