@@ -1,4 +1,5 @@
 { osConfig
+, pkgs
 , lib
 , ...
 }:
@@ -9,14 +10,120 @@ let
   aigateKey = lib.removePrefix "LITELLM_AIGATE_API_KEY="
     (lib.head (lib.filter (s: lib.hasPrefix "LITELLM_AIGATE_API_KEY=" s)
       (lib.splitString "\n" litellmEnv)));
+
+  # --- Skills migrated from the (now-disabled) opencode module ---------------
+  # Vendored from obra/superpowers + labi-le/agent-skills, plus three standalone
+  # skills. Deployed to ~/.omp/agent/skills/<name> so omp's native provider
+  # (priority 100) owns them independently of opencode. The
+  # code-yeongyu/oh-my-openagent source was intentionally dropped.
+  superpowersSrc = pkgs.fetchFromGitHub {
+    owner = "obra";
+    repo = "superpowers";
+    rev = "896224c4b1879920ab573417e68fd51d2ccc9072";
+    hash = "sha256-+lT2a/qq0SF4k0PgnEDKiuidVlZX2p0vEso4d/5T1os=";
+  };
+  agentSkillsSrc = pkgs.fetchFromGitHub {
+    owner = "labi-le";
+    repo = "agent-skills";
+    rev = "57c9f2cf09ba23fe7962e73f0026dc545c4c6bc3";
+    hash = "sha256-DUqUjWDqJk828se7ChbsZaflXfbvRNyQM+zU2psoDYU=";
+  };
+  desloppifySrc = pkgs.fetchFromGitHub {
+    owner = "peteromallet";
+    repo = "desloppify";
+    rev = "3a7735d531a96b6a226bfbdc9fd662b14195f857";
+    hash = "sha256-USFofGy0SUZV0oeh5x5KAWeFReD45GxlyYqpmc23NFM=";
+  };
+  plantumlSrc = pkgs.fetchFromGitHub {
+    owner = "asolfre";
+    repo = "plantuml-rendering-skill";
+    rev = "5191edd2b30b8729a3ada1b61db381f3132d6764";
+    hash = "sha256-SOkpdeAkC68unov70AseGrK3GB0FK/HdR9MxgsqaNr0=";
+  };
+  cavemanSrc = pkgs.fetchFromGitHub {
+    owner = "JuliusBrussee";
+    repo = "caveman";
+    rev = "25d22f864ad68cc447a4cb93aefde918aa4aec9f";
+    hash = "sha256-FbmfhFaPs/SnSZdfNdErdIUHXt1FfBzErpPpLy8kdIc=";
+  };
+
+  # { <name> = "<dir>/<name>"; } for every <name>/SKILL.md under `dir`. readDir
+  # (IFD) auto-tracks the upstream skill set across rev bumps.
+  skillsFromDir =
+    dir:
+    lib.mapAttrs (name: _: "${dir}/${name}") (
+      lib.filterAttrs
+        (name: type: type == "directory" && builtins.pathExists "${dir}/${name}/SKILL.md")
+        (builtins.readDir dir)
+    );
+
+  vendoredSkills =
+    skillsFromDir "${superpowersSrc}/skills"
+    // skillsFromDir "${agentSkillsSrc}/skills"
+    // {
+      desloppify = "${desloppifySrc}/docs";
+      plantuml-rendering = "${plantumlSrc}";
+      caveman = "${cavemanSrc}/skills/caveman";
+    };
+
+  # ~/.omp/agent/skills/<name> -> upstream skill dir.
+  skillFiles = lib.mapAttrs'
+    (
+      name: dir: lib.nameValuePair ".omp/agent/skills/${name}" { source = dir; }
+    )
+    vendoredSkills;
+
+  # index-repo auto-register extension, loaded via programs.oh-my-pi.extensions
+  # below (the proven load path, same as omp-undo-redo). Registers the session's
+  # git repo with the index-repo daemon so the chroma MCP has it indexed. Fires on
+  # session_start (fresh launch) and agent_start (covers autoResume-resumed
+  # sessions). `--pid` ties the registration to this omp process so the daemon GCs
+  # it on exit; an exit handler unregisters promptly. Opt out per-repo with a
+  # `.no-code-index` file, or globally with CODE_INDEXER_DISABLE=1.
+  indexRepoRegisterExt = pkgs.writeText "omp-index-repo-register.js" ''
+    import { execFile, spawnSync } from "node:child_process";
+    import { promisify } from "node:util";
+    import { existsSync } from "node:fs";
+    import { join } from "node:path";
+
+    const run = promisify(execFile);
+    // Use the daemon's exact package so register (writes the marker name) always
+    // matches the serve binary that reads it. pkgs.index-repo is a pinned release
+    // (older `default`) and would write nameless markers -> daemon falls back.
+    const INDEX_REPO = "${osConfig.services.index-repo.package}/bin/index-repo";
+
+    async function ensureRegistered(ctx) {
+      if (process.env.CODE_INDEXER_ACTIVE || process.env.CODE_INDEXER_DISABLE) return;
+      const cwd = (ctx && ctx.cwd) || process.cwd();
+      if (!cwd || !existsSync(join(cwd, ".git")) || existsSync(join(cwd, ".no-code-index"))) return;
+      process.env.CODE_INDEXER_ACTIVE = "1";
+      try { await run("systemctl", ["--user", "start", "--no-block", "index-repo.service"]); } catch {}
+      try { await run(INDEX_REPO, ["register", cwd, "--pid", String(process.pid)]); } catch {}
+      process.once("exit", () => {
+        try { spawnSync(INDEX_REPO, ["unregister", cwd, "--pid", String(process.pid)]); } catch {}
+      });
+    }
+
+    export default function (pi) {
+      pi.on("session_start", (_event, ctx) => ensureRegistered(ctx));
+      pi.on("agent_start", (_event, ctx) => ensureRegistered(ctx));
+    }
+  '';
 in
 {
+  # `uv` provides `uvx`, required by the chroma MCP below. It used to come from
+  # the now-disabled opencode module (opencode/packages.nix); keep it here so
+  # the dependency lives next to the server that needs it.
+  home.packages = [ pkgs.uv ];
+
   programs.oh-my-pi = {
     enable = true;
 
     plugins = [
       "@baylarsadigov/omp-undo-redo"
     ];
+
+    extensions = [ "${indexRepoRegisterExt}" ];
 
     providers = {
       aigate = {
@@ -306,25 +413,33 @@ in
   };
 
   # Global MCP servers for omp (~/.omp/mcp.json), merged with any project-level
-  # <cwd>/.omp/mcp.json. chroma = semantic code search over the ChromaDB the
-  # index-repo daemon builds (same server opencode uses via chromaMcp). Needs
-  # `uvx` (uv) on PATH.
-  home.file.".omp/mcp.json".text = builtins.toJSON {
-    "$schema" = "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json";
-    mcpServers.chroma = {
-      type = "stdio";
-      command = "uvx";
-      args = [
-        "chroma-mcp"
-        "--client-type"
-        "http"
-        "--host"
-        "192.168.1.2"
-        "--port"
-        "8000"
-        "--ssl"
-        "false"
-      ];
+  # <cwd>/.omp/mcp.json. `chroma` = semantic code search over the ChromaDB the
+  # index-repo daemon builds (needs `uvx`/uv on PATH). `context7` = up-to-date
+  # library docs. Skills are migrated from the (disabled) opencode module above.
+  home.file = skillFiles // {
+    ".omp/mcp.json".text = builtins.toJSON {
+      "$schema" = "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json";
+      mcpServers = {
+        chroma = {
+          type = "stdio";
+          command = "uvx";
+          args = [
+            "chroma-mcp"
+            "--client-type"
+            "http"
+            "--host"
+            "192.168.1.2"
+            "--port"
+            "8000"
+            "--ssl"
+            "false"
+          ];
+        };
+        context7 = {
+          type = "http";
+          url = "https://mcp.context7.com/mcp";
+        };
+      };
     };
   };
 }
