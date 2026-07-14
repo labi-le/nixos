@@ -167,7 +167,8 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Wofi launcher | `home-manager/modules/wofi.nix` |
 | Mako notifications | `home-manager/modules/mako.nix` |
 | Git user config | `home-manager/modules/git.nix` |
-| Alacritty terminal | `home-manager/modules/alacritty.nix` |
+| Alacritty terminal (disabled — import commented in `default.nix`, package kept as fallback) | `home-manager/modules/alacritty.nix` |
+| Foot terminal — **default** (Wayland/C, minimalist, no tabs — panes via multiplexer; sixel images for omp) | `home-manager/modules/foot.nix` |
 | Zellij multiplexer (parallel to tmux; direct Ctrl+a/d/x chords) | `home-manager/modules/zellij.nix` |
 | SSH user config | `home-manager/modules/ssh.nix` |
 | MIME type associations | `home-manager/modules/mimeapps.nix` |

@@ -8,7 +8,7 @@
 
 let
   browser = "google-chrome-stable";
-  terminal = "alacritty";
+  terminal = "foot";
   bar = "waybar";
   menu = "wofi";
   filemanager = "thunar";
@@ -142,7 +142,7 @@ in
       floating = {
         modifier = common;
         criteria = [
-          { app_id = "Alacritty"; }
+          { app_id = "foot"; }
           {
             class = "Yad";
             instance = "yad";
@@ -195,7 +195,7 @@ in
         {
           command = "floating disable";
           criteria = {
-            app_id = "Alacritty";
+            app_id = "foot";
             workspace = workspaces.terminal;
           };
         }
@@ -483,7 +483,7 @@ in
       title_align center
       titlebar_padding 10 5
 
-      for_window [app_id="Alacritty"] blur enable
+      for_window [app_id="foot"] blur enable
       layer_effects "mako" {
         blur enable;
         blur_ignore_transparent enable;

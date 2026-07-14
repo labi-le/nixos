@@ -16,7 +16,7 @@
         archive-manager = "xarchiver.desktop";
         browser = "google-chrome.desktop";
         pdf = "org.pwmt.zathura.desktop";
-        terminal = "Alacritty.desktop";
+        terminal = "foot.desktop";
       in
       {
         enable = true;
