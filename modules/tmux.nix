@@ -58,11 +58,6 @@
       set -s extended-keys on
       set -as terminal-features '*:extkeys'
       set -s extended-keys-format csi-u
-
-      # Let foot render sixel images inside tmux (tmux is built with --enable-sixel).
-      # Pairs with PI_FORCE_IMAGE_PROTOCOL=sixel so omp emits sixel; after a switch
-      # run `tmux kill-server` for a running server to pick this up.
-      set -as terminal-features '*:sixel'
     '';
   };
 }
