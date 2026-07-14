@@ -53,11 +53,16 @@
 
       # Forward the kitty keyboard protocol (CSI-u) to apps running inside tmux.
       # Lets TUIs distinguish Shift+Enter from Enter (-> newline) and receive
-      # unambiguous Esc events (-> reliable double-Esc). Needs Alacritty (CSI u)
+      # unambiguous Esc events (-> reliable double-Esc). Needs foot (CSI u)
       # + tmux >= 3.5 for extended-keys-format.
       set -s extended-keys on
       set -as terminal-features '*:extkeys'
       set -s extended-keys-format csi-u
+
+      # Let foot render sixel images inside tmux (tmux is built with --enable-sixel).
+      # Pairs with PI_FORCE_IMAGE_PROTOCOL=sixel so omp emits sixel; after a switch
+      # run `tmux kill-server` for a running server to pick this up.
+      set -as terminal-features '*:sixel'
     '';
   };
 }

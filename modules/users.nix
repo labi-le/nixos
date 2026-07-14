@@ -55,6 +55,9 @@ in
       environment.variables = {
         EDITOR = "nvim";
         TERMINAL = "foot";
+        # foot only speaks sixel (no kitty graphics); force omp to emit sixel so
+        # images render in plain foot and inside tmux (terminal-features *:sixel).
+        PI_FORCE_IMAGE_PROTOCOL = "sixel";
         NIXPKGS_ALLOW_UNFREE = "1";
       };
 
