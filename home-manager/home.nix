@@ -34,4 +34,5 @@ in
 
   programs.home-manager.enable = true;
   home.enableNixpkgsReleaseCheck = false;
+  home.pointerCursor.enable = true;
 }

@@ -25,7 +25,7 @@ fmt:
 	nix-shell -p nixpkgs-fmt --command 'nixpkgs-fmt .'
 
 upgrade:
-	nix flake update && sudo nixos-rebuild switch --upgrade --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
+	nix flake update && sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
 
 boot:
 	sudo nixos-rebuild boot --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --install-bootloader
