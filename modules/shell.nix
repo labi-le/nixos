@@ -33,6 +33,7 @@
         "sudo"
         "ssh"
         "git"
+        "tmux"
       ];
     };
     enableCompletion = true;
