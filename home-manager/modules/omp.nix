@@ -5,11 +5,15 @@
 }:
 
 let
-  # litellm-env.age is an env file (KEY=value lines); pull the aigate key out.
-  litellmEnv = builtins.readFile osConfig.age.secrets.opencode-litellm-master-key.path;
-  aigateKey = lib.removePrefix "LITELLM_AIGATE_API_KEY="
-    (lib.head (lib.filter (s: lib.hasPrefix "LITELLM_AIGATE_API_KEY=" s)
-      (lib.splitString "\n" litellmEnv)));
+  # apiKey resolved at RUNTIME via omp `!command` support (execSync at models.yml
+  # load): the secret is read from /run/agenix live, never baked into the
+  # world-readable /nix/store. Guarded: the secret exists only on pc/notebook.
+  litellmSecret = osConfig.age.secrets.opencode-litellm-master-key or null;
+  aigateApiKey =
+    if litellmSecret != null then
+      "!${pkgs.gnused}/bin/sed -n 's/^LITELLM_AIGATE_API_KEY=//p' ${litellmSecret.path}"
+    else
+      "LITELLM_AIGATE_API_KEY";
 
   # --- Skills migrated from the (now-disabled) opencode module ---------------
   # Vendored from obra/superpowers + labi-le/agent-skills, plus three standalone
@@ -126,7 +130,7 @@ in
       aigate = {
         baseUrl = "https://api.aigate.shop/v1";
         api = "openai-completions";
-        apiKey = aigateKey;
+        apiKey = aigateApiKey;
         models = [
           {
             id = "deepseek/deepseek-v4-pro";

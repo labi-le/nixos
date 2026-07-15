@@ -32,7 +32,6 @@
         "z"
         "sudo"
         "ssh"
-        "git"
         "tmux"
       ];
     };

@@ -1,5 +1,6 @@
 {
   time.timeZone = "Europe/Moscow";
+  services.xserver.xkb.layout = "us";
 
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {

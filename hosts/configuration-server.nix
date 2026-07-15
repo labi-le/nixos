@@ -22,7 +22,6 @@
 
   network = {
     enableFirewall = true;
-    injectHosts = true;
   };
 
   age.secrets.ngate-env = {
@@ -44,22 +43,6 @@
     routes = "79.137.220.62 10.0.0.0/8 185.129.100.112/32 10.206.185.123/32 10.89.58.17/32";
   };
 
-  services.xserver.xkb = {
-    layout = "us";
-  };
-
-  # asusctl profile -p
-  # asusctl profile -P quiet
-  # asusctl profile -l
-  # battery limit
-  # asusctl -c 60
-  # services.asusd = {
-  #   enable = true;
-  #   enableUserService = true;
-  # };
-  # systemd.tmpfiles.rules = [
-  #   "w /sys/class/power_supply/BAT0/charge_control_end_threshold - - - - 60"
-  # ];
   boot.kernel.sysctl = {
     "vm.dirty_background_ratio" = 15;
     "vm.dirty_ratio" = 30;
@@ -69,9 +52,6 @@
 
   hardware.graphics.enable = true;
 
-  programs.gnupg.agent = {
-    enable = true;
-  };
 
   system.stateVersion = "24.11";
 

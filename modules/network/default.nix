@@ -9,7 +9,7 @@ in
   options.network = {
     injectHosts = mkOption {
       type = types.bool;
-      default = false;
+      default = true;
       description = "Enable or disable injecting host.";
     };
 
