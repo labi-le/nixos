@@ -113,16 +113,13 @@ in
 {
   # `uv` provides `uvx`, required by the chroma MCP below. It used to come from
   # the now-disabled opencode module (opencode/packages.nix); keep it here so
-  # the dependency lives next to the server that needs it.
-  home.packages = [ pkgs.uv ];
+  # the dependency lives next to the server that needs it. `nodejs` provides
+  # `npx`/`node` on PATH for omp — npm-based MCP servers and tooling launched
+  # from within the agent expect it.
+  home.packages = [ pkgs.uv pkgs.nodejs ];
 
   programs.oh-my-pi = {
     enable = true;
-
-    plugins = [
-      "@baylarsadigov/omp-undo-redo"
-    ];
-
     extensions = [ "${indexRepoRegisterExt}" ];
 
     providers = {
@@ -412,12 +409,16 @@ in
     settings.autoResume = true;
   };
 
-  # Global MCP servers for omp (~/.omp/mcp.json), merged with any project-level
-  # <cwd>/.omp/mcp.json. `chroma` = semantic code search over the ChromaDB the
+  # User-scope MCP servers for omp (~/.omp/agent/mcp.json), merged with any
+  # project-level <cwd>/.omp/mcp.json. `chroma` = semantic code search over the ChromaDB the
   # index-repo daemon builds (needs `uvx`/uv on PATH). `context7` = up-to-date
-  # library docs. Skills are migrated from the (disabled) opencode module above.
+  # library docs. `sway` = query/control the running SwayWM session; the binary
+  # is packaged declaratively (overlays.nix -> pkgs.swaywm-mcp) instead of
+  # fetched at runtime via npx. SWAYSOCK is inherited from the session; SWAYMSG_BIN
+  # is pinned so it works even when swaymsg is absent from PATH. Skills are
+  # migrated from the (disabled) opencode module above.
   home.file = skillFiles // {
-    ".omp/mcp.json".text = builtins.toJSON {
+    ".omp/agent/mcp.json".text = builtins.toJSON {
       "$schema" = "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json";
       mcpServers = {
         chroma = {
@@ -438,6 +439,20 @@ in
         context7 = {
           type = "http";
           url = "https://mcp.context7.com/mcp";
+        };
+        sway = {
+          type = "stdio";
+          command = "${pkgs.swaywm-mcp}/bin/swaywm-mcp";
+          env = {
+            NODE_ENV = "production";
+            SWAYMSG_BIN = "${pkgs.swayfx}/bin/swaymsg";
+            # omp runs under tmux, whose server captured an env without SWAYSOCK,
+            # so swaymsg can't find the IPC socket. The socket path is per-sway-pid
+            # and dynamic; resolve it at server launch via omp's `!command` env
+            # feature (newest sway-ipc socket for this uid). Re-run `/mcp reconnect
+            # sway` after a sway restart to pick up the new socket.
+            SWAYSOCK = "!ls -t \"$XDG_RUNTIME_DIR\"/sway-ipc.*.sock 2>/dev/null | head -1";
+          };
         };
       };
     };

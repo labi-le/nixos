@@ -36,6 +36,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     omp-flake.url = "github:labi-le/omp-flake";
+    swaywm-mcp.url = "github:cristianoliveira/swaywm-mcp";
   };
 
   outputs =
