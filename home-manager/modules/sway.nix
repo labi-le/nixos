@@ -323,7 +323,7 @@ in
         }
       ];
       keybindings = {
-        "${common}+Return" = "exec ${terminal} --class tmux-switcher -e tmux-session-switcher";
+        "${common}+Return" = "exec ${terminal} --app-id=tmux-switcher tmux-session-switcher";
         "${common}+Shift+Return" = "exec ${terminal}";
         "${common}+Shift+e" = "exec wofi-powermenu";
         "${common}+q" = "kill";
