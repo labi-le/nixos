@@ -17,13 +17,13 @@ in
     server = mkOption {
       type = types.bool;
       default = false;
-      description = mdDoc "Enable server-specific packages.";
+      description = "Enable server-specific packages.";
     };
 
     desktop = mkOption {
       type = types.bool;
       default = false;
-      description = mdDoc "Enable desktop-specific packages.";
+      description = "Enable desktop-specific packages.";
     };
 
   };

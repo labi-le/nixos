@@ -1,6 +1,12 @@
+{ config, lib, ... }:
 {
-  fileSystems."/media/storage" = {
-    device = "/dev/disk/by-uuid/fbd1306f-612b-4032-bd8c-445087dd7782";
+  options.homeDrive.device = lib.mkOption {
+    type = lib.types.str;
+    description = "Backing device for the /media/storage f2fs mount (set per-host).";
+  };
+
+  config.fileSystems."/media/storage" = {
+    device = config.homeDrive.device;
     fsType = "f2fs";
     options = [
       "defaults"

@@ -10,6 +10,17 @@ in
     description = "Enable PRIME offloading support for NVIDIA hybrid graphics";
   };
 
+  options.primeBusIds = {
+    intel = lib.mkOption {
+      type = lib.types.str;
+      description = "Intel PCI bus id for PRIME offloading (set per-host).";
+    };
+    nvidia = lib.mkOption {
+      type = lib.types.str;
+      description = "NVIDIA PCI bus id for PRIME offloading (set per-host).";
+    };
+  };
+
   config = lib.mkMerge [
     {
       environment.sessionVariables = {
@@ -27,8 +38,8 @@ in
       hardware.nvidia = {
         prime = {
           sync.enable = false;
-          intelBusId = "PCI:0:2:0";
-          nvidiaBusId = "PCI:1:0:0";
+          intelBusId = config.primeBusIds.intel;
+          nvidiaBusId = config.primeBusIds.nvidia;
 
           offload = {
             enable = true;

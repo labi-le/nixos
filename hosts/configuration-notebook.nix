@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ ... }:
 
 {
   imports = [
@@ -10,7 +10,6 @@
     ./../modules/thunar.nix
     ./../modules/kernel-zen.nix
     ./../modules/thunderbolt.nix
-    # ./../modules/radeon.nix
     ./../modules/battery.nix
     ./../modules/hibernation.nix
     ./../modules/adb.nix
@@ -20,9 +19,6 @@
     ./../modules/work-mount.nix
   ];
 
-  services.xserver.xkb = {
-    layout = "us";
-  };
 
   services.belphegor.enable = true;
 
@@ -30,21 +26,11 @@
     graphics.enable = true;
   };
 
-  programs.gnupg.agent = {
-    enable = true;
-    enableSSHSupport = true;
-  };
-
-  audio = {
-    enable = true;
-  };
-
   system.stateVersion = "25.05";
 
   networking.networkmanager.wifi.powersave = false;
   systemd.services.NetworkManager-wait-online.enable = false;
 
-  network.injectHosts = true;
   packages = {
     desktop = true;
   };
@@ -53,17 +39,6 @@
     goland.enable = true;
     # phpstorm.enable = true;
     # pycharm.enable = true;
-    # rustrover = {
-    #   enable = true;
-    #   extraPackages = with pkgs; [
-    #     libarchive
-    #   ];
-    # };
-  };
-
-  hotkeys = {
-    common = "Mod4";
-    additional = "Mod1";
   };
 
   monitors = {
@@ -73,4 +48,5 @@
       position = "center";
     };
   };
+
 }

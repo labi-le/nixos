@@ -19,6 +19,37 @@ in
   ];
   services.logrotate.settings.nginx.enable = false;
 
+  environment.etc."fail2ban/filter.d/nginx-404.conf".text = ''
+    [Definition]
+    failregex = ^<HOST> -.* "(GET|POST|HEAD).*HTTP.*" 404 .*$
+    ignoreregex = \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$
+  '';
+
+  services.fail2ban.jails = {
+    nginx-botsearch.settings = {
+      enabled = true;
+      filter = "nginx-botsearch";
+      logpath = "/var/log/nginx/access.log";
+      backend = "auto";
+      maxretry = 2;
+    };
+    nginx-bad-request.settings = {
+      enabled = true;
+      filter = "nginx-bad-request";
+      logpath = "/var/log/nginx/access.log";
+      backend = "auto";
+    };
+    nginx-scan-404.settings = {
+      enabled = true;
+      filter = "nginx-404";
+      logpath = "/var/log/nginx/access.log";
+      backend = "auto";
+      maxretry = 5;
+      findtime = 60;
+      bantime = "5h";
+    };
+  };
+
   services.nginx = {
     package = pkgs.angie;
     enable = true;
@@ -39,10 +70,6 @@ in
       send_timeout          10s;
       keepalive_timeout     10s;
       keepalive_requests    100;
-      map $http_upgrade $connection_upgrade {
-        default upgrade;
-      '' close;
-      }
     ";
     appendHttpConfig = ''
       access_log /var/log/nginx/access.log;
@@ -102,6 +129,65 @@ in
             }
           '';
         };
+      gachiRadio =
+        { rewrite, rewritePlain }:
+        {
+          locations."/" = {
+            proxyPass = "https://radio.gachibass.us.to";
+            extraConfig = ''
+              proxy_ssl_server_name on;
+              proxy_ssl_name radio.gachibass.us.to;
+              proxy_set_header Host radio.gachibass.us.to;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+
+              proxy_set_header Accept-Encoding "";
+
+              sub_filter_types
+                application/javascript
+                text/css
+                application/json
+                text/plain;
+
+              sub_filter "https://radio.gachibass.us.to" "${rewrite}";
+              sub_filter "http://radio.gachibass.us.to"  "${rewrite}";
+              sub_filter "radio.gachibass.us.to"         "${rewritePlain}";
+
+              sub_filter_once off;
+            '';
+          };
+
+          locations."/fisting" = {
+            proxyPass = "https://radio.gachibass.us.to/fisting";
+            extraConfig = ''
+              proxy_ssl_server_name on;
+              proxy_ssl_name radio.gachibass.us.to;
+              proxy_set_header Host radio.gachibass.us.to;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+
+              proxy_http_version 1.1;
+              proxy_set_header Connection "";
+
+              proxy_buffering off;
+              proxy_cache off;
+              chunked_transfer_encoding on;
+
+              send_timeout 30m;
+
+              proxy_connect_timeout 10s;
+              proxy_read_timeout    30m;
+              proxy_send_timeout    30m;
+
+              keepalive_timeout 30m;
+
+              proxy_set_header Accept-Encoding "";
+              proxy_intercept_errors off;
+            '';
+          };
+        };
     in
     {
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
@@ -143,68 +229,17 @@ in
         internal = true;
         websockets = true;
       };
-      "gachi-radio.labile.cc" = {
+      "gachi-radio.labile.cc" = (gachiRadio {
+        rewrite = "https://gachi-radio.labile.cc";
+        rewritePlain = "gachi-radio.labile.cc";
+      }) // {
         enableACME = true;
         forceSSL = true;
-
-        locations."/" = {
-          proxyPass = "https://radio.gachibass.us.to";
-          extraConfig = ''
-            proxy_ssl_server_name on;
-            proxy_ssl_name radio.gachibass.us.to;
-            proxy_set_header Host radio.gachibass.us.to;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            proxy_set_header Accept-Encoding "";
-
-            sub_filter_types
-              application/javascript
-              text/css
-              application/json
-              text/plain;
-
-
-            sub_filter "https://radio.gachibass.us.to" "https://gachi-radio.labile.cc";
-            sub_filter "http://radio.gachibass.us.to"  "https://gachi-radio.labile.cc";
-            sub_filter "radio.gachibass.us.to"         "gachi-radio.labile.cc";
-
-            sub_filter_once off;
-          '';
-        };
-
-        locations."/fisting" = {
-          proxyPass = "https://radio.gachibass.us.to/fisting";
-          extraConfig = ''
-            proxy_ssl_server_name on;
-            proxy_ssl_name radio.gachibass.us.to;
-            proxy_set_header Host radio.gachibass.us.to;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-
-            proxy_buffering off;
-            proxy_cache off;
-            chunked_transfer_encoding on;
-
-            send_timeout 30m;
-
-            proxy_connect_timeout 10s;
-            proxy_read_timeout    30m;
-            proxy_send_timeout    30m;
-
-            keepalive_timeout 30m;
-
-            proxy_set_header Accept-Encoding "";
-            proxy_intercept_errors off;
-          '';
-        };
       };
-      "93.100.194.40" = {
+      "93.100.194.40" = (gachiRadio {
+        rewrite = "http://93.100.194.40:38264";
+        rewritePlain = "93.100.194.40:38264";
+      }) // {
         listen = [
           {
             addr = "0.0.0.0";
@@ -212,63 +247,6 @@ in
           }
         ];
         serverName = "93.100.194.40";
-
-        locations."/" = {
-          proxyPass = "https://radio.gachibass.us.to";
-          extraConfig = ''
-            proxy_ssl_server_name on;
-            proxy_ssl_name radio.gachibass.us.to;
-            proxy_set_header Host radio.gachibass.us.to;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            proxy_set_header Accept-Encoding "";
-
-            sub_filter_types
-              application/javascript
-              text/css
-              application/json
-              text/plain;
-
-
-            sub_filter "https://radio.gachibass.us.to" "http://93.100.194.40:38264";
-            sub_filter "http://radio.gachibass.us.to"  "http://93.100.194.40:38264";
-            sub_filter "radio.gachibass.us.to"         "93.100.194.40:38264";
-
-            sub_filter_once off;
-          '';
-        };
-
-        locations."/fisting" = {
-          proxyPass = "https://radio.gachibass.us.to/fisting";
-          extraConfig = ''
-            proxy_ssl_server_name on;
-            proxy_ssl_name radio.gachibass.us.to;
-            proxy_set_header Host radio.gachibass.us.to;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-
-            proxy_buffering off;
-            proxy_cache off;
-            chunked_transfer_encoding on;
-
-            send_timeout 30m;
-
-            proxy_connect_timeout 10s;
-            proxy_read_timeout    30m;
-            proxy_send_timeout    30m;
-
-            keepalive_timeout 30m;
-
-            proxy_set_header Accept-Encoding "";
-            proxy_intercept_errors off;
-          '';
-        };
       };
       "_" = {
         listen = [

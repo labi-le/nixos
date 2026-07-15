@@ -1,8 +1,6 @@
-{ pkgs ? import <nixpkgs> { }
-,
-}:
+{ writeShellScriptBin }:
 
-pkgs.writeShellScriptBin "generate-context" ''
+writeShellScriptBin "generate-context" ''
   #!/usr/bin/env bash
 
   set -euo pipefail

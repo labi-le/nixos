@@ -1,8 +1,6 @@
-{ pkgs ? import <nixpkgs> { }
-,
-}:
+{ writeShellScriptBin }:
 
-pkgs.writeShellScriptBin "ea-disable-overlay" ''
+writeShellScriptBin "ea-disable-overlay" ''
   #!/bin/sh
   set -e
 

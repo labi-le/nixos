@@ -13,31 +13,14 @@
     ./../modules/nvidia
   ];
 
-  services.xserver.xkb = {
-    layout = "us";
-  };
-
   hardware = {
     graphics.enable = true;
   };
 
-  programs.gnupg.agent = {
-    enable = true;
-    enableSSHSupport = true;
-  };
-
-  services.openssh.enable = true;
-
   system.stateVersion = "24.11";
 
-  network.injectHosts = true;
   packages = {
     desktop = true;
-  };
-
-  hotkeys = {
-    common = "Mod4";
-    additional = "Mod1";
   };
 
   monitors = {
@@ -49,7 +32,8 @@
   };
 
   enablePrime = true;
-  audio = {
-    enable = true;
+  primeBusIds = {
+    intel = "PCI:0:2:0";
+    nvidia = "PCI:1:0:0";
   };
 }

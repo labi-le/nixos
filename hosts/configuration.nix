@@ -31,21 +31,13 @@
     allowedUDPPorts = [ 10808 ];
   };
 
-  services.xserver.xkb = {
-    layout = "us";
-  };
-
   services.belphegor.enable = true;
   services.hardware.openrgb.enable = true;
   virtualisation.waydroid.enable = true;
 
-  programs.gnupg.agent = {
-    enable = true;
-  };
   programs.dconf.enable = true;
   system.stateVersion = "24.11";
 
-  network.injectHosts = true;
   ide = {
     goland.enable = true;
     phpstorm = {
@@ -63,10 +55,6 @@
   packages.desktop = true;
 
   networking.interfaces.eno1.wakeOnLan.enable = true;
-  hotkeys = {
-    common = "Mod4";
-    additional = "Mod1";
-  };
   monitors = {
     "DP-1" = {
       mode = "2560x1440@179.999Hz";
@@ -79,16 +67,17 @@
       geometry = "0 0";
       position = "left";
     };
-    # "DP-3" = {
-    #   mode = "--custom 2560x1440@83Hz";
-    #   transform = "270";
-    #   geometry = "4480 0";
-    #   position = "right";
-    # };
   };
   audio = {
-    enable = true;
     lowLatency = true;
   };
+
+  steamGamescope = {
+    width = 2560;
+    height = 1440;
+    refresh = 180;
+  };
+
+  homeDrive.device = "/dev/disk/by-uuid/fbd1306f-612b-4032-bd8c-445087dd7782";
 
 }
