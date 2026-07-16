@@ -93,6 +93,7 @@ in
     programs.wl-paste-uploader = mkIf cfg.desktop {
       enable = true;
       ocr = true;
+      provider = "catbox";
     };
 
     fonts = mkIf cfg.desktop {
