@@ -122,11 +122,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1783906982,
-        "narHash": "sha256-+7sj9Mz+a/ZnWX6A7ODLvp2Gfo9Vdiee2jK26kB2PUU=",
+        "lastModified": 1784196908,
+        "narHash": "sha256-xS6rSQBE4qqBIPv2HTgyhNVjsQhbWltCWO9CoL96esk=",
         "owner": "labi-le",
         "repo": "belphegor",
-        "rev": "8cc546da48108eb1f1493b721648d2a8f023f041",
+        "rev": "402486c56b470d4598ba12c31dca9027eb49f1c8",
         "type": "github"
       },
       "original": {
