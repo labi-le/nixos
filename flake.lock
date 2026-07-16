@@ -1021,11 +1021,11 @@
         "nixpkgs": "nixpkgs_11"
       },
       "locked": {
-        "lastModified": 1784103004,
-        "narHash": "sha256-rklXbOzCupNZFxJCbdo0ohORj6kIujylSVGVX1f1UZU=",
+        "lastModified": 1784189607,
+        "narHash": "sha256-LogLxEVQMZJlNkJH6xA8P0UTEq8+ENuxF/D+Gj10Y0o=",
         "owner": "labi-le",
         "repo": "omp-flake",
-        "rev": "c2798fd476f1f67d7d7238d53a70c1d82085466b",
+        "rev": "535fd4a803a3affe802546d210fe2148986686b5",
         "type": "github"
       },
       "original": {
