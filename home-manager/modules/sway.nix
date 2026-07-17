@@ -48,6 +48,22 @@ let
     fi
   '';
 
+  # Toggle Scarlett direct monitoring with one key. Enabling monitoring implies
+  # a mic session, so the script also raises 48V phantom (numid=8) if it is not
+  # already on — no separate hotkey needed. Disabling monitoring leaves 48V
+  # untouched; drop it with the hardware button when unplugging the mic.
+  # 48V on a properly wired balanced dynamic mic is harmless (common-mode);
+  # only passive ribbons care — drop 48V by hardware button before using one.
+  # numid=10 = Direct Monitor Playback Switch, numid=8 = Line In 1 Phantom Power.
+  toggleDirectMonitor = pkgs.writeShellScript "scarlett-toggle-monitor" ''
+    card=$(${pkgs.gawk}/bin/awk '/Scarlett/ {print $1; exit}' /proc/asound/cards)
+    [ -n "$card" ] || exit 0
+    amixer() { ${pkgs.alsa-utils}/bin/amixer -c "$card" "$@"; }
+    if amixer cset numid=10 toggle | ${pkgs.gnugrep}/bin/grep -q 'values=on'; then
+      amixer cget numid=8 | ${pkgs.gnugrep}/bin/grep -q 'values=on' || amixer cset numid=8 on
+    fi
+  '';
+
   workspaces = {
     terminal = "1";
     develop = "2";
@@ -354,8 +370,7 @@ in
         "${common}+Ctrl+Left" = "resize grow width 20 ppt";
         "XF86AudioLowerVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 -2%";
         "XF86AudioRaiseVolume" = "exec ${pkgs.pulseaudio}/bin/pactl set-sink-volume 0 +2%";
-        "XF86AudioMute" =
-          ''exec ${pkgs.alsa-utils}/bin/amixer -c $(cat /proc/asound/cards | grep "Scarlett" | head -n1 | awk '{print $1}') cset numid=10 toggle'';
+        "XF86AudioMute" = "exec ${toggleDirectMonitor}";
         "XF86AudioPlay" = "exec playerctl play";
         "XF86AudioPause" = "exec playerctl pause";
         "XF86AudioNext" = "exec playerctl next";
