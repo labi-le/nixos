@@ -12,6 +12,5 @@
   imports = [
     ./contact-points.nix
     ./tidal-syncer.nix
-    ./sub-preprocessor.nix
   ];
 }

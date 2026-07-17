@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, inputs, ... }:
 
 {
   imports = [
@@ -9,6 +9,7 @@
     ./../modules/kernel-cachyos.nix
     ./../modules/grafana.nix
     ./../modules/monitoring
+    inputs.sub-preprocessor.nixosModules.monitoring
     ./../modules/frp.nix
     # ./../modules/gitlab.nix
     ./../modules/syncthing/server.nix
