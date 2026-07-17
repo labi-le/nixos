@@ -500,6 +500,24 @@
         "type": "github"
       }
     },
+    "flake-utils_7": {
+      "inputs": {
+        "systems": "systems_11"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "fromYaml": {
       "flake": false,
       "locked": {
@@ -780,6 +798,22 @@
     },
     "nixpkgs_15": {
       "locked": {
+        "lastModified": 1781074563,
+        "narHash": "sha256-md8WlXOlfnIeHeOScMTTHFyf2d6iaTwPl2apR5EQ3P4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "9ae611a455b90cf061d8f332b977e387bda8e1ca",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_16": {
+      "locked": {
         "lastModified": 1744178885,
         "narHash": "sha256-Nf/ucWCGNK51G5JxLns2eumB/spxrLR+bwSY0vsSEkI=",
         "owner": "NixOS",
@@ -793,7 +827,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_16": {
+    "nixpkgs_17": {
       "locked": {
         "lastModified": 1784120854,
         "narHash": "sha256-KesHgItiZPgGX740axSiQLcIQ8D24MDqNpkKYWIek8k=",
@@ -1077,6 +1111,7 @@
         "opencode": "opencode",
         "sls-steam": "sls-steam",
         "stylix": "stylix",
+        "sub-preprocessor": "sub-preprocessor",
         "swaywm-mcp": "swaywm-mcp",
         "wl-uploader": "wl-uploader"
       }
@@ -1214,10 +1249,29 @@
         "type": "github"
       }
     },
-    "swaywm-mcp": {
+    "sub-preprocessor": {
       "inputs": {
         "flake-utils": "flake-utils_5",
         "nixpkgs": "nixpkgs_15"
+      },
+      "locked": {
+        "lastModified": 1784327798,
+        "narHash": "sha256-82g8vg/q0jycTvTtMh+Zx7AuboVP8d3Gp6LZ15jX+7s=",
+        "ref": "refs/heads/master",
+        "rev": "bf91db5aeb2d0eb3c9901d92372539a5068cecb8",
+        "revCount": 140,
+        "type": "git",
+        "url": "ssh://git@github.com/labi-le/sub-preprocessor"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/labi-le/sub-preprocessor"
+      }
+    },
+    "swaywm-mcp": {
+      "inputs": {
+        "flake-utils": "flake-utils_6",
+        "nixpkgs": "nixpkgs_16"
       },
       "locked": {
         "lastModified": 1744437348,
@@ -1249,6 +1303,21 @@
       }
     },
     "systems_10": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_11": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
@@ -1471,8 +1540,8 @@
     },
     "wl-uploader": {
       "inputs": {
-        "flake-utils": "flake-utils_6",
-        "nixpkgs": "nixpkgs_16"
+        "flake-utils": "flake-utils_7",
+        "nixpkgs": "nixpkgs_17"
       },
       "locked": {
         "lastModified": 1784203938,
