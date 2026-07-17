@@ -411,6 +411,21 @@ in
     # On launch, resume the cwd's most-recent session in full (conversation +
     # its last model) instead of a fresh session that resets to models.default.
     settings.autoResume = true;
+
+    # Context pruning ("DCP analog"): omp types only compaction.enabled, so the
+    # rest ride the freeform `settings` (merged last into config.yml). snapcompact
+    # is local/deterministic, no LLM or network cost, and the most token-frugal
+    # strategy (auto-falls back to context-full for non-vision models).
+    # midTurnEnabled prunes between tool-loop requests, not only post-turn;
+    # dropUseless blanks zero-value results (empty search/inbox, timed-out poll).
+    # Threshold left at the reserve-based default — it adapts to each model's
+    # window (128k-1M here), unlike a fixed percent.
+    settings.compaction = {
+      enabled = true;
+      strategy = "snapcompact";
+      midTurnEnabled = true;
+      dropUseless = true;
+    };
   };
 
   # User-scope MCP servers for omp (~/.omp/agent/mcp.json), merged with any
