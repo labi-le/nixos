@@ -17,6 +17,16 @@ final: prev: {
     doCheck = !prev.stdenv.hostPlatform.isi686;
   };
 
+  libfprint-tod = prev.libfprint-tod.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./pkgs/libfprint-tod-drop-elan-0c4b.patch ];
+    doInstallCheck = false;
+    nativeBuildInputs = old.nativeBuildInputs ++ [
+      (prev.python3.withPackages (ps: [ ps.pygobject3 ]))
+    ];
+  });
+
+  fprintd-tod = prev.fprintd.override { libfprint = final.libfprint-tod; };
+
   getmyip = prev.callPackage ./pkgs/getmyip.nix { };
   ea-disable-overlay = prev.callPackage ./pkgs/ea-disable-overlay.nix { };
   generate-context = prev.callPackage ./pkgs/generate-context.nix { };
