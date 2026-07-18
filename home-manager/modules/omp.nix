@@ -428,16 +428,16 @@ in
     };
 
     # Speech-to-text: local, offline dictation straight into the TUI editor.
-    # parakeet = NVIDIA Parakeet TDT 0.6B v3 (sherpa-onnx), 25 languages incl.
-    # Russian; SoTA default and fastest decoder. language=ru primes Russian
-    # (whisper models honor it; parakeet auto-detects anyway). submitTrigger=never
-    # keeps transcribed text in the editor for review instead of auto-sending.
-    # Trigger: app.stt.toggle -> Alt+S (keybindings.yml below); the built-in
-    # hold-Space push-to-talk gesture keeps working too. Model weights download
-    # on first activation, then run warm from ~/.omp cache.
+    # turbo = Whisper large-v3-turbo (99 languages), the strongest local model
+    # for Russian accuracy; larger download and heavier on CPU than the smaller
+    # tiers (fast=whisper-base, balanced=whisper-small, parakeet=Parakeet TDT
+    # 0.6B int8). language=ru forces Russian decoding. submitTrigger=never keeps
+    # transcribed text in the editor for review instead of auto-sending. Trigger:
+    # app.stt.toggle -> Alt+S (keybindings.yml below); hold-Space push-to-talk
+    # also works. Weights download on first activation, then run warm from cache.
     settings.stt = {
       enabled = true;
-      modelName = "parakeet";
+      modelName = "turbo";
       language = "ru";
       submitTrigger = "never";
     };
