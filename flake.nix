@@ -25,6 +25,7 @@
     ngate-wrapped.url = "git+ssh://git@github.com/labi-le/ngate-wrapped?dir=qcow2";
     index-repo.url = "git+ssh://git@github.com/labi-le/index-repo";
     sub-preprocessor.url = "git+ssh://git@github.com/labi-le/sub-preprocessor";
+    tidal-syncer.url = "git+ssh://git@github.com/labi-le/tidal-syncer";
     nur = {
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -1113,6 +1113,7 @@
         "stylix": "stylix",
         "sub-preprocessor": "sub-preprocessor",
         "swaywm-mcp": "swaywm-mcp",
+        "tidal-syncer": "tidal-syncer",
         "wl-uploader": "wl-uploader"
       }
     },
@@ -1451,6 +1452,21 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "tidal-syncer": {
+      "locked": {
+        "lastModified": 1784333474,
+        "narHash": "sha256-w30XLM7ke/T1c8HZ4sSIGt0NyEI9iEF7HUqZA9H9ANg=",
+        "ref": "refs/heads/main",
+        "rev": "4f38a618edc48bd345f2008820e4b85261e975bb",
+        "revCount": 24,
+        "type": "git",
+        "url": "ssh://git@github.com/labi-le/tidal-syncer"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/labi-le/tidal-syncer"
       }
     },
     "tinted-kitty": {
