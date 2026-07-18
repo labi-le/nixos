@@ -120,6 +120,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Hibernation | `modules/hibernation.nix` |
 | ADB | `modules/adb.nix` |
 | Bluetooth | `modules/bluetooth.nix` |
+| Fingerprint reader (Elan `04f3:0c4b`, fprintd TOD + PAM, sudo) | `modules/fingerprint-elan.nix` (uses `services.fprintd.tod` + `pkgs.libfprint-2-tod1-elan`; needs `overlays.nix` `libfprint-tod`/`fprintd-tod` overrides + `pkgs/libfprint-tod-drop-elan-0c4b.patch`) |
 | Steam | `modules/steam.nix` |
 | Syncthing (notebook) | `modules/syncthing/notebook.nix` |
 | IDE host options (notebook) | `hosts/configuration-notebook.nix` (ide attrset) |
