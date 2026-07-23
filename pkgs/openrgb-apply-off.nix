@@ -8,11 +8,7 @@
 writeShellScriptBin "openrgb-apply-off" ''
   set -u
   port=6742
-  profile=/home/labile/.config/OpenRGB/off.orp
   orgb=${openrgb}/bin/openrgb
-  mouse="G502 HERO Gaming Mouse"
-  mouse_mode="Spectrum Cycle"
-  mouse_speed="0"
 
   prev=""
   stable=0
@@ -28,6 +24,8 @@ writeShellScriptBin "openrgb-apply-off" ''
     ${coreutils}/bin/sleep 1
   done
 
-  "$orgb" --client "127.0.0.1:$port" --nodetect --profile "$profile"
-  exec "$orgb" --client "127.0.0.1:$port" --nodetect --device "$mouse" --mode "$mouse_mode" --speed "$mouse_speed"
+  "$orgb" --client "127.0.0.1:$port" --nodetect --device "ENE DRAM" --mode Off
+  "$orgb" --client "127.0.0.1:$port" --nodetect --device "Gigabyte AORUS Radeon RX 9070 XT Elite" --mode Static --color 000000
+  "$orgb" --client "127.0.0.1:$port" --nodetect --device "ASUS TUF GAMING B850M-PLUS WIFI" --mode Off
+  exec "$orgb" --client "127.0.0.1:$port" --nodetect --device "G502 HERO Gaming Mouse" --mode "Spectrum Cycle" --speed 0
 ''
