@@ -51,6 +51,7 @@
     extraConfig = ''
       # enable mouse support: scroll, click to select pane/window, drag to resize
       set -g mouse on
+      set-option -g window-size latest
 
       # close current window with prefix + x
       bind x kill-window
