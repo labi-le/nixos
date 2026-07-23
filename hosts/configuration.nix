@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   imports = [
@@ -33,6 +33,13 @@
 
   services.belphegor.enable = true;
   services.hardware.openrgb.enable = true;
+  systemd.services.openrgb.preStart = ''
+    config=/var/lib/OpenRGB/OpenRGB.json
+    if [ -f "$config" ]; then
+      ${pkgs.jq}/bin/jq '.Detectors.detectors."Keychron Q6 Max" = false | del(.Detectors."Keychron Q6 Max")' "$config" > "$config.new" \
+        && ${pkgs.coreutils}/bin/mv -f "$config.new" "$config"
+    fi
+  '';
   virtualisation.waydroid.enable = true;
 
   programs.dconf.enable = true;
