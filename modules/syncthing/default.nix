@@ -27,12 +27,6 @@ in
       example = "myuser";
     };
 
-    enableCaddy = mkOption {
-      type = types.bool;
-      default = false;
-      description = "Enable Caddy reverse proxy with HTTPS for syncthing UI";
-    };
-
     folders = mkOption {
       type = types.attrsOf (
         types.submodule {
@@ -64,20 +58,14 @@ in
   config = mkIf cfg.enable (
     let
       sharedWithNodes = unique (concatMap (folder: folder.sharesWith) (attrValues cfg.folders));
-      portMatch = lib.strings.match ".*:([0-9]+)" config.services.syncthing.guiAddress;
-      syncthingPort = lib.strings.toInt (lib.head portMatch);
     in
     mkMerge [
-      (mkIf cfg.enableCaddy (import ./caddy.nix { inherit config lib; }))
       {
         services.syncthing = {
           enable = true;
           guiAddress = "127.0.0.1:8384";
 
           settings = {
-            gui = {
-              insecureSkipHostCheck = true;
-            };
             devices = listToAttrs (
               map
                 (nodeName: {
@@ -99,17 +87,11 @@ in
           };
         };
 
-        networking.firewall.allowedTCPPorts = [
-          22000
-          syncthingPort
-        ];
+        networking.firewall.allowedTCPPorts = [ 22000 ];
         networking.firewall.allowedUDPPorts = [
           22000
           21027
         ];
-        networking.hosts = {
-          "127.0.0.1" = [ "syncthing" ];
-        };
       }
 
       (mkIf (cfg.user != null) {
