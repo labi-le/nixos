@@ -92,7 +92,6 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Syncthing (pc) | `modules/syncthing/pc.nix` |
 | Syncthing common module | `modules/syncthing/default.nix` |
 | Syncthing device IDs | `modules/syncthing/devices.nix` |
-| Syncthing Caddy reverse proxy | `modules/syncthing/caddy.nix` |
 | Monitor values (pc) | `hosts/configuration.nix` (monitors attrset) |
 | Hardware (pc) | `hosts/hardware-pc.nix` |
 | belphegor, openrgb, gnupg, dconf | `hosts/configuration.nix` |
@@ -147,7 +146,6 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Syncthing (server) | `modules/syncthing/server.nix` |
 | Syncthing common module | `modules/syncthing/default.nix` |
 | Syncthing device IDs | `modules/syncthing/devices.nix` |
-| Syncthing Caddy reverse proxy | `modules/syncthing/caddy.nix` |
 | NVIDIA GT 210 | `modules/nvidia/gt210.nix` |
 | Vaultwarden | `modules/vaultwarden.nix` |
 | qBittorrent | `modules/qbittorrent.nix` |
