@@ -47,4 +47,18 @@ final: prev: {
     in prev.writeShellScriptBin "swaywm-mcp" ''
       exec ${prev.nodejs}/bin/node ${base}/bin/main.js "$@"
     '';
+
+  # langfuse still pins wrapt<2.0 while nixpkgs ships 2.2.2, so
+  # pythonRuntimeDepsCheck fails and takes the whole litellm build (and with it
+  # the system closure) down. That check asserts metadata, not actual
+  # compatibility, and langfuse is only a transitive dep here -- nothing in
+  # services.litellm enables langfuse tracing. nixos-unstable had the identical
+  # failure as of 2026-07-26, so this cannot wait for an upstream bump. Relax
+  # just the one bound; overrideScope keeps the rebuild to langfuse's dependents
+  # instead of the whole python set.
+  python3Packages = prev.python3Packages.overrideScope (_: pyPrev: {
+    langfuse = pyPrev.langfuse.overridePythonAttrs (old: {
+      pythonRelaxDeps = (old.pythonRelaxDeps or [ ]) ++ [ "wrapt" ];
+    });
+  });
 }
