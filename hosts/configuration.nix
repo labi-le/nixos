@@ -74,6 +74,15 @@
       position = "left";
     };
   };
+
+  # fbcon sizes the text grid to the *smallest* connected output (here DP-2's
+  # 1920x1080) while the shared framebuffer is the bounding box (2560x1440), so
+  # the greeter painted only the top-left 1920x1080 of DP-1. Pinning DP-1's
+  # console mode to 1920x1080 makes the console cover the whole scanout; the
+  # monitor upscales it, and sway still picks 2560x1440@180 from EDID after
+  # login. Console only -- KMS clients ignore this.
+  boot.kernelParams = [ "video=DP-1:1920x1080" ];
+
   audio = {
     lowLatency = true;
   };

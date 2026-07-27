@@ -64,7 +64,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Desktop packages | `modules/packages-desktop.nix` | pc, fx516, notebook |
 | Sound / audio | `modules/sound.nix` | pc, fx516, notebook |
 | Wayland | `modules/wayland.nix` | pc, fx516, notebook |
-| Greeter (SDDM) | `modules/greeter.nix` | pc, fx516, notebook |
+| Greeter (ly + sway wayland-session entry) | `modules/greeter.nix` | pc, fx516, notebook |
 | NFS mounts | `modules/nfs.nix` | pc, fx516, notebook |
 | Thunar file manager | `modules/thunar.nix` | pc, fx516, notebook |
 | JetBrains IDE wrapper module | `modules/ide/module.nix` | flake common module; enabled by host `ide.*` options on pc/notebook |
