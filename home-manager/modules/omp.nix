@@ -15,6 +15,15 @@ let
     else
       "LITELLM_AIGATE_API_KEY";
 
+  # Single source of truth for the model omp runs on: models.default and the
+  # advisor role below must stay identical, so they read the same binding.
+  # `anthropic/claude-opus-5` is an exact provider/modelId match on the natively
+  # authed account, and omp resolves that form before canonical coalescing or
+  # bare-id lookup. The gateway's Claude ids only look alike: they are bare ids
+  # of the aigate provider, so a form like `anthropic/claude-haiku-4.5` (no
+  # native twin -- upstream spells it `claude-haiku-4-5`) lands on aigate.
+  mainModel = "anthropic/claude-opus-5";
+
   # --- Skills migrated from the (now-disabled) opencode module ---------------
   # Vendored from obra/superpowers + labi-le/agent-skills, plus three standalone
   # skills. Deployed to ~/.omp/agent/skills/<name> so omp's native provider
@@ -406,20 +415,18 @@ in
       };
     };
 
-    models.default = "deepseek/deepseek-v4-pro";
+    models.default = mainModel;
 
     # Advisor: a second model reviews every finished turn and injects <advisory>
     # notes back into the session (own tool session, read-only: read/grep/glob +
-    # advise). Both halves are required -- advisor.enabled without an advisor
-    # model role is inert. The role id carries the `aigate/` provider prefix so
-    # it is an exact provider/modelId pin: the bare `anthropic/claude-sonnet-4.6`
-    # form only lands on the gateway because the natively-authed anthropic
-    # provider spells the same model `claude-sonnet-4-6`, and the explicit
-    # selector bypasses canonical coalescing instead of relying on that.
-    # Sonnet-tier because a weak reviewer's false blockers cost whole primary
-    # turns. Defaults kept: syncBacklog=off (primary never waits on review
-    # backlog), immuneTurns=3, subagents=false (no advisor per spawned task).
-    models.roles.advisor = "aigate/anthropic/claude-sonnet-4.6";
+    # advise). The role is a literal copy of mainModel because omp has no
+    # "track the session's current model" selector -- role-alias values
+    # (`@default`, `@smol`) leave the advisor inactive, and an unset role falls
+    # back to the `slow` role and then to a generic best-available pick, which
+    # is what silently promoted the reviewer to a native anthropic opus.
+    # Defaults kept: syncBacklog=off (primary never waits on review backlog),
+    # immuneTurns=3, subagents=false (no advisor per spawned task agent).
+    models.roles.advisor = mainModel;
     settings.advisor.enabled = true;
 
     # On launch, resume the cwd's most-recent session in full (conversation +
