@@ -408,6 +408,20 @@ in
 
     models.default = "deepseek/deepseek-v4-pro";
 
+    # Advisor: a second model reviews every finished turn and injects <advisory>
+    # notes back into the session (own tool session, read-only: read/grep/glob +
+    # advise). Both halves are required -- advisor.enabled without an advisor
+    # model role is inert. The role id carries the `aigate/` provider prefix so
+    # it is an exact provider/modelId pin: the bare `anthropic/claude-sonnet-4.6`
+    # form only lands on the gateway because the natively-authed anthropic
+    # provider spells the same model `claude-sonnet-4-6`, and the explicit
+    # selector bypasses canonical coalescing instead of relying on that.
+    # Sonnet-tier because a weak reviewer's false blockers cost whole primary
+    # turns. Defaults kept: syncBacklog=off (primary never waits on review
+    # backlog), immuneTurns=3, subagents=false (no advisor per spawned task).
+    models.roles.advisor = "aigate/anthropic/claude-sonnet-4.6";
+    settings.advisor.enabled = true;
+
     # On launch, resume the cwd's most-recent session in full (conversation +
     # its last model) instead of a fresh session that resets to models.default.
     settings.autoResume = true;
