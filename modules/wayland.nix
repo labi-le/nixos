@@ -8,5 +8,4 @@
   ];
   programs.xwayland.enable = true;
   xdg.portal.config.common.default = "*";
-
 }

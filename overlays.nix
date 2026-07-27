@@ -27,6 +27,25 @@ final: prev: {
 
   fprintd-tod = prev.fprintd.override { libfprint = final.libfprint-tod; };
 
+  # Screencast on sway 1.11 goes through xdpw's ext-image-copy backend, and the
+  # stream dies with "pipewire: out of buffers" anywhere from 20s to 5min in:
+  # upstream asks PipeWire for a pool of two buffers, while Chromium's WebRTC
+  # capturer keeps one of them while it encodes. Eight buffers, on top of the
+  # three post-0.8.3 commits, keep the stream alive indefinitely.
+  xdg-desktop-portal-wlr = prev.xdg-desktop-portal-wlr.overrideAttrs (old: {
+    version = "0.8.3-unstable-2026-07-09";
+    src = final.fetchFromGitHub {
+      owner = "emersion";
+      repo = "xdg-desktop-portal-wlr";
+      rev = "544e11481338a3784a11cb30561f06982fc0a158";
+      hash = "sha256-qDL67snP2DFPp7Fgpru9MtC4iujWaz1A3c6ZALIoXnk=";
+    };
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace include/pipewire_screencast.h \
+        --replace-fail "#define XDPW_PWR_BUFFERS 2" "#define XDPW_PWR_BUFFERS 8"
+    '';
+  });
+
   getmyip = prev.callPackage ./pkgs/getmyip.nix { };
   ea-disable-overlay = prev.callPackage ./pkgs/ea-disable-overlay.nix { };
   generate-context = prev.callPackage ./pkgs/generate-context.nix { };
