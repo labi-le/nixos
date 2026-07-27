@@ -1,7 +1,8 @@
-{ pkgs
-, config
-, user
-, ...
+{
+  pkgs,
+  config,
+  user,
+  ...
 }:
 
 let
@@ -35,4 +36,6 @@ in
   programs.home-manager.enable = true;
   home.enableNixpkgsReleaseCheck = false;
   home.pointerCursor.enable = true;
+
+  programs.equibop.enable = true;
 }
