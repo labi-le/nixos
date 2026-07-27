@@ -94,7 +94,8 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Syncthing device IDs | `modules/syncthing/devices.nix` |
 | Monitor values (pc) | `hosts/configuration.nix` (monitors attrset) |
 | Hardware (pc) | `hosts/hardware-pc.nix` |
-| belphegor, openrgb, gnupg, dconf | `hosts/configuration.nix` |
+| GPU undervolt profile backup (LACT) | `hosts/lact-pc.yaml` | Snapshot only, not deployed — LACT rewrites `/etc/lact/config.yaml` at runtime |
+| belphegor, gnupg, dconf | `hosts/configuration.nix` |
 
 ## FX516-Specific Modules (`hosts/configuration-fx516.nix`)
 

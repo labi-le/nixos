@@ -6,7 +6,7 @@
     "mitigations=off"
     "threadirqs"
   ];
-  boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  boot.kernelPackages = pkgs.linuxPackages_cachyos-lts;
   boot.blacklistedKernelModules = [
     "snd_pcsp"
     "pcspkr"
