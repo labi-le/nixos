@@ -1,7 +1,10 @@
-# Snapshot of /etc/lact/config.yaml (pc, 2026-07-27).
-# LACT owns this file at runtime and rewrites it from the GUI, so it is kept
-# here as a restorable backup rather than deployed declaratively.
-# Restore: sudo systemctl stop lactd && sudo cp hosts/lact-pc.yaml /etc/lact/config.yaml && sudo systemctl start lactd
+# Deployed to /etc/lact/config.yaml via environment.etc, so this file is the
+# source of truth for the GPU profile: -60mV undervolt, 1375MHz VRAM, 364W cap,
+# COMPUTE power profile (needs performance_level: manual), custom fan curve.
+# Because /etc/lact/config.yaml ends up a store symlink, the LACT GUI can no
+# longer save changes -- edit here and rebuild instead.
+# services.lact.settings is deliberately not used: pkgs.formats.yaml quotes map
+# keys ('40': 0.3) and LACT parses the fan curve as BTreeMap<i32, f32>.
 version: 6
 daemon:
   log_level: info

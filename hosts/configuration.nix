@@ -34,6 +34,13 @@
   services.belphegor.enable = true;
   virtualisation.waydroid.enable = true;
 
+  # GPU profile lives in the repo instead of being hand-placed in /etc. Raw
+  # YAML rather than services.lact.settings: that option renders through
+  # pkgs.formats.yaml, which quotes map keys, and lactd then dies on the fan
+  # curve with `invalid type: string "40", expected i32`.
+  environment.etc."lact/config.yaml".source = ./lact-pc.yaml;
+  systemd.services.lactd.restartTriggers = [ ./lact-pc.yaml ];
+
   programs.dconf.enable = true;
   system.stateVersion = "24.11";
 
