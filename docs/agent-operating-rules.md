@@ -43,3 +43,9 @@ Before generating any response, evaluate its Uncertainty Score from `0.0` to
 - Use the simplest working solution.
 - Use idioms and best practices for the specific language, such as Go or C++.
 - Always output the full file code without cherry-picking.
+
+## 5. Commit Messages
+
+- Keep commit messages very short: a single line in the form
+  `scope: description`, lowercase, imperative. No body, no bullet lists, and no
+  explanations unless strictly necessary.
