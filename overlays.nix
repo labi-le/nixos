@@ -17,16 +17,6 @@ final: prev: {
     doCheck = !prev.stdenv.hostPlatform.isi686;
   };
 
-  libfprint-tod = prev.libfprint-tod.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./pkgs/libfprint-tod-drop-elan-0c4b.patch ];
-    doInstallCheck = false;
-    nativeBuildInputs = old.nativeBuildInputs ++ [
-      (prev.python3.withPackages (ps: [ ps.pygobject3 ]))
-    ];
-  });
-
-  fprintd-tod = prev.fprintd.override { libfprint = final.libfprint-tod; };
-
   # Screencast on sway 1.11 goes through xdpw's ext-image-copy backend, and the
   # stream dies with "pipewire: out of buffers" anywhere from 20s to 5min in:
   # upstream asks PipeWire for a pool of two buffers, while Chromium's WebRTC
