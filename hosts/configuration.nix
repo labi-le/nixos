@@ -24,6 +24,7 @@
     ./../modules/bluetooth.nix
     ./../modules/amd
     ./../modules/work-mount.nix
+    ./../modules/sensor-log.nix
   ];
 
   networking.firewall = {

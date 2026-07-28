@@ -95,6 +95,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Monitor values (pc) | `hosts/configuration.nix` (monitors attrset) |
 | Hardware (pc) | `hosts/hardware-pc.nix` |
 | GPU profile (LACT: undervolt, fan curve, power profile) | `hosts/lact-pc.yaml` | Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink |
+| Sensor trace for freeze forensics | `modules/sensor-log.nix` | hwmon only, every 10s; journald syncs every 1s so the last sample survives a hang |
 | belphegor, gnupg, dconf | `hosts/configuration.nix` |
 
 ## FX516-Specific Modules (`hosts/configuration-fx516.nix`)
