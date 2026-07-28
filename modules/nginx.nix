@@ -129,6 +129,34 @@ in
             }
           '';
         };
+      # Sub Store: the UI and the whole admin API sit behind the IP whitelist,
+      # but subscription links must stay reachable from anywhere -- clients fetch
+      # them over mobile networks. Only the backend's /download/ route is public,
+      # matched by shape (32-hex prefix) so the backend path itself stays out of
+      # this repo; a wrong prefix just falls through to the SPA.
+      subStore =
+        { addr }:
+        base {
+          "/" = {
+            proxyPass = addr;
+            extraConfig = ''
+              include ${ipWhiteList};
+              deny all;
+              error_page 403 @error404;
+            '';
+          };
+          "~ ^/[0-9a-f]+/download/" = {
+            proxyPass = addr;
+          };
+        }
+        // {
+          kTLS = true;
+          extraConfig = ''
+            location @error404 {
+              return 404;
+            }
+          '';
+        };
       gachiRadio =
         { rewrite, rewritePlain }:
         {
@@ -219,7 +247,7 @@ in
         # internal = true;
       };
       "ip.labile.cc" = proxy { addr = "http://127.0.0.1:7006"; };
-      "sub.labile.cc" = proxy { addr = "http://127.0.0.1:3001"; };
+      "sub.labile.cc" = subStore { addr = "http://127.0.0.1:3001"; };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";
         internal = true;
