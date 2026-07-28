@@ -32,6 +32,14 @@
     allowedUDPPorts = [ 10808 ];
   };
 
+  # Freeze hunt: the box hard-hangs with no logs, so let the FCH timer reboot
+  # it after 60s instead of the reset button. systemd stops feeding /dev/watchdog
+  # on any hang, so a self-reboot only proves the chipset kept ticking -- the
+  # informative outcome is the timer NOT firing, which means the hang took the
+  # FCH or its rails down too.
+  boot.kernelModules = [ "sp5100_tco" ];
+  systemd.watchdog.runtimeTime = "60s";
+
   services.belphegor.enable = true;
   services.hardware.openrgb.enable = true;
   systemd.services.openrgb.preStart = ''
