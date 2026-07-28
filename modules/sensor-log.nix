@@ -4,9 +4,9 @@ let
   # Freeze forensics: the machine dies without leaving a single kernel line, so
   # the only way to learn anything is to have a thermal/power trace already on
   # disk when it happens. journald syncs every 1s (modules/journald.nix), so the
-  # last sample before death survives. Deliberately limited to sysfs hwmon:
-  # probing the Super-I/O (nct6775) or SMBus for VRM/+12V rails would poke the
-  # very buses under suspicion.
+  # last sample before death survives. k10temp and amdgpu only: DIMM temps read
+  # through spd5118 were dropped after an smbus tracepoint run showed they were
+  # the only SMBus traffic on the box, and SMBus is itself a suspect.
   script = pkgs.writeShellScript "sensor-log" ''
     set -u
     cat=${pkgs.coreutils}/bin/cat
@@ -41,12 +41,8 @@ let
     while :; do
       cpu=$(find_hwmon k10temp | ${pkgs.coreutils}/bin/head -1)
       gpu=$(find_hwmon amdgpu | ${pkgs.coreutils}/bin/head -1)
-      set -- $(find_hwmon spd5118)
-      dimm0=''${1:-}
-      dimm1=''${2:-}
 
       out="cpu=$(read_milli "$cpu/temp1_input")C ccd=$(read_milli "$cpu/temp3_input")C"
-      out="$out dimm0=$(read_milli "$dimm0/temp1_input")C dimm1=$(read_milli "$dimm1/temp1_input")C"
       out="$out gpu=$(read_milli "$gpu/temp1_input")C hotspot=$(read_milli "$gpu/temp2_input")C vram=$(read_milli "$gpu/temp3_input")C"
       out="$out gpu_pwr=$(read_micro "$gpu/power1_average")W gpu_mv=$($cat "$gpu/in0_input" 2>/dev/null || echo '?')"
       out="$out gpu_busy=$($cat "$gpu/device/gpu_busy_percent" 2>/dev/null || echo '?')%"
