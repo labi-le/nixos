@@ -139,10 +139,14 @@ in
         base {
           "/" = {
             proxyPass = addr;
+            # Plain 403, NOT the @error404 remap the other internal vhosts use:
+            # the nginx-404 jail bans 5x404/60s for 5h at the firewall, and that
+            # ban would also cut off the public /download/ links below. Hiding
+            # the host is pointless here anyway -- its subscription URLs are
+            # handed out publicly.
             extraConfig = ''
               include ${ipWhiteList};
               deny all;
-              error_page 403 @error404;
             '';
           };
           "~ ^/[0-9a-f]+/download/" = {
@@ -151,11 +155,6 @@ in
         }
         // {
           kTLS = true;
-          extraConfig = ''
-            location @error404 {
-              return 404;
-            }
-          '';
         };
       gachiRadio =
         { rewrite, rewritePlain }:
