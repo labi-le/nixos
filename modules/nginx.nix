@@ -17,7 +17,10 @@ in
     443
     38264
   ];
-  services.logrotate.settings.nginx.enable = false;
+  # Rotation was off, so access.log reached 300 MB / 742k lines since Oct 2025
+  # and kept every leaked secret path in it indefinitely. Module defaults apply
+  # (weekly, 26 kept, compressed, USR1 to reopen).
+  services.logrotate.settings.nginx.enable = true;
 
   environment.etc."fail2ban/filter.d/nginx-404.conf".text = ''
     [Definition]
