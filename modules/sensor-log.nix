@@ -3,10 +3,10 @@
 let
   # Freeze forensics: the machine dies without leaving a single kernel line, so
   # the only way to learn anything is to have a thermal/power trace already on
-  # disk when it happens. journald flushes every 5s, so the last sample before
-  # death survives. Deliberately limited to sysfs hwmon: probing the Super-I/O
-  # (nct6775) or SMBus for VRM/+12V rails would poke the very buses under
-  # suspicion.
+  # disk when it happens. journald syncs every 1s (modules/journald.nix), so the
+  # last sample before death survives. Deliberately limited to sysfs hwmon:
+  # probing the Super-I/O (nct6775) or SMBus for VRM/+12V rails would poke the
+  # very buses under suspicion.
   script = pkgs.writeShellScript "sensor-log" ''
     set -u
     cat=${pkgs.coreutils}/bin/cat
