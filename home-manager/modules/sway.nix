@@ -111,6 +111,9 @@ in
         {
           command = "${idleDpms}";
         }
+        {
+          command = "${pkgs.openrgb-apply-off}/bin/openrgb-apply-off";
+        }
       ];
       modes = {
         resize = {
