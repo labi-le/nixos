@@ -38,7 +38,7 @@
   # informative outcome is the timer NOT firing, which means the hang took the
   # FCH or its rails down too.
   boot.kernelModules = [ "sp5100_tco" ];
-  systemd.watchdog.runtimeTime = "60s";
+  systemd.settings.Manager.RuntimeWatchdogSec = "60s";
 
   services.belphegor.enable = true;
   services.hardware.openrgb.enable = true;
