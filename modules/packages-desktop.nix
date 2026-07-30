@@ -28,6 +28,4 @@ with pkgs;
   ayugram-desktop
   vlc
   quickemu
-
-  discord-canary
 ]

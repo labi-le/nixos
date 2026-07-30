@@ -1,0 +1,109 @@
+From 0043848c2809535c25cb4e724c09b669225cf7c9 Mon Sep 17 00:00:00 2001
+From: Scott Leggett <scott@sl.id.au>
+Date: Tue, 21 Jul 2026 16:00:28 +0800
+Subject: [PATCH] screencast: fix stream freezing on PipeWire buffer starvation
+
+Currently, when the stream runs out of buffers, PipeWire's graph
+iteration fails and freezes the stream.
+
+This commit introduces a repeating timer to call
+pw_stream_trigger_process at the negotiated frame rate when starved of
+buffers to ensure recovery once a buffer becomes available.
+---
+ include/screencast_common.h          |  1 +
+ src/screencast/pipewire_screencast.c | 44 ++++++++++++++++++++++++++--
+ 2 files changed, 43 insertions(+), 2 deletions(-)
+
+diff --git a/include/screencast_common.h b/include/screencast_common.h
+index baaff360..668f80c7 100644
+--- a/include/screencast_common.h
++++ b/include/screencast_common.h
+@@ -203,6 +203,7 @@ struct xdpw_screencast_instance {
+ 	uint64_t pipewire_serial;
+ 	bool pwr_stream_state;
+ 	uint32_t framerate;
++	struct xdpw_timer *process_retry;
+ 
+ 	// wlroots
+ 	union {
+diff --git a/src/screencast/pipewire_screencast.c b/src/screencast/pipewire_screencast.c
+index 64720c51..69176df8 100644
+--- a/src/screencast/pipewire_screencast.c
++++ b/src/screencast/pipewire_screencast.c
+@@ -369,6 +369,11 @@ static uint64_t read_object_serial(struct pw_stream *stream) {
+ 	return serial;
+ }
+ 
++static void pwr_disarm_process_retry(struct xdpw_screencast_instance *cast) {
++	xdpw_destroy_timer(cast->process_retry);
++	cast->process_retry = NULL;
++}
++
+ static void pwr_handle_stream_state_changed(void *data,
+ 		enum pw_stream_state old, enum pw_stream_state state, const char *error) {
+ 	struct xdpw_screencast_instance *cast = data;
+@@ -393,6 +398,7 @@ static void pwr_handle_stream_state_changed(void *data,
+ 		// fall through
+ 	default:
+ 		cast->pwr_stream_state = false;
++		pwr_disarm_process_retry(cast);
+ 		break;
+ 	}
+ }
+@@ -612,6 +618,38 @@ static void pwr_handle_stream_remove_buffer(void *data, struct pw_buffer *buffer
+ 	buffer->user_data = NULL;
+ }
+ 
++static uint64_t pwr_process_retry_delay(struct xdpw_screencast_instance *cast) {
++	// max_framerate is only valid when framerate is (0/1) (variable rate negotiated)
++	struct spa_fraction *rate = &cast->pwr_format.framerate;
++	if (rate->num == 0) {
++		rate = &cast->pwr_format.max_framerate;
++	}
++	if (rate->num > 0 && rate->denom > 0) {
++		return (uint64_t)SPA_NSEC_PER_SEC * rate->denom / rate->num;
++	}
++	return SPA_NSEC_PER_SEC / 60; // ~16ms/60fps fallback
++}
++
++static void pwr_process_retry(void *data);
++
++static void pwr_arm_process_retry(struct xdpw_screencast_instance *cast) {
++	if (cast->process_retry) {
++		return;
++	}
++	cast->process_retry = xdpw_add_timer(cast->ctx->state,
++		pwr_process_retry_delay(cast), pwr_process_retry, cast);
++	if (!cast->process_retry) {
++		logprint(ERROR, "pipewire: failed to arm process retry timer, stream may stall");
++	}
++}
++
++static void pwr_process_retry(void *data) {
++	struct xdpw_screencast_instance *cast = data;
++	cast->process_retry = NULL; // timer destroyed in event loop
++	pwr_arm_process_retry(cast);
++	pw_stream_trigger_process(cast->stream);
++}
++
+ static void pwr_handle_stream_on_process(void *data) {
+ 	struct xdpw_screencast_instance *cast = data;
+ 
+@@ -629,13 +667,15 @@ static void pwr_handle_stream_on_process(void *data) {
+ 
+ 	xdpw_pwr_dequeue_buffer(cast);
+ 	if (!cast->current_frame.pw_buffer) {
+-		logprint(WARN, "pipewire: unable to export buffer");
++		logprint(WARN, "pipewire: unable to export buffer, dropping frame");
++		pwr_arm_process_retry(cast);
+ 		return;
+ 	}
++
++	pwr_disarm_process_retry(cast);
+ 	xdpw_wlr_frame_capture(cast);
+ }
+ 
+-
+ static const struct pw_stream_events pwr_stream_events = {
+ 	PW_VERSION_STREAM_EVENTS,
+ 	.state_changed = pwr_handle_stream_state_changed,

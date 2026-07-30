@@ -7,7 +7,7 @@
     };
     mimeApps =
       let
-        discord = "vesktop.desktop";
+        discord = "equibop.desktop";
         image-editor = "gimp.desktop";
         imv = "imv.desktop";
         mediaplayer = "mpv.desktop";
