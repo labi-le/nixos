@@ -6,8 +6,6 @@
 }:
 
 writeShellScriptBin "tmux-session-switcher" ''
-  ${swayfx}/bin/swaymsg border none >/dev/null 2>&1
-
   # Cold start (fresh boot): no tmux server yet. Start it here — in the graphical
   # session, so it inherits WAYLAND_DISPLAY/SWAYSOCK/SSH_AUTH_SOCK — and restore
   # the last resurrect snapshot synchronously (run-shell blocks the queue until
@@ -15,7 +13,10 @@ writeShellScriptBin "tmux-session-switcher" ''
   # in fzf and `new-session -A` below attaches to them instead of racing a
   # background restore. Chaining in one invocation keeps the empty server from
   # exiting (exit-empty) before restore recreates the sessions.
-  if ! tmux has-server 2>/dev/null; then
+  # Guard on list-sessions, NOT `tmux has-server`: tmux has no has-server
+  # command, so `! tmux has-server` errored to true every launch and reran
+  # restore each time. list-sessions exits 0 iff a server is up.
+  if ! tmux list-sessions >/dev/null 2>&1; then
     tmux start-server \; run-shell "${tmuxPlugins.resurrect}/share/tmux-plugins/resurrect/scripts/restore.sh"
   fi
   sessions=$(tmux list-sessions -F '#S' 2>/dev/null || true)
