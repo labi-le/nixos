@@ -252,7 +252,7 @@ in
           };
         }
         {
-          command = "floating enable; resize set width 50 ppt height 40 ppt; focus";
+          command = "floating enable; resize set width 50 ppt height 40 ppt; border none; focus";
           criteria = {
             app_id = "tmux-switcher";
           };
