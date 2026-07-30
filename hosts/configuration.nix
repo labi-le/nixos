@@ -24,7 +24,6 @@
     ./../modules/bluetooth.nix
     ./../modules/amd
     ./../modules/work-mount.nix
-    ./../modules/sensor-log.nix
   ];
 
   networking.firewall = {
@@ -32,11 +31,10 @@
     allowedUDPPorts = [ 10808 ];
   };
 
-  # Freeze hunt: the box hard-hangs with no logs, so let the FCH timer reboot
-  # it after 60s instead of the reset button. systemd stops feeding /dev/watchdog
-  # on any hang, so a self-reboot only proves the chipset kept ticking -- the
-  # informative outcome is the timer NOT firing, which means the hang took the
-  # FCH or its rails down too.
+  # The box can hard-hang with no logs at all (a too-deep Curve Optimizer did it
+  # for five days in July 2026). The FCH timer reboots it after 60s instead of
+  # waiting for the reset button; systemd stops feeding /dev/watchdog on any
+  # hang, so this costs nothing while the machine is healthy.
   boot.kernelModules = [ "sp5100_tco" ];
   systemd.settings.Manager.RuntimeWatchdogSec = "60s";
 

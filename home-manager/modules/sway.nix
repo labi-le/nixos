@@ -192,8 +192,10 @@ in
           { class = "steam_app_9420"; }
         ];
         ${workspaces.social} = [
-          { app_id = "vesktop"; }
-          { class = "discord-canary"; }
+          # Electron sets its Wayland app_id from desktopName ("equibop" in the
+          # asar); the class form is the XWayland fallback.
+          { app_id = "(?i)equibop"; }
+          { class = "(?i)equibop"; }
           { app_id = "obsidian"; }
           { app_id = "com.ayugram.desktop"; }
         ];
