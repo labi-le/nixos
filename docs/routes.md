@@ -95,6 +95,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Monitor values (pc) | `hosts/configuration.nix` (monitors attrset) |
 | Hardware (pc) | `hosts/hardware-pc.nix` |
 | GPU profile (LACT: undervolt, fan curve, power profile) | `hosts/lact-pc.yaml` | Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink |
+|RGB lighting (OpenRGB): device profiles + swayidle blanking|`pkgs/openrgb-profile.nix`|`openrgb-profile [--wait] default\|off`; `default` = GPU and DRAM dark, mouse on Spectrum Cycle, `off` = everything dark. Wired from `home-manager/modules/sway.nix` (sway `startup` + swayidle `timeout`/`resume`); the OpenRGB server itself is `services.hardware.openrgb` in `hosts/configuration.nix`, whose `preStart` strips the Keychron Q6 Max detector so the keyboard keeps its firmware lighting|
 | Hardware watchdog (sp5100_tco) | `hosts/configuration.nix` | armed by `systemd.settings.Manager.RuntimeWatchdogSec`; self-reboot 60s after a hang |
 | belphegor, gnupg, dconf | `hosts/configuration.nix` |
 
@@ -234,5 +235,5 @@ Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{
 | `settings.nix` | Common settings (nix settings, allowed packages) |
 | `Makefile` | Convenience targets: `switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise` |
 | `.omp/mcp.json` | Project-scoped MCP servers for this repo; edited here directly, not emitted by Home Manager |
-| `.omp/nixcfg-mcp/` | The `nixcfg` MCP server, split by concern: `config` constants, `protocol` JSON-RPC, `shell` subprocess, `jobs` detached runs, `pane` sudo tmux pane, `system`/`flake`/`routes`/`rules`/`agenix` tools, `registry` schemas, `server` dispatch, `__main__` entry |
+| `.omp/nixcfg-mcp/*.py` | The `nixcfg` MCP server, split by concern: `config` constants, `protocol` JSON-RPC, `text` formatting, `shell` subprocess, `jobs` detached runs, `pane` sudo tmux pane, `system`/`flake`/`routes`/`rules`/`agenix` tools, `registry` schemas, `server` dispatch, `__main__` entry |
 | `.omp/skills/nix-routing/SKILL.md` | Project skills live under `.omp/skills/`, loaded by omp's native skill provider |

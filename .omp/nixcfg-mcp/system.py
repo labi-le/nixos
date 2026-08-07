@@ -16,14 +16,13 @@ from protocol import ToolError
 from shell import (
     cores,
     current_host,
-    envelope,
     failed_derivation,
     first_error,
     require_host,
     run,
-    tail,
     untracked_nix,
 )
+from text import envelope, tail
 
 
 def failed_units():

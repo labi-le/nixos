@@ -4,16 +4,8 @@ import time
 from config import LOCK, MISSING_ATTR_RE, OWNER, REPO
 from jobs import await_job, finish_job, read_log, start_job
 from protocol import ToolError
-from shell import (
-    clamp,
-    envelope,
-    first_error,
-    nix_noise,
-    require_host,
-    run,
-    run_split,
-    tail,
-)
+from shell import first_error, nix_noise, require_host, run, run_split
+from text import clamp, envelope, tail
 
 
 def eval_prelude(host):

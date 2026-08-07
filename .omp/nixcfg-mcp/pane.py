@@ -7,7 +7,8 @@ from pathlib import Path
 
 from config import SUDO_PANE
 from protocol import ToolError
-from shell import run_split, tail
+from shell import run_split
+from text import tail
 
 
 def tmux_socket():

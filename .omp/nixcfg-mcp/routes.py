@@ -4,7 +4,7 @@ from pathlib import Path
 
 from config import DELIMITER_RE, HOSTS, PATH_CELL_RE, PATH_SHAPE_RE, REPO, ROUTES, STOP_WORDS
 from protocol import ToolError
-from shell import envelope
+from text import envelope
 
 
 ROUTES_CACHE = {"mtime": None, "sections": None, "rows": None, "idf": None}

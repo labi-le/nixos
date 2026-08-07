@@ -6,7 +6,7 @@ from pathlib import Path
 
 from config import JOBS, LOG_TAIL_BYTES, MAX_JOBS, REPO
 from protocol import CANCELLED, progress
-from shell import tail
+from text import tail
 
 
 JOB_CHILDREN = {}
