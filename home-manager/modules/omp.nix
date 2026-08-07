@@ -273,75 +273,10 @@ in
   # is pinned so it works even when swaymsg is absent from PATH. Skills are
   # migrated from the (disabled) opencode module above.
   home.file = skillFiles // {
-    ".omp/agent/RULES.md".text = ''
-      # Subagent supervision
-
-      You supervise running subagents; never park behind a batch.
-
-      - `hub jobs` reports only what settled. It carries no liveness signal:
-        never diff snapshots to judge health.
-      - Liveness is `history://`. One bare listing gives every agent's status
-        and last-activity age; that is the probe, and it costs the agents
-        nothing.
-      - Judge by last-activity age, never elapsed runtime. Builds and wide
-        searches are legitimately silent for many minutes.
-      - Stale past ~15 minutes: read that agent's `history://<id>` first. Only
-        if the transcript is frozen, `hub send` for a one-line status; never
-        interrogate one you have not read.
-      - Still frozen on the next probe: `hub cancel` and re-dispatch narrower.
-      - `completed` is a claim, not proof. Verify the files actually changed.
-
-      # Comments
-
-      Short, rare, and only where the code cannot speak for itself. Explain
-      why, never what. A comment running past a couple of lines means the code
-      needs a better name or a smaller function. A project whose own AGENTS.md
-      bans comments outright overrides this.
-    '';
-
-    ".omp/agent/rules/commit-style.md".text = ''
-      ---
-      description: Commit subject and body format
-      condition: '\bgit\b[^\n]*\bcommit\b'
-      scope: tool
-      interruptMode: tool-only
-      ---
-
-      Subject is `component: what changed` — the component is the module, host
-      or package the change belongs to (`omp:`, `pc:`, `nginx:`, `flake:`,
-      `server:`), lowercase and imperative after the colon. Median subject is
-      under 30 characters; treat 70 as the hard ceiling. Add a body only when
-      the change hides a decision the diff cannot show, and keep it to a couple
-      of lines. Never restate the diff, list touched files, or append generated
-      trailers.
-    '';
-
-    ".omp/agent/rules/project-naming.md".text = ''
-      ---
-      description: Naming a new project, repo, binary or service in the user's demonology and imperial gothic register
-      ---
-
-      Propose from the register in AGENTS.md and make the myth carry the
-      function: Belphegor is the demon of ingenious labour-saving inventions,
-      which is why he owns the clipboard daemon. A name that is merely ominous
-      is noise — the entity's domain must map onto what the code does. Offer
-      two or three candidates, state the mapping in one line each, and never
-      reuse a name already taken by one of the user's repos.
-    '';
-
-    ".omp/agent/AGENTS.md".text = ''
-      # Naming aesthetic
-
-      The user's register is demonology and imperial gothic: the Seven Princes
-      of Hell and the Ars Goetia grimoires (Belphegor, Astaroth), and Warhammer
-      40k High Gothic (Adeptus, Mechanicus, cogitator, machine spirit,
-      sanctum). Belphegor is not in the Ars Goetia's seventy-two spirits; he is
-      a Prince of Hell from Binsfeld's classification and the Dictionnaire
-      Infernal.
-
-      Names already spent on that register: `belphegor`, `belphegor-mobile`,
-      `astaroth-*`, `thief`, `tempest`.
-    '';
+    ".omp/agent/RULES.md".source = ./omp/RULES.md;
+    ".omp/agent/rules/commit-style.md".source = ./omp/rules/commit-style.md;
+    ".omp/agent/rules/project-naming.md".source = ./omp/rules/project-naming.md;
+    ".omp/agent/AGENTS.md".source = ./omp/AGENTS.md;
     ".omp/agent/mcp.json".text = builtins.toJSON {
       "$schema" =
         "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json";
