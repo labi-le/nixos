@@ -29,12 +29,15 @@ STATE = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state
 JOBS = STATE / "jobs"
 MAX_TEXT = 20000
 SHORT_TIMEOUT = 180
+OWNER = Path.home().name
+MAX_JOBS = 40
+LOG_TAIL_BYTES = 256 * 1024
 STOP_WORDS = frozenset(
     "the and for with from into that this how where add use set new when only "
     "change edit configure enable disable make host hosts file files module modules".split()
 )
 PATH_CELL_RE = re.compile(r"`([^`]+)`")
-PATH_SHAPE_RE = re.compile(r"^[\w./@<>*+-]+\.(nix|ya?ml|age|json|jar|lock|patch|py)$")
+PATH_SHAPE_RE = re.compile(r"^[\w./@<>*+-]+\.(nix|ya?ml|age|json|jar|lock|patch|py|md)$")
 DELIMITER_RE = re.compile(r"^\|[\s\-:|]+\|$")
 DIRTY_WARNING_RE = re.compile(r"Git tree '.*' is dirty")
 BUILT_RE = re.compile(r"these (\d+) derivations will be built")
@@ -45,7 +48,8 @@ WOULD_DELETE_RE = re.compile(r"(\d+) store paths would be deleted")
 
 OUT_LOCK = threading.Lock()
 CANCELLED = set()
-JOB_LOCK = threading.Lock()
+JOB_CHILDREN = {}
+MISSING_ATTR_RE = re.compile(r"attribute '[^']+' missing|does not provide attribute")
 ROUTES_CACHE = {"mtime": None, "sections": None, "rows": None, "idf": None}
 
 
@@ -96,6 +100,37 @@ def run(argv, timeout=SHORT_TIMEOUT, cwd=None):
     return done.returncode, done.stdout.decode("utf-8", "replace")
 
 
+def run_split(argv, timeout=SHORT_TIMEOUT, cwd=None):
+    try:
+        done = subprocess.run(
+            argv,
+            cwd=str(cwd or REPO),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+    except FileNotFoundError:
+        raise ToolError(f"executable not found: {argv[0]}")
+    except subprocess.TimeoutExpired:
+        raise ToolError(f"timed out after {timeout}s: {' '.join(argv)}")
+    return (
+        done.returncode,
+        done.stdout.decode("utf-8", "replace"),
+        done.stderr.decode("utf-8", "replace"),
+    )
+
+
+def nix_noise(text):
+    return "\n".join(
+        line
+        for line in text.splitlines()
+        if line.strip()
+        and not DIRTY_WARNING_RE.search(line)
+        and not line.startswith("error (ignored):")
+    )
+
+
 def tail(text, lines):
     kept = text.splitlines()[-lines:]
     return "\n".join(kept)
@@ -130,13 +165,15 @@ def require_host(args, default_current=True):
 
 
 def untracked_nix():
-    code, out = run(["git", "status", "--porcelain", "--untracked-files=all"], timeout=60)
+    code, out = run(
+        ["git", "status", "--porcelain", "-z", "--untracked-files=all"], timeout=60
+    )
     if code != 0:
         return []
     return [
-        line[3:]
-        for line in out.splitlines()
-        if line.startswith("?? ") and line.rstrip().endswith(".nix")
+        entry[3:]
+        for entry in out.split("\0")
+        if entry.startswith("?? ") and entry.endswith(".nix")
     ]
 
 
@@ -170,14 +207,15 @@ def job_log_path(job):
 
 def allocate_job(action):
     base = "%s-%s" % (action.replace("-", "_"), time.strftime("%Y%m%d-%H%M%S"))
-    with JOB_LOCK:
-        job = base
-        suffix = 1
-        while job_log_path(job).exists():
+    job = base
+    suffix = 1
+    while True:
+        try:
+            os.close(os.open(str(job_log_path(job)), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644))
+            return job
+        except FileExistsError:
             suffix += 1
             job = f"{base}-{suffix}"
-        job_log_path(job).touch()
-    return job
 
 
 def start_job(action, argv):
@@ -205,6 +243,7 @@ def start_job(action, argv):
         "state": "running",
     }
     job_meta_path(job).write_text(json.dumps(meta, indent=2))
+    JOB_CHILDREN[job] = child
     return child, meta
 
 
@@ -214,6 +253,34 @@ def finish_job(meta, code, seconds):
     meta["duration_s"] = round(seconds, 1)
     job_meta_path(meta["job"]).write_text(json.dumps(meta, indent=2))
     return meta
+
+
+def process_alive(pid):
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[-1].split()
+    except OSError:
+        return False
+    return bool(fields) and fields[0] != "Z"
+
+
+def refresh_job(meta):
+    if meta.get("state") not in ("running", "detached"):
+        return meta
+    child = JOB_CHILDREN.get(meta["job"])
+    if child is not None:
+        code = child.poll()
+        if code is None:
+            return meta
+        meta["state"] = "exited"
+        meta["exit_code"] = code
+    elif meta.get("pid") and not process_alive(meta["pid"]):
+        meta["state"] = "finished"
+        meta["exit_code_note"] = "started by an earlier server instance; exit code unavailable"
+    else:
+        return meta
+    job_meta_path(meta["job"]).write_text(json.dumps(meta, indent=2))
+    return meta
+
 
 
 def await_job(child, meta, wait_s, request_id, token):
@@ -233,18 +300,26 @@ def await_job(child, meta, wait_s, request_id, token):
             progress(token, step, tail(read_log(meta["job"]), 1) or meta["action"])
 
 
-def read_log(job):
+def read_log(job, limit=LOG_TAIL_BYTES):
     path = job_log_path(job)
     if not path.exists():
         return ""
-    return path.read_text("utf-8", "replace")
+    size = path.stat().st_size
+    with path.open("rb") as handle:
+        if size > limit:
+            handle.seek(size - limit)
+        chunk = handle.read()
+    text = chunk.decode("utf-8", "replace")
+    if size > limit:
+        return "[log truncated to the last %d bytes of %d]\n" % (limit, size) + text
+    return text
 
 
 def known_jobs():
     if not JOBS.exists():
         return []
     metas = []
-    for path in sorted(JOBS.glob("*.json")):
+    for path in sorted(JOBS.glob("*.json"))[-MAX_JOBS:]:
         try:
             metas.append(json.loads(path.read_text()))
         except ValueError:
@@ -336,9 +411,7 @@ def tool_rebuild_log(args, request_id, token):
             raise ToolError(f"unknown job {job!r}; known jobs: {', '.join(m['job'] for m in metas)}")
     else:
         selected = metas[-1]
-    if selected.get("state") == "running" and selected.get("pid"):
-        alive = Path(f"/proc/{selected['pid']}").exists()
-        selected["state"] = "running" if alive else "gone"
+    refresh_job(selected)
     lines = max(1, min(int(args.get("lines") or 80), 2000))
     log = read_log(selected["job"])
     pattern = args.get("grep")
@@ -389,6 +462,102 @@ def tool_dry_run(args, request_id, token):
     return envelope(header, tail(out, 80)), code != 0
 
 
+def eval_prelude(host):
+    return (
+        f"let flake = builtins.getFlake (toString {REPO});"
+        " hosts = builtins.attrNames flake.nixosConfigurations;"
+        " configs = builtins.mapAttrs (_: system: system.config) flake.nixosConfigurations;"
+        f" config = flake.nixosConfigurations.{host}.config;"
+        f" options = flake.nixosConfigurations.{host}.options;"
+        f" pkgs = flake.nixosConfigurations.{host}.pkgs;"
+        " lib = flake.inputs.nixpkgs.lib;"
+        f" hm = flake.nixosConfigurations.{host}.config.home-manager.users.{OWNER} or null;"
+        " in "
+    )
+
+
+def eval_target(attr, host):
+    if "#" in attr:
+        return attr
+    if attr.startswith("options."):
+        return f".#nixosConfigurations.{host}.{attr}"
+    if attr.startswith("hm."):
+        return (
+            f".#nixosConfigurations.{host}.config.home-manager.users.{OWNER}.{attr[3:]}"
+        )
+    return f".#nixosConfigurations.{host}.config.{attr}"
+
+
+def attr_candidates(target):
+    path = target
+    for _ in range(5):
+        parent, dot, leaf = path.rpartition(".")
+        if not dot:
+            return None
+        code, out, _ = run_split(
+            ["nix", "eval", parent, "--apply", "builtins.attrNames", "--json"], timeout=600
+        )
+        if code == 0:
+            try:
+                names = json.loads(out)
+            except ValueError:
+                return None
+            if not isinstance(names, list):
+                return None
+            return {"missing": leaf, "resolved_parent": parent, "available": sorted(names)[:80]}
+        path = parent
+    return None
+
+
+def tool_eval(args, request_id, token):
+    attr = (args.get("attr") or "").strip()
+    expr = (args.get("expr") or "").strip()
+    if bool(attr) == bool(expr):
+        raise ToolError("pass exactly one of attr or expr")
+    host = require_host(args)
+    raw = bool(args.get("raw"))
+    if expr:
+        target = None
+        base = ["nix", "eval", "--impure", "--expr", eval_prelude(host) + expr]
+    else:
+        target = eval_target(attr, host)
+        base = ["nix", "eval", target]
+        if args.get("apply"):
+            base += ["--apply", args["apply"]]
+    argv = base + (["--raw"] if raw else ["--json"])
+    code, out, err = run_split(argv, timeout=1800)
+    fmt = "raw" if raw else "json"
+    if code != 0 and not raw:
+        code2, out2, err2 = run_split(base, timeout=1800)
+        if code2 == 0:
+            code, out, err, fmt = code2, out2, err2, "nix"
+    header = {
+        "target": target or "--expr",
+        "host": host,
+        "format": fmt,
+        "exit_code": code,
+    }
+    if expr:
+        header["bindings"] = "flake hosts configs config options pkgs lib hm"
+    if code != 0:
+        header["error"] = tail(nix_noise(err), 25)
+        if target and MISSING_ATTR_RE.search(err):
+            candidates = attr_candidates(target)
+            if candidates:
+                header["candidates"] = candidates
+        return envelope(header), True
+    noise = nix_noise(err)
+    if noise:
+        header["stderr"] = tail(noise, 10)
+    if fmt == "json":
+        try:
+            header["value"] = json.loads(out)
+            return envelope(header), False
+        except ValueError:
+            pass
+    return envelope(header, clamp(out.rstrip("\n"))), False
+
+
 def tool_generations(args, request_id, token):
     limit = max(1, min(int(args.get("limit") or 10), 100))
     code, out = run([NIXOS_REBUILD, "list-generations", "--json"], timeout=120)
@@ -434,7 +603,10 @@ def tool_diff_generations(args, request_id, token):
     code, out = run([NIXOS_REBUILD, "list-generations", "--json"], timeout=120)
     if code != 0:
         raise ToolError(f"list-generations failed with {code}:\n{tail(out, 20)}")
-    entries = json.loads(out)
+    try:
+        entries = json.loads(out)
+    except ValueError:
+        raise ToolError(f"unparseable list-generations output:\n{tail(out, 20)}")
     numbers = [entry["generation"] for entry in entries]
     left = args.get("from")
     right = args.get("to")
@@ -559,9 +731,15 @@ def tool_flake_update(args, request_id, token):
         "exit_code": code,
         "duration_s": meta["duration_s"],
     }
+    if code is None:
+        header["note"] = (
+            f"still running as pid {meta['pid']} (detached from this server); "
+            f"poll with rebuild_log job={meta['job']}"
+        )
+        return envelope(header, tail(log, 20)), False
     if code != 0:
         header["first_error"] = first_error(log)
-        return envelope(header, tail(log, 80)), code is not None
+        return envelope(header, tail(log, 80)), True
     after = json.loads(LOCK.read_text())
     old = lock_revisions(before)
     new = lock_revisions(after)
@@ -629,6 +807,14 @@ def tool_flake_age(args, request_id, token):
     return envelope(header), False
 
 
+def journal_entries(text):
+    return [
+        line
+        for line in text.splitlines()
+        if line.strip() and not line.startswith("--")
+    ]
+
+
 def tool_health(args, request_id, token):
     header = {"failed_units": failed_units()}
     body = ""
@@ -638,13 +824,17 @@ def tool_health(args, request_id, token):
         code, out = run(
             ["journalctl", "-u", unit, "-n", lines, "--no-pager", "-o", "short-iso"], timeout=120
         )
-        if code != 0 or not out.strip():
+        if code != 0 or not journal_entries(out):
             code, out = run(
                 ["journalctl", "--user-unit", unit, "-n", lines, "--no-pager", "-o", "short-iso"],
                 timeout=120,
             )
+            header["scope"] = "user"
+        else:
+            header["scope"] = "system"
         header["unit"] = unit
         header["journal_exit_code"] = code
+        header["journal_empty"] = not journal_entries(out)
         body = tail(out, int(lines))
     return envelope(header, body), False
 
@@ -685,8 +875,8 @@ def extract_paths(cell):
             entry["outside_repo"] = True
         if "/" not in token and token != "Makefile":
             entry["bare_name"] = True
-        resolvable = len(entry) == 1
-        entry["exists"] = (REPO / token).exists() if resolvable else None
+        unresolvable = entry.get("placeholder") or entry.get("glob") or entry.get("outside_repo")
+        entry["exists"] = None if unresolvable else (REPO / token).exists()
         paths.append(entry)
     return paths
 
@@ -788,17 +978,21 @@ def build_record(section, raw):
     }
 
 
-def stem(word):
-    if len(word) > 4 and word.endswith("es"):
-        return word[:-2]
+def variants(word):
+    forms = {word}
+    if len(word) > 3 and word.endswith("es"):
+        forms.add(word[:-2])
     if len(word) > 3 and word.endswith("s"):
-        return word[:-1]
-    return word
+        forms.add(word[:-1])
+    return forms
 
 
 def tokenize(text):
-    words = re.split(r"[^a-z0-9]+", (text or "").lower())
-    return {stem(word) for word in words if len(word) > 2 and word not in STOP_WORDS}
+    tokens = set()
+    for word in re.split(r"[^a-z0-9]+", (text or "").lower()):
+        if len(word) > 2 and word not in STOP_WORDS:
+            tokens |= variants(word)
+    return tokens
 
 
 def build_idf(rows):
@@ -882,23 +1076,24 @@ def tool_route_file(args, request_id, token):
         raise ToolError("path is required")
     cache = parse_routes()
     entries = []
+    loose = []
     for row in cache["rows"]:
         for entry in row["paths"]:
             candidate = entry["path"]
-            hit = candidate == target or Path(candidate).name == Path(target).name
-            if not hit and entry.get("glob"):
-                hit = fnmatch.fnmatch(target, candidate)
-            if hit:
-                entries.append(
-                    {
-                        "section": row["section"],
-                        "routes_line": row["line"],
-                        "concern": row["concern"],
-                        "matched_path": candidate,
-                        "notes": row["notes"],
-                        "hosts": row["hosts"],
-                    }
-                )
+            record = {
+                "section": row["section"],
+                "routes_line": row["line"],
+                "concern": row["concern"],
+                "matched_path": candidate,
+                "notes": row["notes"],
+                "hosts": row["hosts"],
+            }
+            if candidate == target or (entry.get("glob") and fnmatch.fnmatch(target, candidate)):
+                entries.append(record)
+                break
+            if Path(candidate).name == Path(target).name:
+                record["match"] = "basename only"
+                loose.append(record)
                 break
     header = {
         "path": target,
@@ -909,6 +1104,8 @@ def tool_route_file(args, request_id, token):
     if not entries:
         header["suggested_section"] = suggest_section(target)
         header["action"] = "add a row to docs/routes.md per the nix-routing skill"
+        if loose:
+            header["same_basename_elsewhere"] = loose[:10]
     return envelope(header), False
 
 
@@ -980,7 +1177,7 @@ def tool_routes_audit(args, request_id, token):
         for row in cache["rows"]:
             for entry in row["paths"]:
                 routed.add(entry["path"])
-                if entry["exists"] is False:
+                if entry["exists"] is False and not entry.get("bare_name"):
                     dead.append(
                         {
                             "routes_line": row["line"],
@@ -1057,6 +1254,34 @@ TOOLS = [
         },
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         "handler": tool_dry_run,
+    },
+    {
+        "name": "eval",
+        "title": "Evaluate nix",
+        "description": (
+            "Short-hand `nix eval` against this flake. `attr` is a path under the host's "
+            "config, so `security.sudo.extraRules` expands to "
+            "`.#nixosConfigurations.<host>.config.security.sudo.extraRules`; prefixes `hm.` "
+            "(home-manager user config) and `options.` are understood, and any string "
+            "containing `#` is used as a literal flake attr. `expr` instead evaluates a Nix "
+            "expression with these bindings already in scope: flake, hosts, configs, config, "
+            "options, pkgs, lib, hm - so no `builtins.getFlake` boilerplate. Returns parsed "
+            "JSON by default, falls back to nix's own printer for values JSON cannot hold; "
+            "raw=true gives `--raw` for strings. On a missing attribute it lists the "
+            "available names of the parent."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "attr": {"type": "string", "description": "option path, hm.<path>, options.<path>, or a literal flake attr with #"},
+                "expr": {"type": "string", "description": "nix expression; flake/hosts/configs/config/options/pkgs/lib/hm are pre-bound"},
+                "apply": {"type": "string", "description": "nix function applied to the value, e.g. builtins.attrNames (attr mode only)"},
+                "raw": {"type": "boolean", "description": "use --raw instead of --json (strings and paths)"},
+                "host": {"type": "string", "enum": list(HOSTS), "description": "defaults to this machine"},
+            },
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+        "handler": tool_eval,
     },
     {
         "name": "generations",
@@ -1226,28 +1451,31 @@ PUBLIC_TOOLS = [{key: tool[key] for key in tool if key != "handler"} for tool in
 
 
 def call_tool(params, request_id):
+    if not isinstance(params, dict):
+        fail(request_id, -32602, "params must be an object")
+        return
     name = params.get("name")
     tool = TOOL_INDEX.get(name)
     if tool is None:
         fail(request_id, -32602, f"Unknown tool: {name}")
         return
     arguments = params.get("arguments") or {}
+    if not isinstance(arguments, dict):
+        fail(request_id, -32602, "arguments must be an object")
+        return
     missing = [
         key for key in tool["inputSchema"].get("required", []) if arguments.get(key) in (None, "")
     ]
     if missing:
         fail(request_id, -32602, f"Missing required argument(s): {', '.join(missing)}")
         return
-    token = (params.get("_meta") or {}).get("progressToken")
+    meta = params.get("_meta")
+    token = meta.get("progressToken") if isinstance(meta, dict) else None
     try:
         text, is_error = tool["handler"](arguments, request_id, token)
     except ToolError as error:
         text, is_error = str(error), True
-    except Exception as error:
-        fail(request_id, -32603, f"{type(error).__name__}: {error}")
-        return
     if str(request_id) in CANCELLED:
-        CANCELLED.discard(str(request_id))
         return
     result = {"content": [{"type": "text", "text": text}]}
     if is_error:
@@ -1256,9 +1484,22 @@ def call_tool(params, request_id):
 
 
 def handle(message):
-    method = message.get("method")
     request_id = message.get("id")
-    params = message.get("params") or {}
+    try:
+        dispatch(message, request_id)
+    except Exception as error:
+        if request_id is not None:
+            fail(request_id, -32603, f"{type(error).__name__}: {error}")
+    finally:
+        if request_id is not None:
+            CANCELLED.discard(str(request_id))
+
+
+def dispatch(message, request_id):
+    method = message.get("method")
+    params = message.get("params")
+    if not isinstance(params, dict):
+        params = {}
     if request_id is None:
         if method == "notifications/cancelled":
             cancelled = params.get("requestId")
@@ -1298,6 +1539,8 @@ def main():
         try:
             message = json.loads(line)
         except ValueError:
+            continue
+        if not isinstance(message, dict):
             continue
         if message.get("method") == "initialize":
             handle(message)
