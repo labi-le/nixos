@@ -4,9 +4,12 @@ import fnmatch
 import json
 import os
 import re
+import shlex
+import shutil
 import subprocess
 import sys
 import threading
+import tempfile
 import time
 from pathlib import Path
 
@@ -18,6 +21,7 @@ SECRETS_RULES = REPO / "secrets.nix"
 SECRETS_DIR = REPO / "secrets"
 AGE = "/run/current-system/sw/bin/age"
 HOST_KEY_PUB = Path("/etc/ssh/ssh_host_ed25519_key.pub")
+SUDO_PANE = os.environ.get("NIXCFG_SUDO_PANE") or "nixcfg"
 HOSTS = ("pc", "fx516", "notebook", "server")
 NIXOS_REBUILD = "/run/current-system/sw/bin/nixos-rebuild"
 NIX_COLLECT_GARBAGE = "/run/current-system/sw/bin/nix-collect-garbage"
@@ -111,7 +115,11 @@ def run(argv, timeout=SHORT_TIMEOUT, cwd=None):
     return done.returncode, done.stdout.decode("utf-8", "replace")
 
 
-def run_split(argv, timeout=SHORT_TIMEOUT, cwd=None, stdin_data=None):
+def run_split(argv, timeout=SHORT_TIMEOUT, cwd=None, stdin_data=None, env_extra=None, raw=False):
+    child_env = None
+    if env_extra:
+        child_env = dict(os.environ)
+        child_env.update(env_extra)
     try:
         done = subprocess.run(
             argv,
@@ -120,6 +128,7 @@ def run_split(argv, timeout=SHORT_TIMEOUT, cwd=None, stdin_data=None):
             stdin=subprocess.DEVNULL if stdin_data is None else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=child_env,
             timeout=timeout,
         )
     except FileNotFoundError:
@@ -128,7 +137,7 @@ def run_split(argv, timeout=SHORT_TIMEOUT, cwd=None, stdin_data=None):
         raise ToolError(f"timed out after {timeout}s: {' '.join(argv)}")
     return (
         done.returncode,
-        done.stdout.decode("utf-8", "replace"),
+        done.stdout if raw else done.stdout.decode("utf-8", "replace"),
         done.stderr.decode("utf-8", "replace"),
     )
 
@@ -1561,6 +1570,187 @@ def tool_secret_list(args, request_id, token):
     return envelope(header), False
 
 
+def pick_identity(recipients):
+    by_material = {entry["material"]: entry for entry in local_identities()}
+    usable = [
+        by_material[key_material(pubkey)]
+        for pubkey in recipients
+        if key_material(pubkey) in by_material
+    ]
+    if not usable:
+        return None
+    usable.sort(key=lambda entry: entry["needs_root"])
+    return usable[0]
+
+
+def tmux_socket():
+    inside = os.environ.get("TMUX", "")
+    if inside:
+        return inside.split(",")[0]
+    bases = [
+        os.environ.get("TMUX_TMPDIR"),
+        os.environ.get("XDG_RUNTIME_DIR"),
+        "/tmp",
+    ]
+    for base in bases:
+        if not base:
+            continue
+        candidate = Path(base) / f"tmux-{os.getuid()}" / "default"
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
+def tmux_argv(*args):
+    socket = tmux_socket()
+    return ["tmux"] + (["-S", socket] if socket else []) + list(args)
+
+
+def pane_alive():
+    code, _, _ = run_split(tmux_argv("has-session", "-t", SUDO_PANE), timeout=30)
+    return code == 0
+
+
+def run_in_pane(argv, timeout=120):
+    if not pane_alive():
+        raise ToolError(
+            f"this needs the root-owned host key, so it runs in the persistent `{SUDO_PANE}` "
+            "tmux pane where your sudo credential is cached, and that pane does not exist. "
+            f"Create it with `tmux new-session -d -s {SUDO_PANE}`, open it (from inside tmux "
+            f"press Ctrl-a s and pick {SUDO_PANE}, otherwise `tmux attach -t {SUDO_PANE}`), "
+            "run `sudo -v`, then detach with Ctrl-a d."
+        )
+    base = os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()
+    scratch = tempfile.mkdtemp(prefix="nixcfg-pane-", dir=base)
+    try:
+        out_path = Path(scratch) / "out"
+        err_path = Path(scratch) / "err"
+        rc_path = Path(scratch) / "rc"
+        quoted = " ".join(shlex.quote(part) for part in argv)
+        line = (
+            f"{quoted} >{shlex.quote(str(out_path))} 2>{shlex.quote(str(err_path))}; "
+            f"printf %s $? >{shlex.quote(str(rc_path))}"
+        )
+        send = run_split(tmux_argv("send-keys", "-t", SUDO_PANE, line, "Enter"), timeout=30)
+        if send[0] != 0:
+            raise ToolError(f"tmux send-keys failed:\n{tail(send[2], 4)}")
+        deadline = time.monotonic() + timeout
+        while not rc_path.exists():
+            if time.monotonic() > deadline:
+                raise ToolError(f"no result from the {SUDO_PANE} pane after {timeout}s")
+            time.sleep(0.2)
+        try:
+            code = int(rc_path.read_text().strip())
+        except ValueError:
+            code = 1
+        out = out_path.read_bytes() if out_path.exists() else b""
+        err = err_path.read_text("utf-8", "replace") if err_path.exists() else ""
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+    if code != 0 and "password is required" in err:
+        raise ToolError(
+            f"the `{SUDO_PANE}` pane has no cached sudo credential. Attach to it "
+            f"(tmux attach -t {SUDO_PANE}), run `sudo -v`, detach with Ctrl-a d, and retry."
+        )
+    return code, out, err
+
+
+def decrypt_secret(path, recipients):
+    identity = pick_identity(recipients)
+    if identity is None:
+        raise ToolError(
+            f"no private key on this host is a recipient of {path}; it cannot be decrypted here "
+            "at any privilege level. Rekey it on a host that is a recipient, or add a local key "
+            "to its publicKeys in secrets.nix"
+        )
+    argv = [AGE, "-d", "-i", identity["identity"], str(REPO / path)]
+    if identity["needs_root"]:
+        code, out, err = run_in_pane(["sudo", "-n"] + argv, timeout=120)
+    else:
+        code, out, err = run_split(argv, timeout=300, raw=True)
+    if code != 0:
+        raise ToolError(
+            f"decrypt failed with {code} using {identity['identity']}:\n{tail(err, 6)}"
+        )
+    return out, identity
+
+
+def tool_secret_read(args, request_id, token):
+    path = (args.get("path") or "").strip()
+    if not path:
+        raise ToolError("path is required")
+    rules = secret_rules()
+    if path not in rules:
+        raise ToolError(f"{path!r} has no rule in secrets.nix")
+    if args.get("confirm") != "yes":
+        raise ToolError(
+            "reading a secret puts its plaintext into this session's transcript and session "
+            "file on disk; pass confirm=\"yes\" if that is acceptable"
+        )
+    recipients = rules[path].get("publicKeys") or []
+    plaintext, identity = decrypt_secret(path, recipients)
+    header = {
+        "path": path,
+        "identity": identity["identity"],
+        "needed_root": identity["needs_root"],
+        "bytes": len(plaintext),
+        "warning": "the plaintext below is now in the transcript",
+    }
+    return envelope(header, clamp(plaintext.decode("utf-8", "replace"))), False
+
+
+def tool_secret_rekey(args, request_id, token):
+    rules = secret_rules()
+    wanted = args.get("paths") or []
+    if isinstance(wanted, str):
+        wanted = [wanted]
+    targets = wanted or sorted(rules)
+    unknown = [path for path in targets if path not in rules]
+    if unknown:
+        raise ToolError("no rule in secrets.nix for: " + ", ".join(unknown))
+    done = []
+    skipped = []
+    for path in targets:
+        target = REPO / path
+        recipients = rules[path].get("publicKeys") or []
+        if not target.exists():
+            skipped.append({"path": path, "reason": "no .age file yet"})
+            continue
+        if pick_identity(recipients) is None:
+            skipped.append({"path": path, "reason": "not decryptable on this host"})
+            continue
+        plaintext, identity = decrypt_secret(path, recipients)
+        argv = [AGE]
+        if rules[path].get("armor"):
+            argv.append("--armor")
+        for pubkey in recipients:
+            argv += ["--recipient", pubkey]
+        staged = target.with_name(f"{target.name}.{os.getpid()}.{threading.get_ident()}.new")
+        argv += ["-o", str(staged)]
+        code, out, err = run_split(argv, timeout=120, stdin_data=plaintext)
+        if code != 0:
+            staged.unlink(missing_ok=True)
+            raise ToolError(f"re-encrypting {path} failed with {code}:\n{tail(err, 6)}")
+        written = staged.read_bytes()
+        if not written.startswith((b"age-encryption.org/v1", b"-----BEGIN AGE ENCRYPTED FILE-----")):
+            staged.unlink(missing_ok=True)
+            raise ToolError(f"re-encrypting {path} produced no age header; {path} left untouched")
+        os.replace(staged, target)
+        done.append(
+            {
+                "path": path,
+                "recipients": [recipient_label(pubkey) for pubkey in recipients],
+                "identity": identity["identity"],
+            }
+        )
+    header = {
+        "rekeyed": done,
+        "skipped": skipped,
+        "note": "plaintext never left this process; run after changing publicKeys in secrets.nix",
+    }
+    return envelope(header), False
+
+
 def tool_secret_write(args, request_id, token):
     path = (args.get("path") or "").strip()
     if not path:
@@ -1935,6 +2125,50 @@ TOOLS = [
         },
         "annotations": {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": False, "openWorldHint": False},
         "handler": tool_secret_write,
+    },
+    {
+        "name": "secret_read",
+        "title": "Read an agenix secret",
+        "description": (
+            "Decrypt one secret and return its plaintext. Picks a recipient key readable "
+            "without root when one exists; otherwise uses the host key via `sudo -A`, which "
+            "pops a password prompt on the desktop — the password never passes through this "
+            "server or the transcript. The decrypted value DOES land in the transcript, so it "
+            "needs confirm=\"yes\"."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "repo-relative path as keyed in secrets.nix"},
+                "confirm": {"type": "string", "description": "must be \"yes\""},
+            },
+            "required": ["path", "confirm"],
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+        "handler": tool_secret_read,
+    },
+    {
+        "name": "secret_rekey",
+        "title": "Rekey agenix secrets",
+        "description": (
+            "Re-encrypt secrets to the publicKeys currently declared in secrets.nix. Run it "
+            "after adding or removing a recipient. Decrypts with a local recipient key, "
+            "prompting for the sudo password on the desktop when only the host key qualifies. "
+            "Plaintext never leaves the server process. Secrets no host key here can open are "
+            "reported as skipped, not failed."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "paths": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "secrets to rekey; empty means every rule in secrets.nix",
+                }
+            },
+        },
+        "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        "handler": tool_secret_rekey,
     },
 ]
 
