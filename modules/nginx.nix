@@ -7,6 +7,13 @@
 
 let
   ipWhiteList = "/var/lib/nginx/ip_whitelist.conf";
+  # Sources that are allowed regardless of what DNS says. Shared by the tmpfiles
+  # seed and the updater below so the boot-time whitelist and the steady-state
+  # one cannot drift apart.
+  staticAllows = [
+    "allow 127.0.0.1;"
+    "allow 192.168.1.0/24;"
+  ];
 in
 
 {
@@ -293,8 +300,12 @@ in
       };
     };
 
+  # systemd-tmpfiles seeds the whitelist before nginx first starts. The separator
+  # must reach it as the two characters `\n`, which it expands itself: a real
+  # newline splits the rule and the remainder is rejected with `Unknown modifiers
+  # in command: allow`, leaving a localhost-only whitelist that locks out the LAN.
   systemd.tmpfiles.rules = [
-    "f ${ipWhiteList} 0644 nginx nginx - allow 127.0.0.1;\nallow 192.168.1.0/24;"
+    "f ${ipWhiteList} 0644 nginx nginx - ${lib.concatStringsSep "\\n" staticAllows}"
   ];
 
   systemd.services.updateNginxIP = {
@@ -323,20 +334,29 @@ in
         fi
       fi
 
-      # tmpfiles seeds this file with the two static allows, so a whitelist is
-      # always present: leaving the last good one in place beats overwriting it
-      # with a guess, and locking yourself out beats neither.
       if [ -z "$MY_IP" ]; then
-        echo "external.lan did not resolve via the local resolver or the gateway; keeping the current whitelist" >&2
+        # An existing whitelist is worth more than a guess. Only an empty or
+        # absent one is worth replacing, and then with the static entries alone.
+        if [ -s ${ipWhiteList} ]; then
+          echo "external.lan did not resolve via the local resolver or the gateway; keeping the current whitelist" >&2
+          exit 0
+        fi
+        echo "external.lan did not resolve via the local resolver or the gateway; seeding the static entries only" >&2
+      fi
+
+      WANTED=$(
+        ${lib.concatMapStringsSep "; " (a: "echo '${a}'") staticAllows}
+        if [ -n "$MY_IP" ]; then echo "allow $MY_IP/32;"; fi
+      )
+
+      # The address changes rarely, so most hourly runs have nothing to do.
+      # Reloading regardless would be two dozen chances a day to trip over an
+      # unrelated nginx problem and land in `systemctl --failed`.
+      if [ "$WANTED" = "$(cat ${ipWhiteList} 2>/dev/null)" ]; then
         exit 0
       fi
 
-      cat <<EOF > ${ipWhiteList}
-      allow 127.0.0.1;
-      allow 192.168.1.0/24;
-      allow $MY_IP/32;
-      EOF
-
+      printf '%s\n' "$WANTED" > ${ipWhiteList}
       systemctl reload nginx
     '';
     serviceConfig = {
