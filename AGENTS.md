@@ -6,6 +6,12 @@ technically flawless solutions.
 
 - Never write comments in code, in any language. Code must be self-documenting;
   rationale belongs in the commit message or `docs/`.
+- Never edit deployed config directly. Paths such as `~/.config/*`,
+  `~/.omp/*`, and other dotfiles are read-only Nix store symlinks written by
+  this repo. Every config change goes through the owning Home Manager or NixOS
+  module (route via `docs/routes.md`), then `make switch`. Imperative
+  `<tool> config set` commands and hand edits under `$HOME` are prohibited:
+  they either fail on the read-only store or are erased on the next rebuild.
 
 # Agent Instructions
 
