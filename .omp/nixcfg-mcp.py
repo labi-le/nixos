@@ -218,14 +218,24 @@ def allocate_job(action):
             job = f"{base}-{suffix}"
 
 
+def job_rc_path(job):
+    return job_dir() / f"{job}.rc"
+
+
 def start_job(action, argv):
     job = allocate_job(action)
     log = job_log_path(job)
     handle = open(log, "wb")
     handle.write(("$ " + " ".join(argv) + "\n").encode())
     handle.flush()
+    wrapped = [
+        "/bin/sh",
+        "-c",
+        'rc=0; "$@" || rc=$?; printf %s "$rc" > "$0"; exit "$rc"',
+        str(job_rc_path(job)),
+    ] + argv
     child = subprocess.Popen(
-        argv,
+        wrapped,
         cwd=str(REPO),
         stdin=subprocess.DEVNULL,
         stdout=handle,
@@ -263,24 +273,34 @@ def process_alive(pid):
     return bool(fields) and fields[0] != "Z"
 
 
+def recorded_exit_code(job):
+    try:
+        return int(job_rc_path(job).read_text().strip())
+    except (OSError, ValueError):
+        return None
+
+
 def refresh_job(meta):
     if meta.get("state") not in ("running", "detached"):
         return meta
-    child = JOB_CHILDREN.get(meta["job"])
-    if child is not None:
-        code = child.poll()
-        if code is None:
-            return meta
+    job = meta["job"]
+    child = JOB_CHILDREN.get(job)
+    if child is not None and child.poll() is None:
+        return meta
+    recorded = recorded_exit_code(job)
+    if recorded is not None:
         meta["state"] = "exited"
-        meta["exit_code"] = code
+        meta["exit_code"] = recorded
+    elif child is not None:
+        meta["state"] = "exited"
+        meta["exit_code"] = child.returncode
     elif meta.get("pid") and not process_alive(meta["pid"]):
         meta["state"] = "finished"
-        meta["exit_code_note"] = "started by an earlier server instance; exit code unavailable"
+        meta["exit_code_note"] = "process is gone and wrote no exit code; read the log tail"
     else:
         return meta
-    job_meta_path(meta["job"]).write_text(json.dumps(meta, indent=2))
+    job_meta_path(job).write_text(json.dumps(meta, indent=2))
     return meta
-
 
 
 def await_job(child, meta, wait_s, request_id, token):
