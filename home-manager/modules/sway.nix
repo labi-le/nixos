@@ -24,6 +24,7 @@ let
   additional = osConfig.hotkeys.additional;
 
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
+  openrgbProfile = "${pkgs.openrgb-profile}/bin/openrgb-profile";
 
   # Blank both outputs after 20 min of inactivity (DPMS off); any input wakes
   # them and swayidle's resume turns them back on. Launched from sway `startup`
@@ -32,8 +33,8 @@ let
   # swaymsg is taken from the same swayfx package to match the compositor.
   idleDpms = pkgs.writeShellScript "sway-idle-dpms" ''
     exec ${pkgs.swayidle}/bin/swayidle -w \
-      timeout 1200 '${pkgs.swayfx}/bin/swaymsg "output * dpms off"' \
-      resume       '${pkgs.swayfx}/bin/swaymsg "output * dpms on"'
+      timeout 1200 '${pkgs.swayfx}/bin/swaymsg "output * dpms off"; ${openrgbProfile} off' \
+      resume       '${pkgs.swayfx}/bin/swaymsg "output * dpms on"; ${openrgbProfile} default'
   '';
 
   # Toggle all outputs' power (DPMS) with one key: if any active output is on,
@@ -112,7 +113,7 @@ in
           command = "${idleDpms}";
         }
         {
-          command = "${pkgs.openrgb-apply-off}/bin/openrgb-apply-off";
+          command = "${openrgbProfile} --wait default";
         }
       ];
       modes = {
