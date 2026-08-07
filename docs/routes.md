@@ -142,7 +142,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Prometheus, Loki, Alloy (ships nginx/angie + docker container + fail2ban logs to Loki) | `modules/grafana.nix` |
 | Grafana monitoring aggregator (imports shared contact points + per-service alert files) | `modules/monitoring/default.nix` |
 | Grafana shared notification channels (Telegram contact point + agenix secret, reused by all alerts) | `modules/monitoring/contact-points.nix` |
-| Grafana alert: tidal-syncer TIDAL re-login required (Loki log alert) | `modules/monitoring/tidal-syncer.nix` |
+| Grafana alert: tidal-syncer TIDAL re-login required (Prometheus metric alert) | `modules/monitoring/tidal-syncer.nix` |
 | tidal-syncer daemon (native service: config, agenix secret, Prometheus scrape + Grafana dashboard) | `modules/tidal-syncer.nix` |
 | FRP (Fast Reverse Proxy) | `modules/frp.nix` |
 | Syncthing (server) | `modules/syncthing/server.nix` |
