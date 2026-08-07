@@ -214,9 +214,7 @@ in
     models.roles.advisor = mainModel;
     settings.advisor.enabled = true;
 
-    # On launch, resume the cwd's most-recent session in full (conversation +
-    # its last model) instead of a fresh session that resets to models.default.
-    settings.autoResume = true;
+    settings.autoResume = false;
 
     # Context pruning ("DCP analog"): omp types only compaction.enabled, so the
     # rest ride the freeform `settings` (merged last into config.yml). snapcompact
@@ -224,14 +222,30 @@ in
     # strategy (auto-falls back to context-full for non-vision models).
     # midTurnEnabled prunes between tool-loop requests, not only post-turn;
     # dropUseless blanks zero-value results (empty search/inbox, timed-out poll).
-    # Threshold left at the reserve-based default — it adapts to each model's
-    # window (128k-1M here), unlike a fixed percent.
     settings.compaction = {
       enabled = true;
       strategy = "snapcompact";
       midTurnEnabled = true;
       dropUseless = true;
+      thresholdPercent = 60;
+      keepRecentTokens = 40000;
+      idleEnabled = true;
+      idleThresholdTokens = 150000;
+      idleTimeoutSeconds = 300;
     };
+
+    settings.task = {
+      eager = "always";
+      enableLsp = true;
+      maxRuntimeMs = 0;
+    };
+
+    settings.providers = {
+      streamFirstEventTimeoutSeconds = 180;
+      streamIdleTimeoutSeconds = 90;
+    };
+
+    settings.async.pollWaitDuration = "1m";
 
     # Speech-to-text: local, offline dictation straight into the TUI editor.
     # balanced = Whisper small (multilingual): the speed/quality compromise --
@@ -259,6 +273,31 @@ in
   # is pinned so it works even when swaymsg is absent from PATH. Skills are
   # migrated from the (disabled) opencode module above.
   home.file = skillFiles // {
+    ".omp/agent/RULES.md".text = ''
+      # Subagent supervision
+
+      While background subagents are running you are their supervisor, not a
+      spectator. Never park behind a batch and wait for it to resolve itself.
+
+      - `hub jobs` tells you what settled, nothing more. A snapshot where
+        everything is still running carries no health information: it has no
+        per-job activity field, and your next `hub` call supersedes it. Never
+        diff consecutive snapshots to judge liveness.
+      - Liveness lives in `history://`. One read of the bare listing returns
+        every agent with its status and last-activity age. That is your probe:
+        cheap, read-only, and it costs the agents nothing.
+      - Working slowly is not hanging. A build, a test suite, or a wide search
+        legitimately occupies many minutes with nothing to report. Judge by
+        last-activity age, never by elapsed runtime.
+      - Past roughly fifteen minutes of stale last activity, read that agent's
+        `history://<id>` before doing anything else. Only if its transcript is
+        genuinely frozen, `hub send` and ask for a one-line status; a reply
+        costs it a real turn, so never interrogate one you have not read.
+      - Still frozen on the next probe: `hub cancel` and re-dispatch that slice
+        with a narrower brief.
+      - `completed` is a claim, not proof. Before reporting a batch done, verify
+        the files each subagent said it changed actually changed.
+    '';
     ".omp/agent/mcp.json".text = builtins.toJSON {
       "$schema" =
         "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json";
