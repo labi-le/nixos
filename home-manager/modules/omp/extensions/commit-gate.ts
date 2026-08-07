@@ -10,6 +10,22 @@ const SUBJECT_CEILING = 70;
 const BODY_CEILING = 500;
 const BODY_LINES = 6;
 
+// Commands that carry another command inside an argument (`ssh host "…"`).
+const WRAPPERS: Record<string, true> = {
+  ssh: true,
+  sudo: true,
+  doas: true,
+  su: true,
+  sh: true,
+  bash: true,
+  zsh: true,
+  env: true,
+  docker: true,
+  podman: true,
+};
+// Markers that a snippet spawns a process rather than merely mentioning one.
+const EXECUTES = /\bsubprocess\b|\bexecSync\b|\bspawnSync\b|\bspawn\b|\bpopen\b|os\.system|check_output|Bun\.\$|\$`/;
+
 type Simple = string[];
 
 /** Split a command line into simple commands, honouring quotes. */
@@ -199,41 +215,79 @@ export function checkMessage(messages: string[]): string | null {
   return null;
 }
 
+/** Every commit invocation in a command line, including wrapped ones. */
+function collectInvocations(src: string, depth = 0): Invocation[] {
+  const out: Invocation[] = [];
+  for (const simple of splitCommands(src)) {
+    const inv = readCommit(simple);
+    if (inv) {
+      out.push(inv);
+      continue;
+    }
+    if (depth >= 2 || !WRAPPERS[(simple[0] ?? "").replace(/^.*\//, "")]) continue;
+    for (const tok of simple.slice(1)) {
+      if (/\bgit\b/.test(tok) && /\bcommit\b/.test(tok)) {
+        out.push(...collectInvocations(tok, depth + 1));
+      }
+    }
+  }
+  return out;
+}
+
 export default function commitGate(pi: ExtensionAPI): void {
   pi.on("tool_call", async (event, ctx) => {
-    if (event.toolName !== "bash") return;
+    // Every process-spawning tool has to be covered. A gate watching `bash`
+    // alone is one tool choice away from being decoration.
+    const source =
+      event.toolName === "bash"
+        ? String(event.input.command ?? "")
+        : event.toolName === "eval"
+          ? String(event.input.code ?? "")
+          : null;
+    if (source === null || !/\bgit\b/.test(source) || !/\bcommit\b/.test(source)) return;
 
-    const command = String(event.input.command ?? "");
-    if (!/\bgit\b/.test(command) || !/\bcommit\b/.test(command)) return;
+    const found = collectInvocations(source);
+    let broken: string | null = null;
 
-    for (const simple of splitCommands(command)) {
-      const inv = readCommit(simple);
-      if (!inv || inv.exempt) continue;
+    for (const inv of found) {
+      if (inv.exempt) continue;
 
       let messages = inv.messages;
       if (!messages.length && inv.file) {
-        // A chained command may not have written the file yet; unverifiable
-        // rather than non-compliant, so it passes.
         try {
           messages = [await Bun.file(inv.file).text()];
         } catch {
-          continue;
+          // An earlier link of this very command may be what writes the file,
+          // so it is unreadable here -- and unverifiable is not compliant.
+          broken = `the message file \`${inv.file}\` cannot be read, so the message cannot be checked; pass it with -m instead`;
+          break;
         }
       }
       if (!messages.length) continue;
 
-      const broken = checkMessage(messages);
-      if (!broken) continue;
-
-      const reason = `Commit blocked: ${broken}.\n\nSubject: ${messages[0].split("\n")[0]}\n\nRewrite it and run the command again. Full convention: ${RULE}`;
-
-      // The human outranks the rule, so give them the override when they are
-      // actually at the keyboard; a subagent or headless run just stops.
-      if (ctx.hasUI) {
-        const allow = await ctx.ui.confirm("Commit style", `${reason}\n\nCommit anyway?`);
-        if (allow) return;
+      broken = checkMessage(messages);
+      if (broken) {
+        broken = `${broken}\n\nSubject: ${messages[0].split("\n")[0]}`;
+        break;
       }
-      return { block: true, reason };
     }
+
+    // An exec that did not parse is refused rather than trusted: a template
+    // literal can carry the message in a variable that exists only at runtime.
+    if (!broken && !found.length && event.toolName === "eval" && EXECUTES.test(source)) {
+      broken =
+        "a commit spawned from `eval` cannot be read as a command line; run it through the bash tool so the message is visible";
+    }
+    if (!broken) return;
+
+    const reason = `Commit blocked: ${broken}\n\nRewrite it and run the command again. Full convention: ${RULE}`;
+
+    // The human outranks the rule, so give them the override when they are
+    // actually at the keyboard; a subagent or headless run just stops.
+    if (ctx.hasUI) {
+      const allow = await ctx.ui.confirm("Commit style", `${reason}\n\nCommit anyway?`);
+      if (allow) return;
+    }
+    return { block: true, reason };
   });
 }
