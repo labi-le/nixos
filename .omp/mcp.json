@@ -4,6 +4,12 @@
     "nixos": {
       "command": "nix",
       "args": ["run", "github:utensils/mcp-nixos", "--"]
+    },
+    "nixcfg": {
+      "type": "stdio",
+      "command": "python3",
+      "args": [".omp/nixcfg-mcp.py"],
+      "timeout": 0
     }
   }
 }

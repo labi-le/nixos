@@ -9,11 +9,12 @@ description: Use when about to edit any .nix file in this project — determines
 
 When you receive any task that involves editing Nix files:
 
-1. **`Read docs/routes.md`** — contains the mapping of every task/concern to an exact `.nix` file and host scope.
-2. **FORBIDDEN: glob, grep, or any file search.** The routing table already gives you the path. Open that file directly with Read.
-3. Only if the concern is NOT listed in routes.md: search with glob/grep, then **add the new entry** to routes.md.
+1. **Call `mcp__nixcfg_route`** with the task in plain language (optionally `host`). It ranks the rows of `docs/routes.md` and returns the exact file(s), the section, host scope, notes, and whether each path still exists. `mcp__nixcfg_route_file` does the reverse lookup for a path you already have.
+2. **Fall back to `Read docs/routes.md`** only if the server is unavailable — it contains the same mapping of every task/concern to an exact `.nix` file and host scope.
+3. **FORBIDDEN: glob, grep, or any file search.** The routing table already gives you the path. Open that file directly with Read.
+4. Only if the concern is NOT listed (`confident: false`, or `routed: false` from `route_file`): search with glob/grep, then **add the new entry** to routes.md.
 
-Searching after reading routes.md is pure waste of context and tokens.
+Searching after routing is pure waste of context and tokens.
 
 ## Updating the Routing Table
 

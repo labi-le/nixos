@@ -178,7 +178,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Thunar (user config) | `home-manager/modules/thunar.nix` |
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
-| Oh My Pi (omp) coding agent + undo-redo extension + MCP servers (`chroma`, `context7`, `sway`) in `~/.omp/agent/mcp.json` | `home-manager/modules/omp.nix` | omp-flake HM module loaded in `flake.nix` sharedModules; project-scoped servers stay in that project's `.omp/mcp.json` |
+| Oh My Pi (omp) coding agent + undo-redo extension + MCP servers (`chroma`, `context7`, `sway`) in `~/.omp/agent/mcp.json` | `home-manager/modules/omp.nix` | omp-flake HM module loaded in `flake.nix` sharedModules; project-scoped servers stay in that project's `.omp/mcp.json` — see "Other Files" for this repo's own `nixcfg` server |
 | OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
 | OpenCode provider definitions | `home-manager/modules/opencode/providers/*.nix` |
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
@@ -232,3 +232,6 @@ Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{
 | `overlays.nix` | Custom package overlays |
 | `settings.nix` | Common settings (nix settings, allowed packages) |
 | `Makefile` | Convenience targets: `switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise` |
+| `.omp/mcp.json` | Project-scoped MCP servers for this repo: `nixos` (upstream `utensils/mcp-nixos`, docs/option search) + `nixcfg` (local, `timeout: 0` so long rebuilds are not cut off at the 30s default). Not emitted by Home Manager — edited here directly |
+| `.omp/nixcfg-mcp.py` | The `nixcfg` MCP server: `rebuild`, `rebuild_log`, `dry_run`, `generations`, `rollback`, `diff_generations`, `gc`, `flake_update`, `flake_age`, `health`, `route`, `route_file`, `routes_audit`. Stdlib-only python3, launched as `python3 .omp/nixcfg-mcp.py` from the repo root; job logs in `$XDG_STATE_HOME/nixcfg-mcp/jobs`. `gc` needs the `nix-collect-garbage` NOPASSWD rule from `modules/sudo.nix` |
+| `.omp/skills/` | Project skills (`nix-routing`, `nixos-system-update-age`) loaded by omp's native skill provider |
