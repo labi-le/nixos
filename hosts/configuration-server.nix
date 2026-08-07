@@ -10,7 +10,8 @@
     ./../modules/grafana.nix
     ./../modules/monitoring
     inputs.sub-preprocessor.nixosModules.monitoring
-    inputs.tidal-syncer.nixosModules.monitoring
+    inputs.tidal-syncer.nixosModules.default
+    ./../modules/tidal-syncer.nix
     ./../modules/frp.nix
     # ./../modules/gitlab.nix
     ./../modules/syncthing/server.nix
