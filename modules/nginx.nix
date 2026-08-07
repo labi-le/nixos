@@ -300,9 +300,36 @@ in
   systemd.services.updateNginxIP = {
     description = "Update Nginx IP whitelist using dig";
     wantedBy = [ "multi-user.target" ];
+    # `dig +short` prints resolver errors on stdout, so its output cannot reach
+    # the config unfiltered: one timed-out lookup produced
+    # `allow ;; communications error ...`, which nginx rejected -- taking down
+    # the reload and every `nixos-rebuild switch` that triggers it.
     script = ''
-      #!/bin/sh
-      MY_IP=$(${pkgs.dnsutils}/bin/dig +short external.lan)
+      resolve() {
+        ${pkgs.dnsutils}/bin/dig +short +time=2 +tries=2 "$@" external.lan \
+          | ${pkgs.gnugrep}/bin/grep -m1 -E '^[0-9]+(\.[0-9]+){3}$' || true
+      }
+
+      MY_IP=$(resolve)
+
+      if [ -z "$MY_IP" ]; then
+        # The gateway serves `.lan` too, so it still answers when the local
+        # resolver is down. Its address is read from the routing table because
+        # the router hands it out itself; pinning it here would rot silently.
+        ROUTER=$(${pkgs.iproute2}/bin/ip -4 route show default \
+          | ${pkgs.gawk}/bin/awk '{ print $3; exit }')
+        if [ -n "$ROUTER" ]; then
+          MY_IP=$(resolve "@$ROUTER")
+        fi
+      fi
+
+      # tmpfiles seeds this file with the two static allows, so a whitelist is
+      # always present: leaving the last good one in place beats overwriting it
+      # with a guess, and locking yourself out beats neither.
+      if [ -z "$MY_IP" ]; then
+        echo "external.lan did not resolve via the local resolver or the gateway; keeping the current whitelist" >&2
+        exit 0
+      fi
 
       cat <<EOF > ${ipWhiteList}
       allow 127.0.0.1;
