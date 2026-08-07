@@ -23,7 +23,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Task / Concern | File | Notes |
 |---|---|---|
 | Bootloader, kernel parameters | `modules/boot.nix` | |
-| Sudo configuration | `modules/sudo.nix` | |
+| Sudo configuration, NOPASSWD rules | `modules/sudo.nix` | `timestamp_timeout=-1` plus NOPASSWD for exactly two absolute binaries, `nixos-rebuild` and `nix-collect-garbage`, so `make switch` / `make cleanup` never prompt while the login password stays strong; every other command still needs it |
 | Systemd services | `modules/systemd.nix` | |
 | Journald logging | `modules/journald.nix` | |
 | ZSH configuration | `modules/shell.nix` | |
@@ -232,6 +232,6 @@ Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{
 | `overlays.nix` | Custom package overlays |
 | `settings.nix` | Common settings (nix settings, allowed packages) |
 | `Makefile` | Convenience targets: `switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise` |
-| `.omp/mcp.json` | Project-scoped MCP servers for this repo: `nixos` (upstream `utensils/mcp-nixos`, docs/option search) + `nixcfg` (local, `timeout: 0` so long rebuilds are not cut off at the 30s default). Not emitted by Home Manager — edited here directly |
-| `.omp/nixcfg-mcp.py` | The `nixcfg` MCP server: `rebuild`, `rebuild_log`, `dry_run`, `generations`, `rollback`, `diff_generations`, `gc`, `flake_update`, `flake_age`, `health`, `route`, `route_file`, `routes_audit`. Stdlib-only python3, launched as `python3 .omp/nixcfg-mcp.py` from the repo root; job logs in `$XDG_STATE_HOME/nixcfg-mcp/jobs`. `gc` needs the `nix-collect-garbage` NOPASSWD rule from `modules/sudo.nix` |
-| `.omp/skills/` | Project skills (`nix-routing`, `nixos-system-update-age`) loaded by omp's native skill provider |
+| `.omp/mcp.json` | Project-scoped MCP servers for this repo; edited here directly, not emitted by Home Manager |
+| `.omp/nixcfg-mcp.py` | The `nixcfg` MCP server for project-scoped agent tooling; run `tools/list` for its surface |
+| `.omp/skills/nix-routing/SKILL.md` | Project skills live under `.omp/skills/`, loaded by omp's native skill provider |
