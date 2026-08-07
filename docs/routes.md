@@ -143,6 +143,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Grafana monitoring aggregator (imports shared contact points + per-service alert files) | `modules/monitoring/default.nix` |
 | Grafana shared notification channels (Telegram contact point + agenix secret, reused by all alerts) | `modules/monitoring/contact-points.nix` |
 | Grafana alert: tidal-syncer TIDAL re-login required (Loki log alert) | `modules/monitoring/tidal-syncer.nix` |
+| tidal-syncer daemon (native service: config, agenix secret, Prometheus scrape + Grafana dashboard) | `modules/tidal-syncer.nix` |
 | FRP (Fast Reverse Proxy) | `modules/frp.nix` |
 | Syncthing (server) | `modules/syncthing/server.nix` |
 | Syncthing common module | `modules/syncthing/default.nix` |
