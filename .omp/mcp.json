@@ -8,7 +8,7 @@
     "nixcfg": {
       "type": "stdio",
       "command": "python3",
-      "args": [".omp/nixcfg-mcp.py"],
+      "args": [".omp/nixcfg-mcp"],
       "timeout": 0
     }
   }

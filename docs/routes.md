@@ -234,5 +234,5 @@ Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{
 | `settings.nix` | Common settings (nix settings, allowed packages) |
 | `Makefile` | Convenience targets: `switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise` |
 | `.omp/mcp.json` | Project-scoped MCP servers for this repo; edited here directly, not emitted by Home Manager |
-| `.omp/nixcfg-mcp.py` | The `nixcfg` MCP server for project-scoped agent tooling; run `tools/list` for its surface |
+| `.omp/nixcfg-mcp/` | The `nixcfg` MCP server, split by concern: `config` constants, `protocol` JSON-RPC, `shell` subprocess, `jobs` detached runs, `pane` sudo tmux pane, `system`/`flake`/`routes`/`rules`/`agenix` tools, `registry` schemas, `server` dispatch, `__main__` entry |
 | `.omp/skills/nix-routing/SKILL.md` | Project skills live under `.omp/skills/`, loaded by omp's native skill provider |
