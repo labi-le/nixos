@@ -178,7 +178,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Thunar (user config) | `home-manager/modules/thunar.nix` |
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
-| Oh My Pi (omp) coding agent + undo-redo extension + MCP servers (`chroma`, `context7`, `sway`) in `~/.omp/agent/mcp.json` | `home-manager/modules/omp.nix` | omp-flake HM module loaded in `flake.nix` sharedModules; project-scoped servers stay in that project's `.omp/mcp.json` — see "Other Files" for this repo's own `nixcfg` server |
+| Oh My Pi (omp) coding agent + undo-redo extension + MCP servers (`chroma`, `context7`, `sway`) in `~/.omp/agent/mcp.json` + user-level agent context: `RULES.md` (always-apply), `rules/commit-style.md` (TTSR, fires on `git commit`), `rules/project-naming.md` (rulebook, read via `rule://`), `AGENTS.md` (session background) | `home-manager/modules/omp.nix` | omp-flake HM module loaded in `flake.nix` sharedModules; a rule's bucket follows its frontmatter — `condition`/`astCondition` wins over `alwaysApply`, and a `description` with neither lands in the rulebook; project-scoped servers stay in that project's `.omp/mcp.json` — see "Other Files" for this repo's own `nixcfg` server |
 | OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
 | OpenCode provider definitions | `home-manager/modules/opencode/providers/*.nix` |
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
