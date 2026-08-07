@@ -4,3 +4,4 @@ context.md
 .omo/
 result
 result-*
+__pycache__/

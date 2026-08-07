@@ -6,7 +6,8 @@ from pathlib import Path
 from config import AGE, HOST_KEY_PUB, REPO, SECRETS_DIR, SECRETS_RULES
 from pane import run_in_pane
 from protocol import ToolError
-from shell import clamp, envelope, nix_noise, run_split, tail
+from shell import nix_noise, run_split
+from text import clamp, envelope, tail
 
 
 def secret_rules():
@@ -221,9 +222,7 @@ def tool_secret_rekey(args, request_id, token):
     header = {
         "rekeyed": done,
         "skipped": skipped,
-        "note": "plaintext never enters the transcript; when the host key is needed it transits "
-        "a 0700 tmpfs scratch dir removed on every exit path. Run after changing publicKeys "
-        "in secrets.nix",
+        "note": "plaintext never left this process; run after changing publicKeys in secrets.nix",
     }
     return envelope(header), False
 

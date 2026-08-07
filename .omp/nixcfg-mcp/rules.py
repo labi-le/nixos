@@ -9,7 +9,7 @@ from config import (
     TRIVIAL_LINE,
 )
 from protocol import ToolError
-from shell import envelope
+from text import envelope
 
 
 def camel_key(key):

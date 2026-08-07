@@ -1,8 +1,7 @@
-import json
 import os
 import subprocess
 
-from config import DIRTY_WARNING_RE, DRV_FAIL_RE, HOSTS, MAX_TEXT, REPO, SHORT_TIMEOUT
+from config import DIRTY_WARNING_RE, DRV_FAIL_RE, HOSTS, REPO, SHORT_TIMEOUT
 from protocol import ToolError
 
 
@@ -58,24 +57,6 @@ def nix_noise(text):
         and not DIRTY_WARNING_RE.search(line)
         and not line.startswith("error (ignored):")
     )
-
-
-def tail(text, lines):
-    kept = text.splitlines()[-lines:]
-    return "\n".join(kept)
-
-
-def clamp(text):
-    if len(text) <= MAX_TEXT:
-        return text
-    return "[truncated to the last %d chars]\n" % MAX_TEXT + text[-MAX_TEXT:]
-
-
-def envelope(header, body=""):
-    text = json.dumps(header, indent=2, ensure_ascii=False)
-    if body:
-        text += "\n\n" + body
-    return clamp(text)
 
 
 def cores():
