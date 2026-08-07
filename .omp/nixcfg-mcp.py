@@ -14,6 +14,10 @@ REPO = Path(__file__).resolve().parent.parent
 ROUTES = REPO / "docs" / "routes.md"
 OMP_RULES = REPO / "home-manager" / "modules" / "omp"
 LOCK = REPO / "flake.lock"
+SECRETS_RULES = REPO / "secrets.nix"
+SECRETS_DIR = REPO / "secrets"
+AGE = "/run/current-system/sw/bin/age"
+HOST_KEY_PUB = Path("/etc/ssh/ssh_host_ed25519_key.pub")
 HOSTS = ("pc", "fx516", "notebook", "server")
 NIXOS_REBUILD = "/run/current-system/sw/bin/nixos-rebuild"
 NIX_COLLECT_GARBAGE = "/run/current-system/sw/bin/nix-collect-garbage"
@@ -107,12 +111,13 @@ def run(argv, timeout=SHORT_TIMEOUT, cwd=None):
     return done.returncode, done.stdout.decode("utf-8", "replace")
 
 
-def run_split(argv, timeout=SHORT_TIMEOUT, cwd=None):
+def run_split(argv, timeout=SHORT_TIMEOUT, cwd=None, stdin_data=None):
     try:
         done = subprocess.run(
             argv,
             cwd=str(cwd or REPO),
-            stdin=subprocess.DEVNULL,
+            input=stdin_data if stdin_data is not None else None,
+            stdin=subprocess.DEVNULL if stdin_data is None else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout,
@@ -1448,6 +1453,187 @@ def tool_rules(args, request_id, token):
     return envelope(header, bodies[wanted] if wanted else ""), False
 
 
+def secret_rules():
+    code, out, err = run_split(
+        ["nix", "eval", "--file", str(SECRETS_RULES), "--json"], timeout=300
+    )
+    if code != 0:
+        raise ToolError(f"cannot evaluate secrets.nix:\n{tail(nix_noise(err), 10)}")
+    try:
+        rules = json.loads(out)
+    except ValueError:
+        raise ToolError("secrets.nix did not evaluate to JSON data")
+    return rules
+
+
+def key_material(pubkey):
+    parts = pubkey.split()
+    return parts[1] if len(parts) > 1 else pubkey
+
+
+def local_identities():
+    found = []
+    if HOST_KEY_PUB.exists():
+        try:
+            found.append(
+                {
+                    "identity": "/etc/ssh/ssh_host_ed25519_key",
+                    "material": key_material(HOST_KEY_PUB.read_text().strip()),
+                    "needs_root": True,
+                }
+            )
+        except OSError:
+            pass
+    for pub in sorted((Path.home() / ".ssh").glob("*.pub")):
+        private = pub.with_suffix("")
+        if not private.exists():
+            continue
+        try:
+            found.append(
+                {
+                    "identity": str(private),
+                    "material": key_material(pub.read_text().strip()),
+                    "needs_root": False,
+                }
+            )
+        except OSError:
+            continue
+    return found
+
+
+def recipient_label(pubkey):
+    parts = pubkey.split()
+    return parts[2] if len(parts) > 2 else key_material(pubkey)[:12]
+
+
+def tool_secret_list(args, request_id, token):
+    rules = secret_rules()
+    identities = local_identities()
+    by_material = {entry["material"]: entry for entry in identities}
+    secrets = []
+    for path in sorted(rules):
+        spec = rules[path] or {}
+        recipients = spec.get("publicKeys") or []
+        target = REPO / path
+        usable = [
+            by_material[key_material(pubkey)]
+            for pubkey in recipients
+            if key_material(pubkey) in by_material
+        ]
+        entry = {
+            "path": path,
+            "recipients": [recipient_label(pubkey) for pubkey in recipients],
+            "exists": target.exists(),
+            "armor": bool(spec.get("armor")),
+        }
+        if usable:
+            entry["decrypt_here"] = {
+                "identity": usable[0]["identity"],
+                "needs_root": usable[0]["needs_root"],
+            }
+        else:
+            entry["decrypt_here"] = None
+        secrets.append(entry)
+    known = set(rules)
+    orphans = sorted(
+        str(found.relative_to(REPO))
+        for found in SECRETS_DIR.rglob("*.age")
+        if str(found.relative_to(REPO)) not in known
+    )
+    header = {
+        "rules_file": "secrets.nix",
+        "count": len(secrets),
+        "identities_readable_without_root": [
+            entry["identity"] for entry in identities if not entry["needs_root"]
+        ],
+        "secrets": secrets,
+    }
+    if orphans:
+        header["age_files_without_a_rule"] = orphans
+    missing = [entry["path"] for entry in secrets if not entry["exists"]]
+    if missing:
+        header["rules_without_a_file"] = missing
+    header["note"] = (
+        "writing a secret needs only the recipients' public keys; reading or editing one "
+        "needs a private key listed in recipients, so decrypt_here: null means that secret "
+        "cannot be opened on this host at all"
+    )
+    return envelope(header), False
+
+
+def tool_secret_write(args, request_id, token):
+    path = (args.get("path") or "").strip()
+    if not path:
+        raise ToolError("path is required")
+    rules = secret_rules()
+    if path not in rules:
+        raise ToolError(
+            f"{path!r} has no rule in secrets.nix; add its publicKeys there first. "
+            "Known: " + ", ".join(sorted(rules))
+        )
+    content = args.get("content")
+    source = args.get("from_file")
+    if (content is None) == (source is None):
+        raise ToolError("pass exactly one of content or from_file")
+    if source is not None:
+        origin = Path(source)
+        if not origin.is_absolute():
+            raise ToolError("from_file must be an absolute path")
+        if str(origin).startswith(str(REPO)):
+            raise ToolError("from_file must live outside the repo so plaintext is never committed")
+        try:
+            plaintext = origin.read_bytes()
+        except OSError as error:
+            raise ToolError(f"cannot read {source}: {error}")
+    else:
+        plaintext = content.encode()
+    if not plaintext:
+        raise ToolError("refusing to write an empty secret")
+    target = REPO / path
+    if target.exists() and args.get("confirm") != "yes":
+        raise ToolError(
+            f"{path} already exists and its current value cannot be recovered from this host "
+            "once overwritten; pass confirm=\"yes\""
+        )
+    spec = rules[path] or {}
+    recipients = spec.get("publicKeys") or []
+    if not recipients:
+        raise ToolError(f"{path} has no publicKeys in secrets.nix")
+    argv = [AGE]
+    if spec.get("armor"):
+        argv.append("--armor")
+    for pubkey in recipients:
+        argv += ["--recipient", pubkey]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    staged = target.with_name(f"{target.name}.{os.getpid()}.{threading.get_ident()}.new")
+    argv += ["-o", str(staged)]
+    code, out, err = run_split(argv, timeout=120, stdin_data=plaintext)
+    if code != 0:
+        staged.unlink(missing_ok=True)
+        raise ToolError(f"age failed with {code}:\n{tail(nix_noise(err), 10)}")
+    written = staged.read_bytes()
+    if not written.startswith((b"age-encryption.org/v1", b"-----BEGIN AGE ENCRYPTED FILE-----")):
+        staged.unlink(missing_ok=True)
+        raise ToolError("age produced no recognizable header; refusing to install the file")
+    existed = target.exists()
+    os.replace(staged, target)
+    header = {
+        "path": path,
+        "action": "replaced" if existed else "created",
+        "recipients": [recipient_label(pubkey) for pubkey in recipients],
+        "armor": bool(spec.get("armor")),
+        "bytes": len(written),
+        "source": "from_file" if source is not None else "content",
+        "next": "git add " + path + " (a path flakeref ignores untracked files)",
+    }
+    if source is None:
+        header["warning"] = (
+            "the plaintext was passed as a tool argument, so it is in this session's transcript; "
+            "use from_file with a path outside the repo to keep it out"
+        )
+    return envelope(header), False
+
+
 TOOLS = [
     {
         "name": "rebuild",
@@ -1713,6 +1899,42 @@ TOOLS = [
         },
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         "handler": tool_rules,
+    },
+    {
+        "name": "secret_list",
+        "title": "Agenix secrets",
+        "description": (
+            "Every secret declared in secrets.nix: recipients, whether the .age file exists, "
+            "and which local private key could decrypt it. `decrypt_here: null` means no key on "
+            "this host is a recipient, so that secret cannot be opened here at any privilege "
+            "level. Also reports .age files with no rule and rules with no file."
+        ),
+        "inputSchema": {"type": "object", "properties": {}},
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+        "handler": tool_secret_list,
+    },
+    {
+        "name": "secret_write",
+        "title": "Write an agenix secret",
+        "description": (
+            "Create or replace a secret with `age`, encrypting to the recipients declared for "
+            "that path in secrets.nix. Needs no root and no editor, because encryption only uses "
+            "public keys. It does NOT read the old value, so replacing an existing secret is "
+            "destructive and needs confirm=\"yes\". Prefer `from_file` (absolute path outside the "
+            "repo) over `content`, which would put the plaintext in the session transcript."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "repo-relative path exactly as keyed in secrets.nix"},
+                "content": {"type": "string", "description": "plaintext; lands in the transcript"},
+                "from_file": {"type": "string", "description": "absolute path outside the repo holding the plaintext"},
+                "confirm": {"type": "string", "description": "must be \"yes\" to overwrite an existing secret"},
+            },
+            "required": ["path"],
+        },
+        "annotations": {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": False, "openWorldHint": False},
+        "handler": tool_secret_write,
     },
 ]
 
