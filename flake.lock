@@ -1459,11 +1459,11 @@
     },
     "tidal-syncer": {
       "locked": {
-        "lastModified": 1785604607,
-        "narHash": "sha256-l+hnA3SeCQHMQKV+U/eeMBf+lx1wlTk0Yj9OJZGOv4A=",
+        "lastModified": 1786139306,
+        "narHash": "sha256-C5uDvFcPJGnQ2uoqKv6t5orQu8Ztrod27wTIrzUkpgA=",
         "ref": "refs/heads/main",
-        "rev": "bd75a345d7bec0ab207eac37af036101e8fffba6",
-        "revCount": 35,
+        "rev": "4b7060babfe2a3d2264addd769b96ce33c80cd70",
+        "revCount": 41,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/tidal-syncer"
       },

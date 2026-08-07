@@ -67,7 +67,10 @@
       ];
 
       baseConfig = {
-        nixpkgs.overlays = [ (import ./overlays.nix { inherit inputs system; }) ];
+        nixpkgs.overlays = [
+          (import ./overlays.nix { inherit inputs system; })
+          inputs.tidal-syncer.overlays.default
+        ];
         nixpkgs.config.allowUnfree = true;
       };
 
