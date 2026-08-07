@@ -28,5 +28,12 @@ in
       group = "users";
       mode = "0400";
     };
+
+    age.secrets.portainer-mcp = {
+      file = ../secrets/portainer-mcp.age;
+      owner = "labile";
+      group = "users";
+      mode = "0400";
+    };
   };
 }

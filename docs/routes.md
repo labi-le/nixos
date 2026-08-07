@@ -68,7 +68,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | NFS mounts | `modules/nfs.nix` | pc, fx516, notebook |
 | Thunar file manager | `modules/thunar.nix` | pc, fx516, notebook |
 | JetBrains IDE wrapper module | `modules/ide/module.nix` | flake common module; enabled by host `ide.*` options on pc/notebook |
-| Work mount secrets | `modules/work-mount.nix` | pc, notebook |
+| Work secrets (agent tokens): opencode jira/gitlab/grafana + `portainer-mcp` (Portainer URL + API key; consumed by a project-scoped `.omp/mcp.json`, not by the omp HM module) | `modules/work-mount.nix` | pc, notebook |
 
 ## PC-Specific Modules (`hosts/configuration.nix`)
 
@@ -178,7 +178,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Thunar (user config) | `home-manager/modules/thunar.nix` |
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
-| Oh My Pi (omp) coding agent + undo-redo extension | `home-manager/modules/omp.nix` | omp-flake HM module loaded in `flake.nix` sharedModules |
+| Oh My Pi (omp) coding agent + undo-redo extension + MCP servers (`chroma`, `context7`, `sway`) in `~/.omp/agent/mcp.json` | `home-manager/modules/omp.nix` | omp-flake HM module loaded in `flake.nix` sharedModules; project-scoped servers stay in that project's `.omp/mcp.json` |
 | OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
 | OpenCode provider definitions | `home-manager/modules/opencode/providers/*.nix` |
 | OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |

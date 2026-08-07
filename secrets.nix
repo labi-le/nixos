@@ -34,4 +34,9 @@ in
     pc
     notebook
   ];
+
+  "secrets/portainer-mcp.age".publicKeys = [
+    pc
+    notebook
+  ];
 }
