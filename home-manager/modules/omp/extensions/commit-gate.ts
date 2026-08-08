@@ -23,8 +23,11 @@ const WRAPPERS: Record<string, true> = {
   docker: true,
   podman: true,
 };
-// Markers that a snippet spawns a process rather than merely mentioning one.
-const EXECUTES = /\bsubprocess\b|\bexecSync\b|\bspawnSync\b|\bspawn\b|\bpopen\b|os\.system|check_output|Bun\.\$|\$`/;
+const FOREIGN: Record<string, true> = { ssh: true, docker: true, podman: true };
+const COMMIT_TOKEN = /(?<![\w./-])commit(?![\w./-])/;
+const EVAL_RISK = /(?<![\w./-])(commit|--amend|--force|--hard)(?![\w./-])/;
+const ADD_SWEEP = /^-[a-zA-Z]*[Au][a-zA-Z]*$/;
+const AMEND = "\u0000amend";
 
 type Simple = string[];
 
@@ -234,6 +237,98 @@ function collectInvocations(src: string, depth = 0): Invocation[] {
   return out;
 }
 
+function readDanger(cmd: Simple): string | null {
+  const gitAt = cmd.findIndex((t) => t === "git" || t.endsWith("/git"));
+  if (gitAt < 0) return null;
+
+  let i = gitAt + 1;
+  let elsewhere = false;
+  while (i < cmd.length && cmd[i].startsWith("-")) {
+    if (cmd[i] === "-C") elsewhere = true;
+    i += cmd[i] === "-C" || cmd[i] === "-c" ? 2 : 1;
+  }
+  const rest = cmd.slice(i + 1);
+
+  switch (cmd[i]) {
+    case "add": {
+      if (rest.some((t) => t === "-N" || t === "--intent-to-add")) return null;
+      const sweep = rest.find((t) => t === "--all" || t === "--update" || ADD_SWEEP.test(t));
+      if (sweep) {
+        return `\`git add ${sweep}\` stages whatever else sits in the worktree, including work that is not yours; name the paths`;
+      }
+      if (rest.some((t) => t === "." || t === ":/" || t === "*")) {
+        return "`git add` with a whole-tree pathspec stages work that is not yours; name the paths";
+      }
+      return null;
+    }
+    case "commit":
+      if (!rest.includes("--amend")) return null;
+      return elsewhere
+        ? "`--amend` with `-C` rewrites history in another worktree, where HEAD cannot be checked from here; run it from that directory"
+        : AMEND;
+    case "reset":
+      return rest.includes("--hard")
+        ? "`git reset --hard` throws away uncommitted work in the worktree, including work that is not yours"
+        : null;
+    case "push": {
+      const forced = rest.find((t) => t === "-f" || t === "--force" || t.startsWith("--force="));
+      return forced
+        ? `\`git push ${forced}\` overwrites remote history; \`--force-with-lease\` refuses instead when the remote moved`
+        : null;
+    }
+    default:
+      return null;
+  }
+}
+
+function collectDangers(src: string, depth = 0): string[] {
+  const out: string[] = [];
+  for (const simple of splitCommands(src)) {
+    const risk = readDanger(simple);
+    if (risk) {
+      out.push(risk);
+      continue;
+    }
+    const name = (simple[0] ?? "").replace(/^.*\//, "");
+    if (depth >= 2 || !WRAPPERS[name]) continue;
+    for (const tok of simple.slice(1)) {
+      if (!/\bgit\b/.test(tok)) continue;
+      for (const risk of collectDangers(tok, depth + 1)) {
+        out.push(
+          risk === AMEND && FOREIGN[name]
+            ? "`--amend` runs on another host or container, where HEAD cannot be checked from here"
+            : risk,
+        );
+      }
+    }
+  }
+  return out;
+}
+
+async function amendRisk(pi: ExtensionAPI, cwd: string): Promise<string | null> {
+  let head;
+  try {
+    head = await pi.exec("git", ["log", "-1", "--format=%H %P"], { cwd, timeout: 5000 });
+  } catch {
+    return "`--amend` cannot be checked because git did not run; verify HEAD yourself before rewriting it";
+  }
+  if (head.code !== 0) {
+    return "`--amend` cannot be checked here because HEAD does not resolve; run it where the repository is";
+  }
+  const [sha, ...parents] = head.stdout.trim().split(/\s+/);
+  const short = sha.slice(0, 7);
+  if (parents.length > 1) {
+    return `HEAD ${short} is a merge commit, so \`--amend\` would rewrite someone else's merge rather than your own work`;
+  }
+  const published = await pi.exec("git", ["branch", "-r", "--contains", sha], { cwd, timeout: 5000 });
+  const branches = published.stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  const on = branches.find((l) => !l.includes("->")) ?? branches[0];
+  if (published.code === 0 && on) {
+    return `HEAD ${short} is already published on ${on}, so \`--amend\` would rewrite history others have pulled`;
+  }
+  return null;
+}
+
 export default function commitGate(pi: ExtensionAPI): void {
   pi.on("tool_call", async (event, ctx) => {
     // Every process-spawning tool has to be covered. A gate watching `bash`
@@ -244,10 +339,12 @@ export default function commitGate(pi: ExtensionAPI): void {
         : event.toolName === "eval"
           ? String(event.input.code ?? "")
           : null;
-    if (source === null || !/\bgit\b/.test(source) || !/\bcommit\b/.test(source)) return;
+    if (source === null || !/\bgit\b/.test(source)) return;
 
-    const found = collectInvocations(source);
-    let broken: string | null = null;
+    const risks = collectDangers(source);
+    let broken: string | null = risks.find((r) => r !== AMEND) ?? null;
+    if (!broken && risks.includes(AMEND)) broken = await amendRisk(pi, ctx.cwd);
+    const found = !broken && COMMIT_TOKEN.test(source) ? collectInvocations(source) : [];
 
     for (const inv of found) {
       if (inv.exempt) continue;
@@ -274,18 +371,18 @@ export default function commitGate(pi: ExtensionAPI): void {
 
     // An exec that did not parse is refused rather than trusted: a template
     // literal can carry the message in a variable that exists only at runtime.
-    if (!broken && !found.length && event.toolName === "eval" && EXECUTES.test(source)) {
+    if (!broken && !found.length && event.toolName === "eval" && EVAL_RISK.test(source)) {
       broken =
-        "a commit spawned from `eval` cannot be read as a command line; run it through the bash tool so the message is visible";
+        "a commit or history rewrite driven from `eval` cannot be read as a command line; run it through the bash tool so the command is visible";
     }
     if (!broken) return;
 
-    const reason = `Commit blocked: ${broken}\n\nRewrite it and run the command again. Full convention: ${RULE}`;
+    const reason = `Blocked: ${broken}\n\nAdjust the command and run it again. Commit convention: ${RULE}`;
 
     // The human outranks the rule, so give them the override when they are
     // actually at the keyboard; a subagent or headless run just stops.
     if (ctx.hasUI) {
-      const allow = await ctx.ui.confirm("Commit style", `${reason}\n\nCommit anyway?`);
+      const allow = await ctx.ui.confirm("Git guard", `${reason}\n\nRun it anyway?`);
       if (allow) return;
     }
     return { block: true, reason };
