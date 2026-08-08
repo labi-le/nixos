@@ -25,13 +25,19 @@
       enable = true;
       datasources.settings = {
         # Grafana 13's datasource provisioner cannot CHANGE the uid of an
-        # already-provisioned datasource. Once Loki has been provisioned with
-        # its original random uid, adding the fixed `uid = "loki"` below makes
-        # provisioning abort with `Datasource provisioning error: data source
-        # not found`, crashing grafana on every boot (start-limit-hit). Deleting
-        # Loki first lets it be recreated with the stable uid; this is idempotent
-        # (delete is a no-op when absent) and self-heals any future uid change.
+        # already-provisioned datasource. Once a datasource exists with its
+        # generated uid, adding a fixed `uid` below makes provisioning abort with
+        # `Datasource provisioning error: data source not found`, crashing grafana
+        # on every boot (start-limit-hit). Deleting it first lets it be recreated
+        # with the stable uid; this is idempotent (delete is a no-op when absent)
+        # and self-heals any future uid change. Safe for both: no dashboard here
+        # references either datasource by uid -- they select it through a
+        # `${datasource}` template variable or by name.
         deleteDatasources = [
+          {
+            name = "Prometheus";
+            orgId = 1;
+          }
           {
             name = "Loki";
             orgId = 1;
@@ -40,6 +46,11 @@
         datasources = [
           {
             name = "Prometheus";
+            # Stable uid so the provisioned re-auth alert can target Prometheus
+            # (see modules/monitoring/tidal-syncer.nix). A provisioned alert rule
+            # must name a real datasourceUid: it cannot resolve one by name or
+            # fall back to the default, and a wrong uid stops grafana starting.
+            uid = "prometheus";
             type = "prometheus";
             access = "proxy";
             url = "http://127.0.0.1:${toString config.services.prometheus.port}";
