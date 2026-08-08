@@ -96,6 +96,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Hardware (pc) | `hosts/hardware-pc.nix` |
 | GPU profile (LACT: undervolt, fan curve, power profile) | `hosts/lact-pc.yaml` | Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink |
 |RGB lighting (OpenRGB): device profiles + swayidle blanking|`pkgs/openrgb-profile.nix`|`openrgb-profile [--wait] default\|off`; `default` = GPU and DRAM dark, mouse on Spectrum Cycle, `off` = everything dark. Wired from `home-manager/modules/sway.nix` (sway `startup` + swayidle `timeout`/`resume`); the OpenRGB server itself is `services.hardware.openrgb` in `hosts/configuration.nix`, whose `preStart` strips the Keychron Q6 Max detector so the keyboard keeps its firmware lighting|
+|Keyboard backlight (Keychron Q6 Max)|`pkgs/keychron-backlight.nix`|`keychron-backlight on\|off` over VIA raw HID (usage page 0xFF60, `id_custom_set_value` channel 3, value id 2 = RGB matrix effect; effect 0 = dark, stash restores the previous effect). Separate from OpenRGB on purpose: the board's detector is stripped in `systemd.services.openrgb.preStart` so it keeps its QMK firmware effects. Chained into the same swayidle `timeout`/`resume` hooks in `home-manager/modules/sway.nix`; `id_custom_save` is never sent, so nothing is written to the keyboard's EEPROM|
 | Hardware watchdog (sp5100_tco) | `hosts/configuration.nix` | armed by `systemd.settings.Manager.RuntimeWatchdogSec`; self-reboot 60s after a hang |
 | belphegor, gnupg, dconf | `hosts/configuration.nix` |
 
