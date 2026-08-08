@@ -1,5 +1,5 @@
 from config import INSTRUCTIONS, LATEST_PROTOCOL, PROTOCOLS, SERVER_INFO
-from protocol import CANCELLED, ToolError, fail, reply
+from protocol import CANCELLED, INFLIGHT, ToolError, fail, reply
 from registry import PUBLIC_TOOLS, TOOL_INDEX
 
 
@@ -46,6 +46,7 @@ def handle(message):
     finally:
         if request_id is not None:
             CANCELLED.discard(str(request_id))
+            INFLIGHT.discard(str(request_id))
 
 
 def dispatch(message, request_id):
@@ -56,7 +57,7 @@ def dispatch(message, request_id):
     if request_id is None:
         if method == "notifications/cancelled":
             cancelled = params.get("requestId")
-            if cancelled is not None:
+            if cancelled is not None and str(cancelled) in INFLIGHT:
                 CANCELLED.add(str(cancelled))
         return
     if method == "initialize":

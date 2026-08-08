@@ -203,15 +203,19 @@ def tool_secret_rekey(args, request_id, token):
             argv += ["--recipient", pubkey]
         staged = target.with_name(f"{target.name}.{os.getpid()}.{threading.get_ident()}.new")
         argv += ["-o", str(staged)]
-        code, out, err = run_split(argv, timeout=120, stdin_data=plaintext)
-        if code != 0:
-            staged.unlink(missing_ok=True)
-            raise ToolError(f"re-encrypting {path} failed with {code}:\n{tail(err, 6)}")
-        written = staged.read_bytes()
-        if not written.startswith((b"age-encryption.org/v1", b"-----BEGIN AGE ENCRYPTED FILE-----")):
-            staged.unlink(missing_ok=True)
-            raise ToolError(f"re-encrypting {path} produced no age header; {path} left untouched")
-        os.replace(staged, target)
+        installed = False
+        try:
+            code, out, err = run_split(argv, timeout=120, stdin_data=plaintext)
+            if code != 0:
+                raise ToolError(f"re-encrypting {path} failed with {code}:\n{tail(err, 6)}")
+            written = staged.read_bytes()
+            if not written.startswith((b"age-encryption.org/v1", b"-----BEGIN AGE ENCRYPTED FILE-----")):
+                raise ToolError(f"re-encrypting {path} produced no age header; {path} left untouched")
+            os.replace(staged, target)
+            installed = True
+        finally:
+            if not installed:
+                staged.unlink(missing_ok=True)
         done.append(
             {
                 "path": path,
@@ -222,7 +226,9 @@ def tool_secret_rekey(args, request_id, token):
     header = {
         "rekeyed": done,
         "skipped": skipped,
-        "note": "plaintext never left this process; run after changing publicKeys in secrets.nix",
+        "note": "plaintext never enters the transcript; when the host key is needed it transits "
+        "a 0700 tmpfs scratch dir purged on every exit path including SIGTERM. Run after "
+        "changing publicKeys in secrets.nix",
     }
     return envelope(header), False
 
@@ -245,13 +251,19 @@ def tool_secret_write(args, request_id, token):
         origin = Path(source)
         if not origin.is_absolute():
             raise ToolError("from_file must be an absolute path")
-        if str(origin).startswith(str(REPO)):
+        try:
+            origin = origin.resolve(strict=True)
+        except OSError as error:
+            raise ToolError(f"cannot read {source}: {error}")
+        if origin == REPO or REPO in origin.parents:
             raise ToolError("from_file must live outside the repo so plaintext is never committed")
         try:
             plaintext = origin.read_bytes()
         except OSError as error:
             raise ToolError(f"cannot read {source}: {error}")
     else:
+        if not isinstance(content, str):
+            raise ToolError("content must be a string")
         plaintext = content.encode()
     if not plaintext:
         raise ToolError("refusing to write an empty secret")
@@ -273,16 +285,20 @@ def tool_secret_write(args, request_id, token):
     target.parent.mkdir(parents=True, exist_ok=True)
     staged = target.with_name(f"{target.name}.{os.getpid()}.{threading.get_ident()}.new")
     argv += ["-o", str(staged)]
-    code, out, err = run_split(argv, timeout=120, stdin_data=plaintext)
-    if code != 0:
-        staged.unlink(missing_ok=True)
-        raise ToolError(f"age failed with {code}:\n{tail(nix_noise(err), 10)}")
-    written = staged.read_bytes()
-    if not written.startswith((b"age-encryption.org/v1", b"-----BEGIN AGE ENCRYPTED FILE-----")):
-        staged.unlink(missing_ok=True)
-        raise ToolError("age produced no recognizable header; refusing to install the file")
-    existed = target.exists()
-    os.replace(staged, target)
+    installed = False
+    try:
+        code, out, err = run_split(argv, timeout=120, stdin_data=plaintext)
+        if code != 0:
+            raise ToolError(f"age failed with {code}:\n{tail(nix_noise(err), 10)}")
+        written = staged.read_bytes()
+        if not written.startswith((b"age-encryption.org/v1", b"-----BEGIN AGE ENCRYPTED FILE-----")):
+            raise ToolError("age produced no recognizable header; refusing to install the file")
+        existed = target.exists()
+        os.replace(staged, target)
+        installed = True
+    finally:
+        if not installed:
+            staged.unlink(missing_ok=True)
     header = {
         "path": path,
         "action": "replaced" if existed else "created",

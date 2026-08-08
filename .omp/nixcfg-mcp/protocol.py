@@ -4,6 +4,7 @@ import threading
 
 OUT_LOCK = threading.Lock()
 CANCELLED = set()
+INFLIGHT = set()
 
 
 class ToolError(Exception):
