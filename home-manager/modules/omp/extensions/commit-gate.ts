@@ -379,12 +379,6 @@ export default function commitGate(pi: ExtensionAPI): void {
 
     const reason = `Blocked: ${broken}\n\nAdjust the command and run it again. Commit convention: ${RULE}`;
 
-    // The human outranks the rule, so give them the override when they are
-    // actually at the keyboard; a subagent or headless run just stops.
-    if (ctx.hasUI) {
-      const allow = await ctx.ui.confirm("Git guard", `${reason}\n\nRun it anyway?`);
-      if (allow) return;
-    }
     return { block: true, reason };
   });
 }
