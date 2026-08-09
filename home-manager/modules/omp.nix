@@ -214,6 +214,8 @@ in
     models.roles.advisor = mainModel;
     settings.advisor.enabled = true;
 
+    models.roles.tiny = "@default";
+
     settings.autoResume = false;
 
     # Context pruning ("DCP analog"): omp types only compaction.enabled, so the
@@ -233,6 +235,18 @@ in
       idleThresholdTokens = 150000;
       idleTimeoutSeconds = 300;
     };
+
+    memory.backend = "mnemopi";
+
+    settings.mnemopi = {
+      scoping = "per-project";
+      embeddingVariant = "multilingual";
+      polyphonicRecall = true;
+      enhancedRecall = true;
+      proactiveLinking = true;
+    };
+
+    settings.autolearn.enabled = true;
 
     settings.task = {
       eager = "always";
