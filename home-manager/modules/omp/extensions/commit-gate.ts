@@ -7,8 +7,8 @@ import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
 const RULE = "~/.omp/agent/rules/commit-style.md";
 const SUBJECT_CEILING = 70;
-const BODY_CEILING = 500;
-const BODY_LINES = 6;
+const BODY_CEILING = 200;
+const BODY_LINES = 1;
 
 // Commands that carry another command inside an argument (`ssh host "…"`).
 const WRAPPERS: Record<string, true> = {
@@ -209,10 +209,10 @@ export function checkMessage(messages: string[]): string | null {
 
   if (body) {
     if (body.length > BODY_CEILING) {
-      return `the body is ${body.length} characters; it should hold a couple of lines carrying a decision the diff cannot show`;
+      return `the body is ${body.length} characters; it should hold a single line carrying a decision the diff cannot show`;
     }
     if (body.split("\n").filter((l) => l.trim()).length > BODY_LINES) {
-      return "the body runs past a couple of lines";
+      return "the body runs past a single line";
     }
   }
   return null;
