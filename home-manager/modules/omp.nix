@@ -216,7 +216,7 @@ in
 
     models.roles.tiny = "@default";
 
-    settings.autoResume = false;
+    settings.autoResume = true;
 
     # Context pruning ("DCP analog"): omp types only compaction.enabled, so the
     # rest ride the freeform `settings` (merged last into config.yml). snapcompact
