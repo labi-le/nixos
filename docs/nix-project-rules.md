@@ -20,12 +20,6 @@
   nixpkgs documentation.
 - Fetch fresh context before writing or modifying Nix files. Check current
   options first. For non-Nix libraries, use Context7.
-- Before asking the user to run `make switch`, dry-run
-  build for the target host. For `pc`, use:
-
-```bash
-nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run
-```
 
 ## Conventions
 
@@ -50,8 +44,8 @@ nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run
 
 ## Verification Gate
 
-- Verification succeeds only when the dry-run passes and no new evaluation or
-  deprecation warnings are present. The expected `Git tree is dirty` warning is
-  excluded.
+- Verification succeeds only when `switch` exits 0 with no failed units and no
+  new evaluation or deprecation warnings. The expected `Git tree is dirty`
+  warning is excluded.
 - For performance-sensitive changes, include a quick benchmark check in the
   verification output.

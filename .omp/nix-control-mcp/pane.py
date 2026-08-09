@@ -73,7 +73,7 @@ def run_in_pane(argv, timeout=120):
             "run `sudo -v`, then detach with Ctrl-a d."
         )
     base = os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()
-    scratch = tempfile.mkdtemp(prefix="nixcfg-pane-", dir=base)
+    scratch = tempfile.mkdtemp(prefix="nix-control-pane-", dir=base)
     SCRATCH_DIRS.add(scratch)
     try:
         out_path = Path(scratch) / "out"

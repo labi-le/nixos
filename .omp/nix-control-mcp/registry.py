@@ -5,7 +5,6 @@ from routes import tool_route, tool_route_file, tool_routes_audit
 from rules import tool_rules
 from system import (
     tool_diff_generations,
-    tool_dry_run,
     tool_gc,
     tool_generations,
     tool_health,
@@ -55,21 +54,6 @@ TOOLS = [
         },
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         "handler": tool_rebuild_log,
-    },
-    {
-        "name": "dry_run",
-        "title": "Verification gate",
-        "description": (
-            "The documented pre-switch gate: nix build .#nixosConfigurations.<host>."
-            "config.system.build.toplevel --dry-run. Passes only on exit 0 with no evaluation "
-            "or deprecation warnings; the 'Git tree is dirty' warning is excluded."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {"host": {"type": "string", "enum": list(HOSTS), "description": "defaults to this machine"}},
-        },
-        "annotations": {"readOnlyHint": True, "openWorldHint": False},
-        "handler": tool_dry_run,
     },
     {
         "name": "eval",
@@ -168,7 +152,7 @@ TOOLS = [
         "title": "Update flake inputs",
         "description": (
             "nix flake update for all or selected inputs, then report which locked revisions moved. "
-            "Rewrites flake.lock, so it requires confirm=\"yes\". Verify with dry_run afterwards."
+            "Rewrites flake.lock, so it requires confirm=\"yes\". Verify with rebuild action=\"switch\" afterwards."
         ),
         "inputSchema": {
             "type": "object",
