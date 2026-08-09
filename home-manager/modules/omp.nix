@@ -218,6 +218,8 @@ in
 
     settings.autoResume = true;
 
+    settings.modelRoleStorage = "project";
+
     # Context pruning ("DCP analog"): omp types only compaction.enabled, so the
     # rest ride the freeform `settings` (merged last into config.yml). snapcompact
     # is local/deterministic, no LLM or network cost, and the most token-frugal
