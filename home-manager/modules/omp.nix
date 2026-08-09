@@ -289,6 +289,7 @@ in
   home.file = skillFiles // {
     ".omp/agent/RULES.md".source = ./omp/RULES.md;
     ".omp/agent/rules/commit-style.md".source = ./omp/rules/commit-style.md;
+    ".omp/agent/rules/code-comments.md".source = ./omp/rules/code-comments.md;
     ".omp/agent/rules/project-naming.md".source = ./omp/rules/project-naming.md;
     # Enforces the commit-style rule above as a tool_call gate; a rule alone is
     # only context, and context is exactly what a long session loses first.

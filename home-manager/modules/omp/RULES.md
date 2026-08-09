@@ -14,10 +14,3 @@ You supervise running subagents; never park behind a batch.
   interrogate one you have not read.
 - Still frozen on the next probe: `hub cancel` and re-dispatch narrower.
 - `completed` is a claim, not proof. Verify the files actually changed.
-
-# Comments
-
-Short, rare, and only where the code cannot speak for itself. Explain
-why, never what. A comment running past a couple of lines means the code
-needs a better name or a smaller function. A project whose own AGENTS.md
-bans comments outright overrides this.
