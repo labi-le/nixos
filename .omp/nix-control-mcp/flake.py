@@ -156,7 +156,7 @@ def tool_flake_update(args, request_id, token):
                 }
             )
     header["changed_nodes"] = changes
-    header["next"] = "verify with dry_run, then rebuild action=switch"
+    header["next"] = "rebuild action=switch"
     return envelope(header, tail(log, 40)), False
 
 

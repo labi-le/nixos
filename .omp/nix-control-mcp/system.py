@@ -2,9 +2,6 @@ import json
 import re
 
 from config import (
-    BUILT_RE,
-    DIRTY_WARNING_RE,
-    FETCH_RE,
     FREED_RE,
     NIX_COLLECT_GARBAGE,
     NIXOS_REBUILD,
@@ -128,35 +125,6 @@ def tool_rebuild_log(args, request_id, token):
         "jobs": [meta["job"] for meta in metas[-10:]],
     }
     return envelope(header, tail(log, lines)), False
-
-
-def tool_dry_run(args, request_id, token):
-    host = require_host(args)
-    attribute = f".#nixosConfigurations.{host}.config.system.build.toplevel"
-    argv = ["nix", "build", attribute, "--dry-run"]
-    stray = untracked_nix()
-    code, out = run(argv, timeout=1800)
-    warnings = [
-        line
-        for line in out.splitlines()
-        if line.startswith("warning:") and not DIRTY_WARNING_RE.search(line)
-    ]
-    built = BUILT_RE.search(out)
-    fetched = FETCH_RE.search(out)
-    header = {
-        "host": host,
-        "command": " ".join(argv),
-        "exit_code": code,
-        "verdict": "pass" if code == 0 and not warnings else "fail",
-        "gate": "exit 0 and no evaluation or deprecation warnings; 'Git tree is dirty' excluded",
-        "warnings": warnings,
-        "derivations_to_build": int(built.group(1)) if built else (1 if "this derivation will be built" in out else 0),
-        "paths_to_fetch": int(fetched.group(1)) if fetched else 0,
-        "untracked_nix": stray,
-    }
-    if code != 0:
-        header["first_error"] = first_error(out)
-    return envelope(header, tail(out, 80)), code != 0
 
 
 def tool_generations(args, request_id, token):
