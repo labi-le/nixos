@@ -1057,11 +1057,11 @@
         "nixpkgs": "nixpkgs_11"
       },
       "locked": {
-        "lastModified": 1786092142,
-        "narHash": "sha256-FY/1TIMjeRQKpO8hafi0cixUITX7n9wcGuaQzIQ5u/8=",
+        "lastModified": 1786248671,
+        "narHash": "sha256-CmKH9Rlu+xt9Pv7r+NOoMxN4x8rfwQuvkg2qbPFsje4=",
         "owner": "labi-le",
         "repo": "omp-flake",
-        "rev": "0412cb35b5dd9221b9d13ef6e80e93a345af651e",
+        "rev": "178a2b5e1c7ab281f613d8ac395e174476941798",
         "type": "github"
       },
       "original": {
