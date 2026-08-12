@@ -95,8 +95,8 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Monitor values (pc) | `hosts/configuration.nix` (monitors attrset) |
 | Hardware (pc) | `hosts/hardware-pc.nix` |
 | GPU profile (LACT: undervolt, fan curve, power profile) | `hosts/lact-pc.yaml` | Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink |
-|RGB lighting (OpenRGB): device profiles + swayidle blanking|`pkgs/openrgb-profile.nix`|`openrgb-profile [--wait] default\|off`; `default` = GPU and DRAM dark, mouse on Spectrum Cycle, `off` = everything dark. Wired from `home-manager/modules/sway.nix` (sway `startup` + swayidle `timeout`/`resume`); the OpenRGB server itself is `services.hardware.openrgb` in `hosts/configuration.nix`, whose `preStart` strips the Keychron Q6 Max detector so the keyboard keeps its firmware lighting|
-|Keyboard backlight (Keychron Q6 Max)|`pkgs/keychron-backlight.nix`|`keychron-backlight on\|off` over VIA raw HID (usage page 0xFF60, `id_custom_set_value` channel 3, value id 2 = RGB matrix effect; effect 0 = dark, stash restores the previous effect). Separate from OpenRGB on purpose: the board's detector is stripped in `systemd.services.openrgb.preStart` so it keeps its QMK firmware effects. Chained into the same swayidle `timeout`/`resume` hooks in `home-manager/modules/sway.nix`; `id_custom_save` is never sent, so nothing is written to the keyboard's EEPROM|
+|RGB lighting (OpenRGB): device profiles + blanking|`pkgs/openrgb-profile.nix`|`openrgb-profile [--wait] default\|off`; `default` = GPU and DRAM dark, mouse on Spectrum Cycle, `off` = everything dark. Wired from `home-manager/modules/sway.nix` (sway `startup`, plus the shared `sway-power` script used by both the swayidle `timeout`/`resume` hooks and the DPMS toggle hotkey); the OpenRGB server itself is `services.hardware.openrgb` in `hosts/configuration.nix`, whose `preStart` strips the Keychron Q6 Max detector so the keyboard keeps its firmware lighting|
+|Keyboard backlight (Keychron Q6 Max)|`pkgs/keychron-backlight.nix`|`keychron-backlight on\|off` over VIA raw HID (usage page 0xFF60, `id_custom_set_value` channel 3, value id 2 = RGB matrix effect; effect 0 = dark, stash restores the previous effect; `off` re-stashes nothing when already dark, so repeated blanking is safe). Separate from OpenRGB on purpose: the board's detector is stripped in `systemd.services.openrgb.preStart` so it keeps its QMK firmware effects. Chained into the same `sway-power` script in `home-manager/modules/sway.nix`, so idle blanking and the DPMS toggle hotkey dim it alike; `id_custom_save` is never sent, so nothing is written to the keyboard's EEPROM|
 | Hardware watchdog (sp5100_tco) | `hosts/configuration.nix` | armed by `systemd.settings.Manager.RuntimeWatchdogSec`; self-reboot 60s after a hang |
 | belphegor, gnupg, dconf | `hosts/configuration.nix` |
 
@@ -165,7 +165,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Task / Concern | File |
 |---|---|
 | HM entry point | `home-manager/modules/default.nix` |
-| Sway window manager | `home-manager/modules/sway.nix` |
+| Sway window manager | `home-manager/modules/sway.nix` | Display power and peripheral lighting are one state, owned by one script: `sway-power on\|off\|toggle` (dpms + `openrgb-profile` + `keychron-backlight`), called by the swayidle launcher `sway-idle-power` (`timeout 1200` / `resume`) and by the `$mod+Shift+i` hotkey. sway leaves blanked outputs off until something powers them back on (swaywm/sway#2910), so after a manual blank the same hotkey is the only way back |
 | Waybar status bar | `home-manager/modules/waybar.nix` |
 | Wofi launcher | `home-manager/modules/wofi.nix` |
 | Mako notifications | `home-manager/modules/mako.nix` |

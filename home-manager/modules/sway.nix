@@ -26,28 +26,38 @@ let
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
   openrgbProfile = "${pkgs.openrgb-profile}/bin/openrgb-profile";
   keychronBacklight = "${pkgs.keychron-backlight}/bin/keychron-backlight";
+  swaymsg = "${pkgs.swayfx}/bin/swaymsg";
 
-  # Blank both outputs after 20 min of inactivity (DPMS off); any input wakes
-  # them and swayidle's resume turns them back on. Launched from sway `startup`
-  # (not a systemd user unit) so it inherits SWAYSOCK from the running session —
-  # the startup env import below only exports WAYLAND_DISPLAY, not SWAYSOCK.
-  # swaymsg is taken from the same swayfx package to match the compositor.
-  idleDpms = pkgs.writeShellScript "sway-idle-dpms" ''
-    exec ${pkgs.swayidle}/bin/swayidle -w \
-      timeout 1200 '${pkgs.swayfx}/bin/swaymsg "output * dpms off"; ${openrgbProfile} off; ${keychronBacklight} off' \
-      resume       '${pkgs.swayfx}/bin/swaymsg "output * dpms on"; ${openrgbProfile} default; ${keychronBacklight} on'
+  swayPower = pkgs.writeShellScript "sway-power" ''
+    state="''${1:-toggle}"
+    if [ "$state" = toggle ]; then
+      if ${swaymsg} -t get_outputs | ${pkgs.jq}/bin/jq -e 'any(.[]; .active and .dpms)' >/dev/null; then
+        state=off
+      else
+        state=on
+      fi
+    fi
+
+    case "$state" in
+      on) profile=default ;;
+      off) profile=off ;;
+      *)
+        echo "usage: sway-power on|off|toggle" >&2
+        exit 2
+        ;;
+    esac
+
+    ${swaymsg} "output * dpms $state"
+    ${openrgbProfile} "$profile"
+    ${keychronBacklight} "$state"
   '';
 
-  # Toggle all outputs' power (DPMS) with one key: if any active output is on,
-  # blank them all; otherwise power them back on. Input still reaches sway while
-  # blanked, so the same key powers them on again. swaymsg from swayfx to match
-  # the running compositor (same reason as idleDpms above).
-  toggleDpms = pkgs.writeShellScript "sway-toggle-dpms" ''
-    if ${pkgs.swayfx}/bin/swaymsg -t get_outputs | ${pkgs.jq}/bin/jq -e 'any(.[]; .active and .dpms)' >/dev/null; then
-      ${pkgs.swayfx}/bin/swaymsg "output * dpms off"
-    else
-      ${pkgs.swayfx}/bin/swaymsg "output * dpms on"
-    fi
+  # Started from sway `startup`, not a systemd user unit, to inherit SWAYSOCK:
+  # the startup env import below exports only WAYLAND_DISPLAY.
+  idlePower = pkgs.writeShellScript "sway-idle-power" ''
+    exec ${pkgs.swayidle}/bin/swayidle -w \
+      timeout 1200 '${swayPower} off' \
+      resume       '${swayPower} on'
   '';
 
   # Toggle Scarlett direct monitoring with one key. Enabling monitoring implies
@@ -111,7 +121,7 @@ in
           command = "${pkgs.swaybg}/bin/swaybg -i ~/Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
         }
         {
-          command = "${idleDpms}";
+          command = "${idlePower}";
         }
         {
           command = "${openrgbProfile} --wait default";
@@ -355,7 +365,7 @@ in
         "${common}+x" = "mode resize";
         "${common}+d" = "exec ${menu} -c ~/.config/wofi/config -I";
         "${common}+Shift+c" = "reload";
-        "${common}+Shift+i" = "exec ${toggleDpms}";
+        "${common}+Shift+i" = "exec ${swayPower} toggle";
         "${common}+Left" = "focus left";
         "${common}+Down" = "focus down";
         "${common}+Up" = "focus up";
