@@ -296,6 +296,9 @@ in
     # Enforces the commit-style rule above as a tool_call gate; a rule alone is
     # only context, and context is exactly what a long session loses first.
     ".omp/agent/extensions/commit-gate.ts".source = ./omp/extensions/commit-gate.ts;
+    # Same for the code-comments rule: markers, commented-out code and real
+    # production data in comments are mechanical, so they are refused, not advised.
+    ".omp/agent/extensions/comment-gate.ts".source = ./omp/extensions/comment-gate.ts;
     ".omp/agent/AGENTS.md".source = ./omp/AGENTS.md;
     ".omp/agent/mcp.json".text = builtins.toJSON {
       "$schema" =
