@@ -2,8 +2,8 @@ import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
 // Enforces rules/commit-style.md on the agent instead of merely asking it to
 // comply: a rule is context the model may lose, outrank or talk itself out of,
-// while a blocked tool call is a fact it has to deal with. Only `-m`/`-F`
-// invocations are inspected -- an editor-driven commit belongs to the human.
+// while a blocked tool call is a fact it has to deal with. The message has to
+// be literal text in the command; an editor-driven commit belongs to the human.
 
 const RULE = "~/.omp/agent/rules/commit-style.md";
 const SUBJECT_CEILING = 70;
@@ -28,6 +28,35 @@ const COMMIT_TOKEN = /(?<![\w./-])commit(?![\w./-])/;
 const EVAL_RISK = /(?<![\w./-])(commit|--amend|--force|--hard)(?![\w./-])/;
 const ADD_SWEEP = /^-[a-zA-Z]*[Au][a-zA-Z]*$/;
 const AMEND = "\u0000amend";
+const EXPAND = "\u0000expand";
+
+function expansionEnd(src: string, at: number): number {
+  const c = src[at];
+  if (c === "`") {
+    const end = src.indexOf("`", at + 1);
+    return end < 0 ? src.length : end + 1;
+  }
+  if (c !== "$") return 0;
+  const next = src[at + 1] ?? "";
+  if (next === "(") {
+    let depth = 1;
+    let j = at + 2;
+    while (j < src.length && depth > 0) {
+      if (src[j] === "(") depth++;
+      else if (src[j] === ")") depth--;
+      j++;
+    }
+    return j;
+  }
+  if (next === "{") {
+    const end = src.indexOf("}", at + 2);
+    return end < 0 ? src.length : end + 1;
+  }
+  if (!/[A-Za-z_]/.test(next)) return 0;
+  let j = at + 1;
+  while (j < src.length && /[A-Za-z0-9_]/.test(src[j])) j++;
+  return j;
+}
 
 type Simple = string[];
 
@@ -76,24 +105,23 @@ function splitCommands(src: string): Simple[] {
           i += 2;
           continue;
         }
+        const inner = expansionEnd(src, i);
+        if (inner) {
+          tok += EXPAND;
+          i = inner;
+          continue;
+        }
         tok += src[i++];
       }
       i++;
       started = true;
       continue;
     }
-    // Command substitutions stay opaque: their content is not our command.
-    if (c === "$" && src[i + 1] === "(") {
-      let depth = 1;
-      let j = i + 2;
-      while (j < src.length && depth > 0) {
-        if (src[j] === "(") depth++;
-        else if (src[j] === ")") depth--;
-        j++;
-      }
-      tok += src.slice(i, j);
+    const expand = expansionEnd(src, i);
+    if (expand) {
+      tok += EXPAND;
       started = true;
-      i = j;
+      i = expand;
       continue;
     }
     if ((c === "&" && src[i + 1] === "&") || (c === "|" && src[i + 1] === "|")) {
@@ -119,7 +147,7 @@ function splitCommands(src: string): Simple[] {
   return cmds;
 }
 
-type Invocation = { messages: string[]; file?: string; exempt: boolean };
+type Invocation = { messages: string[]; indirect?: string; exempt: boolean };
 
 /** Recognise `git … commit …` and collect what it would use as a message. */
 function readCommit(cmd: Simple): Invocation | null {
@@ -127,13 +155,25 @@ function readCommit(cmd: Simple): Invocation | null {
   if (gitAt < 0) return null;
 
   let i = gitAt + 1;
+  const globals: string[] = [];
   // Global options sit before the subcommand; two of them take a value.
   while (i < cmd.length && cmd[i].startsWith("-")) {
-    i += cmd[i] === "-C" || cmd[i] === "-c" ? 2 : 1;
+    const pair = cmd[i] === "-C" || cmd[i] === "-c";
+    globals.push(cmd[i]);
+    if (pair && cmd[i + 1] !== undefined) globals.push(cmd[i + 1]);
+    i += pair ? 2 : 1;
   }
   if (cmd[i] !== "commit") return null;
 
   const inv: Invocation = { messages: [], exempt: false };
+  const env = cmd
+    .slice(0, gitAt)
+    .find((t) => /^((GIT_)?(EDITOR|VISUAL|SEQUENCE_EDITOR)|GIT_CONFIG\w*)=/.test(t));
+  if (env) inv.indirect = `an environment override (\`${env.split("=")[0]}\`)`;
+  const override = globals
+    .map((t) => /(^|=)(core\.editor|sequence\.editor|commit\.template)=/i.exec(t))
+    .find((hit) => hit !== null);
+  if (override) inv.indirect = `a config override (\`${override[2].toLowerCase()}\`)`;
   for (i++; i < cmd.length; i++) {
     const t = cmd[i];
     // git writes these itself, or reuses a message we never composed.
@@ -151,6 +191,11 @@ function readCommit(cmd: Simple): Invocation | null {
       inv.exempt = true;
       continue;
     }
+    const cluster = t.startsWith("--") ? "" : t.split("m")[0];
+    if (t === "--edit" || /^-[a-zA-Z]*e/.test(cluster)) {
+      inv.indirect = "`--edit`, which hands the message to an editor";
+      continue;
+    }
     if (t === "--message" || /^-[a-zA-Z]*m$/.test(t)) {
       if (cmd[i + 1] !== undefined) inv.messages.push(cmd[++i]);
       continue;
@@ -164,12 +209,13 @@ function readCommit(cmd: Simple): Invocation | null {
       inv.messages.push(attached[1]);
       continue;
     }
-    if (t === "--file" || t === "-F") {
-      inv.file = cmd[++i];
+    if (t === "--file" || t === "-F" || t === "--template" || t === "-t") {
+      inv.indirect = `\`${t}\``;
+      i++;
       continue;
     }
-    if (t.startsWith("--file=")) {
-      inv.file = t.slice(7);
+    if (t.startsWith("--file=") || t.startsWith("--template=")) {
+      inv.indirect = `\`${t.slice(0, t.indexOf("="))}\``;
       continue;
     }
   }
@@ -183,26 +229,29 @@ export function checkMessage(messages: string[]): string | null {
   const subject = lines[0] ?? "";
   const body = lines.slice(1).join("\n").trim();
 
+  if (text.includes(EXPAND)) {
+    return "the message is assembled by the shell, so what git would record cannot be read; pass the literal text";
+  }
+
   // git composes these; they are not ours to shape.
   if (/^(merge|revert|fixup!|squash!|amend!)\b/i.test(subject)) return null;
 
+  if (messages.length > 1) {
+    return "the message is split across repeated `-m` flags; pass a single `-m` whose body is one line";
+  }
   if (!subject.trim()) return "the subject is empty";
 
-  if (/^[a-z]+\([^)]*\):/.test(subject)) {
+  if (/^[a-zA-Z]+\([^)]*\):/.test(subject)) {
     return `the subject uses the conventional-commits \`type(scope):\` form; the prefix is a component -- the module, host or package the change belongs to (\`omp:\`, \`nginx:\`, \`server:\`)`;
   }
-  if (!/^[a-z0-9][a-z0-9._/-]*: \S/.test(subject)) {
-    return "the subject is not `component: what changed` with a lowercase component";
+  const word = "[a-zA-Z0-9][a-zA-Z0-9._/-]*";
+  if (!new RegExp(`^${word}( ${word}){0,2}: \\S`).test(subject)) {
+    return "the subject is not `component: what changed`, with at most three words before the colon";
   }
   if (subject.length > SUBJECT_CEILING) {
     return `the subject is ${subject.length} characters; ${SUBJECT_CEILING} is the hard ceiling and the median belongs under 30`;
   }
   if (subject.endsWith(".")) return "the subject ends with a period";
-
-  const after = subject.slice(subject.indexOf(": ") + 2);
-  if (/^[A-Z]/.test(after)) {
-    return "the text after the colon is capitalised; it should read as a lowercase imperative";
-  }
 
   const trailer = /^(co-authored-by:|generated with\b)|🤖/im.exec(text);
   if (trailer) return `the message carries a generated trailer (\`${trailer[0].trim()}\`)`;
@@ -349,22 +398,20 @@ export default function commitGate(pi: ExtensionAPI): void {
     for (const inv of found) {
       if (inv.exempt) continue;
 
-      let messages = inv.messages;
-      if (!messages.length && inv.file) {
-        try {
-          messages = [await Bun.file(inv.file).text()];
-        } catch {
-          // An earlier link of this very command may be what writes the file,
-          // so it is unreadable here -- and unverifiable is not compliant.
-          broken = `the message file \`${inv.file}\` cannot be read, so the message cannot be checked; pass it with -m instead`;
-          break;
-        }
+      if (inv.indirect) {
+        broken = `the message would come from ${inv.indirect} instead of the command line; pass the literal text in a single \`-m\` so what git records can be read`;
+        break;
       }
-      if (!messages.length) continue;
+      if (!inv.messages.length) {
+        broken =
+          "the commit carries no `-m`, so the message would come from git's editor buffer -- a template, a hook or a prepared `COMMIT_EDITMSG` -- and cannot be read here; pass the literal text in a single `-m`";
+        break;
+      }
 
-      broken = checkMessage(messages);
+      broken = checkMessage(inv.messages);
       if (broken) {
-        broken = `${broken}\n\nSubject: ${messages[0].split("\n")[0]}`;
+        const subject = inv.messages[0].split("\n")[0];
+        if (!subject.includes(EXPAND)) broken = `${broken}\n\nSubject: ${subject}`;
         break;
       }
     }
