@@ -17,7 +17,7 @@ let
         Name=Sway
         Comment=i3-compatible Wayland compositor
         Exec=sway --unsupported-gpu
-        DesktopNames=sway
+        DesktopNames=sway;X-NIXOS-SYSTEMD-AWARE
       '';
     }
     // {
