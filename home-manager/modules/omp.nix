@@ -1,8 +1,7 @@
-{
-  osConfig,
-  pkgs,
-  lib,
-  ...
+{ osConfig
+, pkgs
+, lib
+, ...
 }:
 
 let
@@ -81,11 +80,13 @@ let
     };
 
   # ~/.omp/agent/skills/<name> -> upstream skill dir.
-  skillFiles = lib.mapAttrs' (
-    name: dir: lib.nameValuePair ".omp/agent/skills/${name}" { source = dir; }
-  ) vendoredSkills;
+  skillFiles = lib.mapAttrs'
+    (
+      name: dir: lib.nameValuePair ".omp/agent/skills/${name}" { source = dir; }
+    )
+    vendoredSkills;
 
-  # index-repo auto-register extension, loaded via programs.oh-my-pi.extensions
+  # index-repo auto-register extension, loaded via programs.omp.settings.extensions
   # below (the proven load path, same as omp-undo-redo). Registers the session's
   # git repo with the index-repo daemon so the chroma MCP has it indexed. Fires on
   # session_start (fresh launch) and agent_start (covers autoResume-resumed
@@ -131,186 +132,72 @@ in
   home.packages = [
     pkgs.uv
     pkgs.nodejs
+    pkgs.git
+    pkgs.gh
   ];
 
-  programs.oh-my-pi = {
+  programs.omp = {
     enable = true;
-    extensions = [ "${indexRepoRegisterExt}" ];
+    package = pkgs.omp;
 
-    providers = {
-      aigate = {
-        baseUrl = "https://api.aigate.shop/v1";
-        api = "openai-completions";
-        apiKey = aigateApiKey;
-        models = [
-          {
-            id = "deepseek/deepseek-v4-pro";
-            name = "DeepSeek V4 Pro";
-            contextWindow = 200000;
-            maxTokens = 8192;
-          }
-          {
-            id = "deepseek/deepseek-v4-flash";
-            name = "DeepSeek V4 Flash";
-            contextWindow = 200000;
-            maxTokens = 8192;
-          }
-          # ── Google ──
-          {
-            id = "google/gemini-3.5-flash";
-            name = "Gemini 3.5 Flash";
-            contextWindow = 1048576;
-            maxTokens = 8192;
-          }
-          # ── Qwen ──
-          {
-            id = "qwen/qwen3.7-max";
-            name = "Qwen 3.7 Max";
-            contextWindow = 128000;
-            maxTokens = 8192;
-          }
-          # ── Kimi (Moonshot) ──
-          {
-            id = "moonshotai/kimi-k2.7-code";
-            name = "Kimi K2.7 Code";
-            contextWindow = 1000000;
-            maxTokens = 12192;
-          }
-          {
-            id = "moonshotai/kimi-k3";
-            name = "Kimi K3";
-            contextWindow = 1000000;
-            maxTokens = 12800;
-          }
-          # ── Z.AI (GLM) ──
-          {
-            id = "z-ai/glm-5.2";
-            name = "GLM 5.2";
-            contextWindow = 128000;
-            maxTokens = 8192;
-          }
-          # ── MiniMax ──
-          {
-            id = "minimax/minimax-m3";
-            name = "MiniMax M3";
-            contextWindow = 128000;
-            maxTokens = 8192;
-          }
-        ];
+    settings = {
+      setupVersion = 1;
+
+      extensions = [ "${indexRepoRegisterExt}" ];
+
+      modelRoles = {
+        default = mainModel;
+        advisor = mainModel;
+        tiny = "@default";
+      };
+      advisor.enabled = true;
+
+      memory.backend = "mnemopi";
+
+      autoResume = true;
+      modelRoleStorage = "project";
+
+      compaction = {
+        enabled = true;
+        strategy = "snapcompact";
+        midTurnEnabled = true;
+        dropUseless = true;
+        thresholdPercent = 60;
+        keepRecentTokens = 40000;
+        idleEnabled = true;
+        idleThresholdTokens = 150000;
+        idleTimeoutSeconds = 300;
       };
 
-      # Explicit entry, not the built-in `llama.cpp` discovery: that one only
-      # probes the default port and synthesizes capability-blind metadata.
-      llamacpp-local = {
-        baseUrl = "http://127.0.0.1:8081/v1";
-        api = "openai-completions";
-        auth = "none";
-        models = [
-          {
-            # llama-server --alias, the only id the endpoint answers to.
-            id = "qwen3.8-27b";
-            name = "Qwen3.8 27B (local)";
-            reasoning = true;
-            supportsTools = true;
-            input = [
-              "text"
-              "image"
-            ];
-            # stb_image has no WebP support, and llama.cpp drops such an image
-            # silently: the model then answers as if nothing was attached.
-            imageInputDecoder = "stb";
-            compat.reasoningContentField = "reasoning_content";
-            # As launched (-c); the weights themselves train to 262144.
-            contextWindow = 131072;
-            maxTokens = 8192;
-            cost = {
-              input = 0;
-              output = 0;
-              cacheRead = 0;
-              cacheWrite = 0;
-            };
-          }
-        ];
+      mnemopi = {
+        scoping = "per-project";
+        embeddingVariant = "multilingual";
+        polyphonicRecall = true;
+        enhancedRecall = true;
+        proactiveLinking = true;
       };
-    };
 
-    models.default = mainModel;
+      autolearn.enabled = true;
 
-    # Advisor: a second model reviews every finished turn and injects <advisory>
-    # notes back into the session (own tool session, read-only: read/grep/glob +
-    # advise). The role is a literal copy of mainModel because omp has no
-    # "track the session's current model" selector -- role-alias values
-    # (`@default`, `@smol`) leave the advisor inactive, and an unset role falls
-    # back to the `slow` role and then to a generic best-available pick, which
-    # is what silently promoted the reviewer to a native anthropic opus.
-    # Defaults kept: syncBacklog=off (primary never waits on review backlog),
-    # immuneTurns=3, subagents=false (no advisor per spawned task agent).
-    models.roles.advisor = mainModel;
-    settings.advisor.enabled = true;
+      task = {
+        eager = "always";
+        enableLsp = true;
+        maxRuntimeMs = 0;
+      };
 
-    models.roles.tiny = "@default";
+      providers = {
+        streamFirstEventTimeoutSeconds = 180;
+        streamIdleTimeoutSeconds = 90;
+      };
 
-    settings.autoResume = true;
+      async.pollWaitDuration = "1m";
 
-    settings.modelRoleStorage = "project";
-
-    # Context pruning ("DCP analog"): omp types only compaction.enabled, so the
-    # rest ride the freeform `settings` (merged last into config.yml). snapcompact
-    # is local/deterministic, no LLM or network cost, and the most token-frugal
-    # strategy (auto-falls back to context-full for non-vision models).
-    # midTurnEnabled prunes between tool-loop requests, not only post-turn;
-    # dropUseless blanks zero-value results (empty search/inbox, timed-out poll).
-    settings.compaction = {
-      enabled = true;
-      strategy = "snapcompact";
-      midTurnEnabled = true;
-      dropUseless = true;
-      thresholdPercent = 60;
-      keepRecentTokens = 40000;
-      idleEnabled = true;
-      idleThresholdTokens = 150000;
-      idleTimeoutSeconds = 300;
-    };
-
-    memory.backend = "mnemopi";
-
-    settings.mnemopi = {
-      scoping = "per-project";
-      embeddingVariant = "multilingual";
-      polyphonicRecall = true;
-      enhancedRecall = true;
-      proactiveLinking = true;
-    };
-
-    settings.autolearn.enabled = true;
-
-    settings.task = {
-      eager = "always";
-      enableLsp = true;
-      maxRuntimeMs = 0;
-    };
-
-    settings.providers = {
-      streamFirstEventTimeoutSeconds = 180;
-      streamIdleTimeoutSeconds = 90;
-    };
-
-    settings.async.pollWaitDuration = "1m";
-
-    # Speech-to-text: local, offline dictation straight into the TUI editor.
-    # balanced = Whisper small (multilingual): the speed/quality compromise --
-    # much faster on CPU than turbo (large-v3) while handling Russian better than
-    # the tiny parakeet int8. Speed ladder: fast (whisper-base, fastest) <
-    # balanced < turbo (most accurate, ~3-4s CPU latency). dtype is baked per
-    # model (q8 here); there is no separate device/threads knob and this omp build
-    # has no working GPU EP, so model size is the only latency lever. language=ru
-    # forces Russian. submitTrigger=never keeps text in the editor for review.
-    # Trigger: app.stt.toggle -> Alt+S (below); hold-Space push-to-talk also works.
-    settings.stt = {
-      enabled = true;
-      modelName = "balanced";
-      language = "ru";
-      submitTrigger = "never";
+      stt = {
+        enabled = true;
+        modelName = "balanced";
+        language = "ru";
+        submitTrigger = "never";
+      };
     };
   };
 
@@ -323,6 +210,92 @@ in
   # is pinned so it works even when swaymsg is absent from PATH. Skills are
   # migrated from the (disabled) opencode module above.
   home.file = skillFiles // {
+    ".omp/agent/models.yml".text = builtins.toJSON {
+      providers = {
+        aigate = {
+          baseUrl = "https://api.aigate.shop/v1";
+          api = "openai-completions";
+          apiKey = aigateApiKey;
+          models = [
+            {
+              id = "deepseek/deepseek-v4-pro";
+              name = "DeepSeek V4 Pro";
+              contextWindow = 200000;
+              maxTokens = 8192;
+            }
+            {
+              id = "deepseek/deepseek-v4-flash";
+              name = "DeepSeek V4 Flash";
+              contextWindow = 200000;
+              maxTokens = 8192;
+            }
+            {
+              id = "google/gemini-3.5-flash";
+              name = "Gemini 3.5 Flash";
+              contextWindow = 1048576;
+              maxTokens = 8192;
+            }
+            {
+              id = "qwen/qwen3.7-max";
+              name = "Qwen 3.7 Max";
+              contextWindow = 128000;
+              maxTokens = 8192;
+            }
+            {
+              id = "moonshotai/kimi-k2.7-code";
+              name = "Kimi K2.7 Code";
+              contextWindow = 1000000;
+              maxTokens = 12192;
+            }
+            {
+              id = "moonshotai/kimi-k3";
+              name = "Kimi K3";
+              contextWindow = 1000000;
+              maxTokens = 12800;
+            }
+            {
+              id = "z-ai/glm-5.2";
+              name = "GLM 5.2";
+              contextWindow = 128000;
+              maxTokens = 8192;
+            }
+            {
+              id = "minimax/minimax-m3";
+              name = "MiniMax M3";
+              contextWindow = 128000;
+              maxTokens = 8192;
+            }
+          ];
+        };
+        llamacpp-local = {
+          baseUrl = "http://127.0.0.1:8081/v1";
+          api = "openai-completions";
+          auth = "none";
+          models = [
+            {
+              id = "qwen3.8-27b";
+              name = "Qwen3.8 27B (local)";
+              reasoning = true;
+              supportsTools = true;
+              input = [
+                "text"
+                "image"
+              ];
+              imageInputDecoder = "stb";
+              compat.reasoningContentField = "reasoning_content";
+              contextWindow = 163840;
+              maxTokens = 8192;
+              cost = {
+                input = 0;
+                output = 0;
+                cacheRead = 0;
+                cacheWrite = 0;
+              };
+            }
+          ];
+        };
+      };
+    };
     ".omp/agent/RULES.md".source = ./omp/RULES.md;
     ".omp/agent/rules/commit-style.md".source = ./omp/rules/commit-style.md;
     ".omp/agent/rules/code-comments.md".source = ./omp/rules/code-comments.md;
