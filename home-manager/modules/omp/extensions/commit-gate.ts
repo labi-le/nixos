@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
 // Enforces rules/commit-style.md on the agent instead of merely asking it to
@@ -29,6 +30,8 @@ const EVAL_RISK = /(?<![\w./-])(commit|--amend|--force|--hard)(?![\w./-])/;
 const ADD_SWEEP = /^-[a-zA-Z]*[Au][a-zA-Z]*$/;
 const AMEND = "\u0000amend";
 const EXPAND = "\u0000expand";
+const ELSEWHERE =
+  "`--amend` targets another worktree, where HEAD cannot be checked from here; point the tool's `cwd` at that directory instead of moving with `cd`";
 
 function expansionEnd(src: string, at: number): number {
   const c = src[at];
@@ -70,7 +73,7 @@ function splitCommands(src: string): Simple[] {
 
   const pushTok = () => {
     if (started) {
-      cur.push(tok);
+      if (cur.length || (tok !== "{" && tok !== "}" && tok !== "!")) cur.push(tok);
       tok = "";
       started = false;
     }
@@ -129,7 +132,7 @@ function splitCommands(src: string): Simple[] {
       i += 2;
       continue;
     }
-    if (c === ";" || c === "|" || c === "&" || c === "\n") {
+    if (c === ";" || c === "|" || c === "&" || c === "\n" || c === ")" || (!started && c === "(")) {
       endCmd();
       i++;
       continue;
@@ -293,8 +296,9 @@ function readDanger(cmd: Simple): string | null {
   let i = gitAt + 1;
   let elsewhere = false;
   while (i < cmd.length && cmd[i].startsWith("-")) {
-    if (cmd[i] === "-C") elsewhere = true;
-    i += cmd[i] === "-C" || cmd[i] === "-c" ? 2 : 1;
+    const t = cmd[i];
+    if (t === "-C" || /^--(git-dir|work-tree)(=|$)/.test(t)) elsewhere = true;
+    i += t === "-C" || t === "-c" || t === "--git-dir" || t === "--work-tree" ? 2 : 1;
   }
   const rest = cmd.slice(i + 1);
 
@@ -312,9 +316,7 @@ function readDanger(cmd: Simple): string | null {
     }
     case "commit":
       if (!rest.includes("--amend")) return null;
-      return elsewhere
-        ? "`--amend` with `-C` rewrites history in another worktree, where HEAD cannot be checked from here; run it from that directory"
-        : AMEND;
+      return elsewhere ? ELSEWHERE : AMEND;
     case "reset":
       return rest.includes("--hard")
         ? "`git reset --hard` throws away uncommitted work in the worktree, including work that is not yours"
@@ -332,21 +334,25 @@ function readDanger(cmd: Simple): string | null {
 
 function collectDangers(src: string, depth = 0): string[] {
   const out: string[] = [];
+  let moved = false;
   for (const simple of splitCommands(src)) {
+    const name = (simple[0] ?? "").replace(/^.*\//, "");
+    if (name === "cd" || name === "pushd" || name === "popd" || name === "chdir") moved = true;
     const risk = readDanger(simple);
     if (risk) {
-      out.push(risk);
+      out.push(risk === AMEND && moved ? ELSEWHERE : risk);
       continue;
     }
-    const name = (simple[0] ?? "").replace(/^.*\//, "");
     if (depth >= 2 || !WRAPPERS[name]) continue;
     for (const tok of simple.slice(1)) {
       if (!/\bgit\b/.test(tok)) continue;
-      for (const risk of collectDangers(tok, depth + 1)) {
+      for (const nested of collectDangers(tok, depth + 1)) {
         out.push(
-          risk === AMEND && FOREIGN[name]
+          nested === AMEND && FOREIGN[name]
             ? "`--amend` runs on another host or container, where HEAD cannot be checked from here"
-            : risk,
+            : nested === AMEND && moved
+              ? ELSEWHERE
+              : nested,
         );
       }
     }
@@ -392,7 +398,10 @@ export default function commitGate(pi: ExtensionAPI): void {
 
     const risks = collectDangers(source);
     let broken: string | null = risks.find((r) => r !== AMEND) ?? null;
-    if (!broken && risks.includes(AMEND)) broken = await amendRisk(pi, ctx.cwd);
+    if (!broken && risks.includes(AMEND)) {
+      const where = String(event.input.cwd ?? "");
+      broken = await amendRisk(pi, where ? resolve(ctx.cwd, where) : ctx.cwd);
+    }
     const found = !broken && COMMIT_TOKEN.test(source) ? collectInvocations(source) : [];
 
     for (const inv of found) {
