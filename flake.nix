@@ -37,7 +37,7 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    omp-flake.url = "github:labi-le/omp-flake";
+    omp.url = "github:can1357/oh-my-pi";
     swaywm-mcp.url = "github:cristianoliveira/swaywm-mcp";
   };
 
@@ -78,7 +78,7 @@
         home-manager = {
           useUserPackages = true;
           useGlobalPkgs = true;
-          sharedModules = [ inputs.index-repo.homeManagerModules.default inputs.omp-flake.homeManagerModules.default ];
+          sharedModules = [ inputs.index-repo.homeManagerModules.default inputs.omp.homeManagerModules.default ];
           backupFileExtension = "hm-backup";
         };
       };

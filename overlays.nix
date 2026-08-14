@@ -51,7 +51,7 @@ final: prev: {
   opencode = inputs.opencode.packages.${system}.opencode;
   nix-index-with-small-db = inputs.nix-index-database.packages.${system}.nix-index-with-small-db;
   index-repo = inputs.index-repo.packages.${system}.default;
-  omp = inputs.omp-flake.packages.${system}.default;
+  omp = inputs.omp.packages.${system}.default;
   # The upstream flake bakes in a nodejs-22.14.0 whose V8 build SIGSEGVs on this
   # host (Zen5). Rerun the upstream-built JS (deps live in bin/node_modules) with
   # our working nixpkgs node instead of the broken bundled one.
