@@ -8,8 +8,6 @@ import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
 const RULE = "~/.omp/agent/rules/commit-style.md";
 const SUBJECT_CEILING = 70;
-const BODY_CEILING = 200;
-const BODY_LINES = 1;
 
 // Commands that carry another command inside an argument (`ssh host "…"`).
 const WRAPPERS: Record<string, true> = {
@@ -228,9 +226,7 @@ function readCommit(cmd: Simple): Invocation | null {
 /** Returns the rule each message breaks, or null when the message is fine. */
 export function checkMessage(messages: string[]): string | null {
   const text = messages.join("\n\n");
-  const lines = text.split("\n");
-  const subject = lines[0] ?? "";
-  const body = lines.slice(1).join("\n").trim();
+  const subject = text.split("\n")[0] ?? "";
 
   if (text.includes(EXPAND)) {
     return "the message is assembled by the shell, so what git would record cannot be read; pass the literal text";
@@ -240,7 +236,10 @@ export function checkMessage(messages: string[]): string | null {
   if (/^(merge|revert|fixup!|squash!|amend!)\b/i.test(subject)) return null;
 
   if (messages.length > 1) {
-    return "the message is split across repeated `-m` flags; pass a single `-m` whose body is one line";
+    return "the message is split across repeated `-m` flags; pass a single `-m` holding one line";
+  }
+  if (text.trim().includes("\n")) {
+    return "the message carries a body; it is one line only -- a decision the diff cannot show belongs in `docs/`";
   }
   if (!subject.trim()) return "the subject is empty";
 
@@ -259,14 +258,6 @@ export function checkMessage(messages: string[]): string | null {
   const trailer = /^(co-authored-by:|generated with\b)|🤖/im.exec(text);
   if (trailer) return `the message carries a generated trailer (\`${trailer[0].trim()}\`)`;
 
-  if (body) {
-    if (body.length > BODY_CEILING) {
-      return `the body is ${body.length} characters; it should hold a single line carrying a decision the diff cannot show`;
-    }
-    if (body.split("\n").filter((l) => l.trim()).length > BODY_LINES) {
-      return "the body runs past a single line";
-    }
-  }
   return null;
 }
 
