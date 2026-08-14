@@ -5,3 +5,4 @@ context.md
 result
 result-*
 __pycache__/
+.omp/config.yml

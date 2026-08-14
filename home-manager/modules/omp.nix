@@ -198,6 +198,40 @@ in
           }
         ];
       };
+
+      # Explicit entry, not the built-in `llama.cpp` discovery: that one only
+      # probes the default port and synthesizes capability-blind metadata.
+      llamacpp-local = {
+        baseUrl = "http://127.0.0.1:8081/v1";
+        api = "openai-completions";
+        auth = "none";
+        models = [
+          {
+            # llama-server --alias, the only id the endpoint answers to.
+            id = "qwen3.8-27b";
+            name = "Qwen3.8 27B (local)";
+            reasoning = true;
+            supportsTools = true;
+            input = [
+              "text"
+              "image"
+            ];
+            # stb_image has no WebP support, and llama.cpp drops such an image
+            # silently: the model then answers as if nothing was attached.
+            imageInputDecoder = "stb";
+            compat.reasoningContentField = "reasoning_content";
+            # As launched (-c); the weights themselves train to 262144.
+            contextWindow = 131072;
+            maxTokens = 8192;
+            cost = {
+              input = 0;
+              output = 0;
+              cacheRead = 0;
+              cacheWrite = 0;
+            };
+          }
+        ];
+      };
     };
 
     models.default = mainModel;
