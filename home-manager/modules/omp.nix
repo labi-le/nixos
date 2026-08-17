@@ -148,9 +148,10 @@ in
       modelRoles = {
         default = mainModel;
         advisor = mainModel;
-        tiny = "@default";
       };
       advisor.enabled = true;
+
+      defaultThinkingLevel = "auto";
 
       memory.backend = "mnemopi";
 
@@ -186,6 +187,7 @@ in
       };
 
       providers = {
+        autoThinkingMaxEffort = "max";
         streamFirstEventTimeoutSeconds = 180;
         streamIdleTimeoutSeconds = 90;
       };
