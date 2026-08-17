@@ -1,0 +1,11 @@
+modelRoles:
+  default: anthropic/claude-opus-5
+  smol: anthropic/claude-haiku-4-5
+  slow: anthropic/claude-opus-5
+  vision: anthropic/claude-haiku-4-5
+  plan: anthropic/claude-opus-5
+  designer: anthropic/claude-sonnet-5
+  commit: anthropic/claude-haiku-4-5
+  tiny: anthropic/claude-haiku-4-5
+  task: anthropic/claude-sonnet-5
+  advisor: anthropic/claude-fable-5
