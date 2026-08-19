@@ -270,22 +270,20 @@ in
           ];
         };
         llamacpp-local = {
-          baseUrl = "http://127.0.0.1:8081/v1";
+          baseUrl = "http://192.168.1.2:8095/v1";
           api = "openai-completions";
           auth = "none";
           models = [
             {
               id = "qwen3.8-27b";
-              name = "Qwen3.8 27B (local)";
+              name = "Qwen3.8 27B IQ3_XXS (pet)";
               reasoning = true;
               supportsTools = true;
               input = [
                 "text"
-                "image"
               ];
-              imageInputDecoder = "stb";
               compat.reasoningContentField = "reasoning_content";
-              contextWindow = 163840;
+              contextWindow = 40960;
               maxTokens = 8192;
               cost = {
                 input = 0;
