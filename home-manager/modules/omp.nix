@@ -192,6 +192,11 @@ in
         streamIdleTimeoutSeconds = 90;
       };
 
+      retry = {
+        modelFallback = false;
+        usageAwareFallback = false;
+      };
+
       async.pollWaitDuration = "1m";
 
       stt = {
