@@ -184,7 +184,10 @@ in
         eager = "always";
         enableLsp = true;
         maxRuntimeMs = 0;
+        isolation.mode = "auto";
       };
+
+      secrets.enabled = true;
 
       providers = {
         autoThinkingMaxEffort = "max";
