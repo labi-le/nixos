@@ -50,8 +50,21 @@
               # inject a numeric chat id from an env var as a string.
               chatid = "395448554";
               message = ''
-                {{ range .Alerts }}{{ .Annotations.summary }}
-                {{ end }}'';
+                {{ with index .Alerts 0 }}{{ .Annotations.summary }}
+                {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
+                {{ end }}{{ end }}'';
+            };
+          }
+          {
+            uid = "telegram-alt";
+            type = "telegram";
+            settings = {
+              bottoken = "$__env{TELEGRAM_BOT_TOKEN}";
+              chatid = "5423484768";
+              message = ''
+                {{ with index .Alerts 0 }}{{ .Annotations.summary }}
+                {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
+                {{ end }}{{ end }}'';
             };
           }
         ];

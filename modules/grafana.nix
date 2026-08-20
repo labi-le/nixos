@@ -180,10 +180,11 @@
 
   # Grafana Alloy ships logs into Loki so they are viewable/greppable in Grafana.
   # (services.promtail was removed in NixOS 26.05 — Alloy is the supported replacement.)
-  # Three sources feed a single loki.write sink:
+  # Four sources feed a single loki.write sink:
   #   - nginx/angie access+error files    -> job="nginx"   (see modules/nginx.nix)
   #   - docker container stdout/stderr    -> job="docker"  (label container=<name>)
   #   - fail2ban (logs to SYSLOG=journal) -> job="fail2ban"
+  #   - frp-server (journal)                 -> job="frp"
   services.alloy.enable = true;
 
   environment.etc."alloy/config.alloy".text = ''
@@ -234,6 +235,14 @@
       forward_to = [loki.write.local.receiver]
     }
 
+    // frp-server logs to the journal; ship its unit so the frp connection-loss alert
+    // (modules/monitoring/frp.nix) can see the tunnel-drop error lines.
+    loki.source.journal "frp" {
+      matches    = "_SYSTEMD_UNIT=frp-server.service"
+      labels     = { job = "frp" }
+      forward_to = [loki.write.local.receiver]
+    }
+
     loki.write "local" {
       endpoint {
         url = "http://127.0.0.1:3100/loki/api/v1/push"
@@ -244,7 +253,7 @@
   # Alloy runs as a systemd DynamicUser, so it must join the group owning each source or
   # it silently reads nothing (no error, zero log lines). NixOS concatenates this with the
   # module's default ["systemd-journal"], yielding ["systemd-journal" "nginx" "docker"]:
-  #   systemd-journal -> read the journal (fail2ban)
+  #   systemd-journal -> read the journal (fail2ban, frp-server)
   #   nginx           -> read 0640 nginx:nginx files in the 0750 nginx:nginx log dir
   #   docker          -> read /var/run/docker.sock
   systemd.services.alloy.serviceConfig.SupplementaryGroups = [ "nginx" "docker" ];
