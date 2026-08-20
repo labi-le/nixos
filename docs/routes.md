@@ -147,6 +147,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Grafana alert: tidal-syncer TIDAL re-login required (Prometheus metric alert) | `modules/monitoring/tidal-syncer.nix` |
 | tidal-syncer daemon (native service: config, agenix secret, Prometheus scrape + Grafana dashboard) | `modules/tidal-syncer.nix` |
 | FRP (Fast Reverse Proxy) | `modules/frp.nix` |
+| Grafana alert: frp tunnel connection lost (Loki log alert on frp-server journal) | `modules/monitoring/frp.nix` |
 | Syncthing (server) | `modules/syncthing/server.nix` |
 | Syncthing common module | `modules/syncthing/default.nix` |
 | Syncthing device IDs | `modules/syncthing/devices.nix` |
