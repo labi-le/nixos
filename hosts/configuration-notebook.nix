@@ -20,7 +20,10 @@
   ];
 
 
-  services.belphegor.enable = true;
+  services.belphegor = {
+    enable = true;
+    notify = false;
+  };
 
   hardware = {
     graphics.enable = true;
