@@ -8,4 +8,4 @@ modelRoles:
   commit: opencode-go/deepseek-v4-flash:minimal
   tiny: opencode-go/deepseek-v4-flash
   task: opencode-go/deepseek-v4-pro
-  advisor: opencode-go/deepseek-v4-pro
+  advisor: opencode-go/deepseek-v4-flash:high

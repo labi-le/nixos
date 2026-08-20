@@ -38,7 +38,10 @@
   boot.kernelModules = [ "sp5100_tco" ];
   systemd.settings.Manager.RuntimeWatchdogSec = "60s";
 
-  services.belphegor.enable = true;
+  services.belphegor = {
+    enable = true;
+    notify = false;
+  };
   services.hardware.openrgb.enable = true;
   systemd.services.openrgb.preStart = ''
     config=/var/lib/OpenRGB/OpenRGB.json

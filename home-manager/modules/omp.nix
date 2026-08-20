@@ -189,6 +189,13 @@ in
 
       secrets.enabled = true;
 
+      lsp = {
+        diagnosticsOnEdit = true;
+        formatOnWrite = true;
+      };
+
+      eval.js = false;
+
       providers = {
         autoThinkingMaxEffort = "max";
         streamFirstEventTimeoutSeconds = 180;
@@ -357,6 +364,52 @@ in
     # Press-to-toggle dictation (alternative to the default hold-Space gesture).
     ".omp/agent/keybindings.yml".text = builtins.toJSON {
       "app.stt.toggle" = "Alt+S";
+    };
+    ".omp/agent/lsp.json".text = builtins.toJSON {
+      servers = {
+        nixd = {
+          command = "${pkgs.nixd}/bin/nixd";
+          args = [ ];
+          fileTypes = [ ".nix" ];
+        };
+        gopls = {
+          command =
+            (pkgs.writeShellScriptBin "gopls" ''
+              export PATH=${lib.makeBinPath [ pkgs.go ]}:$PATH
+              exec ${pkgs.gopls}/bin/gopls "$@"
+            '') + "/bin/gopls";
+          args = [ ];
+          fileTypes = [ ".go" ];
+        };
+        biome = {
+          command = "${pkgs.biome}/bin/biome";
+          args = [ "lsp-proxy" ];
+          fileTypes = [
+            ".ts"
+            ".tsx"
+            ".js"
+            ".jsx"
+            ".mjs"
+            ".cjs"
+            ".mts"
+            ".cts"
+            ".json"
+            ".jsonc"
+            ".vue"
+            ".astro"
+            ".svelte"
+            ".css"
+            ".graphql"
+            ".gql"
+            ".html"
+          ];
+        };
+        phpactor = {
+          command = "${pkgs.phpactor}/bin/phpactor";
+          args = [ "language-server" ];
+          fileTypes = [ ".php" ];
+        };
+      };
     };
   };
 }
