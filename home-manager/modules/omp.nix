@@ -32,8 +32,8 @@ let
   superpowersSrc = pkgs.fetchFromGitHub {
     owner = "obra";
     repo = "superpowers";
-    rev = "896224c4b1879920ab573417e68fd51d2ccc9072";
-    hash = "sha256-+lT2a/qq0SF4k0PgnEDKiuidVlZX2p0vEso4d/5T1os=";
+    rev = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797";
+    hash = "sha256-EsGNO0dULWf5Bx6bGrCv2kI2Z8aKH0kRvGiuN23wChQ=";
   };
   agentSkillsSrc = pkgs.fetchFromGitHub {
     owner = "labi-le";
@@ -56,8 +56,8 @@ let
   cavemanSrc = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
-    rev = "25d22f864ad68cc447a4cb93aefde918aa4aec9f";
-    hash = "sha256-FbmfhFaPs/SnSZdfNdErdIUHXt1FfBzErpPpLy8kdIc=";
+    rev = "2f49f0e1a352aa810e70056b7930aeb0b3d219b4";
+    hash = "sha256-FagkzOnjW9tqeaAK8NX1X8REsjWRRMqfrvhByEtrAXM=";
   };
 
   # { <name> = "<dir>/<name>"; } for every <name>/SKILL.md under `dir`. readDir
