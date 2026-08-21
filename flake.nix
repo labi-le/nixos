@@ -12,7 +12,7 @@
     wl-uploader.url = "github:labi-le/wl-paste-uploader";
     deal.url = "github:labi-le/deal";
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-    # ayugram-desktop.url = "github:ayugram-port/ayugram-desktop/release?submodules=1";
+    ayugram-desktop.url = "github:ndfined-crp/ayugram-desktop";
     flake-utils.url = "github:numtide/flake-utils";
     musnix.url = "github:musnix/musnix";
 
