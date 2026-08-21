@@ -86,42 +86,6 @@ let
     )
     vendoredSkills;
 
-  # index-repo auto-register extension, loaded via programs.omp.settings.extensions
-  # below (the proven load path, same as omp-undo-redo). Registers the session's
-  # git repo with the index-repo daemon so the chroma MCP has it indexed. Fires on
-  # session_start (fresh launch) and agent_start (covers autoResume-resumed
-  # sessions). `--pid` ties the registration to this omp process so the daemon GCs
-  # it on exit; an exit handler unregisters promptly. Opt out per-repo with a
-  # `.no-code-index` file, or globally with CODE_INDEXER_DISABLE=1.
-  indexRepoRegisterExt = pkgs.writeText "omp-index-repo-register.js" ''
-    import { execFile, spawnSync } from "node:child_process";
-    import { promisify } from "node:util";
-    import { existsSync } from "node:fs";
-    import { join } from "node:path";
-
-    const run = promisify(execFile);
-    // Use the daemon's exact package so register (writes the marker name) always
-    // matches the serve binary that reads it. pkgs.index-repo is a pinned release
-    // (older `default`) and would write nameless markers -> daemon falls back.
-    const INDEX_REPO = "${osConfig.services.index-repo.package}/bin/index-repo";
-
-    async function ensureRegistered(ctx) {
-      if (process.env.CODE_INDEXER_ACTIVE || process.env.CODE_INDEXER_DISABLE) return;
-      const cwd = (ctx && ctx.cwd) || process.cwd();
-      if (!cwd || !existsSync(join(cwd, ".git")) || existsSync(join(cwd, ".no-code-index"))) return;
-      process.env.CODE_INDEXER_ACTIVE = "1";
-      try { await run("systemctl", ["--user", "start", "--no-block", "index-repo.service"]); } catch {}
-      try { await run(INDEX_REPO, ["register", cwd, "--pid", String(process.pid)]); } catch {}
-      process.once("exit", () => {
-        try { spawnSync(INDEX_REPO, ["unregister", cwd, "--pid", String(process.pid)]); } catch {}
-      });
-    }
-
-    export default function (pi) {
-      pi.on("session_start", (_event, ctx) => ensureRegistered(ctx));
-      pi.on("agent_start", (_event, ctx) => ensureRegistered(ctx));
-    }
-  '';
 in
 {
   # `uv` provides `uvx`, required by the chroma MCP below. It used to come from
@@ -135,6 +99,7 @@ in
     pkgs.git
     pkgs.gh
   ];
+  services.index-repo.omp.registerHook.enable = true;
 
   programs.omp = {
     enable = true;
@@ -143,7 +108,7 @@ in
     settings = {
       setupVersion = 1;
 
-      extensions = [ "${indexRepoRegisterExt}" ];
+      extensions = [ ];
 
       modelRoles = {
         default = mainModel;
