@@ -6,7 +6,7 @@ final: prev: {
   # accela = inputs.accela.packages.${system}.default;
   sls-steam = inputs.sls-steam.packages.${system}.sls-steam;
   sls-steam-wrapped = inputs.sls-steam.packages.${system}.wrapped;
-  # ayugram-desktop = inputs.ayugram-desktop.packages.${system}.ayugram-desktop;
+  ayugram-desktop = inputs.ayugram-desktop.packages.${system}.default;
 
   # stable = import inputs.nixpkgs-stable {
   #   inherit system;
