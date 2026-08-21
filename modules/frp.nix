@@ -21,15 +21,14 @@ in
     settings = {
       bindAddr = "0.0.0.0";
       bindPort = listenPort;
+      quicBindPort = listenPort;
       auth = {
         method = "token";
         token = "{{ .Envs.FRP_TOKEN }}";
       };
     };
   };
-
   networking.firewall.allowedTCPPorts = [
-    listenPort
     danyaVNC
   ];
   networking.firewall.allowedUDPPorts = [
