@@ -213,6 +213,7 @@ The indexer is an external flake (`index-repo.url` in `flake.nix`) that ships it
 | System service | `flake.nix` (`mkSystem` `withHomeManager` list) | imports `inputs.index-repo.nixosModules.default` + sets `services.index-repo.enable = true` (HM hosts only, not server) |
 | Opencode glue | `flake.nix` (`homeManagerConfig.sharedModules`) + `home-manager/modules/opencode/{default,wrappers}.nix` | imports `inputs.index-repo.homeManagerModules.default`; the wrapper splices `config.services.index-repo.opencode.hook` |
 | Chroma gate + MCP | `home-manager/modules/opencode/integrations.nix` | sets `services.index-repo.opencode.chromaGate.enable` (deploys the `chroma-gate.ts` opencode plugin from the index-repo flake) + `chromaMcp.{enable,host}` (emits `programs.opencode.settings.mcp.chroma`, the `uvx chroma-mcp` server) |
+| Oh-my-pi register hook | `home-manager/modules/omp.nix` | sets `services.index-repo.omp.registerHook.enable`; extension source + deployment live in the index-repo flake (`hooks/omp/repo-register.js`) |
 
 Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{host,port,ssl,debounce}` on the NixOS module. The systemd user unit (`index-repo serve`) is defined by the module — do NOT hand-write it. The opencode chroma-gate plugin + `chroma` MCP server come from the same index-repo HM module (`services.index-repo.opencode.{chromaGate,chromaMcp}`, enabled in `integrations.nix`); `chromaMcp.{host,port,ssl}` default to the NixOS `services.index-repo.{host,port,ssl}` via `osConfig`.
 

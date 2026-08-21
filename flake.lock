@@ -705,11 +705,11 @@
         "nixpkgs": "nixpkgs_6"
       },
       "locked": {
-        "lastModified": 1787258348,
-        "narHash": "sha256-E6SOgbxlELoNugf+TDMaXnws2hXOkJuU91okhoQ7na0=",
+        "lastModified": 1787312572,
+        "narHash": "sha256-CzffFzNlAdTum0lhjV+COVd4NxNgpj2htuvAwWlPwd4=",
         "ref": "refs/heads/main",
-        "rev": "c8313b809c10fe186935589c77b18741e8e81bdc",
-        "revCount": 93,
+        "rev": "e86da1efbf49824e5ff3537001962fd1647b32fd",
+        "revCount": 96,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/index-repo"
       },
