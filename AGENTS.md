@@ -12,6 +12,10 @@ technically flawless solutions.
   module (route via `docs/routes.md`), then `make switch`. Imperative
   `<tool> config set` commands and hand edits under `$HOME` are prohibited:
   they either fail on the read-only store or are erased on the next rebuild.
+- Search the codebase chroma-first: query the indexed collections through
+  the `chroma` MCP tools before reaching for `grep` or `glob`.
+- Control the system through the `nix-control` MCP tools (rebuild, health,
+  generations, routes, secrets) instead of raw shell commands.
 
 # Agent Instructions
 
