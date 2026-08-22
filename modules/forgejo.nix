@@ -6,7 +6,7 @@
 
 let
   host = "git.labile.cc";
-  port = 3100;
+  port = 3150;
 in
 {
   services.forgejo = {
