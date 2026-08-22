@@ -19,10 +19,8 @@ in
         ROOT_URL = "https://${host}";
         HTTP_ADDR = "127.0.0.1";
         HTTP_PORT = port;
-        REQUIRE_SIGNIN_VIEW = true;
       };
       service.DISABLE_REGISTRATION = true;
-      repository.DEFAULT_PRIVATE = true;
       session.COOKIE_SECURE = true;
       actions.ENABLED = true;
       actions.DEFAULT_ACTIONS_URL = "github";
