@@ -13,7 +13,7 @@
     inputs.tidal-syncer.nixosModules.default
     ./../modules/tidal-syncer.nix
     ./../modules/frp.nix
-    # ./../modules/gitlab.nix
+    ./../modules/forgejo.nix
     ./../modules/syncthing/server.nix
     ./../modules/nvidia/gt210.nix
     ./../modules/vaultwarden.nix
