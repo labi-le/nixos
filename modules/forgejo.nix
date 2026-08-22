@@ -25,4 +25,28 @@ in
       actions.ENABLED = true;
     };
   };
+
+  users.groups.gitea-runner = { };
+  users.users.gitea-runner = {
+    isSystemUser = true;
+    group = "gitea-runner";
+  };
+
+  age.secrets.forgejo-runner-token = {
+    file = ../secrets/forgejo-runner-token.age;
+    mode = "0440";
+    group = "gitea-runner";
+  };
+
+  services.gitea-actions-runner.instances.git = {
+    enable = true;
+    name = "git";
+    url = host;
+    tokenFile = config.age.secrets.forgejo-runner-token.path;
+    labels = [
+      "ubuntu-latest:docker://ghcr.io/catthehacker/ubuntu:act-latest"
+      "ubuntu-22.04:docker://ghcr.io/catthehacker/ubuntu:act-latest"
+      "ubuntu-24.04:docker://ghcr.io/catthehacker/ubuntu:act-24.04"
+    ];
+  };
 }
