@@ -50,9 +50,4 @@ in
       "ubuntu-24.04:docker://ghcr.io/catthehacker/ubuntu:act-24.04"
     ];
   };
-
-  security.acme.certs."git.labile.cc" = {
-    server = "https://acme-v02.api.letsencrypt.org/directory";
-    extraLegoFlags = lib.mkForce [ ];
-  };
 }
