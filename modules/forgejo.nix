@@ -23,6 +23,7 @@ in
       service.DISABLE_REGISTRATION = true;
       session.COOKIE_SECURE = true;
       actions.ENABLED = true;
+      actions.DEFAULT_ACTIONS_URL = "github";
     };
   };
 
