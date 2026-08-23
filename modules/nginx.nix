@@ -261,7 +261,10 @@ in
         addr = "http://127.0.0.1:8384";
         internal = true;
       };
-      # "gitlab.labile.cc" = proxy { addr = "http://unix:/run/gitlab/gitlab-workhorse.socket"; };
+      "git.labile.cc" = proxy {
+        addr = "http://127.0.0.1:3150";
+        websockets = true;
+      };
       "logs.labile.cc" = proxy {
         addr = "http://127.0.0.1:8008";
         internal = true;

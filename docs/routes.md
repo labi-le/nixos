@@ -157,7 +157,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | AmneziaWG | `modules/awg/default.nix` |
 | AmneziaWG compose stack | `modules/awg/compose.nix` |
 | Network (server) | `modules/network/default.nix` |
-| GitLab (disabled) | `modules/gitlab.nix` |
+| Forgejo git forge (web UI + GitHub mirror sync + Actions runner) | `modules/forgejo.nix` |
 | ChromaDB vector database service | `modules/chromadb.nix` |
 | Hardware (server) | `hosts/hardware-server.nix` |
 
@@ -221,12 +221,7 @@ Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{
 
 | Task / Concern | File | Notes |
 |---|---|---|
-| Generic latest kernel | `modules/kernel.nix` | Not imported by active host configs |
 | Virtual machines / libvirt | `modules/vm.nix` | Commented in `hosts/configuration.nix` |
-| Spicetify | `modules/spicetify.nix` | Not imported by active host configs |
-| DPI bypass proxy | `modules/dpi.nix` | Not imported by active host configs |
-| EarlyOOM | `modules/earlyoom.nix` | Not imported by active host configs |
-| GitLab | `modules/gitlab.nix` | Commented in `hosts/configuration-server.nix` |
 
 ## Other Files
 

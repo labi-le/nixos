@@ -9,6 +9,6 @@
 {
   nix.registry.dev.to = {
     type = "path";
-    path = "/home/labile/nixos";
+    path = "/home/labile/nix";
   };
 }
