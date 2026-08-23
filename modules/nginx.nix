@@ -261,10 +261,6 @@ in
         addr = "http://127.0.0.1:8384";
         internal = true;
       };
-      "git.labile.cc" = proxy {
-        addr = "http://127.0.0.1:3150";
-        websockets = true;
-      };
       "logs.labile.cc" = proxy {
         addr = "http://127.0.0.1:8008";
         internal = true;
