@@ -157,7 +157,6 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | AmneziaWG | `modules/awg/default.nix` |
 | AmneziaWG compose stack | `modules/awg/compose.nix` |
 | Network (server) | `modules/network/default.nix` |
-| Forgejo git forge (web UI + GitHub mirror sync + Actions runner) | `modules/forgejo.nix` |
 | ChromaDB vector database service | `modules/chromadb.nix` |
 | Hardware (server) | `hosts/hardware-server.nix` |
 

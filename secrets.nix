@@ -19,7 +19,6 @@ in
   "secrets/grafana-telegram.age".publicKeys = [ server ];
   "secrets/frp.age".publicKeys = [ server ];
   "secrets/zerossl.age".publicKeys = [ server ];
-  "secrets/forgejo-runner-token.age".publicKeys = [ server ];
 
   "secrets/litellm-env.age".publicKeys = all;
 
