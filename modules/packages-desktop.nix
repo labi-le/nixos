@@ -18,7 +18,7 @@ with pkgs;
       "--enable-zero-copy"
     ];
   })
-  chromium
+  vivaldi
 
   pcsx2
   qbittorrent
