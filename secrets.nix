@@ -17,6 +17,7 @@ in
   "secrets/ngate-env.age".publicKeys = [ server ];
   "secrets/grafana.age".publicKeys = [ server ];
   "secrets/grafana-telegram.age".publicKeys = [ server ];
+  "secrets/harmonia-key.age".publicKeys = [ server ];
   "secrets/frp.age".publicKeys = [ server ];
   "secrets/zerossl.age".publicKeys = [ server ];
 

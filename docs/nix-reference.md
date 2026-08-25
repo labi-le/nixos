@@ -203,6 +203,24 @@ chroma_add_documents(
 - Known problems and workarounds.
 - Project patterns the agent must follow.
 
+## Internal Binary Cache
+
+Served at `https://cache.labile.cc` by harmonia on `server`, which signs
+narinfos with its key from `secrets/harmonia-key.age` (signing key exists only
+on `server`) and serves its own `/nix/store`.
+
+Push what a machine builds:
+
+```bash
+cache-push <installable-or-store-path>...
+```
+
+`cache-push` wraps `nix copy --to ssh://pet`; set `CACHE_PUSH_TARGET` to copy
+elsewhere. The local cache has priority `-1` so it wins over `cache.nixos.org`
+(`10`) and cachix mirrors (`20+`). Rotating the signing key requires updating
+the public key constant in `settings.nix`. GC is disabled on `server`: evicted
+store paths break the narinfos it serves.
+
 ## Nginx / ACME Operations
 
 Force restart all ACME order-renew units on the server:

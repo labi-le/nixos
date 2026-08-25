@@ -1,4 +1,4 @@
-{ config, inputs, ... }:
+{ config, inputs, lib, ... }:
 
 {
   imports = [
@@ -20,6 +20,7 @@
     ./../modules/awg
     ./../modules/network
     ./../modules/chromadb.nix
+    ./../modules/harmonia.nix
   ];
 
   network = {
@@ -38,6 +39,14 @@
     group = "users";
     mode = "0400";
   };
+
+  age.secrets.harmonia-key = {
+    file = ../secrets/harmonia-key.age;
+    mode = "0400";
+  };
+
+  nix.gc.automatic = lib.mkForce false;
+  nix.settings.trusted-users = [ "labile" ];
 
   services.ngate-wrapped-vm = {
     enable = true;

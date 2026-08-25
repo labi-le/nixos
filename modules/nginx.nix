@@ -1,8 +1,7 @@
-{
-  lib,
-  pkgs,
-  config,
-  ...
+{ lib
+, pkgs
+, config
+, ...
 }:
 
 let
@@ -98,11 +97,10 @@ in
         enableACME = true;
       };
       proxy =
-        {
-          addr,
-          internal ? false,
-          websockets ? false,
-          ...
+        { addr
+        , internal ? false
+        , websockets ? false
+        , ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -146,23 +144,24 @@ in
       # this repo; a wrong prefix just falls through to the SPA.
       subStore =
         { addr }:
-        base {
-          "/" = {
-            proxyPass = addr;
-            # Plain 403, NOT the @error404 remap the other internal vhosts use:
-            # the nginx-404 jail bans 5x404/60s for 5h at the firewall, and that
-            # ban would also cut off the public /download/ links below. Hiding
-            # the host is pointless here anyway -- its subscription URLs are
-            # handed out publicly.
-            extraConfig = ''
-              include ${ipWhiteList};
-              deny all;
-            '';
-          };
-          "~ ^/[0-9a-f]+/download/" = {
-            proxyPass = addr;
-          };
-        }
+        base
+          {
+            "/" = {
+              proxyPass = addr;
+              # Plain 403, NOT the @error404 remap the other internal vhosts use:
+              # the nginx-404 jail bans 5x404/60s for 5h at the firewall, and that
+              # ban would also cut off the public /download/ links below. Hiding
+              # the host is pointless here anyway -- its subscription URLs are
+              # handed out publicly.
+              extraConfig = ''
+                include ${ipWhiteList};
+                deny all;
+              '';
+            };
+            "~ ^/[0-9a-f]+/download/" = {
+              proxyPass = addr;
+            };
+          }
         // {
           kTLS = true;
         };
@@ -228,6 +227,7 @@ in
     in
     {
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
+      "cache.labile.cc" = proxy { addr = "http://127.0.0.1:5000"; };
       "llm.labile.cc" =
         lib.recursiveUpdate
           (proxy {

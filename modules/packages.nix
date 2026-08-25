@@ -1,8 +1,7 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
+{ config
+, lib
+, pkgs
+, ...
 }:
 
 with lib;
@@ -74,6 +73,10 @@ in
         nix-tree
         nix-prefetch-git
         tree
+        (pkgs.writeShellScriptBin "cache-push" ''
+          target=''${CACHE_PUSH_TARGET:-pet}
+          exec ${pkgs.nix}/bin/nix copy --to "ssh://''${target}" "$@"
+        '')
 
         deal
         wireshark
