@@ -3,23 +3,17 @@
 ## Project Structure
 
 ```text
-  /
-  ├── flake.nix                  # Flake definition with inputs and outputs
-  ├── overlays.nix               # Custom package overlays
-  ├──
-  settings.nix               # Common settings
-  ├──
-  modules / # NixOS modules
-  │   ├── base.nix               # Base modules import
-  │   ├── packages.nix           # System packages
-  │   ├──
-  packages-desktop.nix   # Desktop packages
-  │   ├──
-  packages-server.nix    # Server packages
-  │   ├──
-  shell.nix              # ZSH configuration
-  │   ├──
-  users.nix              # User management + Home Manager
+/
+├── flake.nix                  # Flake definition with inputs and outputs
+├── overlays.nix               # Custom package overlays
+├── settings.nix               # Common settings
+├── modules/                   # NixOS modules
+│   ├── base.nix               # Base modules import
+│   ├── packages.nix           # System packages
+│   ├── packages-desktop.nix   # Desktop packages
+│   ├── packages-server.nix    # Server packages
+│   ├── shell.nix              # ZSH configuration
+│   ├── users.nix              # User management + Home Manager
 │   └── ...
 ├── hosts/                     # Host-specific configurations
 │   ├── configuration.nix
@@ -27,8 +21,8 @@
 │   ├── configuration-notebook.nix
 │   └── configuration-server.nix
 └── home-manager/              # Home Manager configuration
-├── home.nix
-└── modules/               # HM modules: sway, waybar, alacritty, etc.
+    ├── home.nix
+    └── modules/               # HM modules: sway, waybar, alacritty, etc.
 ```
 
 ## Adding A Package
@@ -72,7 +66,7 @@ my-script = prev.callPackage ./pkgs/my-script.nix { };
 
 - `modules/packages.nix` for all hosts.
 - `modules/packages-desktop.nix` for desktop hosts: `pc`, `fx516`, and
-`notebook`.
+  `notebook`.
 - `modules/packages-server.nix` for servers.
 
 ## Adding A Command Alias
@@ -99,9 +93,9 @@ age -p -o secrets/mysecret.age <<< "secret content"
 
 ```nix
 age.secrets.mysecret = {
-file = ./secrets/mysecret.age;
-owner = "labile";
-group = "users";
+  file = ./secrets/mysecret.age;
+  owner = "labile";
+  group = "users";
 };
 ```
 
@@ -118,16 +112,16 @@ Monitors are configured in the host configuration, such as
 
 ```nix
 monitors = {
-"DP-3" = {
-mode = "2560x1440@179.999Hz";
-geometry = "1920 0";
-position = "right";
-};
-"DP-2" = {
-mode = "1920x1080@165Hz";
-geometry = "0 0";
-position = "left";
-};
+  "DP-3" = {
+    mode = "2560x1440@179.999Hz";
+    geometry = "1920 0";
+    position = "right";
+  };
+  "DP-2" = {
+    mode = "1920x1080@165Hz";
+    geometry = "0 0";
+    position = "left";
+  };
 };
 ```
 
@@ -183,9 +177,9 @@ Query recent memory to restore context:
 
 ```
 chroma_query_documents(
-collection: "memory-nixos",
-query_texts: ["recent decisions and progress"],
-n_results: 10
+  collection: "memory-nixos",
+  query_texts: ["recent decisions and progress"],
+  n_results: 10
 )
 ```
 
@@ -195,10 +189,10 @@ Save key decisions and progress:
 
 ```
 chroma_add_documents(
-collection: "memory-nixos",
-documents: ["<description>"],
-ids: ["<type>-<topic>-<YYYY-MM-DD>"],
-metadatas: [{"type": "decision|progress|problem|pattern", "date": "<YYYY-MM-DD>"}]
+  collection: "memory-nixos",
+  documents: ["<description>"],
+  ids: ["<type>-<topic>-<YYYY-MM-DD>"],
+  metadatas: [{"type": "decision|progress|problem|pattern", "date": "<YYYY-MM-DD>"}]
 )
 ```
 
