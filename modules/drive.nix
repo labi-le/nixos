@@ -35,14 +35,19 @@ in
     settings = {
       nfsd = {
         udp = false;
-        vers3 = false;
+        vers3 = true;
         vers4 = true;
       };
+      mountd.port = 20048;
     };
   };
 
   networking.firewall = {
     allowedTCPPorts = [ 2049 ];
+    interfaces."enp37s0" = {
+      allowedTCPPorts = [ 111 20048 ];
+      allowedUDPPorts = [ 111 20048 ];
+    };
   };
 
   # boot.kernelPatches = [
