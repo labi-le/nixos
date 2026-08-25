@@ -81,6 +81,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | UxPlay (AirPlay) | `modules/uxplay.nix` |
 | Virtual machines / libvirt (disabled) | `modules/vm.nix` |
 | Kernel (CachyOS) | `modules/kernel-cachyos.nix` |
+| Swap: zram hot tier, NVMe overflow tier, `vm` sysctls | `modules/swap.nix` | The 32 GiB box ran with no swap at all and took 70 kernel OOM kills in 9 days of uptime (steamwebhelper, chrome, electron): `pgsteal_anon` was 0 while 72M file pages refaulted, so every byte of reclaim pressure landed on the page cache. `zram0` is `zstd` sized at 50% of RAM, `swap-priority` 100; `/var/lib/swapfile`, 32 GiB on the root NVMe, is the overflow tier at priority 10 and is created once by `mkswap-var-lib-swapfile.service` (`dd`, not `fallocate`). `zswap.enabled=0` because the CachyOS kernel ships `CONFIG_ZSWAP_DEFAULT_ON` and zswap in front of a zram device compresses every page twice. `vm.swappiness` needs `lib.mkForce`: musnix (`audio.lowLatency`) defines it as 10 without `mkDefault`, and 10 keeps the kernel from using zram at all. `vm.watermark_scale_factor` 125 widens kswapd's headroom from ~31 MB to ~390 MB, the burst that OOM-killed renderers while gigabytes were still free |
 | Steam | `modules/steam.nix` |
 | Esync | `modules/esync.nix` |
 | ADB (Android Debug Bridge) | `modules/adb.nix` |

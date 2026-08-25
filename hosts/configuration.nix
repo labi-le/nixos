@@ -11,6 +11,7 @@
     ./../modules/nfs.nix
     ./../modules/thunar.nix
     ./../modules/kernel-cachyos.nix
+    ./../modules/swap.nix
     ./../modules/radeon.nix
     # ./../modules/vm.nix
     ./../modules/adb.nix
