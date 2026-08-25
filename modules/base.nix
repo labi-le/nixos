@@ -21,6 +21,7 @@
     ./hotkeys.nix
     ./nix-search-tv.nix
     ./nix-ld.nix
+    ./cache-push.nix
     ./opencode-secrets.nix
     ./nixvim
     ./stylix.nix

@@ -199,7 +199,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 |---|---|---|---|
 | Add package from flake input | `flake.nix` (add input) | `overlays.nix` (add overlay) | `modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix` |
 | Add local package | `pkgs/<name>.nix` (create) | `overlays.nix` (add) | `modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix` |
-| Push store paths to the binary cache | `settings.nix` (trusted-users, substituters) + `modules/packages.nix` (`cache-push` helper) | `cache-push <installable-or-store-path>` from any host | |
+| Push store paths to the binary cache | `modules/cache-push.nix` (post-build hook) + `settings.nix` (trusted-users, substituters); `cache-push` helper in `modules/packages.nix` for backfill | automatic after every local build; `cache-push <path>` from any host | |
 | Add AGenix secret | `secrets/<name>.age` (encrypt) | host config (add `age.secrets.<name>`) | |
 | Add new NixOS module | `modules/<name>.nix` (create) | `modules/base.nix` or per-host config (add import) | |
 | Add a Grafana alert for a service | `modules/monitoring/<service>.nix` (create, with `services.grafana.provision.alerting.rules`) | `modules/monitoring/default.nix` (add import) | route to the `telegram` contact point via `notification_settings.receiver` |
