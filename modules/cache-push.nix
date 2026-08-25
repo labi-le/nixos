@@ -15,7 +15,7 @@ let
     read -r -a paths <<< "$OUT_PATHS"
 
     export NIX_SSHOPTS='-i /run/agenix/cache-push-key -o IdentitiesOnly=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new'
-    target=''${CACHE_PUSH_TARGET:-pet}
+    target=''${CACHE_PUSH_TARGET:-labile@labile.cc}
 
     if ${pkgs.coreutils}/bin/timeout 600 ${pkgs.nix}/bin/nix copy --to "ssh://''${target}" "''${paths[@]}"; then
       echo "cache-push: pushed ''${#paths[@]} path(s)" >&2
@@ -33,14 +33,5 @@ in
     };
 
     nix.settings.post-build-hook = hook;
-
-    programs.ssh.extraConfig = ''
-      Host pet
-        HostName labile.cc
-        User labile
-        IdentityFile /run/agenix/cache-push-key
-        IdentitiesOnly yes
-        ConnectTimeout 5
-    '';
   };
 }
