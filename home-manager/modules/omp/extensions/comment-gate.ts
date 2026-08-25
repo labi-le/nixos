@@ -13,12 +13,17 @@ type Syntax = "slash" | "hash" | "dash";
 // is a private field: one shared comment syntax would refuse valid code.
 const SYNTAX: Record<string, Syntax> = {
   ts: "slash", tsx: "slash", js: "slash", jsx: "slash", mjs: "slash",
-  cjs: "slash", go: "slash", rs: "slash", c: "slash", h: "slash", cc: "slash",
-  cpp: "slash", hpp: "slash", java: "slash", kt: "slash", kts: "slash",
-  swift: "slash", cs: "slash", scala: "slash", zig: "slash", dart: "slash",
-  php: "slash", nix: "hash", py: "hash", sh: "hash", bash: "hash",
-  zsh: "hash", rb: "hash", pl: "hash", yaml: "hash", yml: "hash",
-  toml: "hash", sql: "dash", lua: "dash", hs: "dash",
+  cjs: "slash", vue: "slash", svelte: "slash", astro: "slash",
+  scss: "slash", less: "slash", go: "slash", rs: "slash", zig: "slash",
+  c: "slash", h: "slash", cc: "slash", cpp: "slash", hpp: "slash",
+  cs: "slash", java: "slash", kt: "slash", kts: "slash", scala: "slash",
+  groovy: "slash", gradle: "slash", swift: "slash", dart: "slash",
+  sol: "slash", proto: "slash", php: "slash",
+  nix: "hash", py: "hash", sh: "hash", bash: "hash", zsh: "hash",
+  ps1: "hash", rb: "hash", pl: "hash", ex: "hash", exs: "hash",
+  jl: "hash", r: "hash", tf: "hash", tfvars: "hash", hcl: "hash",
+  yaml: "hash", yml: "hash", toml: "hash",
+  sql: "dash", lua: "dash", hs: "dash",
 };
 
 const MARKER = /\b(TODO|FIXME|XXX|HACK|WIP|TBD)\b/;

@@ -1,7 +1,7 @@
 ---
 description: Comments and examples in code
-condition: ['(?:^|\n)[^\S\n]*(?://|#)[^\n]*\n[^\S\n]*(?://|#)|/\*(?:[^*]|\*(?!/))*\n', '(?:^|\n)(?:[^\n]*[^\S\n])?(?://|#|--[^\S\n])[^\n]*(?:[\w.%+-]+@[\w-]+\.[A-Za-z][A-Za-z]+|\b\d\d?\d?\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?\b|\b[\w-]+\.(?:internal|intranet|corp|lan|prod|prd|stage|stg)\b|/home/[A-Za-z_][\w.-]*)']
-globs: ['*.ts','*.tsx','*.js','*.jsx','*.nix','*.py','*.sh','*.bash','*.zsh','*.go','*.rs','*.c','*.h','*.cpp','*.hpp','*.java','*.kt','*.rb','*.lua','*.sql','*.yaml','*.yml','*.toml']
+condition: ['(?:^|\n)[^\S\n]*(?://|#|--[^\S\n])[^\n]*\n[^\S\n]*(?://|#|--[^\S\n])|/\*(?:[^*]|\*(?!/))*\n', '(?:^|\n)(?:[^\n]*[^\S\n])?(?://|#|--[^\S\n])[^\n]*(?:[\w.%+-]+@[\w-]+\.[A-Za-z][A-Za-z]+|\b\d\d?\d?\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?\b|\b[\w-]+\.(?:internal|intranet|corp|lan|prod|prd|stage|stg)\b|/home/[A-Za-z_][\w.-]*)']
+globs: ['*.ts','*.tsx','*.js','*.jsx','*.mjs','*.cjs','*.vue','*.svelte','*.astro','*.scss','*.less','*.php','*.py','*.rb','*.pl','*.lua','*.go','*.rs','*.zig','*.c','*.h','*.cc','*.cpp','*.hpp','*.cs','*.java','*.kt','*.kts','*.scala','*.groovy','*.gradle','*.swift','*.dart','*.ex','*.exs','*.hs','*.jl','*.r','*.R','*.sol','*.proto','*.sh','*.bash','*.zsh','*.ps1','*.nix','*.tf','*.tfvars','*.hcl','*.sql','*.yaml','*.yml','*.toml']
 scope: tool
 interruptMode: tool-only
 ---
