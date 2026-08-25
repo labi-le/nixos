@@ -43,11 +43,15 @@ in
   };
 
   networking.firewall = {
-    allowedTCPPorts = [ 2049 ];
-    interfaces."enp37s0" = {
-      allowedTCPPorts = [ 111 20048 ];
-      allowedUDPPorts = [ 111 20048 ];
-    };
+    allowedTCPPorts = [
+      2049
+      111
+      20048
+    ];
+    allowedUDPPorts = [
+      111
+      20048
+    ];
   };
 
   # boot.kernelPatches = [
