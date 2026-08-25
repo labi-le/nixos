@@ -33,5 +33,14 @@ in
     };
 
     nix.settings.post-build-hook = hook;
+
+    programs.ssh.extraConfig = ''
+      Host pet
+        HostName labile.cc
+        User labile
+        IdentityFile /run/agenix/cache-push-key
+        IdentitiesOnly yes
+        ConnectTimeout 5
+    '';
   };
 }
