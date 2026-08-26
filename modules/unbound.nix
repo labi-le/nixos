@@ -246,6 +246,7 @@ in
         done
       done
 
+      chmod 0640 "$new"
       mv -f "$new" ${blockZone}
       trap - EXIT
       unbound-control -s ${config.services.unbound.localControlSocketPath} auth_zone_reload rpz.ads.

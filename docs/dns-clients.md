@@ -22,6 +22,14 @@ probing `/dns-query` will find it.
 Plain DNS on `192.168.1.2:53` and `10.8.0.1:53` stays available unchanged;
 the encrypted endpoints are additions, not replacements.
 
+One asymmetry to expect before it confuses you: clients arriving from
+`192.168.1.0/24` or `10.8.0.0/24` — plain 53 and DoT alike — get ad and tracker
+filtering, while the public DoH endpoint does not filter at all. A name that
+answers normally through `https://dns.labile.cc/dns-query` can be NXDOMAIN over
+DoT from inside the same house, and that is deliberate rather than a fault: an
+open resolver must not impose a policy on strangers. `docs/dns-resolver.md`
+covers the mechanism and the kill switch.
+
 Which endpoint suits whom: DoT fits devices that permanently live in the LAN
 or on the VPN — Android phones at home, systemd-resolved boxes, the router's
 stubby, unbound forwarders on other NixOS hosts. DoT cannot carry a secret

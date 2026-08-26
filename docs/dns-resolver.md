@@ -106,6 +106,81 @@ is a symlink to `fullchain.pem`, and symlink modes are always 0777 on Linux;
 `find -printf %m` reports the link, not the target. The real files are 0640
 `acme:dns-tls`. Do not "fix" it with a chmod, which would replace the link.
 
+## Filtering
+
+Ads and trackers are filtered through two RPZ zones, and the filtering applies
+to *tagged clients only*: `access-control-tag` marks `192.168.1.0/24` and
+`10.8.0.0/24` with the tag `ads`, and both `rpz:` clauses carry `tags: "ads"`.
+Loopback is deliberately left untagged, which is the whole point of the split:
+`127.0.0.1` is where the public DoH endpoint arrives from, and an open resolver
+that answers NXDOMAIN for names that exist is lying to strangers who never
+asked for a policy. Measured after deployment, the same name is NXDOMAIN for a
+LAN client on plain 53 and over DoT, and NOERROR through
+`https://dns.labile.cc/dns-query`.
+
+`respip` must lead `module-config` (`"respip validator iterator"`) or every
+`rpz:` clause is silently inert — no error, no filtering. The obvious way to
+scope filtering, `interface-tag` on the LAN and VPN listeners, does not work
+here: the manual states that any `access-control*:` option overrides all
+`interface-*:` options for targeted clients, and a test confirmed it — with
+`tags:` set, a tagged listener filtered nothing, while removing `tags:`
+filtered on every listener. Client-address tagging is the only mechanism that
+survives an `access-control` block, and `define-tag` must be parsed before
+anything that references a tag.
+
+The zone order matters and is load-bearing. `rpz.local.` comes first: a
+hand-maintained zone generated into the store from two Nix lists, an allow list
+emitting `CNAME rpz-passthru.` and a block list emitting `CNAME .`, each for
+both the name and its wildcard. A `passthru` in the first zone beats a block in
+the second, verified, so that list is the exception mechanism for a false
+positive as well as the place to add what upstream misses. It currently blocks
+`adfox.ru` and `vk-portal.net`, the two Russian ad domains that no HaGeZi tier
+covers. Unbound never rewrites a zonefile that has no primary or url, so the
+store path is safe as a zonefile.
+
+`rpz.ads.` is HaGeZi Pro, 452 190 rules, fetched by `unbound-rpz-update.timer`
+rather than by unbound's own `url:` option. The daemon can download and refresh
+a zone itself, and the list ships a usable SOA, but then a bad publish is
+activated unvalidated and a stuck HTTP fetch lives inside the DNS daemon. The
+unit downloads to a temporary file and refuses to activate it unless the header
+carries an SOA, the rule count is at least 300 000, and no canary is blocked;
+only then does it `mv` into place and call `unbound-control auth_zone_reload
+rpz.ads.`, which reloads without a restart. Any failure leaves the previous
+zone serving — observed for real when the first run rejected a good list
+because `grep -q` exiting early under `pipefail` turned a broken pipe into a
+failed SOA check.
+
+The canaries are the eight `*.work-parent.example` work portals, `labile.cc`, and the
+Russian services whose loss would be noticed first. Each is checked along its
+whole suffix chain, so a `*.work-parent.example` entry upstream would be caught rather than
+silently costing access to work. This is not hypothetical: the list already
+blocks `work-analytics.example`, which is analytics on a government site and correct to
+block, but it proves upstream does write `work-parent.example` rules.
+
+The cost is 285 MB resident, up from 33 MB, and about two seconds added to
+startup while 452 190 rules parse — during which the resolver answers nothing,
+so a restart is now perceptible. The host has 31 GiB. `rpz-log` is on and each
+block is journalled with the client address (`rpz: applied [ads] mc.yandex.ru.
+rpz-nxdomain 192.168.1.3@54088`); those lines stay in journald, because Alloy
+ships nginx, docker and two journal units to Loki but not unbound.
+
+When something breaks, the escape hatch needs no rebuild and no restart:
+`unbound-control rpz_disable rpz.ads.` turns the blocklist off, `rpz_enable`
+turns it back on, both verified live. Scope expectation: most LAN traffic never
+reaches this resolver at all, since the router sends general queries to mihomo
+where `adblock-fast` already filters. What this layer actually covers is DoT
+clients, VPN clients on `10.8.0.0/24` and the router's stubby branch.
+
+Coverage against Russian analytics, measured from a tagged client: HaGeZi Light
+blocked 19 of 24 tested names, Pro blocked 22, and the two local additions make
+it 24. Blocked by both tiers are `mc.yandex.ru`, `an.yandex.ru`,
+`ads.adfox.ru`, `yandexadexchange.net`, `top-fwz1.mail.ru`, `rs.mail.ru`,
+`ad.mail.ru`, `tns-counter.ru`, `counter.yadro.ru`, the Rambler counters,
+`adriver.ru`, `dmg.digitaltarget.ru`, `openstat.net` and `spylog.com`; Pro adds
+`appmetrica.yandex.ru`, `mc.admetrica.ru` and `ads.vk.com`. Nothing in
+`yandex.ru`, `mail.ru`, `vk.com`, `gosuslugi.ru`, `sberbank.ru`, `ozon.ru`,
+`wildberries.ru`, `avito.ru`, the work portals or `labile.cc` is affected.
+
 Both transports share one ZeroSSL certificate for `dns.labile.cc`, issued by
 the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:
 
