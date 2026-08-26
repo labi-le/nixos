@@ -22,6 +22,7 @@
     ./../modules/chromadb.nix
     ./../modules/harmonia.nix
     ./../modules/unbound.nix
+    ./../modules/ifconfig.nix
   ];
 
   network = {
