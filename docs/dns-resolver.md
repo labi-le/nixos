@@ -166,10 +166,29 @@ ships nginx, docker and two journal units to Loki but not unbound.
 
 When something breaks, the escape hatch needs no rebuild and no restart:
 `unbound-control rpz_disable rpz.ads.` turns the blocklist off, `rpz_enable`
-turns it back on, both verified live. Scope expectation: most LAN traffic never
-reaches this resolver at all, since the router sends general queries to mihomo
-where `adblock-fast` already filters. What this layer actually covers is DoT
-clients, VPN clients on `10.8.0.0/24` and the router's stubby branch.
+turns it back on, both verified live.
+
+Scope is wider than it first appears, and an earlier version of this document
+got it wrong. The whole LAN is filtered, not merely the encrypted clients,
+because the router's chain terminates here: a client asks dnsmasq on
+`192.168.1.1:53`, dnsmasq forwards everything general to mihomo on
+`127.0.0.1:12344`, and mihomo's only upstream is stubby on `127.0.0.1:5453`,
+which speaks DoT to this resolver. mihomo runs `enhanced-mode: fake-ip` with
+`fake-ip-filter-mode: rule`, and its filter list ends with `MATCH,real-ip`, so
+only the `vpn`, `telegram` and `warp` rule-sets are answered with a
+`198.18.1.0/24` placeholder; everything else is resolved for real by us. The
+router queries as `192.168.1.1`, which is inside the tagged netblock, so LAN
+clients receive the same NXDOMAIN a DoT client gets. Measured through all three
+layers: `an.yandex.ru` is NXDOMAIN at stubby, at mihomo and at dnsmasq, while
+`example.com` resolves.
+
+mihomo must stay in that path. Its DNS answers are how proxy routing is decided
+for the three rule-sets above, so pointing dnsmasq straight at this resolver
+would resolve those domains honestly and route them direct instead of through
+the proxy. It also caches positive answers, which is why a newly blocked name
+can keep resolving for a while: `mc.yandex.ru` kept returning `77.88.21.119`
+through the client path after the RPZ went live, and only a mihomo restart
+cleared it, while the same name was already NXDOMAIN one layer deeper at stubby.
 
 Coverage against Russian analytics, measured from a tagged client: HaGeZi Light
 blocked 19 of 24 tested names, Pro blocked 22, and the two local additions make
@@ -229,40 +248,52 @@ three. Do not do it.
 
 ## Router-side prerequisite
 
-The OpenWrt router (`192.168.1.1`, 24.10.4) runs `adblock-fast` with
-`force_dns=1` and `force_dns_port='53' '853'`, which installs a redirect through
-ubus at the top of `dstnat_lan`:
-
-```
-tcp dport 53 counter redirect to :53 comment "!fw4: ubus:adblock-fast[main] redirect 0"
-udp dport 53 counter redirect to :53 comment "!fw4: ubus:adblock-fast[main] redirect 0"
-```
-
-Every port-53 packet leaving any LAN host — regardless of destination — was
-redirected into the router's own dnsmasq. A query sent to `192.0.2.1`
-(TEST-NET-1, unroutable) answered in 0 ms with `aa` set, and asking that address
-for `external.lan` returned `93.100.194.40`, a record that exists only on the
+Every port-53 packet leaving any LAN host is redirected into the router's own
+dnsmasq, regardless of destination. A query sent to `192.0.2.1` (TEST-NET-1,
+unroutable) answered in 0 ms with `aa` set, and asking that address for
+`external.lan` returned `93.100.194.40`, a record that exists only on the
 router. Behind that redirect a recursive resolver cannot work at all: root-zone
 AXFR fails, iterative queries never reach the authoritative servers, and the
 interceptor answers without an EDNS OPT record and strips RRSIG, so every signed
-zone turns bogus and SERVFAILs.
+zone turns bogus and SERVFAILs. The server's own source address is therefore
+returned before the redirect can match.
 
-One source address is therefore exempted before `dstnat_lan` runs, in
-`/usr/share/nftables.d/chain-pre/dstnat_lan/10-unbound-egress.nft` on the router:
+Until 2026-08-26 the redirect belonged to `adblock-fast`, which injected it
+through ubus along with a reject rule for port 853. That package has been
+removed: it filtered nothing whatsoever — empty `status` output, no blocklist
+artifact anywhere on disk, `/tmp/dnsmasq.d` and `/var/run/adblock-fast` both
+empty, and ad domains resolving to real addresses whenever the server's RPZ did
+not block them — while costing a 90 KB init script and a luci app. Its one
+worthwhile effect now lives in a static file,
+`/usr/share/nftables.d/chain-pre/dstnat_lan/10-dns-hijack.nft`:
 
 ```
-ip saddr 192.168.1.2 udp dport 53 counter return comment "unbound egress exempt"
-ip saddr 192.168.1.2 tcp dport 53 counter return comment "unbound egress exempt"
+ip saddr 192.168.1.2 udp dport 53 counter return comment "server recursion egress"
+ip saddr 192.168.1.2 tcp dport 53 counter return comment "server recursion egress"
+udp dport 53 counter redirect to :53 comment "hijack lan plain dns"
+tcp dport 53 counter redirect to :53 comment "hijack lan plain dns"
 ```
+
+Order inside the file is load-bearing: the two `return` rules must precede the
+redirects, or the server's recursion is hijacked back into the router and DNSSEC
+dies silently. Four static rules cost nothing at runtime, and the hijack is
+worth keeping because it is what makes filtering unbypassable — a television or
+phone hardcoded to `8.8.8.8` is answered by our chain anyway. Verified after the
+change: `dig @8.8.8.8 an.yandex.ru` from a LAN host returns NXDOMAIN and
+`dig @8.8.8.8 example.com` returns the real address, both by way of the router.
+
+The 853 reject was deliberately not reproduced. It made every third-party DoT
+resolver unreachable from the LAN and protected nothing, since a device speaking
+to an external encrypted resolver bypasses filtering regardless of port 853.
+`1.1.1.1:853` and `9.9.9.9:853` now accept connections from the LAN again, where
+both previously refused.
 
 Apply with `fw4 check && fw4 reload`; `fw4 check` renders the ruleset through
 nftables' check mode without touching the running system, so never reload
-without it passing. The rule is scoped to one source address, so `adblock-fast`
-keeps forcing every other client through the router and no other device changes
-behaviour. Roll back by deleting the file and reloading.
-
-The file lives on the overlay, so it survives reboots and `fw4 restart`, but not
-a firmware upgrade unless its path is listed in `/etc/sysupgrade.conf`.
+without it passing. The file lives on the overlay, so it survives reboots and
+`fw4 restart`, but not a firmware upgrade unless its path is listed in
+`/etc/sysupgrade.conf`, which now names this file and no longer the exemption-only
+predecessor it replaced.
 
 ## Making the LAN use it
 

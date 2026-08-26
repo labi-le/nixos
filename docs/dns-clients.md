@@ -35,20 +35,19 @@ or on the VPN — Android phones at home, systemd-resolved boxes, the router's
 stubby, unbound forwarders on other NixOS hosts. DoT cannot carry a secret
 path, so it is deliberately not exposed publicly: a public listener would be
 an open resolver. DoH fits browsers and anything that roams, because it rides
-port 443 and works from any network. One network constraint to know: LAN hosts
-cannot reach any third-party DoT resolver — `1.1.1.1:853` and `9.9.9.9:853`
-refuse connections from both the desktop and the server while `8.8.8.8:443` is
-open. The cause is the router's `adblock-fast`, which runs
-`force_dns_port='53' '853'` and treats the two ports differently: port 53 is
-redirected into its own dnsmasq, while port 853 gets `jump handle_reject` in
-`inet fw4`, which is why the failure is an immediate refusal rather than a
-timeout. The nft exemption on the router covers port 53 for `192.168.1.2`
-only, so even the server is refused on 853. Two consequences:
-`192.168.1.2:853` is the only DoT available to LAN clients, and it works
-because same-subnet traffic is switched rather than routed, so neither rule
-ever sees it. The router itself is not subject to either and its own stubby
-completes a full handshake to `1.1.1.1:853`, which is what makes the
-Cloudflare fallback below encrypted.
+port 443 and works from any network. One piece of history worth knowing,
+because it explains why the router's stubby was dead weight for so long: until
+2026-08-26 no LAN host could reach any third-party DoT resolver, since the
+router's `adblock-fast` ran `force_dns_port='53' '853'` and treated the two
+ports differently — port 53 redirected into its own dnsmasq, port 853 sent to
+`jump handle_reject` in `inet fw4`, which is why the failure was an immediate
+refusal rather than a timeout. That package has been removed, its reject rule
+with it, and `1.1.1.1:853` now accepts connections from the LAN again. The
+port-53 redirect survives as a static nftables file with the server's recursion
+exempted, so plain DNS from any device still lands in our filtered chain
+whatever resolver it was aimed at; see `docs/dns-resolver.md`. Traffic to
+`192.168.1.2:853` was never affected either way, because same-subnet traffic is
+switched rather than routed and `dstnat_lan` never sees it.
 
 ## Support matrix
 
