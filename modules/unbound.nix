@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   lanInterface = "enp37s0";
@@ -14,6 +14,52 @@ let
   tlsPort = 853;
   dohPort = 8053;
   stateDir = config.services.unbound.stateDir;
+  rpzDir = "${stateDir}/rpz";
+  blockZone = "${rpzDir}/ads.zone";
+  blockUrl = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/rpz/pro.txt";
+  blockMinRules = 300000;
+  adsTag = "ads";
+
+  localAllow = [ ];
+  localBlock = [
+    "adfox.ru"
+    "vk-portal.net"
+  ];
+
+  canaries = [
+    "work-portal.example"
+    "work-portal.example"
+    "work-portal.example"
+    "work-portal.example"
+    "work-portal.example"
+    "work-portal.example"
+    "work-portal.example"
+    "work-portal.example"
+    "labile.cc"
+    "yandex.ru"
+    "mail.ru"
+    "vk.com"
+    "gosuslugi.ru"
+    "sberbank.ru"
+    "github.com"
+  ];
+
+  zoneHead = ''
+    $TTL 3600
+    @ IN SOA localhost. root.localhost. 1 3600 1200 604800 3600
+    @ IN NS localhost.
+  '';
+
+  triggers = action: names:
+    lib.concatMapStrings (n: "${n} IN CNAME ${action}\n*.${n} IN CNAME ${action}\n") names;
+
+  seedZoneFile = pkgs.writeText "unbound-rpz-seed.zone" zoneHead;
+
+  localZoneFile = pkgs.writeText "unbound-rpz-local.zone" (
+    zoneHead
+    + triggers "rpz-passthru." localAllow
+    + triggers "." localBlock
+  );
 in
 {
   services.unbound = {
@@ -24,6 +70,9 @@ in
 
     settings = {
       server = {
+        define-tag = ''"${adsTag}"'';
+        module-config = ''"respip validator iterator"'';
+
         interface = [
           "127.0.0.1@${toString localPort}"
           lanAddress
@@ -41,6 +90,11 @@ in
           "${lanNetwork} allow"
           "${vpnNetwork} allow"
           "0.0.0.0/0 deny"
+        ];
+
+        access-control-tag = [
+          ''${lanNetwork} "${adsTag}"''
+          ''${vpnNetwork} "${adsTag}"''
         ];
 
         ip-freebind = true;
@@ -97,6 +151,21 @@ in
           fallback-enabled = true;
         }
       ];
+
+      rpz = [
+        {
+          name = ''"rpz.local."'';
+          zonefile = ''"${localZoneFile}"'';
+          tags = ''"${adsTag}"'';
+        }
+        {
+          name = ''"rpz.ads."'';
+          zonefile = ''"${blockZone}"'';
+          tags = ''"${adsTag}"'';
+          rpz-log = true;
+          rpz-log-name = ''"${adsTag}"'';
+        }
+      ];
     };
   };
 
@@ -120,10 +189,76 @@ in
   systemd.services.unbound = {
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
+    preStart = ''
+      mkdir -p ${rpzDir}
+      chmod 0750 ${rpzDir}
+      if [ ! -s ${blockZone} ]; then
+        install -m 0640 ${seedZoneFile} ${blockZone}
+      fi
+    '';
     serviceConfig = {
       SupplementaryGroups = [ tlsGroup ];
       LogRateLimitIntervalSec = "30s";
       LogRateLimitBurst = 3000;
+    };
+  };
+
+  systemd.services.unbound-rpz-update = {
+    description = "Refresh the unbound RPZ blocklist";
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" "unbound.service" ];
+    path = with pkgs; [ curl coreutils gnugrep config.services.unbound.package ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = config.services.unbound.user;
+      Group = config.services.unbound.group;
+    };
+    script = ''
+      set -euo pipefail
+
+      new="${rpzDir}/.ads.zone.new"
+      trap 'rm -f "$new"' EXIT
+
+      curl -fsSL --max-time 300 --retry 2 -o "$new" ${blockUrl}
+
+      if ! grep -vE '^[;!]' "$new" | grep -qm1 'SOA'; then
+        echo "refusing zone without SOA" >&2
+        exit 1
+      fi
+
+      rules=$(grep -c 'CNAME' "$new")
+      if [ "$rules" -lt ${toString blockMinRules} ]; then
+        echo "refusing zone with $rules rules, minimum is ${toString blockMinRules}" >&2
+        exit 1
+      fi
+
+      for canary in ${lib.concatStringsSep " " canaries}; do
+        suffix="$canary"
+        while [ -n "$suffix" ]; do
+          if grep -qE "^(\*\.)?$suffix[[:space:]]+.*CNAME" "$new"; then
+            echo "refusing zone: canary $canary is blocked via $suffix" >&2
+            exit 1
+          fi
+          case "$suffix" in
+            *.*) suffix=''${suffix#*.} ;;
+            *) suffix="" ;;
+          esac
+        done
+      done
+
+      mv -f "$new" ${blockZone}
+      trap - EXIT
+      unbound-control -s ${config.services.unbound.localControlSocketPath} auth_zone_reload rpz.ads.
+      echo "activated $rules rules"
+    '';
+  };
+
+  systemd.timers.unbound-rpz-update = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      RandomizedDelaySec = "45m";
+      Persistent = true;
     };
   };
 
