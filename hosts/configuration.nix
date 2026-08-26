@@ -25,7 +25,10 @@
     ./../modules/bluetooth.nix
     ./../modules/amd
     ./../modules/work-mount.nix
+    ./../modules/btop.nix
   ];
+
+  services.btop.enable = true;
 
   networking.firewall = {
     allowedTCPPorts = [ 10808 ];

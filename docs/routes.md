@@ -43,6 +43,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Network hosts injection | `modules/network/hosts.nix` | Imported by `modules/network/default.nix` |
 | Network proxy | `modules/network/proxy.nix` | Imported by `modules/network/default.nix` |
 | System packages (all hosts) | `modules/packages.nix` | |
+| btop user config (full default + show swap, all hosts) | `modules/btop.nix` | Deploys `~/.config/btop/btop.conf` via `systemd.tmpfiles` store symlink; imported + enabled per-host |
 | OpenSSH daemon | `modules/ssh.nix` | |
 | Remote Nix builders | `modules/builders.nix` | |
 | Sway hotkeys | `modules/hotkeys.nix` | |
@@ -164,7 +165,6 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | DoH public endpoint: vhost, rate limit, secret path | `modules/nginx.nix` + `hosts/configuration-server.nix` | Vhost `dns.labile.cc` on Angie 443 with `enableACME`, a `location /` that returns 404, and `limit_req_zone ... zone=doh` in `commonHttpConfig`. The secret URL path lives in the agenix secret `doh-location` because this repository is public; `hosts/configuration-server.nix` places it at `/run/doh-location.conf` with group `nginx`. It is included with a glob (`include /run/doh-location.conf*;`) so a missing secret cannot stop Angie serving the other vhosts — verified: the literal form aborts startup with `[emerg] open() ... failed`. Do not read it from `/run/agenix` directly: that directory is `drwxr-x--x root:keys`, and expanding a wildcard needs read on the directory, which the `nginx` user does not have |
 | ifconfig.io container behind `ip.labile.cc` | `modules/ifconfig.nix` | `virtualisation.oci-containers` container `ifconfig` (image `georgyo/ifconfig.io`, tag `latest` as before), bound to `127.0.0.1:7006` only because Angie is its sole client, with `Restart = "always"` on `docker-ifconfig.service` the way `modules/awg/compose.nix` does it. Supersedes the hand-run compose file in `~/projects/ifconfig` on the server, which had no restart policy at all and left `ip.labile.cc` answering 502 once the container was gone |
 | ChromaDB vector database service | `modules/chromadb.nix` |
-| btop user config (server, no Home Manager): show swap | `modules/btop.nix` | Places `show_swap = True` into `/home/labile/.config/btop/btop.conf` via `systemd.tmpfiles` symlink to a store file; mirrors `home-manager/modules/btop.nix` for desktop hosts |
 | Hardware (server) | `hosts/hardware-server.nix` |
 
 ## Home Manager Modules (desktop only, `home-manager/modules/default.nix`)
@@ -180,7 +180,6 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Alacritty terminal (disabled — import commented in `default.nix`, package kept as fallback) | `home-manager/modules/alacritty.nix` |
 | Foot terminal — **default** (Wayland/C, minimalist, no tabs — panes via multiplexer; sixel images for omp) | `home-manager/modules/foot.nix` |
 | Zellij multiplexer (parallel to tmux; direct Ctrl+a/d/x chords) | `home-manager/modules/zellij.nix` |
-| btop resource monitor (user config; rocm-enabled package) | `home-manager/modules/btop.nix` |
 | SSH user config | `home-manager/modules/ssh.nix` |
 | MIME type associations | `home-manager/modules/mimeapps.nix` |
 | mpv media player | `home-manager/modules/mpv.nix` |

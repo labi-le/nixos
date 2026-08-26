@@ -8,7 +8,6 @@
     # ./alacritty.nix  # disabled — foot.nix is the terminal
     ./foot.nix
     ./zellij.nix
-    ./btop.nix
     ./ssh.nix
     ./mimeapps.nix
     ./mpv.nix

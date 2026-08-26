@@ -17,8 +17,10 @@
     ./../modules/syncthing/notebook.nix
     ./../modules/steam.nix
     ./../modules/work-mount.nix
+    ./../modules/btop.nix
   ];
 
+  services.btop.enable = true;
 
   services.belphegor = {
     enable = true;

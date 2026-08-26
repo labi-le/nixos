@@ -11,7 +11,10 @@
     ./../modules/kernel-zen.nix
     ./../modules/thunderbolt.nix
     ./../modules/nvidia
+    ./../modules/btop.nix
   ];
+
+  services.btop.enable = true;
 
   hardware = {
     graphics.enable = true;
