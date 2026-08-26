@@ -10,6 +10,7 @@ let
   localPort = 5335;
   tlsHost = "dns.labile.cc";
   tlsCertDir = "/var/lib/acme/${tlsHost}";
+  tlsGroup = "dns-tls";
   tlsPort = 853;
   dohPort = 8053;
   stateDir = config.services.unbound.stateDir;
@@ -111,6 +112,7 @@ in
   systemd.services.unbound = {
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
+    serviceConfig.SupplementaryGroups = [ tlsGroup ];
   };
 
   services.doh-server = {
@@ -131,8 +133,13 @@ in
     after = [ "unbound.service" ];
   };
 
+  users.groups.${tlsGroup}.members = [
+    config.services.nginx.user
+    config.services.unbound.user
+  ];
+
   security.acme.certs."${tlsHost}" = {
-    group = "unbound";
+    group = tlsGroup;
     reloadServices = [ "unbound" ];
   };
 }
