@@ -75,6 +75,8 @@ in
         hide-version = true;
         do-not-query-localhost = true;
         extended-statistics = true;
+        log-queries = true;
+        log-replies = true;
       };
 
       auth-zone = [
@@ -129,7 +131,7 @@ in
       upstream = [ "tcp:127.0.0.1:${toString localPort}" ];
       timeout = 5;
       tries = 2;
-      verbose = false;
+      verbose = true;
       log_guessed_client_ip = true;
     };
   };
