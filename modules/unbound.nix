@@ -8,6 +8,10 @@ let
   vpnAddress = "10.8.0.1";
   vpnNetwork = "10.8.0.0/24";
   localPort = 5335;
+  tlsHost = "dns.labile.cc";
+  tlsCertDir = "/var/lib/acme/${tlsHost}";
+  tlsPort = 853;
+  dohPort = 8053;
   stateDir = config.services.unbound.stateDir;
 in
 {
@@ -90,16 +94,45 @@ in
   networking.firewall.interfaces = {
     "${lanInterface}" = {
       allowedUDPPorts = [ 53 ];
-      allowedTCPPorts = [ 53 ];
+      allowedTCPPorts = [
+        53
+        tlsPort
+      ];
     };
     "${vpnInterface}" = {
       allowedUDPPorts = [ 53 ];
-      allowedTCPPorts = [ 53 ];
+      allowedTCPPorts = [
+        53
+        tlsPort
+      ];
     };
   };
 
   systemd.services.unbound = {
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
+  };
+
+  services.doh-server = {
+    enable = true;
+    settings = {
+      listen = [ "127.0.0.1:${toString dohPort}" ];
+      path = "/dns-query";
+      upstream = [ "tcp:127.0.0.1:${toString localPort}" ];
+      timeout = 5;
+      tries = 2;
+      verbose = false;
+      log_guessed_client_ip = true;
+    };
+  };
+
+  systemd.services.doh-server = {
+    wants = [ "unbound.service" ];
+    after = [ "unbound.service" ];
+  };
+
+  security.acme.certs."${tlsHost}" = {
+    group = "unbound";
+    reloadServices = [ "unbound" ];
   };
 }

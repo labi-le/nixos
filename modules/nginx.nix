@@ -79,6 +79,7 @@ in
       send_timeout          10s;
       keepalive_timeout     10s;
       keepalive_requests    100;
+      limit_req_zone $binary_remote_addr zone=doh:10m rate=60r/m;
     ";
     appendHttpConfig = ''
       access_log /var/log/nginx/access.log;
@@ -254,6 +255,15 @@ in
       "vaultwarden.labile.cc" = proxy {
         addr = "http://127.0.0.1:7005";
         # internal = true;
+      };
+      "dns.labile.cc" = (base {
+        "/" = {
+          return = "404";
+        };
+      }) // {
+        extraConfig = ''
+          include /run/agenix/doh-location*;
+        '';
       };
       "ip.labile.cc" = proxy { addr = "http://127.0.0.1:7006"; };
       "sub.labile.cc" = subStore { addr = "http://127.0.0.1:3001"; };

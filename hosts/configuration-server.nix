@@ -46,6 +46,13 @@
     mode = "0400";
   };
 
+  age.secrets.doh-location = {
+    file = ../secrets/doh-location.age;
+    owner = "root";
+    group = "root";
+    mode = "0444";
+  };
+
   nix.gc.automatic = lib.mkForce false;
   nix.settings.trusted-users = [ "labile" ];
   users.users.labile.openssh.authorizedKeys.keys = [
