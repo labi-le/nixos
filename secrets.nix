@@ -20,7 +20,6 @@ in
   "secrets/harmonia-key.age".publicKeys = [ server ];
   "secrets/frp.age".publicKeys = [ server ];
   "secrets/zerossl.age".publicKeys = [ server ];
-  "secrets/doh-location.age".publicKeys = [ server ];
 
   "secrets/litellm-env.age".publicKeys = all;
   "secrets/cache-push-key.age".publicKeys = all;

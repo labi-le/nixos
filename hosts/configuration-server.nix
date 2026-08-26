@@ -50,14 +50,6 @@
     mode = "0400";
   };
 
-  age.secrets.doh-location = {
-    file = ../secrets/doh-location.age;
-    path = "/run/doh-location.conf";
-    owner = "root";
-    group = config.services.nginx.group;
-    mode = "0440";
-  };
-
   nix.gc.automatic = lib.mkForce false;
   nix.settings.trusted-users = [ "labile" ];
   users.users.labile.openssh.authorizedKeys.keys = [

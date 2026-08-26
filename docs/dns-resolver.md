@@ -39,9 +39,15 @@ DoH queries therefore reach unbound from `127.0.0.1`, already inside
 `access-control`, so no rule had to be widened for them.
 
 DoT stays on the LAN and VPN addresses only. A public DoT listener cannot be
-authenticated — the protocol carries no path or token — so it would be an open
-resolver. DoH is public because its secret path can be, and is, kept out of
-this repository.
+authenticated — the protocol carries no path or token — so it would be an
+unlimited open resolver. DoH is public and deliberately open: `/dns-query` on
+`dns.labile.cc`, no token, no client restriction. The rate limit at the nginx
+layer (`limit_req zone=doh`, 60 r/min per client IP, burst 120) is the only
+access control, and it has to live there: DoH queries reach unbound from
+`127.0.0.1`, so unbound sees every public client as one address and cannot
+rate-limit per IP itself. DoH runs over TCP, so there is no amplification
+angle; the accepted cost is that the server's IP resolves queries for anyone
+who finds the endpoint, and scanners probing `/dns-query` will find it.
 
 Both transports share one ZeroSSL certificate for `dns.labile.cc`, issued by
 the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:
@@ -52,14 +58,11 @@ the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:
   users, plus `SupplementaryGroups` on the unbound unit and
   `reloadServices = [ "unbound" ]` so renewal reaches it through the existing
   `ExecReload=kill -HUP`.
-- The DoH `location` lives in an agenix secret, included with a glob so a
-  missing file cannot stop Angie serving the other twenty vhosts. That glob is
-  why the secret is placed at `/run/doh-location.conf` instead of being read
-  from `/run/agenix` directly: `/run/agenix` is `drwxr-x--x root:keys`, and
-  expanding a wildcard needs *read* on the directory, not merely traverse. The
-  `nginx` user has traverse only, so the glob silently matched nothing and every
-  request fell through to `location /` and its `404`. Opening a literal path
-  would have worked; enumerating one does not.
+- The DoH `location` was originally an agenix secret included with a glob, so
+  a missing file could not stop Angie serving the other twenty vhosts. That
+  whole mechanism is gone: the endpoint is open, the `location` is a plain
+  `proxyPass` in `modules/nginx.nix`, and the secret, its rule in `secrets.nix`
+  and the encrypted file were removed together.
 
 The root zone is transferred by AXFR, addressed by IP rather than by name,
 because resolving a name would be circular for the zone that provides the

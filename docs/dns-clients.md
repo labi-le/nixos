@@ -8,13 +8,16 @@ custom CA or an SPKI pin.
 | Endpoint | Address | Reachable from | Transport |
 |---|---|---|---|
 | DoT | `dns.labile.cc:853` (`192.168.1.2` on LAN, `10.8.0.1` on VPN) | LAN and VPN only | DNS over TLS, RFC 7858 |
-| DoH | `https://dns.labile.cc/<TOKEN>/dns-query` | anywhere, TCP 443 through Angie | DNS over HTTPS, RFC 8484 |
+| DoH | `https://dns.labile.cc/dns-query` | anywhere, TCP 443 through Angie | DNS over HTTPS, RFC 8484 |
 
-`<TOKEN>` is a secret path component held in the agenix secret `doh-location`;
-it never appears in this repository, which is public. To obtain it, decrypt
-the `doh-location` secret, or read `/run/doh-location.conf` on the server —
-that is the file Angie includes. Everywhere below, `<TOKEN>` is a literal
-placeholder to substitute.
+The DoH endpoint is open: no token, no authentication, deliberately. Anyone
+who knows the URL can use this resolver, so it is protected by an nginx rate
+limit (`limit_req zone=doh`: 60 requests per minute per client IP, burst 120)
+instead. Public DoT is still not offered, because DoT has no path that could
+carry any access control at all — a public listener would be an unlimited open
+resolver. DoH is TCP, so there is no amplification angle; the cost of the open
+endpoint is that the server's IP answers strangers' lookups, and scanners
+probing `/dns-query` will find it.
 
 Plain DNS on `192.168.1.2:53` and `10.8.0.1:53` stays available unchanged;
 the encrypted endpoints are additions, not replacements.
@@ -67,7 +70,7 @@ Android marks the network as having no internet access, in the default
 opportunistic mode it silently falls back to cleartext. Roaming Android
 devices should therefore turn Private DNS off and use a DoH application
 instead (Intra, RethinkDNS), pointed at
-`https://dns.labile.cc/<TOKEN>/dns-query`.
+`https://dns.labile.cc/dns-query`.
 
 Installing a private CA into Android's system store requires root, and no
 official documentation describes Private DNS interaction with user-installed
@@ -114,15 +117,14 @@ equivalent in OS 26+). Save as `labile-dns.mobileconfig`:
       <key>DNSProtocol</key>
       <string>HTTPS</string>
       <key>ServerURL</key>
-      <string>https://dns.labile.cc/&lt;TOKEN&gt;/dns-query</string>
+      <string>https://dns.labile.cc/dns-query</string>
     </dict>
   </array>
 </dict>
 </plist>
 ```
 
-Replace every `PayloadUUID` with fresh values (`uuidgen`) and the escaped
-`&lt;TOKEN&gt;` with the real token. `ServerAddresses` is optional; when
+Replace every `PayloadUUID` with fresh values (`uuidgen`). `ServerAddresses` is optional; when
 omitted the system resolves the URL host through ordinary DNS, which keeps
 the profile working on any network thanks to the wildcard record. For the
 DoT variant swap the inner dict keys:
@@ -148,7 +150,7 @@ In `about:config`:
 
 ```js
 user_pref("network.trr.mode", 3);
-user_pref("network.trr.uri", "https://dns.labile.cc/<TOKEN>/dns-query");
+user_pref("network.trr.uri", "https://dns.labile.cc/dns-query");
 user_pref("network.trr.excluded-domains", "lan,labile.cc");
 ```
 
@@ -166,7 +168,7 @@ GUI: Settings → Privacy and security → Security → "Use secure DNS" → Wit
 custom, paste the URL:
 
 ```
-https://dns.labile.cc/<TOKEN>/dns-query
+https://dns.labile.cc/dns-query
 ```
 
 Managed Linux deployments use policy files instead —
@@ -176,7 +178,7 @@ Managed Linux deployments use policy files instead —
 ```json
 {
   "DnsOverHttpsMode": "secure",
-  "DnsOverHttpsTemplates": "https://dns.labile.cc/<TOKEN>/dns-query"
+  "DnsOverHttpsTemplates": "https://dns.labile.cc/dns-query"
 }
 ```
 
@@ -195,14 +197,14 @@ server once — the single entry carries both the DoH template and the DoT
 host — then enable both globally:
 
 ```cmd
-netsh dnsclient add encryption server=192.168.1.2 dothemplate=https://dns.labile.cc/<TOKEN>/dns-query dothost=dns.labile.cc:853 autoupgrade=yes udpfallback=no
+netsh dnsclient add encryption server=192.168.1.2 dothemplate=https://dns.labile.cc/dns-query dothost=dns.labile.cc:853 autoupgrade=yes udpfallback=no
 netsh dnsclient set global doh=yes dot=yes
 ```
 
 Equivalent PowerShell:
 
 ```powershell
-Add-DnsClientDohServerAddress -ServerAddress '192.168.1.2' -DohTemplate 'https://dns.labile.cc/<TOKEN>/dns-query' -AutoUpgrade $True -AllowFallbackToUdp $False
+Add-DnsClientDohServerAddress -ServerAddress '192.168.1.2' -DohTemplate 'https://dns.labile.cc/dns-query' -AutoUpgrade $True -AllowFallbackToUdp $False
 ```
 
 Prerequisites and notes:
@@ -309,7 +311,7 @@ From any client with BIND's `dig` 9.20 or newer:
 ```sh
 dig +tls +tls-ca +tls-hostname=dns.labile.cc @192.168.1.2 example.com
 dig +tls +tls-ca +tls-hostname=dns.labile.cc @10.8.0.1 example.com
-dig +https=/<TOKEN>/dns-query @dns.labile.cc example.com
+dig +https=/dns-query @dns.labile.cc example.com
 dig @192.168.1.2 example.com
 ```
 

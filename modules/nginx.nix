@@ -257,14 +257,18 @@ in
         # internal = true;
       };
       "dns.labile.cc" = (base {
+        "/dns-query" = {
+          proxyPass = "http://127.0.0.1:8053/dns-query";
+          extraConfig = ''
+            proxy_buffering off;
+            client_max_body_size 64k;
+            limit_req zone=doh burst=120 nodelay;
+          '';
+        };
         "/" = {
           return = "404";
         };
-      }) // {
-        extraConfig = ''
-          include /run/doh-location.conf*;
-        '';
-      };
+      });
       "ip.labile.cc" = proxy { addr = "http://127.0.0.1:7006"; };
       "sub.labile.cc" = subStore { addr = "http://127.0.0.1:3001"; };
       "sync.labile.cc" = proxy {
