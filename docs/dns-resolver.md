@@ -17,9 +17,12 @@ replacing it.
 
 Port 53 on loopback stays with dnsmasq. `access-control` allows only
 `127.0.0.0/8`, `192.168.1.0/24` and `10.8.0.0/24`; everything else is `deny`,
-which drops silently and gives no amplification surface. The firewall opens 53
-and 853 only on `enp37s0` and `wg0`, never globally. Client-facing setup for
-both encrypted transports is in `docs/dns-clients.md`.
+which drops silently and gives no amplification surface. That ACL, not the
+firewall, is what keeps 53 and 853 off the internet: the rules are scoped to
+`enp37s0` and `wg0` rather than globally, but public traffic arrives on
+`enp37s0` too, DNAT'ed by the router to `192.168.1.2`, so a mistaken port
+forward would pass the firewall and be refused by unbound instead. Client-facing
+setup for both encrypted transports is in `docs/dns-clients.md`.
 
 ## Encrypted transports
 
@@ -48,6 +51,42 @@ access control, and it has to live there: DoH queries reach unbound from
 rate-limit per IP itself. DoH runs over TCP, so there is no amplification
 angle; the accepted cost is that the server's IP resolves queries for anyone
 who finds the endpoint, and scanners probing `/dns-query` will find it.
+
+What the open endpoint is hardened against, having been reviewed once it was
+live: `location = /dns-query` is an exact match, because a prefix location
+proxies `/dns-queryZZZ` to the daemon and turns its backend 404s into
+`nginx-scan-404` fail2ban hits. `Access-Control-Allow-Origin` and
+`X-Powered-By` are stripped from the response — doh-server sets the former to
+`*`, which lets any web page make its visitors query this resolver from
+addresses nobody can usefully ban, and the latter names the exact build to
+look up CVEs against. `ratelimit: 1000` caps unbound's outbound queries per
+target zone: `ip-ratelimit` cannot help here because every DoH query arrives
+as `127.0.0.1`, so without it a random-subdomain flood through the open
+endpoint would leave this host, not the attacker, as the address a victim's
+authoritative servers see and blocklist. Two costs have no fix while one cache
+is shared between the public endpoint and private clients: the returned TTL is
+the decremented one, which makes the endpoint a cache-snooping oracle telling
+strangers what the household resolved and when, and sustained unique-name
+traffic evicts entries the LAN depends on. Separating them means a second
+unbound instance with its own cache.
+
+Query logging is on: `log-replies` in unbound, `verbose` in doh-server. Only
+`log-replies`, not `log-queries` — the reply line carries the client, qname,
+type, class, rcode, timing and answer size, so the query line duplicates it at
+twice the journal volume. Attribution is split on purpose. unbound sees every
+DoH client as `127.0.0.1`, so the honest client address exists only in the
+nginx access log, and the two are correlated by timestamp. doh-server's own
+`log_guessed_client_ip` is deliberately off: it derives the address from the
+first global entry in `X-Forwarded-For`, which the client sets and nginx only
+appends to, so an outsider could write arbitrary "this IP looked up that name"
+lines into the log. Without the option the daemon logs what nginx put in
+`X-Real-IP`, which nginx replaces rather than appends, so the value is
+authentic. The DoH location logs through `log_format doh`, which is the
+combined format minus `$query_string`: a GET carries the query in the URL, and
+that URL is shipped to Loki, which has no retention policy — the qname stays
+in journald, which rotates, while Loki keeps only the address and the verb.
+The residue is that a rate-limited request still reaches `error.log` with its
+full request line, so throttled abusers' qnames do land in Loki.
 
 Both transports share one ZeroSSL certificate for `dns.labile.cc`, issued by
 the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:

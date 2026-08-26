@@ -80,6 +80,7 @@ in
       keepalive_timeout     10s;
       keepalive_requests    100;
       limit_req_zone $binary_remote_addr zone=doh:10m rate=60r/m;
+      log_format doh '$remote_addr - - [$time_local] \"$request_method $uri $server_protocol\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\"';
     ";
     appendHttpConfig = ''
       access_log /var/log/nginx/access.log;
@@ -257,12 +258,15 @@ in
         # internal = true;
       };
       "dns.labile.cc" = (base {
-        "/dns-query" = {
+        "= /dns-query" = {
           proxyPass = "http://127.0.0.1:8053/dns-query";
           extraConfig = ''
             proxy_buffering off;
             client_max_body_size 64k;
             limit_req zone=doh burst=120 nodelay;
+            proxy_hide_header X-Powered-By;
+            proxy_hide_header Access-Control-Allow-Origin;
+            access_log /var/log/nginx/access.log doh;
           '';
         };
         "/" = {
