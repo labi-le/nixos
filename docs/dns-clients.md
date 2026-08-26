@@ -27,11 +27,20 @@ or on the VPN — Android phones at home, systemd-resolved boxes, the router's
 stubby, unbound forwarders on other NixOS hosts. DoT cannot carry a secret
 path, so it is deliberately not exposed publicly: a public listener would be
 an open resolver. DoH fits browsers and anything that roams, because it rides
-port 443 and works from any network. One network constraint to know: outbound
-TCP/853 towards the internet is actively blocked here (`1.1.1.1:853` and
-`9.9.9.9:853` refuse connections while `8.8.8.8:443` is open), so third-party
-DoT resolvers are unreachable from this network; traffic between LAN hosts is
-switched rather than routed and is unaffected.
+port 443 and works from any network. One network constraint to know: LAN hosts
+cannot reach any third-party DoT resolver — `1.1.1.1:853` and `9.9.9.9:853`
+refuse connections from both the desktop and the server while `8.8.8.8:443` is
+open. The cause is the router's `adblock-fast`, which runs
+`force_dns_port='53' '853'` and treats the two ports differently: port 53 is
+redirected into its own dnsmasq, while port 853 gets `jump handle_reject` in
+`inet fw4`, which is why the failure is an immediate refusal rather than a
+timeout. The nft exemption on the router covers port 53 for `192.168.1.2`
+only, so even the server is refused on 853. Two consequences:
+`192.168.1.2:853` is the only DoT available to LAN clients, and it works
+because same-subnet traffic is switched rather than routed, so neither rule
+ever sees it. The router itself is not subject to either and its own stubby
+completes a full handshake to `1.1.1.1:853`, which is what makes the
+Cloudflare fallback below encrypted.
 
 ## Support matrix
 
@@ -268,41 +277,76 @@ and authenticates who is answering.
 
 ## OpenWrt router
 
-The AX6000 already runs `stubby` 0.4.3-r1 (getdns 1.7.3), currently aimed at
-Cloudflare `1.1.1.1:853` and therefore dead weight: outbound 853 is blocked.
-Repointing it at the server turns it into the encrypted upstream for the
-whole network. Replace the existing resolver sections and wire dnsmasq in
-front:
+The AX6000 runs `stubby` 0.4.3 (getdns 1.7.3), and as of 2026-08-26 its first
+upstream is this server. What it is *not* is the router's main resolver, which
+is the mistake to avoid making: dnsmasq keeps `noresolv=1` and three routes,
+and only the first belongs to stubby.
+
+```
+LAN client → dnsmasq 192.168.1.1:53
+  ├─ /cloud.dit,sudir,hub,gate-k,gate-n,vpn-ke,vpn-dc,passport .work-parent.example/ → stubby 127.0.0.1#5453
+  ├─ /work-parent.example, internal-work.example, internal-work.example/                               → 192.168.1.2#5353
+  └─ everything else                                                    → mihomo 127.0.0.1#12344
+```
+
+Only the stubby branch was moved. The other two must stay: `mihomo` is the
+proxy's own resolver and carries the geo-routing decisions, so answering those
+queries honestly from a local recursor would send blocked destinations direct
+instead of through a proxy; and `192.168.1.2#5353` is mailcow's bundled unbound
+container, which returns the work network's *internal* `10.x` addresses because
+the authoritative servers answer by source address and the server's path is
+inside the work tunnel. A second, hand-written stubby (`/etc/stubby/tiktok.yml`,
+`127.0.0.1@5054`) serves mihomo and is likewise none of this file's business.
+
+Because the package is uci-driven (`manual='0'`) it regenerates
+`/var/etc/stubby/stubby.yml` on every start, so editing `/etc/stubby/stubby.yml`
+changes nothing — that file is only the shipped sample. Configure it through
+uci:
 
 ```sh
-while uci -q delete stubby.@resolver[0]; do :; done
-uci set stubby.global.manual='0'
-uci add_list stubby.global.listen_address='127.0.0.1@5453'
-uci add_list stubby.global.dns_transport='GETDNS_TRANSPORT_TLS'
-uci set stubby.global.tls_authentication='1'
 uci add stubby resolver
 uci set stubby.@resolver[-1].address='192.168.1.2'
 uci set stubby.@resolver[-1].tls_auth_name='dns.labile.cc'
 uci set stubby.@resolver[-1].tls_port='853'
+uci reorder stubby.@resolver[-1]=0
+uci set stubby.global.round_robin_upstreams='0'
+uci -q delete stubby.global.dns_transport
+uci add_list stubby.global.dns_transport='GETDNS_TRANSPORT_TLS'
 uci commit stubby
-/etc/init.d/stubby restart
-
-uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5453'
-uci set dhcp.@dnsmasq[0].noresolv='1'
-uci commit dhcp
-/etc/init.d/dnsmasq restart
+service stubby restart
 ```
 
-dnsmasq stays the frontend: `.lan` host records and the
-`server=/domain/vpn-dns#5353` policy entries live there, and longest-suffix
-matching keeps them winning over the general upstream. The compromise is
-availability: with `noresolv=1` the entire network's DNS depends on the
-server being up. Cheaper insurance than uptime is a second
-`list dhcp.@dnsmasq[0].server='<wan-resolver>'` entry as last-resort
-fallback, at the cost of leaking some queries unencrypted during outages.
+Two of those lines are the whole point. `round_robin_upstreams='0'` makes the
+list a priority order rather than a rotation — left at `1`, Cloudflare would
+have served roughly half the queries and "fallback" would have meant "half the
+time". And dropping `GETDNS_TRANSPORT_UDP` from the transport list is what
+makes this DoT at all: with UDP present, stubby degrades to plaintext port 53
+whenever TLS fails, and it says so itself — *a Strict Profile only applies when
+TLS is the ONLY transport*. The Cloudflare entries stay after ours as the
+failure path, which is why removing UDP costs nothing: DoT to `1.1.1.1:853`
+works from this router, verified, so the fallback is encrypted too.
 
-Rollback is symmetric: delete the added resolver section, restore the
-previous upstream list, unset `noresolv`, restart both services.
+Verified after the change: `Conn opened: TLS - Strict Profile` and
+`Verify passed : TLS` against `192.168.1.2` (the ZeroSSL chain validates
+against the stock `ca-bundle`, no pinning needed); twelve unique names sent
+through `127.0.0.1:5453` all appeared in the server's unbound log from client
+`192.168.1.1`, none served by Cloudflare; and with the first upstream pointed
+at a black hole, `1.1.1.1` took over after 3.9 s, proving the fallback rather
+than assuming it. `uci commit` writes `/etc/config/stubby`, which survives
+reboot and sysupgrade.
+
+Do not trust `nc -z` on this box for reachability checks: busybox returns 1
+even for ports that are demonstrably open. Nor can a second `stubby -C` be
+started while the service runs — it refuses on the pidfile unless left in the
+foreground, which is how the isolated tests above were run.
+
+Rollback touches stubby only, since dnsmasq was never changed:
+`uci delete stubby.@resolver[0]`, `uci set
+stubby.global.round_robin_upstreams='1'`, re-add
+`uci add_list stubby.global.dns_transport='GETDNS_TRANSPORT_UDP'` if the old
+opportunistic behaviour is wanted back, then `uci commit stubby` and
+`service stubby restart`. Work-domain resolution returns to Cloudflare with no
+other side effects.
 
 ## Verifying a client
 

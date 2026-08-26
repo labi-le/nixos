@@ -191,19 +191,28 @@ a firmware upgrade unless its path is listed in `/etc/sysupgrade.conf`.
 
 ## Making the LAN use it
 
-Point the router's dnsmasq at unbound as its only general upstream and keep the
-suffix rules in front of it:
+What is actually wired, as of 2026-08-26, is the router's `stubby` — not its
+general upstream. The router's dnsmasq runs `noresolv=1` with three routes, and
+the general one belongs to `mihomo` on `127.0.0.1#12344`, the proxy's own
+resolver: it decides what goes through a proxy, so replacing it with honest
+local recursion would send blocked destinations direct. A second route sends
+`work-parent.example`, `internal-work.example` and `internal-work.example` to `192.168.1.2#5353`, which is
+mailcow's bundled unbound container answering with the work network's internal
+`10.x` addresses. Neither may be repointed here.
 
-```
-option noresolv '1'
-list server '192.168.1.2'
-```
+What did move is the work-portal branch: the eight `*.work-parent.example` suffixes that
+dnsmasq routes to `stubby` on `127.0.0.1#5453`, whose first upstream is now
+`192.168.1.2@853` with `dns.labile.cc` authentication, Cloudflare kept behind
+it as an ordered fallback (`round_robin_upstreams=0`, or the "fallback" would
+serve half the traffic). Those answers matched Cloudflare's byte for byte
+before the switch, apart from which member of a rotation set came first, and
+they now carry DNSSEC validation. The uci recipe and the verification are in
+`docs/dns-clients.md`.
 
-Longest-suffix matching means `/domain/vpn-dns#5353` and `.lan` still win, so
-policy routing survives. The cost is that the whole network's DNS then depends
-on the server being up; `serve-expired` with `serve-expired-ttl-reset` keeps a
-stale cache answering for a day, but a second `list server` as fallback is
-cheaper insurance.
+Pointing dnsmasq's *general* upstream here is still possible in principle —
+longest-suffix matching would keep `.lan` and the policy routes winning — but
+it would cost the proxy routing above and make the whole network's DNS depend
+on this host. It is deliberately not done.
 
 A single client can also be pointed straight at `192.168.1.2` instead. The
 `force_dns` redirect does not stand in the way, because same-subnet traffic is
