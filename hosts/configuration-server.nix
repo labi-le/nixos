@@ -21,6 +21,7 @@
     ./../modules/network
     ./../modules/chromadb.nix
     ./../modules/harmonia.nix
+    ./../modules/unbound.nix
   ];
 
   network = {

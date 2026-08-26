@@ -159,6 +159,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | AmneziaWG | `modules/awg/default.nix` |
 | AmneziaWG compose stack | `modules/awg/compose.nix` |
 | Network (server) | `modules/network/default.nix` |
+| Recursive validating DNS resolver (unbound, RFC 7706 local root zone) | `modules/unbound.nix` | Listens `127.0.0.1@5335` (dnsmasq keeps `127.0.0.1:53`), `192.168.1.2:53` (LAN), `10.8.0.1:53` (AWG clients); `access-control` allows only loopback/LAN/VPN and `deny`s the rest, so it is never an open reflector. Root zone is fetched over HTTPS (`auth-zone url:`) because the OpenWrt router runs `adblock-fast`, whose `force_dns` redirect in `dstnat_lan` hijacks every outbound port-53 packet — AXFR from the root primaries cannot complete through it. `for-downstream = false` per RFC 7706. Real recursion needs the router-side exemption documented in `docs/dns-resolver.md`; the server's own `/etc/resolv.conf` path (dnsmasq → router) is deliberately left untouched so `.lan`, the `labile.cc` split-horizon and the router's VPN domain policy keep working
 | ChromaDB vector database service | `modules/chromadb.nix` |
 | Hardware (server) | `hosts/hardware-server.nix` |
 
