@@ -1,8 +1,9 @@
 # DNS resolver on `server`
 
 `modules/unbound.nix` runs unbound as a validating, recursive resolver with a
-local copy of the root zone (RFC 7706). It is a second, independent resolver
-that sits *beside* the existing DNS path instead of replacing it.
+local copy of the root zone (RFC 8806, which obsoletes RFC 7706). It is a
+second, independent resolver that sits *beside* the existing DNS path instead of
+replacing it.
 
 ## Listeners
 
@@ -17,13 +18,22 @@ Port 53 on loopback stays with dnsmasq. `access-control` allows only
 which drops silently and gives no amplification surface. The firewall opens 53
 only on `enp37s0` and `wg0`, never globally.
 
-The root zone is transferred by AXFR straight from the root primaries, by
-address rather than by name, because resolving a name would be circular for the
-zone that provides the names. `for-downstream = false` keeps unbound a resolver
-rather than a root server, as RFC 7706 requires, while `for-upstream = true`
-makes it answer TLD delegations from the local copy and DNSSEC-validate that
-copy first. `fallback-enabled = true` means a failed transfer degrades to
-ordinary recursion instead of an outage.
+The root zone is transferred by AXFR, addressed by IP rather than by name,
+because resolving a name would be circular for the zone that provides the
+names. Only some sources serve those transfers: measured from this host,
+`lax`/`iad.xfr.dns.icann.org` (`192.0.32.132`, `192.0.47.132`) and root servers
+`b`, `c`, `d`, `f`, `k` each hand over all 24886 records, while `a` refuses and
+`g` — listed in RFC 8806 — has since stopped, exactly as the RFC warns
+operators eventually will. ICANN's two transfer hosts are tried first because
+they are the designated distribution points; the five roots are fallbacks. Note
+that RFC 8806's own example still names `b` as `199.9.14.201`, its pre-2023
+address; `170.247.170.2` is the current one and both still answer.
+
+`for-downstream = false` keeps unbound a resolver rather than a root server, as
+the RFC requires, while `for-upstream = true` makes it answer TLD delegations
+from the local copy and DNSSEC-validate that copy first. `fallback-enabled =
+true` means a failed transfer degrades to ordinary recursion instead of an
+outage.
 
 ## What is deliberately not touched
 
