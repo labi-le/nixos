@@ -221,8 +221,8 @@ in
 
       curl -fsSL --max-time 300 --retry 2 -o "$new" ${blockUrl}
 
-      if ! grep -vE '^[;!]' "$new" | grep -qm1 'SOA'; then
-        echo "refusing zone without SOA" >&2
+      if ! head -n 20 "$new" | grep -vE '^[;!]' | grep 'SOA' > /dev/null; then
+        echo "refusing zone without SOA in its header" >&2
         exit 1
       fi
 
