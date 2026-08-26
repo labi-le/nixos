@@ -11,9 +11,10 @@ custom CA or an SPKI pin.
 | DoH | `https://dns.labile.cc/<TOKEN>/dns-query` | anywhere, TCP 443 through Angie | DNS over HTTPS, RFC 8484 |
 
 `<TOKEN>` is a secret path component held in the agenix secret `doh-location`;
-it never appears in this repository. To obtain it, decrypt the `doh-location`
-secret, or read `/run/agenix/doh-location` on the server. Everywhere below,
-`<TOKEN>` is a literal placeholder to substitute.
+it never appears in this repository, which is public. To obtain it, decrypt
+the `doh-location` secret, or read `/run/doh-location.conf` on the server —
+that is the file Angie includes. Everywhere below, `<TOKEN>` is a literal
+placeholder to substitute.
 
 Plain DNS on `192.168.1.2:53` and `10.8.0.1:53` stays available unchanged;
 the encrypted endpoints are additions, not replacements.

@@ -12,11 +12,54 @@ replacing it.
 | `127.0.0.1@5335` | administration and verification from the host |
 | `192.168.1.2:53` | LAN clients and the router, when pointed here explicitly |
 | `10.8.0.1:53` | AmneziaWG clients; `modules/awg/default.nix` already accepts `udp/53` on `wg0` |
+| `192.168.1.2@853` | DoT for LAN clients |
+| `10.8.0.1@853` | DoT for VPN clients |
 
 Port 53 on loopback stays with dnsmasq. `access-control` allows only
 `127.0.0.0/8`, `192.168.1.0/24` and `10.8.0.0/24`; everything else is `deny`,
 which drops silently and gives no amplification surface. The firewall opens 53
-only on `enp37s0` and `wg0`, never globally.
+and 853 only on `enp37s0` and `wg0`, never globally. Client-facing setup for
+both encrypted transports is in `docs/dns-clients.md`.
+
+## Encrypted transports
+
+DoT is unbound's own, because that needs nothing but `tls-port` and a
+certificate. DoH is not, and cannot be: the unbound in this nixpkgs is built
+without `libnghttp2` (`unbound -V` reports only libevent and OpenSSL), so its
+DoH listener does not exist. `unbound-checkconf` still accepts `https-port`
+and `http-endpoint` without complaint, which makes that a silent failure
+rather than a build error — do not add those options here. Rebuilding with
+`withDoH = true` would not help either: the DoH listener requires ALPN `h2`
+unconditionally (`util/netevent.c` sets `http_min_version = http_version_2`
+and drops any connection that does not negotiate `h2`), while nginx speaks
+HTTP/1.1 to upstreams, so it can never sit in front of it. `services.doh-server`
+terminates DoH instead: Angie handles TLS and HTTP/2 on 443, proxies HTTP/1.1
+to `127.0.0.1:8053`, and that daemon speaks plain DNS to `127.0.0.1@5335`.
+DoH queries therefore reach unbound from `127.0.0.1`, already inside
+`access-control`, so no rule had to be widened for them.
+
+DoT stays on the LAN and VPN addresses only. A public DoT listener cannot be
+authenticated — the protocol carries no path or token — so it would be an open
+resolver. DoH is public because its secret path can be, and is, kept out of
+this repository.
+
+Both transports share one ZeroSSL certificate for `dns.labile.cc`, issued by
+the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:
+
+- `nginx.service` runs as `User=nginx`, not root, so nixpkgs asserts that every
+  consumer can read the certificate. Group `unbound` fails that assertion.
+  Hence group `dns-tls`, whose members are exactly the `nginx` and `unbound`
+  users, plus `SupplementaryGroups` on the unbound unit and
+  `reloadServices = [ "unbound" ]` so renewal reaches it through the existing
+  `ExecReload=kill -HUP`.
+- The DoH `location` lives in an agenix secret, included with a glob so a
+  missing file cannot stop Angie serving the other twenty vhosts. That glob is
+  why the secret is placed at `/run/doh-location.conf` instead of being read
+  from `/run/agenix` directly: `/run/agenix` is `drwxr-x--x root:keys`, and
+  expanding a wildcard needs *read* on the directory, not merely traverse. The
+  `nginx` user has traverse only, so the glob silently matched nothing and every
+  request fell through to `location /` and its `404`. Opening a literal path
+  would have worked; enumerating one does not.
 
 The root zone is transferred by AXFR, addressed by IP rather than by name,
 because resolving a name would be circular for the zone that provides the
