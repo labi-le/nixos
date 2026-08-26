@@ -23,7 +23,10 @@
     ./../modules/harmonia.nix
     ./../modules/unbound.nix
     ./../modules/ifconfig.nix
+    ./../modules/btop.nix
   ];
+
+  services.btop.enable = true;
 
   network = {
     enableFirewall = true;
