@@ -22,101 +22,88 @@ firewall, is what keeps 53 and 853 off the internet: the rules are scoped to
 `enp37s0` and `wg0` rather than globally, but public traffic arrives on
 `enp37s0` too, DNAT'ed by the router to `192.168.1.2`, so a mistaken port
 forward would pass the firewall and be refused by unbound instead. Client-facing
-setup for both encrypted transports is in `docs/dns-clients.md`.
+setup for DoT is in `docs/dns-clients.md`.
 
 ## Encrypted transports
 
 DoT is unbound's own, because that needs nothing but `tls-port` and a
-certificate. DoH is not, and cannot be: the unbound in this nixpkgs is built
-without `libnghttp2` (`unbound -V` reports only libevent and OpenSSL), so its
-DoH listener does not exist. `unbound-checkconf` still accepts `https-port`
-and `http-endpoint` without complaint, which makes that a silent failure
-rather than a build error — do not add those options here. Rebuilding with
-`withDoH = true` would not help either: the DoH listener requires ALPN `h2`
-unconditionally (`util/netevent.c` sets `http_min_version = http_version_2`
-and drops any connection that does not negotiate `h2`), while nginx speaks
-HTTP/1.1 to upstreams, so it can never sit in front of it. `services.doh-server`
-terminates DoH instead: Angie handles TLS and HTTP/2 on 443, proxies HTTP/1.1
-to `127.0.0.1:8053`, and that daemon speaks plain DNS to `127.0.0.1@5335`.
-DoH queries therefore reach unbound from `127.0.0.1`, already inside
-`access-control`, so no rule had to be widened for them.
+certificate. It listens on the LAN and VPN addresses only, never publicly: the
+protocol carries no path and no token, so a public listener would be an
+unlimited open resolver with no access control available at any layer.
 
-DoT stays on the LAN and VPN addresses only. A public DoT listener cannot be
-authenticated — the protocol carries no path or token — so it would be an
-unlimited open resolver. DoH is public and deliberately open: `/dns-query` on
-`dns.labile.cc`, no token, no client restriction. The rate limit at the nginx
-layer (`limit_req zone=doh`, 60 r/min per client IP, burst 120) is the only
-access control, and it has to live there: DoH queries reach unbound from
-`127.0.0.1`, so unbound sees every public client as one address and cannot
-rate-limit per IP itself. DoH runs over TCP, so there is no amplification
-angle; the accepted cost is that the server's IP resolves queries for anyone
-who finds the endpoint, and scanners probing `/dns-query` will find it.
+The certificate is the one already issued for the apex name `labile.cc`, shared
+with the web vhost of the same name through group `dns-tls`, whose members are
+the nginx and unbound users; unbound gets it via `SupplementaryGroups` and
+`reloadServices = [ "unbound" ]` on the ACME cert sends a HUP after each
+renewal. There is deliberately no certificate of the resolver's own any more.
+`dns.labile.cc` had one until 2026-08-26, together with an nginx vhost that
+existed at the end only to answer the HTTP-01 challenge for it; both are gone.
+Clients authenticate the transport as `labile.cc`, and the SAN list holds that
+single name with no wildcard, so nothing else validates: measured,
+`openssl s_client -verify_hostname dns.labile.cc` against `192.168.1.2:853`
+returns code 62 while `labile.cc` returns 0.
 
-What the open endpoint is hardened against, having been reviewed once it was
-live: `location = /dns-query` is an exact match, because a prefix location
-proxies `/dns-queryZZZ` to the daemon and turns its backend 404s into
-`nginx-scan-404` fail2ban hits. `Access-Control-Allow-Origin` and
-`X-Powered-By` are stripped from the response — doh-server sets the former to
-`*`, which lets any web page make its visitors query this resolver from
-addresses nobody can usefully ban, and the latter names the exact build to
-look up CVEs against. `ratelimit: 1000` caps unbound's outbound queries per
-target zone: `ip-ratelimit` cannot help here because every DoH query arrives
-as `127.0.0.1`, so without it a random-subdomain flood through the open
-endpoint would leave this host, not the attacker, as the address a victim's
-authoritative servers see and blocklist. Two costs have no fix while one cache
-is shared between the public endpoint and private clients: the returned TTL is
-the decremented one, which makes the endpoint a cache-snooping oracle telling
-strangers what the household resolved and when, and sustained unique-name
-traffic evicts entries the LAN depends on. Separating them means a second
-unbound instance with its own cache.
+DoH is not offered at all. It was served briefly by `services.doh-server`
+behind Angie on 443, forwarding plain DNS to `127.0.0.1@5335`, and it was
+removed on 2026-08-26 as unused: it was the only
+publicly reachable part of the resolver, and keeping it honest cost a daemon, a
+`limit_req` zone, a fail2ban jail, a dedicated log format and a permanent
+cache-snooping oracle for strangers. Measured before removal, it was not even
+faster to give up: on the LAN plain 53, DoT and DoH were indistinguishable at
+`dig`'s 1 ms resolution on cache hits, and on a cold name DoT took 9 ms against
+DoH's 10 ms.
 
-Query logging is on: `log-replies` in unbound, `verbose` in doh-server. Only
-`log-replies`, not `log-queries` — the reply line carries the client, qname,
-type, class, rcode, timing and answer size, so the query line duplicates it at
-twice the journal volume. Attribution is split on purpose. unbound sees every
-DoH client as `127.0.0.1`, so the honest client address exists only in the
-nginx access log, and the two are correlated by timestamp. doh-server's own
-`log_guessed_client_ip` is deliberately off: it derives the address from the
-first global entry in `X-Forwarded-For`, which the client sets and nginx only
-appends to, so an outsider could write arbitrary "this IP looked up that name"
-lines into the log. Without the option the daemon logs what nginx put in
-`X-Real-IP`, which nginx replaces rather than appends, so the value is
-authentic. The DoH location logs through `log_format doh`, which is the
-combined format minus `$query_string`, and a second line of defence sits in the
-Alloy pipeline, where `stage.replace` rewrites every `?…` in an nginx line to
-`?redacted` before it reaches Loki — that one also covers `error.log`, where a
-rate-limited request would otherwise deposit its full base64 query. So the
-qname lives only in journald, which is size-capped and rotates, while Loki
-keeps the address, the verb and the path for 90 days.
+Should anyone want it back, the trap that made the first attempt expensive is
+still there. The unbound in this nixpkgs is built without `libnghttp2`
+(`unbound -V` reports only libevent and OpenSSL), so its own DoH listener does
+not exist, and `unbound-checkconf` accepts `https-port` and `http-endpoint`
+regardless — a silent failure rather than a build error. Rebuilding with
+`withDoH = true` would not help either: that listener requires ALPN `h2`
+unconditionally (`util/netevent.c` sets `http_min_version = http_version_2` and
+drops any connection that does not negotiate `h2`), while nginx speaks HTTP/1.1
+to upstreams and can never sit in front of it. A separate daemon is the only
+shape that works, which is what was removed.
 
-Sustained abuse is banned rather than merely throttled: the `nginx-doh-abuse`
-jail feeds `nginx-limit-req` restricted to zone `doh` and bans an address for
-an hour after 20 rejections in ten minutes, escalating through the global
-`bantime.increment`. It is scoped to `port = "https"`, unlike the other nginx
-jails, so a false positive costs the client this vhost rather than every port
-on the host — and RFC1918 sources are in `ignoreIP`, so LAN and VPN clients
-cannot ban themselves. Because `log-replies` and doh-server's `verbose` write
-per-query lines, both units carry `LogRateLimitBurst = 3000` per 30 s: without
-it an outsider staying inside the request limit could still evict sshd, sudo
-and fail2ban history from the 1 GB journal.
+`ratelimit: 1000` stays, capping unbound's outbound queries per target zone so a
+random-subdomain flood cannot leave this host as the address a victim's
+authoritative servers see and blocklist. Its old companion argument is obsolete:
+`ip-ratelimit` was useless while every DoH query arrived as `127.0.0.1`, and now
+that every client is a LAN, VPN or loopback address it would work — it is
+deliberately not enabled, because the remaining clients are trusted and an
+untuned per-IP cap on the router's stubby, which multiplexes the whole LAN
+behind one address, would be a self-inflicted outage.
+
+Query logging is `log-replies` in unbound and nothing else. Not `log-queries` —
+the reply line carries the client, qname, type, class, rcode, timing and answer
+size, so the query line duplicates it at twice the journal volume. Attribution
+is no longer split between two logs: unbound now sees each client's real
+address directly, so a single journal line answers who asked what. The Alloy
+pipeline still rewrites every `?…` in an nginx line to `?redacted` before it
+reaches Loki, but that now protects the ordinary vhosts rather than DNS query
+strings, and it stays for that reason. `LogRateLimitBurst = 3000` per 30 s
+remains on the unbound unit so per-query logging cannot evict sshd, sudo and
+fail2ban history from the 1 GB journal.
 
 One caution for whoever audits this next: `cert.pem` in every ACME directory
 shows as `lrwxrwxrwx`, which looks like a world-writable key and is not one. It
 is a symlink to `fullchain.pem`, and symlink modes are always 0777 on Linux;
-`find -printf %m` reports the link, not the target. The real files are 0640
-`acme:dns-tls`. Do not "fix" it with a chmod, which would replace the link.
+`find -printf %m` reports the link, not the target. The real files are 0640,
+owned `acme:dns-tls` for the apex certificate this resolver shares. Do not
+"fix" it with a chmod, which would replace the link.
 
 ## Filtering
 
 Ads and trackers are filtered through two RPZ zones, and the filtering applies
 to *tagged clients only*: `access-control-tag` marks `192.168.1.0/24` and
 `10.8.0.0/24` with the tag `ads`, and both `rpz:` clauses carry `tags: "ads"`.
-Loopback is deliberately left untagged, which is the whole point of the split:
-`127.0.0.1` is where the public DoH endpoint arrives from, and an open resolver
-that answers NXDOMAIN for names that exist is lying to strangers who never
-asked for a policy. Measured after deployment, the same name is NXDOMAIN for a
-LAN client on plain 53 and over DoT, and NOERROR through
-`https://dns.labile.cc/dns-query`.
+Since the public DoH endpoint was removed every remaining client is inside one
+of those two netblocks, so in practice everything that asks is filtered. The
+tags are not vestigial for that reason: loopback stays untagged, which keeps
+`127.0.0.1@5335` an honest diagnostic path, and comparing a filtered answer
+against an unfiltered one is then a single `dig -p 5335` rather than a
+`rpz_disable` on the live daemon. Measured, the same name is NXDOMAIN for a LAN
+client on plain 53 and over DoT, and NOERROR on the admin port. Delete the tags
+and that comparison is gone.
 
 `respip` must lead `module-config` (`"respip validator iterator"`) or every
 `rpz:` clause is silently inert — no error, no filtering. The obvious way to
@@ -200,8 +187,9 @@ it 24. Blocked by both tiers are `mc.yandex.ru`, `an.yandex.ru`,
 `yandex.ru`, `mail.ru`, `vk.com`, `gosuslugi.ru`, `sberbank.ru`, `ozon.ru`,
 `wildberries.ru`, `avito.ru`, the work portals or `labile.cc` is affected.
 
-Both transports share one ZeroSSL certificate for `dns.labile.cc`, issued by
-the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:
+DoT uses the ZeroSSL certificate of the apex name `labile.cc`, issued by the
+existing HTTP-01 flow for the web vhost of that name. Two non-obvious
+constraints govern how it is shared:
 
 - `nginx.service` runs as `User=nginx`, not root, so nixpkgs asserts that every
   consumer can read the certificate. Group `unbound` fails that assertion.
@@ -209,11 +197,13 @@ the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:
   users, plus `SupplementaryGroups` on the unbound unit and
   `reloadServices = [ "unbound" ]` so renewal reaches it through the existing
   `ExecReload=kill -HUP`.
-- The DoH `location` was originally an agenix secret included with a glob, so
-  a missing file could not stop Angie serving the other twenty vhosts. That
-  whole mechanism is gone: the endpoint is open, the `location` is a plain
-  `proxyPass` in `modules/nginx.nix`, and the secret, its rule in `secrets.nix`
-  and the encrypted file were removed together.
+- Borrowing the apex certificate is what allowed `dns.labile.cc` to disappear
+  completely. A name of its own would need its own HTTP-01 challenge, and that
+  needs an nginx vhost for exactly that name — the 404 stub that existed for one
+  afternoon. The cost is that the transport authentication name is now tied to
+  the main site's certificate: if that vhost ever moves off this host, DoT must
+  be repointed at whatever certificate stays, and every client's SNI changes
+  with it.
 
 The root zone is transferred by AXFR, addressed by IP rather than by name,
 because resolving a name would be circular for the zone that provides the
@@ -308,7 +298,7 @@ mailcow's bundled unbound container answering with the work network's internal
 
 What did move is the work-portal branch: the eight `*.work-parent.example` suffixes that
 dnsmasq routes to `stubby` on `127.0.0.1#5453`, whose first upstream is now
-`192.168.1.2@853` with `dns.labile.cc` authentication, Cloudflare kept behind
+`192.168.1.2@853` with `labile.cc` authentication, Cloudflare kept behind
 it as an ordered fallback (`round_robin_upstreams=0`, or the "fallback" would
 serve half the traffic). Those answers matched Cloudflare's byte for byte
 before the switch, apart from which member of a rotation set came first, and

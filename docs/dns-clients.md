@@ -1,70 +1,79 @@
-# DNS clients for `dns.labile.cc`
+# DNS clients for `labile.cc`
 
-The resolver on `server` exposes two encrypted endpoints. Both serve the same
-validating recursive resolver behind them and both present one publicly
-trusted ZeroSSL certificate for `dns.labile.cc`, so clients never need a
-custom CA or an SPKI pin.
+The resolver on `server` exposes one encrypted endpoint. It fronts the same
+validating recursive resolver as plain DNS does, and it presents the publicly
+trusted ZeroSSL certificate already issued for the apex name `labile.cc`, so
+clients need no custom CA and no SPKI pin.
 
 | Endpoint | Address | Reachable from | Transport |
 |---|---|---|---|
-| DoT | `dns.labile.cc:853` (`192.168.1.2` on LAN, `10.8.0.1` on VPN) | LAN and VPN only | DNS over TLS, RFC 7858 |
-| DoH | `https://dns.labile.cc/dns-query` | anywhere, TCP 443 through Angie | DNS over HTTPS, RFC 8484 |
+| DoT | `labile.cc:853` (`192.168.1.2` on LAN, `10.8.0.1` on VPN) | LAN and VPN only | DNS over TLS, RFC 7858 |
 
-The DoH endpoint is open: no token, no authentication, deliberately. Anyone
-who knows the URL can use this resolver, so it is protected by an nginx rate
-limit (`limit_req zone=doh`: 60 requests per minute per client IP, burst 120)
-instead. Public DoT is still not offered, because DoT has no path that could
-carry any access control at all — a public listener would be an unlimited open
-resolver. DoH is TCP, so there is no amplification angle; the cost of the open
-endpoint is that the server's IP answers strangers' lookups, and scanners
-probing `/dns-query` will find it.
+DoH existed until 2026-08-26 as `https://dns.labile.cc/dns-query` and was
+removed as unused. It was the only publicly reachable part of the resolver, and
+it cost a separate daemon, a rate-limit zone, a fail2ban jail and a log format
+to keep an open endpoint honest. The `dns.labile.cc` name went with it: DoT now
+authenticates as `labile.cc`, so no certificate of its own is needed and no
+vhost has to exist to answer the ACME challenge. Any client still configured
+with the old hostname fails verification rather than falling back — measured,
+`openssl s_client -verify_hostname dns.labile.cc` against `192.168.1.2:853`
+returns code 62, hostname mismatch, while `labile.cc` returns 0.
 
-Plain DNS on `192.168.1.2:53` and `10.8.0.1:53` stays available unchanged;
-the encrypted endpoints are additions, not replacements.
+Plain DNS on `192.168.1.2:53` and `10.8.0.1:53` stays available unchanged; DoT
+is an addition, not a replacement.
 
-One asymmetry to expect before it confuses you: clients arriving from
-`192.168.1.0/24` or `10.8.0.0/24` — plain 53 and DoT alike — get ad and tracker
-filtering, while the public DoH endpoint does not filter at all. A name that
-answers normally through `https://dns.labile.cc/dns-query` can be NXDOMAIN over
-DoT from inside the same house, and that is deliberate rather than a fault: an
-open resolver must not impose a policy on strangers. `docs/dns-resolver.md`
-covers the mechanism and the kill switch.
+Every client of this resolver now arrives from `192.168.1.0/24`, `10.8.0.0/24`
+or loopback, so ad and tracker filtering applies to all of them, over plain 53
+and DoT alike. The one path that stays unfiltered is `127.0.0.1:5335` on the
+server itself, which exists to compare a filtered answer against an honest one;
+`docs/dns-resolver.md` covers the mechanism and the kill switch.
 
-Which endpoint suits whom: DoT fits devices that permanently live in the LAN
-or on the VPN — Android phones at home, systemd-resolved boxes, the router's
-stubby, unbound forwarders on other NixOS hosts. DoT cannot carry a secret
-path, so it is deliberately not exposed publicly: a public listener would be
-an open resolver. DoH fits browsers and anything that roams, because it rides
-port 443 and works from any network. One piece of history worth knowing,
-because it explains why the router's stubby was dead weight for so long: until
-2026-08-26 no LAN host could reach any third-party DoT resolver, since the
-router's `adblock-fast` ran `force_dns_port='53' '853'` and treated the two
-ports differently — port 53 redirected into its own dnsmasq, port 853 sent to
-`jump handle_reject` in `inet fw4`, which is why the failure was an immediate
-refusal rather than a timeout. That package has been removed, its reject rule
-with it, and `1.1.1.1:853` now accepts connections from the LAN again. The
-port-53 redirect survives as a static nftables file with the server's recursion
-exempted, so plain DNS from any device still lands in our filtered chain
-whatever resolver it was aimed at; see `docs/dns-resolver.md`. Traffic to
-`192.168.1.2:853` was never affected either way, because same-subnet traffic is
-switched rather than routed and `dstnat_lan` never sees it.
+Which clients this suits: anything that permanently lives on the LAN or the
+VPN — Android phones at home, systemd-resolved boxes, the router's stubby,
+unbound forwarders on other NixOS hosts. DoT is not exposed publicly and cannot
+be: the protocol carries no path and no token, so a public listener would be an
+unlimited open resolver. Devices that roam have no encrypted path to this
+resolver at all, because browsers speak only DoH; their options are the
+AmneziaWG VPN, which puts them on `10.8.0.1` with both plain 53 and DoT
+available, or a third-party resolver with no filtering.
+
+One piece of history worth knowing, because it explains why the router's stubby
+was dead weight for so long: until 2026-08-26 no LAN host could reach any
+third-party DoT resolver, since the router's `adblock-fast` ran
+`force_dns_port='53' '853'` and treated the two ports differently — port 53
+redirected into its own dnsmasq, port 853 sent to `jump handle_reject` in
+`inet fw4`, which is why the failure was an immediate refusal rather than a
+timeout. That package has been removed, its reject rule with it, and
+`1.1.1.1:853` now accepts connections from the LAN again. The port-53 redirect
+survives as a static nftables file with the server's recursion exempted, so
+plain DNS from any device still lands in our filtered chain whatever resolver it
+was aimed at; see `docs/dns-resolver.md`. Traffic to `192.168.1.2:853` was never
+affected either way, because same-subnet traffic is switched rather than routed
+and `dstnat_lan` never sees it.
 
 ## Support matrix
 
-| Platform | DoT | DoH | Address format |
-|---|---|---|---|
-| Android 9+ Private DNS | yes | no | hostname only, no port, no path |
-| iOS 14+ / macOS 11+ profile | yes (`TLS`) | yes (`HTTPS`) | DoT: `ServerAddresses` + `ServerName`; DoH: full `ServerURL` |
-| Firefox | no | yes | `https://` URL in `network.trr.uri` |
-| Chrome / Chromium / Edge | no | yes | URI-template string |
-| Windows 11 | yes (`dothost=`) | yes | DoH: `dohtemplate=` URL; DoT: `server=<ip>` + `dothost=<hostname>:<port>` |
-| systemd-resolved | yes | no | `IP:port#iface#SNI`, i.e. `IP:port#hostname` |
-| unbound forwarder | yes | yes (forward-zones only) | `forward-addr: <ip>@<port>#<auth_name>` |
-| stubby (OpenWrt/Linux) | yes | no | `address_data` + `tls_auth_name` |
+| Platform | DoT | Address format |
+|---|---|---|
+| Android 9+ Private DNS | yes | hostname only, no port, no path |
+| iOS 14+ / macOS 11+ profile | yes (`TLS`) | `ServerAddresses` + `ServerName` |
+| Windows 11 | yes | `server=<ip>` + `dothost=<hostname>:<port>` |
+| systemd-resolved | yes | `IP:port#iface#SNI`, i.e. `IP:port#hostname` |
+| unbound forwarder | yes | `forward-addr: <ip>@<port>#<auth_name>` |
+| stubby (OpenWrt/Linux) | yes | `address_data` + `tls_auth_name` |
 
-Only DoH accepts the secret-token path. Pure-DoT speakers (Android, systemd-
-resolved, stubby, unbound) have no concept of paths; there secrecy comes from
-the hostname itself, which is why DoT stays LAN/VPN-only.
+Browsers are absent from that table on purpose: Firefox, Chrome and Edge
+implement DoH only, so since the endpoint was removed they can no longer be
+pointed here at all. They inherit whatever the operating system resolves,
+which on the LAN is this resolver by way of the router.
+
+The split between the two client shapes matters more than the platform. Clients
+that take an explicit address plus a separate name for validation — stubby,
+systemd-resolved, an unbound forwarder, the Apple profile — work from anywhere
+they can route to `192.168.1.2` or `10.8.0.1`, because the address is configured
+and the name is used only for the certificate. Clients that accept a hostname
+and nothing else, which is every Android Private DNS field, depend on how that
+name resolves for them.
 
 ## Android
 
@@ -76,17 +85,25 @@ Settings → Network & internet → Private DNS → "Private DNS provider
 hostname":
 
 ```
-dns.labile.cc
+labile.cc
 ```
 
-Inside the LAN the name resolves to `192.168.1.2`, on the VPN to `10.8.0.1`;
-both terminate the certificate correctly. Off those networks the wildcard
-resolves to the public address where nothing listens on 853: in strict mode
-Android marks the network as having no internet access, in the default
-opportunistic mode it silently falls back to cleartext. Roaming Android
-devices should therefore turn Private DNS off and use a DoH application
-instead (Intra, RethinkDNS), pointed at
-`https://dns.labile.cc/dns-query`.
+This works on the LAN and nowhere else, and the reason is worth stating
+precisely because an earlier version of this document had it wrong. The LAN
+answer comes from the router's dnsmasq, which carries
+`address=/labile.cc/192.168.1.2` and so maps the apex and every subdomain to the
+server; a phone using DHCP resolves the name that way and reaches
+`192.168.1.2:853` with a matching certificate. This resolver itself recurses
+honestly and answers `93.100.194.40` for the same name — measured on both
+`127.0.0.1:5335` and `192.168.1.2:53` — so a VPN client, which resolves through
+`10.8.0.1`, gets the public address, where nothing listens on 853. In strict
+mode Android then marks the network as having no internet access; in the default
+opportunistic mode it silently falls back to cleartext.
+
+VPN clients therefore need one of the explicit-address forms below, with
+`10.8.0.1` as the address and `labile.cc` as the name to verify. Giving Android
+the same treatment would require a per-view answer in unbound, which is not
+configured. Roaming devices have no encrypted path here at all.
 
 Installing a private CA into Android's system store requires root, and no
 official documentation describes Private DNS interaction with user-installed
@@ -94,9 +111,9 @@ CAs; unverifiable, and moot with a publicly trusted certificate.
 
 ## iOS and macOS
 
-Both protocols come from one payload type, `com.apple.dnsSettings.managed`,
-available since iOS 14 / macOS 11 (deprecated in favour of a declarative
-equivalent in OS 26+). Save as `labile-dns.mobileconfig`:
+The payload type is `com.apple.dnsSettings.managed`, available since iOS 14 /
+macOS 11 (deprecated in favour of a declarative equivalent in OS 26+). Save as
+`labile-dns.mobileconfig`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -123,104 +140,44 @@ equivalent in OS 26+). Save as `labile-dns.mobileconfig`:
       <key>PayloadType</key>
       <string>com.apple.dnsSettings.managed</string>
       <key>PayloadIdentifier</key>
-      <string>cc.labile.dns.doh</string>
+      <string>cc.labile.dns.dot</string>
       <key>PayloadUUID</key>
       <string>B41D93A7-52C8-4E06-9F3B-D82A16C07E54</string>
       <key>PayloadVersion</key>
       <integer>1</integer>
       <key>PayloadDisplayName</key>
-      <string>labile.cc DoH</string>
+      <string>labile.cc DoT</string>
       <key>DNSProtocol</key>
-      <string>HTTPS</string>
-      <key>ServerURL</key>
-      <string>https://dns.labile.cc/dns-query</string>
+      <string>TLS</string>
+      <key>ServerName</key>
+      <string>labile.cc</string>
+      <key>ServerAddresses</key>
+      <array>
+        <string>192.168.1.2</string>
+      </array>
     </dict>
   </array>
 </dict>
 </plist>
 ```
 
-Replace every `PayloadUUID` with fresh values (`uuidgen`). `ServerAddresses` is optional; when
-omitted the system resolves the URL host through ordinary DNS, which keeps
-the profile working on any network thanks to the wildcard record. For the
-DoT variant swap the inner dict keys:
-
-```xml
-<key>DNSProtocol</key>
-<string>TLS</string>
-<key>ServerName</key>
-<string>dns.labile.cc</string>
-<key>ServerAddresses</key>
-<array>
-  <string>192.168.1.2</string>
-</array>
-```
-
-VPN devices use `10.8.0.1` instead. A signed profile avoids extra install
-confirmations; self-signed signatures suffice. Without MDM the profile
-applies to Wi-Fi networks, and when installed manually also to cellular.
-
-## Firefox
-
-In `about:config`:
-
-```js
-user_pref("network.trr.mode", 3);
-user_pref("network.trr.uri", "https://dns.labile.cc/dns-query");
-user_pref("network.trr.excluded-domains", "lan,labile.cc");
-```
-
-Mode `3` is TRR-only; mode `2` tries DoH first and falls back to plaintext.
-A user-set `network.trr.uri` takes precedence over rollout heuristics. No
-`network.trr.bootstrapAddr` is needed here: unlike a resolver known only
-behind a LAN name, `dns.labile.cc` resolves through any ordinary DNS, inside
-and outside. Acceptance of a custom path and port in the URI is inferred from
-the URL parsing in `TRRServiceBase.cpp` rather than stated verbatim in any
-document; irrelevant here since the port is a standard 443.
-
-## Chrome, Chromium, Edge
-
-GUI: Settings → Privacy and security → Security → "Use secure DNS" → With:
-custom, paste the URL:
-
-```
-https://dns.labile.cc/dns-query
-```
-
-Managed Linux deployments use policy files instead —
-`/etc/chromium/policies/managed/*.json` (Chromium) or
-`/etc/opt/edge/policies/managed/*.json` (Edge):
-
-```json
-{
-  "DnsOverHttpsMode": "secure",
-  "DnsOverHttpsTemplates": "https://dns.labile.cc/dns-query"
-}
-```
-
-`secure` forbids fallback to plaintext; `automatic` upgrades when possible
-but may leak. If the built-in DNS client was disabled by another policy,
-`BuiltInDnsClientEnabled` must be turned back on. Whether the desktop UIs
-accept nonstandard ports in manual input is not documented either way
-(inferred from the URI-template format); again moot on port 443.
+Replace every `PayloadUUID` with fresh values (`uuidgen`). `ServerAddresses` is
+mandatory in practice here, not optional: it is what keeps the profile from
+depending on how `labile.cc` resolves on the network the device happens to be
+on. VPN devices use `10.8.0.1` in that array instead. A signed profile avoids
+extra install confirmations; self-signed signatures suffice. Without MDM the
+profile applies to Wi-Fi networks, and when installed manually also to cellular.
 
 ## Windows 11
 
 Windows requires the server to be pre-registered before any encrypted mode
-becomes selectable: only DNS servers present in the known-server list get
-DoH/DoT, whether via netsh, PowerShell, or the UI dropdown. Register the
-server once — the single entry carries both the DoH template and the DoT
-host — then enable both globally:
+becomes selectable: only DNS servers present in the known-server list get DoT,
+whether via netsh, PowerShell, or the UI dropdown. Register the server once,
+then enable the transport globally:
 
 ```cmd
-netsh dnsclient add encryption server=192.168.1.2 dothemplate=https://dns.labile.cc/dns-query dothost=dns.labile.cc:853 autoupgrade=yes udpfallback=no
-netsh dnsclient set global doh=yes dot=yes
-```
-
-Equivalent PowerShell:
-
-```powershell
-Add-DnsClientDohServerAddress -ServerAddress '192.168.1.2' -DohTemplate 'https://dns.labile.cc/dns-query' -AutoUpgrade $True -AllowFallbackToUdp $False
+netsh dnsclient add encryption server=192.168.1.2 dothost=labile.cc:853 autoupgrade=yes udpfallback=no
+netsh dnsclient set global dot=yes
 ```
 
 Prerequisites and notes:
@@ -228,9 +185,12 @@ Prerequisites and notes:
 - The network adapter's DNS server must be `192.168.1.2` for the
   registration to apply; plain DNS on that address stays the fallback
   transport. VPN adapters register separately against `10.8.0.1`.
-- Certificates validate against the system store. The DoT-side validation
-  behaviour is not spelled out verbatim in Microsoft's documentation;
-  unverifiable, and irrelevant with a publicly trusted certificate.
+- Certificates validate against the system store. Neither the DoT-side
+  validation behaviour nor whether the CLI accepts an entry carrying only
+  `dothost=` and no DoH template is spelled out in Microsoft's documentation;
+  both are unverified here, and the first is irrelevant with a publicly trusted
+  certificate. Should the entry be rejected without a template, there is no
+  template to give it any more — use plain DNS on `192.168.1.2` instead.
 
 ## systemd-resolved
 
@@ -239,7 +199,7 @@ of the `resolved.conf` options mention it. `/etc/systemd/resolved.conf.d/labile.
 
 ```ini
 [Resolve]
-DNS=192.168.1.2:853#dns.labile.cc
+DNS=192.168.1.2:853#labile.cc
 Domains=~.
 DNSOverTLS=yes
 DNSSEC=allow-downgrade
@@ -266,7 +226,7 @@ services.unbound = {
       {
         name = ".";
         forward-tls-upstream = true;
-        forward-addr = [ "192.168.1.2@853#dns.labile.cc" ];
+        forward-addr = [ "192.168.1.2@853#labile.cc" ];
       }
     ];
   };
@@ -274,7 +234,7 @@ services.unbound = {
 ```
 
 Hosts that reach the server only over the VPN use
-`10.8.0.1@853#dns.labile.cc`. The `#auth_name` part is mandatory: unbound's
+`10.8.0.1@853#labile.cc`. The `#auth_name` part is mandatory: unbound's
 documentation states that leaving out the `#` and auth name means *any* name
 is accepted, which defeats the point of authenticated encryption. The
 certificate chains to a public CA, so the stock CA bundle suffices. These
@@ -313,7 +273,7 @@ uci:
 ```sh
 uci add stubby resolver
 uci set stubby.@resolver[-1].address='192.168.1.2'
-uci set stubby.@resolver[-1].tls_auth_name='dns.labile.cc'
+uci set stubby.@resolver[-1].tls_auth_name='labile.cc'
 uci set stubby.@resolver[-1].tls_port='853'
 uci reorder stubby.@resolver[-1]=0
 uci set stubby.global.round_robin_upstreams='0'
@@ -360,48 +320,45 @@ other side effects.
 From any client with BIND's `dig` 9.20 or newer:
 
 ```sh
-dig +tls +tls-ca +tls-hostname=dns.labile.cc @192.168.1.2 example.com
-dig +tls +tls-ca +tls-hostname=dns.labile.cc @10.8.0.1 example.com
-dig +https=/dns-query @dns.labile.cc example.com
+dig +tls +tls-ca +tls-hostname=labile.cc @192.168.1.2 example.com
+dig +tls +tls-ca +tls-hostname=labile.cc @10.8.0.1 example.com
 dig @192.168.1.2 example.com
 ```
 
 `+tls` selects DoT and defaults to port 853. `+tls-ca` enables certificate
 validation against the system trust store; `+tls-hostname` fixes the name
 checked against the certificate — without it dig checks the `@server`
-address, and `192.168.1.2` does not appear in the certificate. `+https=`
-implies TLS and takes the URI path of the DoH endpoint; dig bootstraps
-`dns.labile.cc` through the system resolver, so the same command works from
-inside and outside the network.
+address, and `192.168.1.2` does not appear in the certificate. The certificate
+carries exactly one name, `labile.cc`, with no wildcard SAN, so that is the only
+value `+tls-hostname` accepts.
 
 DNSSEC correctness reads straight off the answer flags: a successful
-validation sets `ad` in the response header. Both transports must return
-`ad` for signed names, and `dig +tls ... dnssec-failed.org` must return
-SERVFAIL. `ad` absent everywhere or SERVFAIL on everything indicates a broken
-path, not a broken resolver.
+validation sets `ad` in the response header. DoT must return `ad` for signed
+names, and `dig +tls ... dnssec-failed.org` must return SERVFAIL. `ad` absent
+everywhere or SERVFAIL on everything indicates a broken path, not a broken
+resolver.
 
 ## What direct clients give up
 
 Three things live exclusively in the router's dnsmasq, so any client wired
-straight to `dns.labile.cc` loses them:
+straight to this resolver loses them:
 
 - `.lan` names, served only by the router.
-- the `labile.cc` split-horizon record: the server itself returns the local
-  `192.168.1.2` inside, but a bypassing client that reaches the wildcard from
-  outside sees the public address instead.
+- the `labile.cc` split-horizon record. The router carries
+  `address=/labile.cc/192.168.1.2`, which covers the apex and every subdomain;
+  this resolver has no local data at all and recurses honestly, so it answers
+  the public `93.100.194.40` for the same name — measured on both
+  `127.0.0.1:5335` and `192.168.1.2:53`. A direct client therefore reaches
+  services the long way round, through the router's NAT reflection.
 - the router's per-domain VPN policy routing (`server=/domain/vpn-dns#5353`),
   which steers selected domains through the VPN tunnel.
 
-Clients going through the router's dnsmasq → stubby path lose none of these;
-only direct-pointing clients do. For Firefox the loss is recoverable per
-domain: `network.trr.excluded-domains` routes listed suffixes back through
-the operating system resolver, i.e. to the router:
-
-```js
-user_pref("network.trr.excluded-domains", "lan,labile.cc");
-```
-
-That restores local `.lan` answers and the internal view of `labile.cc` while
-everything else stays on DoH. Equivalent escape hatches exist elsewhere —
-`SupplementalMatchDomains` in Apple profiles, dnsmasq address overrides on
-the router — but Firefox is the case where one pref covers both problems.
+Clients going through the router's dnsmasq → mihomo → stubby path lose none of
+these; only direct-pointing clients do. The recoverable case is a client that
+can split by suffix: `SupplementalMatchDomains` in Apple profiles and
+`Domains=~lan` style entries in systemd-resolved send listed suffixes back to
+the operating system resolver, i.e. to the router, while everything else stays
+on DoT. Since the split-horizon name is the apex `labile.cc`, which is also the
+DoT authentication name, an excluded suffix there does not break the transport:
+the certificate name is checked against the configured `ServerName`, not
+re-resolved.
