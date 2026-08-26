@@ -82,11 +82,29 @@ appends to, so an outsider could write arbitrary "this IP looked up that name"
 lines into the log. Without the option the daemon logs what nginx put in
 `X-Real-IP`, which nginx replaces rather than appends, so the value is
 authentic. The DoH location logs through `log_format doh`, which is the
-combined format minus `$query_string`: a GET carries the query in the URL, and
-that URL is shipped to Loki, which has no retention policy — the qname stays
-in journald, which rotates, while Loki keeps only the address and the verb.
-The residue is that a rate-limited request still reaches `error.log` with its
-full request line, so throttled abusers' qnames do land in Loki.
+combined format minus `$query_string`, and a second line of defence sits in the
+Alloy pipeline, where `stage.replace` rewrites every `?…` in an nginx line to
+`?redacted` before it reaches Loki — that one also covers `error.log`, where a
+rate-limited request would otherwise deposit its full base64 query. So the
+qname lives only in journald, which is size-capped and rotates, while Loki
+keeps the address, the verb and the path for 90 days.
+
+Sustained abuse is banned rather than merely throttled: the `nginx-doh-abuse`
+jail feeds `nginx-limit-req` restricted to zone `doh` and bans an address for
+an hour after 20 rejections in ten minutes, escalating through the global
+`bantime.increment`. It is scoped to `port = "https"`, unlike the other nginx
+jails, so a false positive costs the client this vhost rather than every port
+on the host — and RFC1918 sources are in `ignoreIP`, so LAN and VPN clients
+cannot ban themselves. Because `log-replies` and doh-server's `verbose` write
+per-query lines, both units carry `LogRateLimitBurst = 3000` per 30 s: without
+it an outsider staying inside the request limit could still evict sshd, sudo
+and fail2ban history from the 1 GB journal.
+
+One caution for whoever audits this next: `cert.pem` in every ACME directory
+shows as `lrwxrwxrwx`, which looks like a world-writable key and is not one. It
+is a symlink to `fullchain.pem`, and symlink modes are always 0777 on Linux;
+`find -printf %m` reports the link, not the target. The real files are 0640
+`acme:dns-tls`. Do not "fix" it with a chmod, which would replace the link.
 
 Both transports share one ZeroSSL certificate for `dns.labile.cc`, issued by
 the existing HTTP-01 flow. Two non-obvious constraints govern how it is shared:
