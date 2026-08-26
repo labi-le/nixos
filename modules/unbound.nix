@@ -120,7 +120,11 @@ in
   systemd.services.unbound = {
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
-    serviceConfig.SupplementaryGroups = [ tlsGroup ];
+    serviceConfig = {
+      SupplementaryGroups = [ tlsGroup ];
+      LogRateLimitIntervalSec = "30s";
+      LogRateLimitBurst = 3000;
+    };
   };
 
   services.doh-server = {
@@ -138,6 +142,10 @@ in
   systemd.services.doh-server = {
     wants = [ "unbound.service" ];
     after = [ "unbound.service" ];
+    serviceConfig = {
+      LogRateLimitIntervalSec = "30s";
+      LogRateLimitBurst = 3000;
+    };
   };
 
   users.groups.${tlsGroup}.members = [

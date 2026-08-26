@@ -166,6 +166,12 @@
         ];
       };
 
+      compactor = {
+        working_directory = "/var/lib/loki/compactor";
+        retention_enabled = true;
+        delete_request_store = "filesystem";
+      };
+
       query_scheduler = {
         max_outstanding_requests_per_tenant = 2048;
       };
@@ -174,6 +180,7 @@
         ingestion_rate_mb = 32;
         ingestion_burst_size_mb = 64;
         max_streams_per_user = 10000;
+        retention_period = "2160h";
       };
     };
   };
@@ -199,8 +206,17 @@
 
     loki.source.file "nginx" {
       targets       = local.file_match.nginx.targets
-      forward_to    = [loki.write.local.receiver]
+      forward_to    = [loki.process.nginx.receiver]
       tail_from_end = true
+    }
+
+    loki.process "nginx" {
+      forward_to = [loki.write.local.receiver]
+
+      stage.replace {
+        expression = "([?][^ ]*)"
+        replace    = "?redacted"
+      }
     }
 
     // Docker: discover running containers via the daemon socket and read their logs

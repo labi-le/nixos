@@ -57,6 +57,16 @@ in
       findtime = 60;
       bantime = "5h";
     };
+    nginx-doh-abuse.settings = {
+      enabled = true;
+      filter = "nginx-limit-req[ngx_limit_req_zones=doh]";
+      logpath = "/var/log/nginx/error.log";
+      backend = "auto";
+      port = "https";
+      maxretry = 20;
+      findtime = 600;
+      bantime = "1h";
+    };
   };
 
   services.nginx = {
