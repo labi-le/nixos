@@ -28,7 +28,13 @@ in
           "127.0.0.1@${toString localPort}"
           lanAddress
           vpnAddress
+          "${lanAddress}@${toString tlsPort}"
+          "${vpnAddress}@${toString tlsPort}"
         ];
+
+        tls-port = tlsPort;
+        tls-service-key = ''"${tlsCertDir}/key.pem"'';
+        tls-service-pem = ''"${tlsCertDir}/fullchain.pem"'';
 
         access-control = [
           "127.0.0.0/8 allow"
