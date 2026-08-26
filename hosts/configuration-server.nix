@@ -48,9 +48,10 @@
 
   age.secrets.doh-location = {
     file = ../secrets/doh-location.age;
+    path = "/run/doh-location.conf";
     owner = "root";
-    group = "root";
-    mode = "0444";
+    group = config.services.nginx.group;
+    mode = "0440";
   };
 
   nix.gc.automatic = lib.mkForce false;

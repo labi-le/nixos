@@ -262,7 +262,7 @@ in
         };
       }) // {
         extraConfig = ''
-          include /run/agenix/doh-location*;
+          include /run/doh-location.conf*;
         '';
       };
       "ip.labile.cc" = proxy { addr = "http://127.0.0.1:7006"; };
