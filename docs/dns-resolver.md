@@ -87,12 +87,19 @@ list server '192.168.1.2'
 ```
 
 Longest-suffix matching means `/domain/vpn-dns#5353` and `.lan` still win, so
-policy routing survives. Note that LAN clients cannot reach `192.168.1.2:53`
-directly while `force_dns` is on — their queries are redirected to the router
-before they leave — so the router is the only sanctioned client. The cost is
-that the whole network's DNS then depends on the server being up;
-`serve-expired` with `serve-expired-ttl-reset` keeps a stale cache answering for
-a day, but a second `list server` as fallback is cheaper insurance.
+policy routing survives. The cost is that the whole network's DNS then depends
+on the server being up; `serve-expired` with `serve-expired-ttl-reset` keeps a
+stale cache answering for a day, but a second `list server` as fallback is
+cheaper insurance.
+
+A single client can also be pointed straight at `192.168.1.2` instead. The
+`force_dns` redirect does not stand in the way, because same-subnet traffic is
+switched rather than routed and `dstnat_lan` never sees it — measured from
+`192.168.1.3`, `dig @192.168.1.2 external.lan` returns NXDOMAIN while the router
+answers `93.100.194.40` for the same name. That is the whole trade in one
+query: a client wired directly to unbound gets an independent, validated,
+ECS-free answer and loses `.lan`, the `labile.cc` split-horizon record and the
+per-domain VPN routing.
 
 ## Verification
 
