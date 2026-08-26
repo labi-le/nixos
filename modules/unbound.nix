@@ -8,11 +8,10 @@ let
   vpnAddress = "10.8.0.1";
   vpnNetwork = "10.8.0.0/24";
   localPort = 5335;
-  tlsHost = "dns.labile.cc";
+  tlsHost = "labile.cc";
   tlsCertDir = "/var/lib/acme/${tlsHost}";
   tlsGroup = "dns-tls";
   tlsPort = 853;
-  dohPort = 8053;
   stateDir = config.services.unbound.stateDir;
   rpzDir = "${stateDir}/rpz";
   blockZone = "${rpzDir}/ads.zone";
@@ -260,27 +259,6 @@ in
       OnCalendar = "daily";
       RandomizedDelaySec = "45m";
       Persistent = true;
-    };
-  };
-
-  services.doh-server = {
-    enable = true;
-    settings = {
-      listen = [ "127.0.0.1:${toString dohPort}" ];
-      path = "/dns-query";
-      upstream = [ "tcp:127.0.0.1:${toString localPort}" ];
-      timeout = 5;
-      tries = 2;
-      verbose = true;
-    };
-  };
-
-  systemd.services.doh-server = {
-    wants = [ "unbound.service" ];
-    after = [ "unbound.service" ];
-    serviceConfig = {
-      LogRateLimitIntervalSec = "30s";
-      LogRateLimitBurst = 3000;
     };
   };
 

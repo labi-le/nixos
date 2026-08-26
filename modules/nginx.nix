@@ -57,16 +57,6 @@ in
       findtime = 60;
       bantime = "5h";
     };
-    nginx-doh-abuse.settings = {
-      enabled = true;
-      filter = "nginx-limit-req[ngx_limit_req_zones=doh]";
-      logpath = "/var/log/nginx/error.log";
-      backend = "auto";
-      port = "https";
-      maxretry = 20;
-      findtime = 600;
-      bantime = "1h";
-    };
   };
 
   services.nginx = {
@@ -89,8 +79,6 @@ in
       send_timeout          10s;
       keepalive_timeout     10s;
       keepalive_requests    100;
-      limit_req_zone $binary_remote_addr zone=doh:10m rate=60r/m;
-      log_format doh '$remote_addr - - [$time_local] \"$request_method $uri $server_protocol\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\"';
     ";
     appendHttpConfig = ''
       access_log /var/log/nginx/access.log;
@@ -267,22 +255,6 @@ in
         addr = "http://127.0.0.1:7005";
         # internal = true;
       };
-      "dns.labile.cc" = (base {
-        "= /dns-query" = {
-          proxyPass = "http://127.0.0.1:8053/dns-query";
-          extraConfig = ''
-            proxy_buffering off;
-            client_max_body_size 64k;
-            limit_req zone=doh burst=120 nodelay;
-            proxy_hide_header X-Powered-By;
-            proxy_hide_header Access-Control-Allow-Origin;
-            access_log /var/log/nginx/access.log doh;
-          '';
-        };
-        "/" = {
-          return = "404";
-        };
-      });
       "ip.labile.cc" = proxy { addr = "http://127.0.0.1:7006"; };
       "sub.labile.cc" = subStore { addr = "http://127.0.0.1:3001"; };
       "sync.labile.cc" = proxy {
