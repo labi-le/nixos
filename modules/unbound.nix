@@ -63,8 +63,7 @@ in
         hide-identity = true;
         hide-version = true;
         do-not-query-localhost = true;
-
-        tls-cert-bundle = ''"/etc/ssl/certs/ca-certificates.crt"'';
+        extended-statistics = true;
       };
 
       auth-zone = [
@@ -76,7 +75,6 @@ in
             "193.0.14.129"
             "192.0.32.132"
           ];
-          url = "https://www.internic.net/domain/root.zone";
           zonefile = ''"${stateDir}/root.zone"'';
           for-downstream = false;
           for-upstream = true;
