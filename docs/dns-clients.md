@@ -258,8 +258,10 @@ LAN client → dnsmasq 192.168.1.1:53
 
 The two work branches are named by role rather than spelled out, here and
 everywhere else in this repository: it is public, and those suffixes identify
-an employer. They live in the agenix secret `dns-canaries` and in the router's
-own `/var/etc/dnsmasq.conf.*`, which is not nix-managed.
+an employer. They exist in exactly one place, the router's own
+`/etc/config/dhcp`, which is imperative and not nix-managed; nothing on the
+server keeps a second copy, deliberately — see the canary discussion in
+`docs/dns-resolver.md`.
 
 Only the stubby branch was moved. The other two must stay: `mihomo` is the
 proxy's own resolver and carries the geo-routing decisions, so answering those

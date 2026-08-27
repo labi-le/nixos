@@ -25,8 +25,7 @@ let
     "vk-portal.net"
   ];
 
-  canaryFile = "/run/agenix/dns-canaries";
-  publicCanaries = [
+  canaries = [
     "labile.cc"
     "yandex.ru"
     "mail.ru"
@@ -224,18 +223,7 @@ in
         exit 1
       fi
 
-      if [ ! -r ${canaryFile} ] || [ ! -s ${canaryFile} ]; then
-        echo "refusing zone: canary list ${canaryFile} is unreadable or empty" >&2
-        exit 1
-      fi
-
-      private=$(grep -vE '^[[:space:]]*(#|$)' ${canaryFile}) || private=""
-      if [ -z "$private" ]; then
-        echo "refusing zone: canary list ${canaryFile} has no entries" >&2
-        exit 1
-      fi
-
-      for canary in $private ${lib.concatStringsSep " " publicCanaries}; do
+      for canary in ${lib.concatStringsSep " " canaries}; do
         suffix="$canary"
         while [ -n "$suffix" ]; do
           if grep -qE "^(\*\.)?$suffix[[:space:]]+.*CNAME" "$new"; then

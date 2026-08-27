@@ -50,12 +50,6 @@
     mode = "0400";
   };
 
-  age.secrets.dns-canaries = {
-    file = ../secrets/dns-canaries.age;
-    owner = "root";
-    group = config.services.unbound.group;
-    mode = "0440";
-  };
 
   nix.gc.automatic = lib.mkForce false;
   nix.settings.trusted-users = [ "labile" ];

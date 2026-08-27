@@ -137,32 +137,43 @@ zone serving — observed for real when the first run rejected a good list
 because `grep -q` exiting early under `pipefail` turned a broken pipe into a
 failed SOA check.
 
-The canary set has two halves. The public one stays inline in
-`modules/unbound.nix`: `labile.cc`, `github.com` and the Russian services whose
-loss would be noticed first. The private one is the work-portal suffixes and the
-internal work zones, which are not in this repository at all — it is public, and
-those names identify an employer. They live in the agenix secret `dns-canaries`
-(rule in `secrets.nix`, declaration in `hosts/configuration-server.nix`),
-decrypted to `/run/agenix/dns-canaries` as `root:unbound` 0440, one name per
-line, read by the update service at run time. Keeping them out of the module
-also keeps them out of the unit script in `/nix/store`, which is world-readable.
+The canaries are `labile.cc`, `github.com` and the Russian services whose loss
+would be noticed first. Each is checked along its whole suffix chain, so a
+wildcard entry one level up is caught rather than only an exact match.
 
-The check fails closed in both directions, verified by running the real unit
-script against substituted paths: an unreadable or empty list refuses the
-downloaded zone, and a canary that would be blocked refuses it too — measured
-with `mc.yandex.ru` planted as a canary, which the upstream list does block. In
-both runs the live zone kept its mtime and its 452 042 rules.
+Work domains are deliberately *not* canaries, and that is a decision rather than
+an omission. Work queries do reach this filter — the router sends the
+work-portal suffixes to `stubby`, whose first upstream is this resolver's DoT
+listener, and stubby arrives from `192.168.1.1`, which `access-control-tag`
+marks `ads` — so guarding them looks attractive. It was implemented, on
+2026-08-27, as an agenix secret read by the update service, and removed the same
+day for two reasons.
 
-Each canary is checked along its whole suffix chain, so a wildcard entry on a
-work parent zone is caught rather than silently costing access to work. That is
-not hypothetical: the upstream list already blocks an analytics host inside the
-work parent zone, correctly — but it proves upstream writes rules there.
+The first is duplication. The list of work suffixes already has an owner: the
+router's dnsmasq, which is imperative and outside this repository. A second copy
+here would drift silently and in the dangerous direction — a new portal added on
+the router announces itself immediately, because work stops working without the
+route, while a canary list that never learned the name simply stops protecting
+it. Nothing would notice.
 
-The guard is load-bearing because work queries do pass through this filter. The
-router sends the work-portal suffixes to `stubby`, whose first upstream is this
-resolver's DoT listener, and stubby arrives from `192.168.1.1`, which
-`access-control-tag` marks `ads`. Splitting at dnsmasq routes those names *to*
-the filter, not around it.
+The second is that the guard was worse than the risk it covered. Reading the
+list from a runtime file makes the refresh fail closed on that file, so any
+permission or path regression stops blocklist updates entirely, reported only in
+a journal nobody reads. Upstream writes leaf rules for tracker hosts, not apex
+rules for government portals: the one rule it does have inside the work parent
+zone is an analytics host, blocked correctly. The likelier failure was the
+safety mechanism.
+
+If a work name is ever blocked anyway, the fix needs no rebuild and no list:
+`unbound-control rpz_disable rpz.ads.` turns filtering off instantly, and
+`localAllow` in `modules/unbound.nix` emits a `rpz-passthru` in `rpz.local.`,
+which beats any block in `rpz.ads.` — verified. Adding a work name there is a
+deliberate act at incident time, not a list to maintain in advance.
+
+A behavioural canary was considered and rejected: deriving the protected set
+from names this resolver has recently answered needs no list, but it would gate
+a deterministic update on non-deterministic traffic, and it would have protected
+every ad domain resolved before the filter existed.
 
 The cost is 285 MB resident, up from 33 MB, and about two seconds added to
 startup while 452 190 rules parse — during which the resolver answers nothing,
