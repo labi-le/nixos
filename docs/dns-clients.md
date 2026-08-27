@@ -251,10 +251,15 @@ and only the first belongs to stubby.
 
 ```
 LAN client → dnsmasq 192.168.1.1:53
-  ├─ /cloud.dit,sudir,hub,gate-k,gate-n,vpn-ke,vpn-dc,passport .work-parent.example/ → stubby 127.0.0.1#5453
-  ├─ /work-parent.example, internal-work.example, internal-work.example/                               → 192.168.1.2#5353
-  └─ everything else                                                    → mihomo 127.0.0.1#12344
+  ├─ eight work-portal suffixes  → stubby 127.0.0.1#5453
+  ├─ the internal work zones     → 192.168.1.2#5353
+  └─ everything else             → mihomo 127.0.0.1#12344
 ```
+
+The two work branches are named by role rather than spelled out, here and
+everywhere else in this repository: it is public, and those suffixes identify
+an employer. They live in the agenix secret `dns-canaries` and in the router's
+own `/var/etc/dnsmasq.conf.*`, which is not nix-managed.
 
 Only the stubby branch was moved. The other two must stay: `mihomo` is the
 proxy's own resolver and carries the geo-routing decisions, so answering those

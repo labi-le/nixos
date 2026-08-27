@@ -137,12 +137,32 @@ zone serving — observed for real when the first run rejected a good list
 because `grep -q` exiting early under `pipefail` turned a broken pipe into a
 failed SOA check.
 
-The canaries are the eight `*.work-parent.example` work portals, `labile.cc`, and the
-Russian services whose loss would be noticed first. Each is checked along its
-whole suffix chain, so a `*.work-parent.example` entry upstream would be caught rather than
-silently costing access to work. This is not hypothetical: the list already
-blocks `work-analytics.example`, which is analytics on a government site and correct to
-block, but it proves upstream does write `work-parent.example` rules.
+The canary set has two halves. The public one stays inline in
+`modules/unbound.nix`: `labile.cc`, `github.com` and the Russian services whose
+loss would be noticed first. The private one is the work-portal suffixes and the
+internal work zones, which are not in this repository at all — it is public, and
+those names identify an employer. They live in the agenix secret `dns-canaries`
+(rule in `secrets.nix`, declaration in `hosts/configuration-server.nix`),
+decrypted to `/run/agenix/dns-canaries` as `root:unbound` 0440, one name per
+line, read by the update service at run time. Keeping them out of the module
+also keeps them out of the unit script in `/nix/store`, which is world-readable.
+
+The check fails closed in both directions, verified by running the real unit
+script against substituted paths: an unreadable or empty list refuses the
+downloaded zone, and a canary that would be blocked refuses it too — measured
+with `mc.yandex.ru` planted as a canary, which the upstream list does block. In
+both runs the live zone kept its mtime and its 452 042 rules.
+
+Each canary is checked along its whole suffix chain, so a wildcard entry on a
+work parent zone is caught rather than silently costing access to work. That is
+not hypothetical: the upstream list already blocks an analytics host inside the
+work parent zone, correctly — but it proves upstream writes rules there.
+
+The guard is load-bearing because work queries do pass through this filter. The
+router sends the work-portal suffixes to `stubby`, whose first upstream is this
+resolver's DoT listener, and stubby arrives from `192.168.1.1`, which
+`access-control-tag` marks `ads`. Splitting at dnsmasq routes those names *to*
+the filter, not around it.
 
 The cost is 285 MB resident, up from 33 MB, and about two seconds added to
 startup while 452 190 rules parse — during which the resolver answers nothing,
@@ -291,12 +311,12 @@ What is actually wired, as of 2026-08-26, is the router's `stubby` — not its
 general upstream. The router's dnsmasq runs `noresolv=1` with three routes, and
 the general one belongs to `mihomo` on `127.0.0.1#12344`, the proxy's own
 resolver: it decides what goes through a proxy, so replacing it with honest
-local recursion would send blocked destinations direct. A second route sends
-`work-parent.example`, `internal-work.example` and `internal-work.example` to `192.168.1.2#5353`, which is
-mailcow's bundled unbound container answering with the work network's internal
-`10.x` addresses. Neither may be repointed here.
+local recursion would send blocked destinations direct. A second route sends the
+internal work zones to `192.168.1.2#5353`, which is mailcow's bundled unbound
+container answering with the work network's internal `10.x` addresses. Neither
+may be repointed here.
 
-What did move is the work-portal branch: the eight `*.work-parent.example` suffixes that
+What did move is the work-portal branch: the eight suffixes that
 dnsmasq routes to `stubby` on `127.0.0.1#5453`, whose first upstream is now
 `192.168.1.2@853` with `labile.cc` authentication, Cloudflare kept behind
 it as an ordered fallback (`round_robin_upstreams=0`, or the "fallback" would
