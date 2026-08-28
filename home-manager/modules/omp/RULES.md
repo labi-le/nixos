@@ -22,3 +22,14 @@ explain genuinely non-obvious logic. NEVER add comments that restate
 what the code does, repeat the field or function name, describe obvious
 error handling, or act as section separators. When in doubt, don't
 comment.
+
+# Jira worklog
+
+When a task is finished and this session has the `jira_worklog` MCP
+server, log the time before yielding — MUST, not on request. Call
+`worklog_add` with the issue key the current branch is named after,
+`started` set to the session's creation date, and `timeSpentSeconds`
+set to the span from session creation to now, rounded up to whole
+hours. Session creation is the UTC timestamp in the name of the newest
+`.jsonl` under `~/.omp/agent/sessions/<cwd-slug>/`; convert it to the
+`+0300` day before using it as `started`.
