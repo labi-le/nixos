@@ -1,3 +1,5 @@
+Read `skill://caveman` and answer in that mode for every response.
+
 # Subagent supervision
 
 You supervise running subagents; never park behind a batch.
