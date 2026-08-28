@@ -35,7 +35,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | GNOME keyring | `modules/keyring.nix` | |
 | Locale, timezone | `modules/locale.nix` | |
 | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | |
-| OpenCode secrets for Home Manager hosts | `modules/opencode-secrets.nix` | Enabled for hosts listed in the module |
+| LLM gateway API keys for Home Manager hosts (agenix `opencode-litellm-master-key`, consumed by `home-manager/modules/omp.nix`) | `modules/opencode-secrets.nix` | Enabled for hosts listed in the module |
 | Environment variables | `modules/env.nix` | |
 | Network entry point | `modules/network/default.nix` | Imports DNS, firewall, hosts, proxy sub-modules |
 | Network DNS | `modules/network/dns.nix` | Imported by `modules/network/default.nix` |
@@ -191,13 +191,6 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
 | Oh My Pi (omp) coding agent + undo-redo extension + MCP servers (`chroma`, `context7`, `sway`) in `~/.omp/agent/mcp.json` + user-level agent context: `RULES.md` (always-apply), `rules/commit-style.md` (TTSR, fires on `git commit`), `rules/code-comments.md` (TTSR, fires on comment blocks in edits), `rules/project-naming.md` (rulebook, read via `rule://`), `AGENTS.md` (session background) + mnemopi memory scoping | `home-manager/modules/omp.nix` | upstream oh-my-pi (`github:can1357/oh-my-pi`) `programs.omp` HM module loaded in `flake.nix` sharedModules; provider defs are emitted as `~/.omp/agent/models.yml`, config keys as `programs.omp.settings`; the five markdown documents are files under `home-manager/modules/omp/`, wired with `source =`, so editing a rule needs no Nix string escaping; a rule's bucket follows its frontmatter — `condition`/`astCondition` wins over `alwaysApply`, and a `description` with neither lands in the rulebook; project-scoped servers stay in that project's `.omp/mcp.json` — see "Other Files" for this repo's own `nix-control` server; memory is `mnemopi.scoping = "per-project"` — one isolated bank per project, no shared bank |
-| OpenCode (LLM agents) entry point | `home-manager/modules/opencode/default.nix` |
-| OpenCode provider definitions | `home-manager/modules/opencode/providers/*.nix` |
-| OpenCode package wiring | `home-manager/modules/opencode/packages.nix` |
-| OpenCode agents | `home-manager/modules/opencode/agents.nix` |
-| OpenCode integrations | `home-manager/modules/opencode/integrations.nix` |
-| OpenCode LSP servers (per-language) | `home-manager/modules/opencode/lsp/default.nix` imports `go.nix`, `php.nix`, `nix.nix` |
-| OpenCode wrapper scripts (splices the `index-repo` opencode hook: registers `$PWD` with the shared indexer service on launch, unregisters on exit) | `home-manager/modules/opencode/wrappers.nix` |
 | Code indexer (`index-repo`) — Rust crate + Nix modules; lives in its own repo `git+ssh://git@github.com/labi-le/index-repo` | external flake input (`flake.nix`); see "Code indexer wiring" below |
 
 ## Cross-Cutting Tasks
@@ -220,11 +213,9 @@ The indexer is an external flake (`index-repo.url` in `flake.nix`) that ships it
 |---|---|---|
 | Package overlay | `overlays.nix` | `index-repo = inputs.index-repo.packages.${system}.default` (→ `pkgs.index-repo`) |
 | System service | `flake.nix` (`mkSystem` `withHomeManager` list) | imports `inputs.index-repo.nixosModules.default` + sets `services.index-repo.enable = true` (HM hosts only, not server) |
-| Opencode glue | `flake.nix` (`homeManagerConfig.sharedModules`) + `home-manager/modules/opencode/{default,wrappers}.nix` | imports `inputs.index-repo.homeManagerModules.default`; the wrapper splices `config.services.index-repo.opencode.hook` |
-| Chroma gate + MCP | `home-manager/modules/opencode/integrations.nix` | sets `services.index-repo.opencode.chromaGate.enable` (deploys the `chroma-gate.ts` opencode plugin from the index-repo flake) + `chromaMcp.{enable,host}` (emits `programs.opencode.settings.mcp.chroma`, the `uvx chroma-mcp` server) |
 | Oh-my-pi register hook | `home-manager/modules/omp.nix` | sets `services.index-repo.omp.registerHook.enable`; extension source + deployment live in the index-repo flake (`hooks/omp/repo-register.js`) |
 
-Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{host,port,ssl,debounce}` on the NixOS module. The systemd user unit (`index-repo serve`) is defined by the module — do NOT hand-write it. The opencode chroma-gate plugin + `chroma` MCP server come from the same index-repo HM module (`services.index-repo.opencode.{chromaGate,chromaMcp}`, enabled in `integrations.nix`); `chromaMcp.{host,port,ssl}` default to the NixOS `services.index-repo.{host,port,ssl}` via `osConfig`.
+Connection options (ChromaDB host/port/ssl, debounce) are `services.index-repo.{host,port,ssl,debounce}` on the NixOS module. The systemd user unit (`index-repo serve`) is defined by the module — do NOT hand-write it. omp's register hook is wired in `home-manager/modules/omp.nix`.
 
 ## Optional / Currently Unimported Modules
 

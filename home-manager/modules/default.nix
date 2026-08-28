@@ -16,7 +16,6 @@
     ./thunar.nix
     ./yt-dlp.nix
     ./xdg.nix
-    # ./opencode  # disabled — skills + MCP migrated to omp.nix
     ./omp.nix
   ];
 

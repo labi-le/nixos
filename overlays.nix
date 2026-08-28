@@ -48,7 +48,6 @@ final: prev: {
   agenix = inputs.agenix.packages.${system}.default;
   nur = (inputs.nur.overlays.default final prev).nur;
   apple-fonts = inputs.apple-fonts.packages.${system};
-  opencode = inputs.opencode.packages.${system}.opencode;
   nix-index-with-small-db = inputs.nix-index-database.packages.${system}.nix-index-with-small-db;
   index-repo = inputs.index-repo.packages.${system}.default;
   omp = inputs.omp.packages.${system}.default;

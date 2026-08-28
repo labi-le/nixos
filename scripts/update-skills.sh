@@ -1,27 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Update the fetchFromGitHub skill pins (rev + hash) in
-#   home-manager/modules/opencode/integrations.nix
-# to the latest upstream default-branch HEAD.
-#
-# Counterpart to scripts/codegen/* (which regenerate provider model lists);
-# this one refreshes the hand-maintained `programs.opencode.skills` pins.
-# Idempotent: re-running while already current makes no changes.
-
 script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
-target="$script_dir/../home-manager/modules/opencode/integrations.nix"
+target="$script_dir/../home-manager/modules/omp.nix"
 
-# name | owner | repo   (owner is the unique anchor inside integrations.nix)
-# customize-opencode is intentionally absent: it has no upstream repo (its body
-# is extracted from the opencode binary into skills/customize-opencode/SKILL.md).
 skills=(
-  "desloppify|peteromallet|desloppify"
-  "plantuml-rendering|asolfre|plantuml-rendering-skill"
-  "caveman|JuliusBrussee|caveman"
   "superpowers|obra|superpowers"
   "agent-skills|labi-le|agent-skills"
-  "oh-my-openagent|code-yeongyu|oh-my-openagent"
+  "desloppify|peteromallet|desloppify"
+  "plantuml|asolfre|plantuml-rendering-skill"
+  "caveman|JuliusBrussee|caveman"
 )
 
 prefetch() {
@@ -45,8 +33,6 @@ for entry in "${skills[@]}"; do
   fi
 
   before="$(sha1sum "$target")"
-  # Scope rev+hash substitution to this skill's fetchFromGitHub block:
-  # from its unique `owner = "<owner>";` line to the next closing `}`.
   sed -i -E \
     -e "/owner = \"${owner}\";/,/\}/ s|rev = \"[^\"]*\";|rev = \"${rev}\";|" \
     -e "/owner = \"${owner}\";/,/\}/ s|hash = \"[^\"]*\";|hash = \"${hash}\";|" \
@@ -62,7 +48,7 @@ for entry in "${skills[@]}"; do
 done
 
 if [ "$changed" -eq 1 ]; then
-  printf '\nPins updated in %s\nRun `home-manager switch` to apply.\n' "$target"
+  printf '\nPins updated in %s\nRun `make switch` to apply.\n' "$target"
 else
   printf '\nAll skill pins already at latest upstream HEAD.\n'
 fi

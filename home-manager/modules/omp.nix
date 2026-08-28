@@ -25,11 +25,9 @@ let
   # bare-id lookup.
   mainModel = "anthropic/claude-opus-5";
 
-  # --- Skills migrated from the (now-disabled) opencode module ---------------
-  # Vendored from obra/superpowers + labi-le/agent-skills, plus three standalone
-  # skills. Deployed to ~/.omp/agent/skills/<name> so omp's native provider
-  # (priority 100) owns them independently of opencode. The
-  # code-yeongyu/oh-my-openagent source was intentionally dropped.
+  # Skills vendored from obra/superpowers + labi-le/agent-skills, plus three
+  # standalone skills, deployed to ~/.omp/agent/skills/<name> for omp's native
+  # provider (priority 100).
   superpowersSrc = pkgs.fetchFromGitHub {
     owner = "obra";
     repo = "superpowers";
@@ -89,9 +87,7 @@ let
 
 in
 {
-  # `uv` provides `uvx`, required by the chroma MCP below. It used to come from
-  # the now-disabled opencode module (opencode/packages.nix); keep it here so
-  # the dependency lives next to the server that needs it. `nodejs` provides
+  # `uv` provides `uvx`, required by the chroma MCP below. `nodejs` provides
   # `npx`/`node` on PATH for omp — npm-based MCP servers and tooling launched
   # from within the agent expect it.
   home.packages = [
@@ -189,8 +185,7 @@ in
   # library docs. `sway` = query/control the running SwayWM session; the binary
   # is packaged declaratively (overlays.nix -> pkgs.swaywm-mcp) instead of
   # fetched at runtime via npx. SWAYSOCK is inherited from the session; SWAYMSG_BIN
-  # is pinned so it works even when swaymsg is absent from PATH. Skills are
-  # migrated from the (disabled) opencode module above.
+  # is pinned so it works even when swaymsg is absent from PATH.
   home.file = skillFiles // {
     ".omp/agent/models.yml".text = builtins.toJSON {
       providers = {

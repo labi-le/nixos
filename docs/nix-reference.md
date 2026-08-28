@@ -32,13 +32,13 @@
 1. Add an input in `flake.nix`:
 
 ```nix
-opencode.url = "github:numtide/llm-agents.nix";
+omp.url = "github:can1357/oh-my-pi";
 ```
 
 2. Expose it in `overlays.nix`:
 
 ```nix
-opencode = inputs.opencode.packages.${system}.opencode;
+omp = inputs.omp.packages.${system}.default;
 ```
 
 ### From A Local Package
@@ -71,12 +71,12 @@ my-script = prev.callPackage ./pkgs/my-script.nix { };
 
 ## Adding A Command Alias
 
-Add aliases in `modules/users.nix` under `environment.interactiveShellInit`:
+Add aliases in `modules/shell.nix` under `programs.zsh.shellAliases`:
 
 ```nix
-environment.interactiveShellInit = ''
-  alias oo="opencode"
-'';
+programs.zsh.shellAliases = {
+  eh = "grep -o '^[^=]*'";
+};
 ```
 
 ## Secrets Management With agenix
