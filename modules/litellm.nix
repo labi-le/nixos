@@ -12,28 +12,6 @@
         {
           model_name = "research-free";
           litellm_params = {
-            model = "deepseek/deepseek-v4-flash";
-            api_base = "https://api.aigate.shop/v1";
-            api_key = "os.environ/LITELLM_AIGATE_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "xiaomi/mimo-v2.5";
-            api_base = "https://api.aigate.shop/v1";
-            api_key = "os.environ/LITELLM_AIGATE_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
             model = "deepseek-v4-flash-free";
             api_base = "https://opencode.ai/zen/v1";
             api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";

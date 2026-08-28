@@ -7,21 +7,22 @@
 let
   # apiKey resolved at RUNTIME via omp `!command` support (execSync at models.yml
   # load): the secret is read from /run/agenix live, never baked into the
-  # world-readable /nix/store. Guarded: the secret exists only on pc/notebook.
+  # world-readable /nix/store. Guarded: the secret exists only on pc/notebook,
+  # where the fallback is the plain env var name.
   litellmSecret = osConfig.age.secrets.opencode-litellm-master-key or null;
-  aigateApiKey =
+  litellmKey =
+    envName:
     if litellmSecret != null then
-      "!${pkgs.gnused}/bin/sed -n 's/^LITELLM_AIGATE_API_KEY=//p' ${litellmSecret.path}"
+      "!${pkgs.gnused}/bin/sed -n 's/^${envName}=//p' ${litellmSecret.path}"
     else
-      "LITELLM_AIGATE_API_KEY";
+      envName;
+  closerouterApiKey = litellmKey "LITELLM_CLOSEROUTER";
 
   # Single source of truth for the model omp runs on: models.default and the
   # advisor role below must stay identical, so they read the same binding.
   # `anthropic/claude-opus-5` is an exact provider/modelId match on the natively
   # authed account, and omp resolves that form before canonical coalescing or
-  # bare-id lookup. The gateway's Claude ids only look alike: they are bare ids
-  # of the aigate provider, so a form like `anthropic/claude-haiku-4.5` (no
-  # native twin -- upstream spells it `claude-haiku-4-5`) lands on aigate.
+  # bare-id lookup.
   mainModel = "anthropic/claude-opus-5";
 
   # --- Skills migrated from the (now-disabled) opencode module ---------------
@@ -193,57 +194,25 @@ in
   home.file = skillFiles // {
     ".omp/agent/models.yml".text = builtins.toJSON {
       providers = {
-        aigate = {
-          baseUrl = "https://api.aigate.shop/v1";
+        closerouter = {
+          baseUrl = "https://api.closerouter.dev/v1";
           api = "openai-completions";
-          apiKey = aigateApiKey;
+          apiKey = closerouterApiKey;
           models = [
             {
-              id = "deepseek/deepseek-v4-pro";
-              name = "DeepSeek V4 Pro";
-              contextWindow = 200000;
-              maxTokens = 8192;
-            }
-            {
-              id = "deepseek/deepseek-v4-flash";
-              name = "DeepSeek V4 Flash";
-              contextWindow = 200000;
-              maxTokens = 8192;
-            }
-            {
-              id = "google/gemini-3.5-flash";
-              name = "Gemini 3.5 Flash";
-              contextWindow = 1048576;
-              maxTokens = 8192;
-            }
-            {
-              id = "qwen/qwen3.7-max";
-              name = "Qwen 3.7 Max";
-              contextWindow = 128000;
-              maxTokens = 8192;
-            }
-            {
-              id = "moonshotai/kimi-k2.7-code";
-              name = "Kimi K2.7 Code";
+              id = "deepseek/deepseek-v4-pro-0813";
+              name = "DeepSeek V4 Pro (CloseRouter)";
+              reasoning = true;
+              supportsTools = true;
               contextWindow = 1000000;
-              maxTokens = 12192;
-            }
-            {
-              id = "moonshotai/kimi-k3";
-              name = "Kimi K3";
-              contextWindow = 1000000;
-              maxTokens = 12800;
-            }
-            {
-              id = "z-ai/glm-5.2";
-              name = "GLM 5.2";
-              contextWindow = 128000;
               maxTokens = 8192;
             }
             {
-              id = "minimax/minimax-m3";
-              name = "MiniMax M3";
-              contextWindow = 128000;
+              id = "deepseek/deepseek-v4-flash-0731";
+              name = "DeepSeek V4 Flash (CloseRouter)";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
               maxTokens = 8192;
             }
           ];
