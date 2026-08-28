@@ -112,9 +112,8 @@ in
 
       modelRoles = {
         default = mainModel;
-        advisor = mainModel;
       };
-      advisor.enabled = true;
+      advisor.enabled = false;
 
       defaultThinkingLevel = "auto";
 
