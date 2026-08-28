@@ -56,6 +56,8 @@
       # close current window with prefix + x
       bind x kill-window
 
+      bind r command-prompt -I "#W" { rename-window "%%" }
+
       # Forward the kitty keyboard protocol (CSI-u) to apps running inside tmux.
       # Lets TUIs distinguish Shift+Enter from Enter (-> newline) and receive
       # unambiguous Esc events (-> reliable double-Esc). Needs foot (CSI u)
