@@ -55,8 +55,8 @@ let
   cavemanSrc = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
-    rev = "2f49f0e1a352aa810e70056b7930aeb0b3d219b4";
-    hash = "sha256-FagkzOnjW9tqeaAK8NX1X8REsjWRRMqfrvhByEtrAXM=";
+    rev = "17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8";
+    hash = "sha256-lmzmlPj47lWNRZudMSsdIocS4srZYQeG2bQw800Os7U=";
   };
 
   # { <name> = "<dir>/<name>"; } for every <name>/SKILL.md under `dir`. readDir
