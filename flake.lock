@@ -707,11 +707,11 @@
       },
       "locked": {
         "dir": "qcow2",
-        "lastModified": 1787962405,
-        "narHash": "sha256-Wb28Y027dAvn4B8wAo8ARlC5s6jMTko7UNUn2nuF/uo=",
+        "lastModified": 1787962797,
+        "narHash": "sha256-RKcg1QTlIjFLVOLlCbdPymYxWck6OEHARetLbIeo2Ns=",
         "ref": "refs/heads/master",
-        "rev": "e7ec99fd2930cea2892ae6bc93d9bcd7eeaec490",
-        "revCount": 52,
+        "rev": "4c9dad8235567cfbd3452ad5b950a3f5dcd4d7a6",
+        "revCount": 53,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/ngate-wrapped"
       },
