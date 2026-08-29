@@ -63,7 +63,10 @@
     routes = "79.137.220.62 10.0.0.0/8 185.129.100.112/32 10.206.185.123/32 10.89.58.17/32";
   };
 
-  systemd.services.ngate-wrapped-vm.startLimitIntervalSec = 0;
+  systemd.services.ngate-wrapped-vm = {
+    startLimitIntervalSec = 0;
+    serviceConfig.RestartSec = 5;
+  };
 
   boot.kernel.sysctl = {
     "vm.dirty_background_ratio" = 15;
