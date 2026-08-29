@@ -54,7 +54,7 @@
   nix.gc.automatic = lib.mkForce false;
   nix.settings.trusted-users = [ "labile" ];
   users.users.labile.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIK4XUt2RWmKFHA+eKh4mP6k580R5pk/0IsuK/XRgSUx cache-push"
+    "command=\"nix-store --serve --write\",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIK4XUt2RWmKFHA+eKh4mP6k580R5pk/0IsuK/XRgSUx cache-push"
   ];
 
   services.ngate-wrapped-vm = {
