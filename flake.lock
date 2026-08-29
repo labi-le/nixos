@@ -707,11 +707,11 @@
       },
       "locked": {
         "dir": "qcow2",
-        "lastModified": 1786962118,
-        "narHash": "sha256-9OuXWYKIwipTtIRhxfw0+Wnt7TycpQz/02T3HoIbnE8=",
+        "lastModified": 1787962405,
+        "narHash": "sha256-Wb28Y027dAvn4B8wAo8ARlC5s6jMTko7UNUn2nuF/uo=",
         "ref": "refs/heads/master",
-        "rev": "2c528aa8651bbfe7d44fb476861ad1a8c5f8c188",
-        "revCount": 51,
+        "rev": "e7ec99fd2930cea2892ae6bc93d9bcd7eeaec490",
+        "revCount": 52,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/ngate-wrapped"
       },
@@ -1035,11 +1035,11 @@
     },
     "nixpkgs_9": {
       "locked": {
-        "lastModified": 1786862985,
-        "narHash": "sha256-FBJRXmbGXiSUDvYEbfLYRkckayyZ6SK1UEqhCrIZ2Cs=",
+        "lastModified": 1787736819,
+        "narHash": "sha256-cV5xEJJK3BvhU8rEd4mC9UsmDi5qscv/kzGPhBRC5WA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e5bdc4a41d4c072fe1e3787eaa0320a384741d44",
+        "rev": "9fbb54b33e91ee4ca368e35a78e0613c720600b3",
         "type": "github"
       },
       "original": {
