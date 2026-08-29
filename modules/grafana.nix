@@ -18,7 +18,7 @@
         domain = "logs.labile.cc";
       };
       analytics.reporting_enabled = false;
-      security.secret_key = config.age.secrets.grafana.path;
+      security.secret_key = "$__file{${config.age.secrets.grafana.path}}";
 
     };
     provision = {
