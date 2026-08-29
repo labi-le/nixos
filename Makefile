@@ -63,14 +63,23 @@ dump:
 
 agenix-rekey:
 	@echo "Rekeying agenix secrets accessible from $(HOSTNAME)..."
-	@find secrets -name '*.age' -type f ! -path 'secrets/keys/*' | while read secret; do \
-		echo "Checking $$secret..."; \
-		if agenix -r -i /etc/ssh/ssh_host_ed25519_key "$$secret" 2>&1 | grep -q "no identity matched"; then \
+	@failed=0; \
+	for secret in $$(find secrets -name '*.age' -type f ! -path 'secrets/keys/*'); do \
+		output=$$(agenix -r -i /etc/ssh/ssh_host_ed25519_key "$$secret" 2>&1); \
+		status=$$?; \
+		if [ "$$status" -eq 0 ]; then \
+			echo "Rekeyed $$secret"; \
+		elif echo "$$output" | grep -q "no identity matched"; then \
 			echo "Skipping $$secret (not accessible from $(HOSTNAME))"; \
 		else \
-			echo "Rekeyed $$secret"; \
+			failed=1; \
+			echo "$$secret:" >&2; \
+			echo "$$output" >&2; \
 		fi; \
-	done
+	done; \
+	if [ "$$failed" -ne 0 ]; then \
+		exit 1; \
+	fi
 
 
 restore-keys:
