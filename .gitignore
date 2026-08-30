@@ -2,7 +2,7 @@
 context.md
 .playwright-mcp/
 .omo/
-.omp/config.yml
+.omp/
 result
 result-*
 __pycache__/
