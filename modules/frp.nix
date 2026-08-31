@@ -34,5 +34,6 @@ in
   networking.firewall.allowedUDPPorts = [
     listenPort
     awgBY
+    danyaVNC
   ];
 }
