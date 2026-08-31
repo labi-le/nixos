@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 with lib;
@@ -46,7 +47,6 @@ in
         inetutils
         iperf3
 
-        alacritty
         imv
         (btop.override {
           rocmSupport = true;
