@@ -155,6 +155,8 @@ in
         formatOnWrite = true;
       };
 
+      edit.autoRepair.enabled = true;
+
       eval.js = false;
 
       providers = {
