@@ -227,7 +227,9 @@ in
     in
     {
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
-      "cache.labile.cc" = proxy { addr = "http://127.0.0.1:5000"; };
+      "cache.labile.cc" = lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:5000"; }) {
+        kTLS = false;
+      };
       "llm.labile.cc" =
         lib.recursiveUpdate
           (proxy {
