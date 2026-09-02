@@ -137,8 +137,8 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 |---|---|
 | Server host config entry point | `hosts/configuration-server.nix` |
 | Server packages | `modules/packages-server.nix` |
-| Nginx | `modules/nginx.nix` |
-| Binary cache (harmonia) | `modules/harmonia.nix` |
+| Nginx; aborted HTTP/2 downloads, KTLS | `modules/nginx.nix`, `docs/nginx.md` |
+| Binary cache (harmonia) | `modules/harmonia.nix`; fetch aborts: `docs/nginx.md` |
 | ZeroSSL ACME for nginx | `modules/zerossl.nix` |
 | LiteLLM | `modules/litellm.nix` |
 | Drive mounts | `modules/drive.nix` |
