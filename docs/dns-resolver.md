@@ -152,45 +152,33 @@ zone serving — observed for real when the first run rejected a good list
 because `grep -q` exiting early under `pipefail` turned a broken pipe into a
 failed SOA check.
 
-There is no canary gate. One existed until 2026-09-02: a list of names that had
-to stay resolvable, each checked along its whole suffix chain so that a wildcard
-entry one level up was caught rather than only an exact match, refusing the
-whole zone if any of them was blocked. It was removed at the operator's request.
-The loss is real and worth naming — a hostile or broken publish now activates
-with only the SOA and rule-count checks in front of it — and the gate also had a
-failure mode of its own: a name that upstream blocks deliberately would have
-made every refresh fail, silently, freezing the zone on whatever it last had.
+No canary gate. One existed until 2026-09-02 — names that had to stay
+resolvable, checked along the whole suffix chain, refusing the zone if any was
+blocked — removed at the operator's request. Two consequences worth knowing: a
+bad publish now activates behind only the SOA and rule-count checks, and the
+gate's own failure mode is gone, where a deliberately blocked upstream name
+would have failed every refresh silently and frozen the zone.
 
-Work domains were never protected by it, and that was deliberate. Work queries
-do reach this filter: the router sends the work-portal suffixes to `stubby`,
-whose first upstream is this resolver's DoT listener, and stubby arrives from
-`192.168.1.1`, which `access-control-tag` marks `ads`. A guard was implemented
-on 2026-08-27 as an agenix secret read by the update service and removed the
-same day, because the list of work suffixes already has an owner in the router's
-dnsmasq, and a second copy here would drift silently in the dangerous direction:
-a new portal added on the router announces itself immediately, since work stops
-working without the route, while a canary list that never learned the name
-simply stops protecting it.
+Do not reintroduce it as a list of work domains. That was tried on 2026-08-27
+as an agenix secret and removed the same day: the router's dnsmasq already owns
+that list, and a second copy drifts in the dangerous direction — a new portal
+announces itself on the router because work breaks without it, while a stale
+canary list just stops protecting.
 
-If a name is ever blocked wrongly, the fix needs no rebuild and no list:
-`unbound-control rpz_disable rpz.ads.` turns filtering off instantly, and
-`localAllow` in `modules/unbound.nix` emits a `rpz-passthru` in `rpz.local.`,
-which beats any block in `rpz.ads.` — verified.
+Blocked names answer NODATA, via `rpz-action-override: nodata` on `rpz.ads.`
+only — the override hits every trigger in its zone, so on `rpz.local.` it would
+destroy the `passthru` that `localAllow` depends on. NXDOMAIN was
+indistinguishable from a name that does not exist, which is the ambiguity that
+cost an evening on a phone claiming to be offline. Measured, unbound 1.26.0:
+blocked answers `NOERROR` with zero records, nonexistent still answers
+`NXDOMAIN`, `rpz-log` writes `rpz-nodata`. Rejected: a local-data sinkhole
+(`A 127.0.0.7`) hands out a successful answer, so clients open sockets to their
+own loopback and local services receive the traffic, and HTTPS degrades to
+certificate errors instead of a clean DNS failure.
 
-A blocked name answers NODATA rather than NXDOMAIN, set by
-`rpz-action-override: nodata` on `rpz.ads.` only. The override applies to every
-trigger in its zone, so putting it on `rpz.local.` would destroy the `passthru`
-that makes `localAllow` work. The reason is diagnostic: NXDOMAIN for a blocked
-name is indistinguishable from a name that does not exist, and that ambiguity
-sent a phone diagnosis down the wrong path for hours. NODATA is distinguishable
-at a glance, hands the client no address, and so keeps the failure as fast as
-NXDOMAIN was. Measured on unbound 1.26.0: a blocked name answers `NOERROR` with
-zero records, a name that really does not exist still answers `NXDOMAIN`, and
-`rpz-log` records `rpz-nodata` in place of `rpz-nxdomain`. A local-data sinkhole
-such as `A 127.0.0.7` was considered and rejected — it hands out a successful
-answer, so clients open sockets to their own loopback where local services then
-receive the traffic, and HTTPS degrades to certificate errors instead of a clean
-DNS failure.
+Wrongly blocked name, no rebuild needed: `unbound-control rpz_disable rpz.ads.`
+kills filtering instantly; `localAllow` emits a `rpz-passthru` in `rpz.local.`
+that beats any block in `rpz.ads.` — verified.
 
 The cost is 319 MB resident, up from 33 MB, measured with 499 200 rules loaded.
 The host has 31 GiB. Parsing adds a perceptible pause to startup during which
