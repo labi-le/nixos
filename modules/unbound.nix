@@ -15,24 +15,20 @@ let
   stateDir = config.services.unbound.stateDir;
   rpzDir = "${stateDir}/rpz";
   blockZone = "${rpzDir}/ads.zone";
-  blockUrl = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/rpz/pro.txt";
+  blockUrl = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/rpz/pro.plus.txt";
   blockMinRules = 300000;
   adsTag = "ads";
 
-  localAllow = [ ];
+  localAllow = [
+    "conn-service-eu-04.allawnos.com"
+    "conn-service-eu-05.allawnos.com"
+  ];
   localBlock = [
     "adfox.ru"
     "vk-portal.net"
-  ];
-
-  canaries = [
-    "labile.cc"
-    "yandex.ru"
-    "mail.ru"
-    "vk.com"
-    "gosuslugi.ru"
-    "sberbank.ru"
-    "github.com"
+    "smi2.ru"
+    "adspynet.com"
+    "carrotquest.io"
   ];
 
   zoneHead = ''
@@ -153,6 +149,7 @@ in
           name = ''"rpz.ads."'';
           zonefile = ''"${blockZone}"'';
           tags = ''"${adsTag}"'';
+          rpz-action-override = "nodata";
           rpz-log = true;
           rpz-log-name = ''"${adsTag}"'';
         }
@@ -222,20 +219,6 @@ in
         echo "refusing zone with $rules rules, minimum is ${toString blockMinRules}" >&2
         exit 1
       fi
-
-      for canary in ${lib.concatStringsSep " " canaries}; do
-        suffix="$canary"
-        while [ -n "$suffix" ]; do
-          if grep -qE "^(\*\.)?$suffix[[:space:]]+.*CNAME" "$new"; then
-            echo "refusing zone: canary $canary is blocked via $suffix" >&2
-            exit 1
-          fi
-          case "$suffix" in
-            *.*) suffix=''${suffix#*.} ;;
-            *) suffix="" ;;
-          esac
-        done
-      done
 
       chmod 0640 "$new"
       mv -f "$new" ${blockZone}

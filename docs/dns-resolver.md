@@ -101,9 +101,10 @@ of those two netblocks, so in practice everything that asks is filtered. The
 tags are not vestigial for that reason: loopback stays untagged, which keeps
 `127.0.0.1@5335` an honest diagnostic path, and comparing a filtered answer
 against an unfiltered one is then a single `dig -p 5335` rather than a
-`rpz_disable` on the live daemon. Measured, the same name is NXDOMAIN for a LAN
-client on plain 53 and over DoT, and NOERROR on the admin port. Delete the tags
-and that comparison is gone.
+`rpz_disable` on the live daemon. Measured, a blocked name answers NOERROR with
+no records for a LAN client on plain 53 and over DoT, and NOERROR with the real
+addresses on the admin port, so the discriminator is the answer count rather
+than the status code. Delete the tags and that comparison is gone.
 
 `respip` must lead `module-config` (`"respip validator iterator"`) or every
 `rpz:` clause is silently inert — no error, no filtering. The obvious way to
@@ -120,66 +121,75 @@ hand-maintained zone generated into the store from two Nix lists, an allow list
 emitting `CNAME rpz-passthru.` and a block list emitting `CNAME .`, each for
 both the name and its wildcard. A `passthru` in the first zone beats a block in
 the second, verified, so that list is the exception mechanism for a false
-positive as well as the place to add what upstream misses. It currently blocks
-`adfox.ru` and `vk-portal.net`, the two Russian ad domains that no HaGeZi tier
-covers. Unbound never rewrites a zonefile that has no primary or url, so the
-store path is safe as a zonefile.
+positive as well as the place to add what upstream misses. It blocks
+`adfox.ru`, `vk-portal.net`, `smi2.ru`, `adspynet.com` and `carrotquest.io`,
+Russian ad and analytics domains that neither Pro nor Pro++ covers, measured
+against both tiers rather than assumed. The allow list carries
+`conn-service-eu-04.allawnos.com` and `conn-service-eu-05.allawnos.com`:
+HaGeZi entries 54244 and 54246 classify them as OPPO telemetry, but they are
+the ColorOS connectivity check, and blocking them makes an OPPO phone fall back
+to `www.google.eu`, whose single A record is an edge whose TLS this ISP
+blackholes. The phone then reports PARTIAL_CONNECTIVITY and every app claims to
+be offline while the network is fine. Unbound never rewrites a zonefile that has
+no primary or url, so the store path is safe as a zonefile.
 
-`rpz.ads.` is HaGeZi Pro, 452 190 rules, fetched by `unbound-rpz-update.timer`
+`rpz.ads.` is HaGeZi Pro++, 499 200 rules, fetched by `unbound-rpz-update.timer`
 rather than by unbound's own `url:` option. The daemon can download and refresh
 a zone itself, and the list ships a usable SOA, but then a bad publish is
 activated unvalidated and a stuck HTTP fetch lives inside the DNS daemon. The
 unit downloads to a temporary file and refuses to activate it unless the header
-carries an SOA, the rule count is at least 300 000, and no canary is blocked;
-only then does it `mv` into place and call `unbound-control auth_zone_reload
-rpz.ads.`, which reloads without a restart. Any failure leaves the previous
+carries an SOA and the rule count is at least 300 000; only then does it `mv`
+into place and call `unbound-control auth_zone_reload rpz.ads.`, which reloads
+without a restart. Any failure leaves the previous
 zone serving — observed for real when the first run rejected a good list
 because `grep -q` exiting early under `pipefail` turned a broken pipe into a
 failed SOA check.
 
-The canaries are `labile.cc`, `github.com` and the Russian services whose loss
-would be noticed first. Each is checked along its whole suffix chain, so a
-wildcard entry one level up is caught rather than only an exact match.
+There is no canary gate. One existed until 2026-09-02: a list of names that had
+to stay resolvable, each checked along its whole suffix chain so that a wildcard
+entry one level up was caught rather than only an exact match, refusing the
+whole zone if any of them was blocked. It was removed at the operator's request.
+The loss is real and worth naming — a hostile or broken publish now activates
+with only the SOA and rule-count checks in front of it — and the gate also had a
+failure mode of its own: a name that upstream blocks deliberately would have
+made every refresh fail, silently, freezing the zone on whatever it last had.
 
-Work domains are deliberately *not* canaries, and that is a decision rather than
-an omission. Work queries do reach this filter — the router sends the
-work-portal suffixes to `stubby`, whose first upstream is this resolver's DoT
-listener, and stubby arrives from `192.168.1.1`, which `access-control-tag`
-marks `ads` — so guarding them looks attractive. It was implemented, on
-2026-08-27, as an agenix secret read by the update service, and removed the same
-day for two reasons.
+Work domains were never protected by it, and that was deliberate. Work queries
+do reach this filter: the router sends the work-portal suffixes to `stubby`,
+whose first upstream is this resolver's DoT listener, and stubby arrives from
+`192.168.1.1`, which `access-control-tag` marks `ads`. A guard was implemented
+on 2026-08-27 as an agenix secret read by the update service and removed the
+same day, because the list of work suffixes already has an owner in the router's
+dnsmasq, and a second copy here would drift silently in the dangerous direction:
+a new portal added on the router announces itself immediately, since work stops
+working without the route, while a canary list that never learned the name
+simply stops protecting it.
 
-The first is duplication. The list of work suffixes already has an owner: the
-router's dnsmasq, which is imperative and outside this repository. A second copy
-here would drift silently and in the dangerous direction — a new portal added on
-the router announces itself immediately, because work stops working without the
-route, while a canary list that never learned the name simply stops protecting
-it. Nothing would notice.
-
-The second is that the guard was worse than the risk it covered. Reading the
-list from a runtime file makes the refresh fail closed on that file, so any
-permission or path regression stops blocklist updates entirely, reported only in
-a journal nobody reads. Upstream writes leaf rules for tracker hosts, not apex
-rules for government portals: the one rule it does have inside the work parent
-zone is an analytics host, blocked correctly. The likelier failure was the
-safety mechanism.
-
-If a work name is ever blocked anyway, the fix needs no rebuild and no list:
+If a name is ever blocked wrongly, the fix needs no rebuild and no list:
 `unbound-control rpz_disable rpz.ads.` turns filtering off instantly, and
 `localAllow` in `modules/unbound.nix` emits a `rpz-passthru` in `rpz.local.`,
-which beats any block in `rpz.ads.` — verified. Adding a work name there is a
-deliberate act at incident time, not a list to maintain in advance.
+which beats any block in `rpz.ads.` — verified.
 
-A behavioural canary was considered and rejected: deriving the protected set
-from names this resolver has recently answered needs no list, but it would gate
-a deterministic update on non-deterministic traffic, and it would have protected
-every ad domain resolved before the filter existed.
+A blocked name answers NODATA rather than NXDOMAIN, set by
+`rpz-action-override: nodata` on `rpz.ads.` only. The override applies to every
+trigger in its zone, so putting it on `rpz.local.` would destroy the `passthru`
+that makes `localAllow` work. The reason is diagnostic: NXDOMAIN for a blocked
+name is indistinguishable from a name that does not exist, and that ambiguity
+sent a phone diagnosis down the wrong path for hours. NODATA is distinguishable
+at a glance, hands the client no address, and so keeps the failure as fast as
+NXDOMAIN was. Measured on unbound 1.26.0: a blocked name answers `NOERROR` with
+zero records, a name that really does not exist still answers `NXDOMAIN`, and
+`rpz-log` records `rpz-nodata` in place of `rpz-nxdomain`. A local-data sinkhole
+such as `A 127.0.0.7` was considered and rejected — it hands out a successful
+answer, so clients open sockets to their own loopback where local services then
+receive the traffic, and HTTPS degrades to certificate errors instead of a clean
+DNS failure.
 
 The cost is 285 MB resident, up from 33 MB, and about two seconds added to
 startup while 452 190 rules parse — during which the resolver answers nothing,
 so a restart is now perceptible. The host has 31 GiB. `rpz-log` is on and each
 block is journalled with the client address (`rpz: applied [ads] mc.yandex.ru.
-rpz-nxdomain 192.168.1.3@54088`); those lines stay in journald, because Alloy
+rpz-nodata 192.168.1.3@54088`); those lines stay in journald, because Alloy
 ships nginx, docker and two journal units to Loki but not unbound.
 
 When something breaks, the escape hatch needs no rebuild and no restart:
