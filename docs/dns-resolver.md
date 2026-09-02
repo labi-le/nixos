@@ -130,7 +130,14 @@ HaGeZi entries 54244 and 54246 classify them as OPPO telemetry, but they are
 the ColorOS connectivity check, and blocking them makes an OPPO phone fall back
 to `www.google.eu`, whose single A record is an edge whose TLS this ISP
 blackholes. The phone then reports PARTIAL_CONNECTIVITY and every app claims to
-be offline while the network is fine. Unbound never rewrites a zonefile that has
+be offline while the network is fine. The passthru only restores half of that
+probe pair: measured on 2026-09-02, the phone's `PROBE_DNS` and `PROBE_HTTP`
+against `conn-service-eu-04` succeed in 8 ms and 18 ms, while `PROBE_HTTPS`
+against `conn-service-eu-05` still times out, because the Akamai edges this
+network is handed (`23.196.236.0/24`) accept TCP 443 and never finish the
+handshake either. The only HTTPS probe that completes is `www.google.eu`, and
+only because the router routes that name through WARP, so that route stays
+load-bearing for validation. Unbound never rewrites a zonefile that has
 no primary or url, so the store path is safe as a zonefile.
 
 `rpz.ads.` is HaGeZi Pro++, 499 200 rules, fetched by `unbound-rpz-update.timer`
