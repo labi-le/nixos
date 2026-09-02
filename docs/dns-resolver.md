@@ -185,9 +185,12 @@ answer, so clients open sockets to their own loopback where local services then
 receive the traffic, and HTTPS degrades to certificate errors instead of a clean
 DNS failure.
 
-The cost is 285 MB resident, up from 33 MB, and about two seconds added to
-startup while 452 190 rules parse — during which the resolver answers nothing,
-so a restart is now perceptible. The host has 31 GiB. `rpz-log` is on and each
+The cost is 319 MB resident, up from 33 MB, measured with 499 200 rules loaded.
+The host has 31 GiB. Parsing adds a perceptible pause to startup during which
+the resolver answers nothing; the figure of about two seconds was measured at
+452 190 rules and has not been re-measured at this tier, because the restart
+that came with the switch still parsed the previous zone — the new one is
+fetched by the timer afterwards. `rpz-log` is on and each
 block is journalled with the client address (`rpz: applied [ads] mc.yandex.ru.
 rpz-nodata 192.168.1.3@54088`); those lines stay in journald, because Alloy
 ships nginx, docker and two journal units to Loki but not unbound.
@@ -206,9 +209,12 @@ which speaks DoT to this resolver. mihomo runs `enhanced-mode: fake-ip` with
 only the `vpn`, `telegram` and `warp` rule-sets are answered with a
 `198.18.1.0/24` placeholder; everything else is resolved for real by us. The
 router queries as `192.168.1.1`, which is inside the tagged netblock, so LAN
-clients receive the same NXDOMAIN a DoT client gets. Measured through all three
-layers: `an.yandex.ru` is NXDOMAIN at stubby, at mihomo and at dnsmasq, while
-`example.com` resolves.
+clients receive the same answer a DoT client gets. Measured through all three
+layers after the NODATA change: `mc.yandex.ru` answers NOERROR with zero
+records at dnsmasq, and so does the query the interceptor catches for an
+unroutable destination, while `example.net` resolves and `nx-test-zzz.invalid`
+is still NXDOMAIN. The block signal therefore survives mihomo and dnsmasq
+intact rather than being flattened into one of them.
 
 mihomo must stay in that path. Its DNS answers are how proxy routing is decided
 for the three rule-sets above, so pointing dnsmasq straight at this resolver
@@ -383,3 +389,17 @@ means the router exemption is gone.
 Confirming that the exemption stayed surgical: from the server,
 `dig @192.0.2.1 example.com` must time out, while the same query from any other
 LAN host must still return an answer.
+
+Answering "is this name in the blocklist" from any client, which is the whole
+point of the NODATA action:
+
+```sh
+dig +noall +comments +answer @192.168.1.1 mc.yandex.ru
+```
+
+`NOERROR` with no answer records means the ads zone blocked it. `NXDOMAIN`
+means the name genuinely does not resolve, or that `rpz.local.`'s own block
+list caught it — that zone carries no action override, so `localBlock` still
+answers NXDOMAIN and stays distinguishable from an upstream block. To see
+which zone acted, compare against the untagged admin port, where no RPZ
+applies: `dig -p 5335 @127.0.0.1 mc.yandex.ru` returns the real addresses.
