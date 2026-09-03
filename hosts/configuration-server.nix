@@ -25,11 +25,14 @@
     ./../modules/awg
     ./../modules/network
     ./../modules/chromadb.nix
+    ./../modules/omp.nix
     ./../modules/harmonia.nix
     ./../modules/unbound.nix
     ./../modules/ifconfig.nix
     ./../modules/btop.nix
   ];
+
+  mySystem.omp.enable = true;
 
   services.btop.enable = true;
 

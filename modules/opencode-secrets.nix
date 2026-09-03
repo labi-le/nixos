@@ -3,6 +3,7 @@
 let
   enabledHosts = [
     "pc"
+    "server"
     "notebook"
   ];
 in

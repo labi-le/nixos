@@ -17,6 +17,42 @@ in
     ];
   };
 
+  fileSystems."/home/labile/GolandProjects" = {
+    device = "/drive/code/GolandProjects";
+    fsType = "none";
+    options = [
+      "bind"
+      "noauto"
+      "x-systemd.automount"
+      "nofail"
+    ];
+    depends = [ "/drive" ];
+  };
+
+  fileSystems."/home/labile/RustroverProjects" = {
+    device = "/drive/code/RustroverProjects";
+    fsType = "none";
+    options = [
+      "bind"
+      "noauto"
+      "x-systemd.automount"
+      "nofail"
+    ];
+    depends = [ "/drive" ];
+  };
+
+  fileSystems."/home/labile/PhpstormProjects" = {
+    device = "/drive/code/PhpstormProjects";
+    fsType = "none";
+    options = [
+      "bind"
+      "noauto"
+      "x-systemd.automount"
+      "nofail"
+    ];
+    depends = [ "/drive" ];
+  };
+
   # systemd.services."set-readahead-drive" = {
   #   description = "Set readahead for /dev/sda";
   #   wantedBy = [ "local-fs.target" ];
