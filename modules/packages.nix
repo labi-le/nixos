@@ -103,15 +103,23 @@ in
       enableDefaultPackages = true;
       packages = with pkgs; [
         apple-fonts.sf-pro
-        apple-fonts.sf-mono
         apple-fonts.sf-pro-nerd
-
+        apple-fonts.sf-mono
+        apple-fonts.sf-mono-nerd
+        apple-fonts.ny
       ];
 
       fontconfig = {
         defaultFonts = {
-          sansSerif = [ "SF Pro Display" ];
-          monospace = [ "SF Mono" ];
+          sansSerif = [
+            "SF Pro Display"
+            "SFProDisplay Nerd Font"
+          ];
+          monospace = [
+            "SF Mono"
+            "SFMono Nerd Font"
+          ];
+          serif = [ "New York" ];
         };
       };
     };

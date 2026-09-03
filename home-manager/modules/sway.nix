@@ -166,6 +166,11 @@ in
         inner = 2;
         outer = 0;
       };
+      fonts = lib.mkForce {
+        names = [ "SFProDisplay Nerd Font" ];
+        style = "Semibold";
+        size = 10.0;
+      };
       window = {
         border = 1;
         hideEdgeBorders = "smart";

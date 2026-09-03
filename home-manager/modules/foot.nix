@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ ... }:
 
 {
   # Minimalist Wayland terminal (C, CPU-rendered, ~21 MB). No tabs/splits/mux by
@@ -12,7 +12,6 @@
   # the terminal, not the image path.
   programs.foot = {
     enable = true;
-    settings.main.font = lib.mkForce "JetBrainsMono Nerd Font:size=14";
   };
 
   # Default terminal for xdg-terminal-exec (took over from alacritty).

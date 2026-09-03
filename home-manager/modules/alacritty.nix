@@ -1,12 +1,9 @@
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 {
   programs.alacritty = {
     enable = true;
     settings = {
-      font = {
-        size = lib.mkForce 14;
-      };
       # Make Shift+Enter emit the kitty keyboard-protocol sequence (CSI-u:
       # ESC[13;2u) for Return+Shift, so TUI apps (e.g. omp) receive a
       # distinct key and insert a newline instead of submitting. Nix has no

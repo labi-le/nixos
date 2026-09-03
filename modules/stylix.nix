@@ -14,16 +14,20 @@
 
     fonts = {
       monospace = {
-        package = pkgs.nerd-fonts.jetbrains-mono;
-        name = "JetBrainsMono Nerd Font";
+        package = pkgs.apple-fonts.sf-mono-nerd;
+        name = "SFMono Nerd Font";
       };
       sansSerif = {
-        package = pkgs.dejavu_fonts;
-        name = "DejaVu Sans";
+        package = pkgs.apple-fonts.sf-pro-nerd;
+        name = "SFProDisplay Nerd Font";
       };
       serif = {
-        package = pkgs.dejavu_fonts;
-        name = "DejaVu Serif";
+        package = pkgs.apple-fonts.ny;
+        name = "New York";
+      };
+
+      sizes = {
+        terminal = 14;
       };
     };
 

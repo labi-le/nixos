@@ -47,7 +47,7 @@
 
   programs.wofi.style = ''
     * {
-    	font-family: "Hack", monospace;
+    	font-family: "SFProDisplay Nerd Font", sans-serif;
     }
 
     window {
