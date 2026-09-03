@@ -34,41 +34,34 @@
     config.age.secrets.grafana-telegram.path
   ];
 
-  services.grafana.provision.alerting.contactPoints.settings = {
-    apiVersion = 1;
-    contactPoints = [
-      {
+  services.grafana.provision.alerting.contactPoints.settings =
+    let
+      template = ''
+        {{ with index .Alerts 0 }}{{ .Annotations.summary }}
+        {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
+        {{ end }}{{ if .Annotations.Error }}<pre>evaluation error: {{ .Annotations.Error }}</pre>
+        {{ end }}{{ end }}'';
+      telegram = uid: chatid: {
         orgId = 1;
-        name = "telegram";
+        name = uid;
         receivers = [
           {
-            uid = "telegram";
+            inherit uid;
             type = "telegram";
             settings = {
               bottoken = "$__env{TELEGRAM_BOT_TOKEN}";
-              # Hardcoded (not $__env) — see the NOTE above: grafana cannot
-              # inject a numeric chat id from an env var as a string.
-              chatid = "395448554";
-              message = ''
-                {{ with index .Alerts 0 }}{{ .Annotations.summary }}
-                {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
-                {{ end }}{{ end }}'';
-            };
-          }
-          {
-            uid = "telegram-alt";
-            type = "telegram";
-            settings = {
-              bottoken = "$__env{TELEGRAM_BOT_TOKEN}";
-              chatid = "5423484768";
-              message = ''
-                {{ with index .Alerts 0 }}{{ .Annotations.summary }}
-                {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
-                {{ end }}{{ end }}'';
+              inherit chatid;
+              message = template;
             };
           }
         ];
-      }
-    ];
-  };
+      };
+    in
+    {
+      apiVersion = 1;
+      contactPoints = [
+        (telegram "telegram" "395448554")
+        (telegram "telegram-frp" "5423484768")
+      ];
+    };
 }

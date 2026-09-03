@@ -120,7 +120,7 @@
             # covered by the sibling `tidal-syncer-down` rule below. Keep it quiet
             # so a rebuild restarting the unit does not page twice.
             noDataState = "OK";
-            execErrState = "Error";
+            execErrState = "KeepLast";
             for = "0m";
             annotations = {
               summary = "TIDAL session expired on server: run 'tidal-syncer-login' (or 'systemctl start tidal-syncer-login' and watch 'journalctl -fu tidal-syncer-login' for the verification URL) to re-authorize.";
@@ -222,7 +222,7 @@
             # and not something to stay quiet about. `for` below absorbs the gap a
             # rebuild leaves while the unit restarts.
             noDataState = "Alerting";
-            execErrState = "Error";
+            execErrState = "KeepLast";
             for = "10m";
             annotations = {
               summary = "tidal-syncer is not exporting metrics: check 'systemctl status tidal-syncer' and 'journalctl -u tidal-syncer -n 50' on the server.";

@@ -89,7 +89,7 @@
               }
             ];
             noDataState = "OK";
-            execErrState = "Error";
+            execErrState = "KeepLast";
             for = "0m";
             annotations = {
               summary = "frp issues";
@@ -100,7 +100,7 @@
             };
             isPaused = false;
             notification_settings = {
-              receiver = "telegram";
+              receiver = "telegram-frp";
               group_by = [ "alertname" ];
               group_wait = "30s";
               group_interval = "5m";
