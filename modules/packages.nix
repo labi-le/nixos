@@ -38,7 +38,6 @@ in
         unzip
         jq
         openssl
-        yazi
 
         dig
         nmap

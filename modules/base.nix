@@ -24,6 +24,7 @@
     ./cache-push.nix
     ./opencode-secrets.nix
     ./omp
+    ./yazi.nix
     ./nixvim
     ./stylix.nix
   ];
