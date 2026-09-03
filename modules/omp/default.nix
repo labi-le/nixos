@@ -74,8 +74,6 @@ let
     name: dir: "L+ ${agentDir}/skills/${name} - - - - ${dir}"
   ) vendoredSkills;
 
-  cfgDir = ./omp;
-
   modelsYml = pkgs.writeText "models.yml" (
     builtins.toJSON {
       providers = {
@@ -343,13 +341,13 @@ in
       "L+ ${agentDir}/mcp.json - - - - ${mcpJson}"
       "L+ ${agentDir}/keybindings.yml - - - - ${keybindingsYml}"
       "L+ ${agentDir}/lsp.json - - - - ${lspJson}"
-      "L+ ${agentDir}/AGENTS.md - - - - ${cfgDir}/AGENTS.md"
-      "L+ ${agentDir}/RULES.md - - - - ${cfgDir}/RULES.md"
-      "L+ ${agentDir}/rules/commit-style.md - - - - ${cfgDir}/rules/commit-style.md"
-      "L+ ${agentDir}/rules/code-comments.md - - - - ${cfgDir}/rules/code-comments.md"
-      "L+ ${agentDir}/rules/project-naming.md - - - - ${cfgDir}/rules/project-naming.md"
-      "L+ ${agentDir}/extensions/commit-gate.ts - - - - ${cfgDir}/extensions/commit-gate.ts"
-      "L+ ${agentDir}/extensions/comment-gate.ts - - - - ${cfgDir}/extensions/comment-gate.ts"
+      "L+ ${agentDir}/AGENTS.md - - - - ${./AGENTS.md}"
+      "L+ ${agentDir}/RULES.md - - - - ${./RULES.md}"
+      "L+ ${agentDir}/rules/commit-style.md - - - - ${./rules/commit-style.md}"
+      "L+ ${agentDir}/rules/code-comments.md - - - - ${./rules/code-comments.md}"
+      "L+ ${agentDir}/rules/project-naming.md - - - - ${./rules/project-naming.md}"
+      "L+ ${agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
+      "L+ ${agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
       "L+ ${agentDir}/extensions/repo-register.js - - - - ${repoRegisterJs}"
     ]
     ++ skillLinks;

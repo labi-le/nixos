@@ -25,7 +25,7 @@
     ./../modules/awg
     ./../modules/network
     ./../modules/chromadb.nix
-    ./../modules/omp.nix
+    ./../modules/omp
     ./../modules/harmonia.nix
     ./../modules/unbound.nix
     ./../modules/ifconfig.nix
