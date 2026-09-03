@@ -19,7 +19,7 @@
       };
       analytics.reporting_enabled = false;
       security.secret_key = "$__file{${config.age.secrets.grafana.path}}";
-
+      database.query_retries = 3;
     };
     provision = {
       enable = true;
