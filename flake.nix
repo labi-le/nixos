@@ -37,7 +37,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     omp.url = "github:can1357/oh-my-pi";
-    swaywm-mcp.url = "github:cristianoliveira/swaywm-mcp";
   };
 
   outputs =
@@ -99,7 +98,6 @@
           ++ inputs.nixpkgs.lib.optionals withHomeManager [
             inputs.home-manager.nixosModules.home-manager
             homeManagerConfig
-            ./modules/index-repo.nix
           ];
         };
 

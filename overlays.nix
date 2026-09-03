@@ -51,17 +51,6 @@ final: prev: {
   nix-index-with-small-db = inputs.nix-index-database.packages.${system}.nix-index-with-small-db;
   index-repo = inputs.index-repo.packages.${system}.default;
   omp = inputs.omp.packages.${system}.default;
-  # The upstream flake bakes in a nodejs-22.14.0 whose V8 build SIGSEGVs on this
-  # host (Zen5). Rerun the upstream-built JS (deps live in bin/node_modules) with
-  # our working nixpkgs node instead of the broken bundled one.
-  swaywm-mcp =
-    let
-      base = inputs.swaywm-mcp.packages.${system}.default;
-    in
-    prev.writeShellScriptBin "swaywm-mcp" ''
-      exec ${prev.nodejs}/bin/node ${base}/bin/main.js "$@"
-    '';
-
   # langfuse still pins wrapt<2.0 while nixpkgs ships 2.2.2, so
   # pythonRuntimeDepsCheck fails and takes the whole litellm build (and with it
   # the system closure) down. That check asserts metadata, not actual

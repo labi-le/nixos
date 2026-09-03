@@ -23,6 +23,7 @@
     ./nix-ld.nix
     ./cache-push.nix
     ./opencode-secrets.nix
+    ./omp
     ./nixvim
     ./stylix.nix
   ];

@@ -311,50 +311,44 @@ in
 {
   imports = [ inputs.index-repo.nixosModules.default ];
 
-  options.mySystem.omp = {
-    enable = lib.mkEnableOption "OMP coding agent as a standalone NixOS module";
+  environment.systemPackages = [
+    pkgs.omp
+    pkgs.uv
+    pkgs.nodejs
+    pkgs.git
+    pkgs.gh
+  ];
+
+  services.index-repo = {
+    enable = true;
+    host = "192.168.1.2";
+    package = pkgs.index-repo;
   };
 
-  config = lib.mkIf config.mySystem.omp.enable {
-    environment.systemPackages = [
-      pkgs.omp
-      pkgs.uv
-      pkgs.nodejs
-      pkgs.git
-      pkgs.gh
-    ];
+  users.users.${user.name}.linger = true;
 
-    services.index-repo = {
-      enable = true;
-      host = "192.168.1.2";
-      package = pkgs.index-repo;
-    };
+  systemd.tmpfiles.rules = [
+    "d ${agentDir} 0700 ${user.name} ${userCfg.group} -"
+    "d ${agentDir}/skills 0700 ${user.name} ${userCfg.group} -"
+    "d ${agentDir}/rules 0700 ${user.name} ${userCfg.group} -"
+    "d ${agentDir}/extensions 0700 ${user.name} ${userCfg.group} -"
+    "L+ ${agentDir}/models.yml - - - - ${modelsYml}"
+    "L+ ${agentDir}/mcp.json - - - - ${mcpJson}"
+    "L+ ${agentDir}/keybindings.yml - - - - ${keybindingsYml}"
+    "L+ ${agentDir}/lsp.json - - - - ${lspJson}"
+    "L+ ${agentDir}/AGENTS.md - - - - ${./AGENTS.md}"
+    "L+ ${agentDir}/RULES.md - - - - ${./RULES.md}"
+    "L+ ${agentDir}/rules/commit-style.md - - - - ${./rules/commit-style.md}"
+    "L+ ${agentDir}/rules/code-comments.md - - - - ${./rules/code-comments.md}"
+    "L+ ${agentDir}/rules/project-naming.md - - - - ${./rules/project-naming.md}"
+    "L+ ${agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
+    "L+ ${agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
+    "L+ ${agentDir}/extensions/repo-register.js - - - - ${repoRegisterJs}"
+  ]
+  ++ skillLinks;
 
-    users.users.${user.name}.linger = true;
-
-    systemd.tmpfiles.rules = [
-      "d ${agentDir} 0700 ${user.name} ${userCfg.group} -"
-      "d ${agentDir}/skills 0700 ${user.name} ${userCfg.group} -"
-      "d ${agentDir}/rules 0700 ${user.name} ${userCfg.group} -"
-      "d ${agentDir}/extensions 0700 ${user.name} ${userCfg.group} -"
-      "L+ ${agentDir}/models.yml - - - - ${modelsYml}"
-      "L+ ${agentDir}/mcp.json - - - - ${mcpJson}"
-      "L+ ${agentDir}/keybindings.yml - - - - ${keybindingsYml}"
-      "L+ ${agentDir}/lsp.json - - - - ${lspJson}"
-      "L+ ${agentDir}/AGENTS.md - - - - ${./AGENTS.md}"
-      "L+ ${agentDir}/RULES.md - - - - ${./RULES.md}"
-      "L+ ${agentDir}/rules/commit-style.md - - - - ${./rules/commit-style.md}"
-      "L+ ${agentDir}/rules/code-comments.md - - - - ${./rules/code-comments.md}"
-      "L+ ${agentDir}/rules/project-naming.md - - - - ${./rules/project-naming.md}"
-      "L+ ${agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
-      "L+ ${agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
-      "L+ ${agentDir}/extensions/repo-register.js - - - - ${repoRegisterJs}"
-    ]
-    ++ skillLinks;
-
-    system.activationScripts.ompConfig = lib.stringAfter [ "users" ] ''
-      mkdir -p ${agentDir}
-      install -m 600 -o ${user.name} -g ${userCfg.group} ${configFile} ${agentDir}/config.yml
-    '';
-  };
+  system.activationScripts.ompConfig = lib.stringAfter [ "users" ] ''
+    mkdir -p ${agentDir}
+    install -m 600 -o ${user.name} -g ${userCfg.group} ${configFile} ${agentDir}/config.yml
+  '';
 }
