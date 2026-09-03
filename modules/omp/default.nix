@@ -17,8 +17,6 @@ let
       envName;
   closerouterApiKey = litellmKey "LITELLM_CLOSEROUTER";
 
-  mainModel = "anthropic/claude-opus-5";
-
   userCfg = config.users.users.${user.name};
   agentDir = "${userCfg.home}/.omp/agent";
 
@@ -250,9 +248,6 @@ let
   configFile = yaml.generate "omp-config.yml" {
     setupVersion = 1;
     extensions = [ ];
-    modelRoles = {
-      default = mainModel;
-    };
     advisor.enabled = false;
     defaultThinkingLevel = "auto";
     memory.backend = "mnemopi";
@@ -260,7 +255,12 @@ let
     modelRoleStorage = "project";
     compaction = {
       enabled = true;
-      strategy = "snapcompact";
+      methodOrder = [
+        "shake"
+        "snapcompact"
+        "remote"
+        "soft"
+      ];
       midTurnEnabled = true;
       dropUseless = true;
       thresholdPercent = 60;
@@ -281,7 +281,7 @@ let
       eager = "always";
       enableLsp = true;
       maxRuntimeMs = 0;
-      isolation.mode = "auto";
+      isolation.enabled = true;
     };
     secrets.enabled = true;
     lsp = {
