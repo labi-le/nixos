@@ -41,27 +41,28 @@
         {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
         {{ end }}{{ if .Annotations.Error }}<pre>evaluation error: {{ .Annotations.Error }}</pre>
         {{ end }}{{ end }}'';
-      telegram = uid: chatid: {
+      telegram = name: chatids: {
         orgId = 1;
-        name = uid;
-        receivers = [
-          {
-            inherit uid;
-            type = "telegram";
-            settings = {
-              bottoken = "$__env{TELEGRAM_BOT_TOKEN}";
-              inherit chatid;
-              message = template;
-            };
-          }
-        ];
+        inherit name;
+        receivers = map (chatid: {
+          uid = "${name}-${chatid}";
+          type = "telegram";
+          settings = {
+            bottoken = "$__env{TELEGRAM_BOT_TOKEN}";
+            inherit chatid;
+            message = template;
+          };
+        }) chatids;
       };
     in
     {
       apiVersion = 1;
       contactPoints = [
-        (telegram "telegram" "395448554")
-        (telegram "telegram-frp" "5423484768")
+        (telegram "telegram-admin" [ "395448554" ])
+        (telegram "telegram-frp-users" [
+          "395448554"
+          "5423484768"
+        ])
       ];
     };
 }

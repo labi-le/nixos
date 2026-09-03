@@ -90,7 +90,7 @@
             execErrState = "KeepLast";
             for = "0m";
             annotations = {
-              summary = "frp issues";
+              summary = "frp reverse proxy: tunnel connections are dropping on the server; check 'systemctl status frp-server' and 'journalctl -u frp-server -n 50'.";
             };
             labels = {
               severity = "warning";
@@ -98,7 +98,7 @@
             };
             isPaused = false;
             notification_settings = {
-              receiver = "telegram-frp";
+              receiver = "telegram-frp-users";
               group_by = [ "alertname" ];
               group_wait = "30s";
               group_interval = "5m";

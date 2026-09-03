@@ -22,8 +22,6 @@
 # is nothing left to say about the session -- so on its own it would be exactly
 # as silent about a dead daemon as the old Loki query was. `up` is Prometheus'
 # own scrape result and exists for as long as the scrape job does.
-#
-# Routes to the shared "telegram" contact point (./contact-points.nix).
 {
   services.grafana.provision.alerting.rules.settings = {
     apiVersion = 1;
@@ -133,7 +131,7 @@
             # Route straight to the shared Telegram contact point without
             # touching Grafana's root notification policy.
             notification_settings = {
-              receiver = "telegram";
+              receiver = "telegram-admin";
               group_by = [ "alertname" ];
               group_wait = "30s";
               group_interval = "5m";
@@ -233,7 +231,7 @@
             };
             isPaused = false;
             notification_settings = {
-              receiver = "telegram";
+              receiver = "telegram-admin";
               group_by = [ "alertname" ];
               group_wait = "30s";
               group_interval = "5m";
