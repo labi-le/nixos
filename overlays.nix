@@ -55,8 +55,10 @@ final: prev: {
   # host (Zen5). Rerun the upstream-built JS (deps live in bin/node_modules) with
   # our working nixpkgs node instead of the broken bundled one.
   swaywm-mcp =
-    let base = inputs.swaywm-mcp.packages.${system}.default;
-    in prev.writeShellScriptBin "swaywm-mcp" ''
+    let
+      base = inputs.swaywm-mcp.packages.${system}.default;
+    in
+    prev.writeShellScriptBin "swaywm-mcp" ''
       exec ${prev.nodejs}/bin/node ${base}/bin/main.js "$@"
     '';
 
@@ -68,9 +70,11 @@ final: prev: {
   # failure as of 2026-07-26, so this cannot wait for an upstream bump. Relax
   # just the one bound; overrideScope keeps the rebuild to langfuse's dependents
   # instead of the whole python set.
-  python3Packages = prev.python3Packages.overrideScope (_: pyPrev: {
-    langfuse = pyPrev.langfuse.overridePythonAttrs (old: {
-      pythonRelaxDeps = (old.pythonRelaxDeps or [ ]) ++ [ "wrapt" ];
-    });
-  });
+  python3Packages = prev.python3Packages.overrideScope (
+    _: pyPrev: {
+      langfuse = pyPrev.langfuse.overridePythonAttrs (old: {
+        pythonRelaxDeps = (old.pythonRelaxDeps or [ ]) ++ [ "wrapt" ];
+      });
+    }
+  );
 }

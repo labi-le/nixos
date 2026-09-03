@@ -1,8 +1,8 @@
-{ writeShellScriptBin
-, openrgb
-, gnugrep
-, coreutils
-,
+{
+  writeShellScriptBin,
+  openrgb,
+  gnugrep,
+  coreutils,
 }:
 
 writeShellScriptBin "openrgb-profile" ''

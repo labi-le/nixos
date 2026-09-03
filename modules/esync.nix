@@ -1,5 +1,6 @@
-{ user
-, ...
+{
+  user,
+  ...
 }:
 {
   systemd.settings.Manager.DefaultLimitNOFILE = "524288";

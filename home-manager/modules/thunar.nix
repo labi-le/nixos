@@ -30,7 +30,14 @@
     (xarchiver.overrideAttrs (old: {
       postFixup = ''
         wrapProgram $out/bin/xarchiver \
-          --prefix PATH : ${lib.makeBinPath [ unrar p7zip zip unzip ]}
+          --prefix PATH : ${
+            lib.makeBinPath [
+              unrar
+              p7zip
+              zip
+              unzip
+            ]
+          }
       '';
     }))
     p7zip

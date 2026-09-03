@@ -1,7 +1,10 @@
 { pkgs, ... }:
 
 {
-  boot.kernelModules = [ "thunderbolt" "thunderbolt-net" ];
+  boot.kernelModules = [
+    "thunderbolt"
+    "thunderbolt-net"
+  ];
   environment.systemPackages = with pkgs; [ bolt ];
 
   services = {

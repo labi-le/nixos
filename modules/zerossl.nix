@@ -6,13 +6,11 @@
 
 let
   certNames = builtins.attrNames config.security.acme.certs;
-  acmeServiceNames = builtins.concatMap (
-    cert: [
-      "acme-${cert}"
-      "acme-order-renew-${cert}"
-      "acme-renew-${cert}"
-    ]
-  ) certNames;
+  acmeServiceNames = builtins.concatMap (cert: [
+    "acme-${cert}"
+    "acme-order-renew-${cert}"
+    "acme-renew-${cert}"
+  ]) certNames;
 in
 {
   age.secrets.zerossl = {

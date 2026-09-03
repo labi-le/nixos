@@ -272,5 +272,8 @@
   #   systemd-journal -> read the journal (fail2ban, frp-server)
   #   nginx           -> read 0640 nginx:nginx files in the 0750 nginx:nginx log dir
   #   docker          -> read /var/run/docker.sock
-  systemd.services.alloy.serviceConfig.SupplementaryGroups = [ "nginx" "docker" ];
+  systemd.services.alloy.serviceConfig.SupplementaryGroups = [
+    "nginx"
+    "docker"
+  ];
 }

@@ -1,7 +1,8 @@
-{ lib
-, pkgs
-, config
-, ...
+{
+  lib,
+  pkgs,
+  config,
+  ...
 }:
 
 let
@@ -97,10 +98,11 @@ in
         enableACME = true;
       };
       proxy =
-        { addr
-        , internal ? false
-        , websockets ? false
-        , ...
+        {
+          addr,
+          internal ? false,
+          websockets ? false,
+          ...
         }@args:
         let
           ipRestrictionsConfig =
@@ -144,24 +146,23 @@ in
       # this repo; a wrong prefix just falls through to the SPA.
       subStore =
         { addr }:
-        base
-          {
-            "/" = {
-              proxyPass = addr;
-              # Plain 403, NOT the @error404 remap the other internal vhosts use:
-              # the nginx-404 jail bans 5x404/60s for 5h at the firewall, and that
-              # ban would also cut off the public /download/ links below. Hiding
-              # the host is pointless here anyway -- its subscription URLs are
-              # handed out publicly.
-              extraConfig = ''
-                include ${ipWhiteList};
-                deny all;
-              '';
-            };
-            "~ ^/[0-9a-f]+/download/" = {
-              proxyPass = addr;
-            };
-          }
+        base {
+          "/" = {
+            proxyPass = addr;
+            # Plain 403, NOT the @error404 remap the other internal vhosts use:
+            # the nginx-404 jail bans 5x404/60s for 5h at the firewall, and that
+            # ban would also cut off the public /download/ links below. Hiding
+            # the host is pointless here anyway -- its subscription URLs are
+            # handed out publicly.
+            extraConfig = ''
+              include ${ipWhiteList};
+              deny all;
+            '';
+          };
+          "~ ^/[0-9a-f]+/download/" = {
+            proxyPass = addr;
+          };
+        }
         // {
           kTLS = true;
         };
@@ -268,25 +269,29 @@ in
         internal = true;
         websockets = true;
       };
-      "gachi-radio.labile.cc" = (gachiRadio {
-        rewrite = "https://gachi-radio.labile.cc";
-        rewritePlain = "gachi-radio.labile.cc";
-      }) // {
-        enableACME = true;
-        forceSSL = true;
-      };
-      "93.100.194.40" = (gachiRadio {
-        rewrite = "http://93.100.194.40:38264";
-        rewritePlain = "93.100.194.40:38264";
-      }) // {
-        listen = [
-          {
-            addr = "0.0.0.0";
-            port = 38264;
-          }
-        ];
-        serverName = "93.100.194.40";
-      };
+      "gachi-radio.labile.cc" =
+        (gachiRadio {
+          rewrite = "https://gachi-radio.labile.cc";
+          rewritePlain = "gachi-radio.labile.cc";
+        })
+        // {
+          enableACME = true;
+          forceSSL = true;
+        };
+      "93.100.194.40" =
+        (gachiRadio {
+          rewrite = "http://93.100.194.40:38264";
+          rewritePlain = "93.100.194.40:38264";
+        })
+        // {
+          listen = [
+            {
+              addr = "0.0.0.0";
+              port = 38264;
+            }
+          ];
+          serverName = "93.100.194.40";
+        };
       "_" = {
         listen = [
           {

@@ -1,4 +1,9 @@
-{ config, inputs, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 
 {
   imports = [
@@ -50,7 +55,6 @@
     mode = "0400";
   };
 
-
   nix.gc.automatic = lib.mkForce false;
   nix.settings.trusted-users = [ "labile" ];
   users.users.labile.openssh.authorizedKeys.keys = [
@@ -76,7 +80,6 @@
   };
 
   hardware.graphics.enable = true;
-
 
   system.stateVersion = "24.11";
 

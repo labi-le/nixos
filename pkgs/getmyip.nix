@@ -1,10 +1,10 @@
-{ writeShellScriptBin
-, stuntman
-, gnugrep
-, gawk
-, coreutils
-, runtimeShell
-,
+{
+  writeShellScriptBin,
+  stuntman,
+  gnugrep,
+  gawk,
+  coreutils,
+  runtimeShell,
 }:
 
 writeShellScriptBin "getmyip" ''

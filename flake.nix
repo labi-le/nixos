@@ -77,7 +77,10 @@
         home-manager = {
           useUserPackages = true;
           useGlobalPkgs = true;
-          sharedModules = [ inputs.index-repo.homeManagerModules.default inputs.omp.homeManagerModules.default ];
+          sharedModules = [
+            inputs.index-repo.homeManagerModules.default
+            inputs.omp.homeManagerModules.default
+          ];
           backupFileExtension = "hm-backup";
         };
       };

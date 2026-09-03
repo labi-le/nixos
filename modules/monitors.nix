@@ -52,9 +52,13 @@ with lib;
           names = attrNames found;
           monitorName = if names != [ ] then head names else null;
         in
-        if monitorName != null then {
-          name = monitorName;
-        } // config.monitors.${monitorName} else null;
+        if monitorName != null then
+          {
+            name = monitorName;
+          }
+          // config.monitors.${monitorName}
+        else
+          null;
     };
   };
 

@@ -1,7 +1,8 @@
-{ osConfig
-, pkgs
-, lib
-, ...
+{
+  osConfig,
+  pkgs,
+  lib,
+  ...
 }:
 
 let
@@ -79,11 +80,9 @@ let
     };
 
   # ~/.omp/agent/skills/<name> -> upstream skill dir.
-  skillFiles = lib.mapAttrs'
-    (
-      name: dir: lib.nameValuePair ".omp/agent/skills/${name}" { source = dir; }
-    )
-    vendoredSkills;
+  skillFiles = lib.mapAttrs' (
+    name: dir: lib.nameValuePair ".omp/agent/skills/${name}" { source = dir; }
+  ) vendoredSkills;
 
 in
 {
@@ -307,7 +306,8 @@ in
             (pkgs.writeShellScriptBin "gopls" ''
               export PATH=${lib.makeBinPath [ pkgs.go ]}:$PATH
               exec ${pkgs.gopls}/bin/gopls "$@"
-            '') + "/bin/gopls";
+            '')
+            + "/bin/gopls";
           args = [ ];
           fileTypes = [ ".go" ];
         };

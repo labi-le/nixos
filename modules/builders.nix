@@ -1,8 +1,9 @@
 # ./hosts/modules/builders.nix
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 
 with lib;
@@ -71,26 +72,24 @@ let
     let
       enabledBuilders = filterAttrs (name: builderCfg: builderCfg.enable) cfg.remoteBuilders;
     in
-    mapAttrsToList
-      (
-        builderName: builderCfg:
-          let
-            user = builderCfg.user;
-            host = builderCfg.host;
-            keyFile = builderCfg.keyFile;
-            arch = builderCfg.architecture;
-            finalCores = determineEffectiveRemoteCores builderCfg.cores;
-            coresStr = toString finalCores;
-            supportedFeaturesStr =
-              if builderCfg.supportedFeatures == [ ] then
-                "-"
-              else
-                lib.concatStringsSep " " builderCfg.supportedFeatures;
+    mapAttrsToList (
+      builderName: builderCfg:
+      let
+        user = builderCfg.user;
+        host = builderCfg.host;
+        keyFile = builderCfg.keyFile;
+        arch = builderCfg.architecture;
+        finalCores = determineEffectiveRemoteCores builderCfg.cores;
+        coresStr = toString finalCores;
+        supportedFeaturesStr =
+          if builderCfg.supportedFeatures == [ ] then
+            "-"
+          else
+            lib.concatStringsSep " " builderCfg.supportedFeatures;
 
-          in
-          "ssh-ng://${user}@${host} ${arch} ${keyFile} ${coresStr} - ${supportedFeaturesStr} -"
-      )
-      enabledBuilders;
+      in
+      "ssh-ng://${user}@${host} ${arch} ${keyFile} ${coresStr} - ${supportedFeaturesStr} -"
+    ) enabledBuilders;
 
 in
 {

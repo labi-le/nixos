@@ -5,7 +5,13 @@
 
       enable = true;
       settings = {
-        defaults = { file_ignore_patterns = [ "vendor" "migrations" ".git" ]; };
+        defaults = {
+          file_ignore_patterns = [
+            "vendor"
+            "migrations"
+            ".git"
+          ];
+        };
       };
       extensions = {
         file-browser = {
@@ -24,14 +30,12 @@
     keymaps = [
       {
         key = "ff";
-        action =
-          "<cmd>lua (function() local builtin = require('telescope.builtin'); local ok = pcall(builtin.git_files, {}); if not ok then builtin.find_files({ hidden = true }) end end)()<cr>";
+        action = "<cmd>lua (function() local builtin = require('telescope.builtin'); local ok = pcall(builtin.git_files, {}); if not ok then builtin.find_files({ hidden = true }) end end)()<cr>";
       }
 
       {
         key = "fd";
-        action =
-          "<cmd>lua require('telescope').extensions.file_browser.file_browser()<cr>";
+        action = "<cmd>lua require('telescope').extensions.file_browser.file_browser()<cr>";
       }
       {
         key = "fg";

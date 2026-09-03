@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   lanInterface = "enp37s0";
@@ -37,15 +42,14 @@ let
     @ IN NS localhost.
   '';
 
-  triggers = action: names:
+  triggers =
+    action: names:
     lib.concatMapStrings (n: "${n} IN CNAME ${action}\n*.${n} IN CNAME ${action}\n") names;
 
   seedZoneFile = pkgs.writeText "unbound-rpz-seed.zone" zoneHead;
 
   localZoneFile = pkgs.writeText "unbound-rpz-local.zone" (
-    zoneHead
-    + triggers "rpz-passthru." localAllow
-    + triggers "." localBlock
+    zoneHead + triggers "rpz-passthru." localAllow + triggers "." localBlock
   );
 in
 {
@@ -194,8 +198,16 @@ in
   systemd.services.unbound-rpz-update = {
     description = "Refresh the unbound RPZ blocklist";
     wants = [ "network-online.target" ];
-    after = [ "network-online.target" "unbound.service" ];
-    path = with pkgs; [ curl coreutils gnugrep config.services.unbound.package ];
+    after = [
+      "network-online.target"
+      "unbound.service"
+    ];
+    path = with pkgs; [
+      curl
+      coreutils
+      gnugrep
+      config.services.unbound.package
+    ];
     serviceConfig = {
       Type = "oneshot";
       User = config.services.unbound.user;
