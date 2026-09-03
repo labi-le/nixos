@@ -33,6 +33,10 @@ in
     pc
     notebook
   ];
+  "secrets/opencode/google-docs-mcp.age".publicKeys = [
+    pc
+    notebook
+  ];
   "secrets/opencode/jira-mcp.age".publicKeys = [
     pc
     notebook

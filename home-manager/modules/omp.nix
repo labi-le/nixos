@@ -211,6 +211,14 @@ in
               contextWindow = 1000000;
               maxTokens = 8192;
             }
+            {
+              id = "qwen/qwen3.8-max";
+              name = "Qwen3.8 Max";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 32768;
+            }
           ];
         };
         llamacpp-local = {

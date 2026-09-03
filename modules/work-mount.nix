@@ -29,6 +29,13 @@ in
       mode = "0400";
     };
 
+    age.secrets.google-docs-mcp = {
+      file = ../secrets/opencode/google-docs-mcp.age;
+      owner = "labile";
+      group = "users";
+      mode = "0400";
+    };
+
     age.secrets.portainer-mcp = {
       file = ../secrets/portainer-mcp.age;
       owner = "labile";
