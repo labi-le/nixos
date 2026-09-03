@@ -6,8 +6,6 @@
 #
 # noDataState = "OK": no matching lines is the healthy state, so an empty result
 # must resolve green instead of paging on every quiet minute.
-#
-# Routes to the shared "telegram" contact point (./contact-points.nix).
 {
   services.grafana.provision.alerting.rules.settings = {
     apiVersion = 1;
