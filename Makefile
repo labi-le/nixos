@@ -22,7 +22,7 @@ generate-hardware:
 	@echo "Hardware configuration saved to $(HARDWARE_FILE)"
 
 fmt:
-	nix-shell -p nixfmt-rfc-style --command 'nixfmt .'
+	nix-shell -p nixfmt --command 'nixfmt .'
 
 upgrade:
 	nix flake update && sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
