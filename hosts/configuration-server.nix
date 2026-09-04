@@ -67,7 +67,21 @@
     enable = true;
     envFile = config.age.secrets.ngate-env.path;
     routes = "79.137.220.62 10.0.0.0/8 185.129.100.112/32 10.206.185.123/32 10.89.58.17/32";
+    # The guest's overlay upperdir absorbs every write the Debian VM makes
+    # (~275 KB/s measured), which is the single largest writer on the system
+    # NVMe; /drive is the 2 TB SATA SSD.
+    workingDirectory = "/drive/state/ngate-wrapped-vm";
   };
+
+  # Same reason: keep the 32 GiB swapfile off the NVMe. zram (priority 100)
+  # absorbs normal pressure, so this file only takes burst writes.
+  swapDevices = lib.mkForce [
+    {
+      device = "/drive/swapfile";
+      size = 32768;
+      priority = 10;
+    }
+  ];
 
   systemd.services.ngate-wrapped-vm = {
     startLimitIntervalSec = 0;
