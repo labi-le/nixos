@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 
 {
   age.secrets.grafana = {
@@ -67,6 +67,23 @@
           }
         ];
       };
+      dashboards.settings = {
+        apiVersion = 1;
+        providers = [
+          {
+            name = "system";
+            type = "file";
+            disableDeletion = true;
+            folder = "system";
+            options = {
+              foldersFromFilesStructure = false;
+              path = pkgs.writeTextDir "system-dashboards/system-temperatures.json" (
+                builtins.readFile ./monitoring/dashboards/system-temperatures.json
+              );
+            };
+          }
+        ];
+      };
     };
   };
 
@@ -79,6 +96,7 @@
         port = 3021;
         enabledCollectors = [
           "systemd"
+          "hwmon"
           "cpu"
           "meminfo"
           "netdev"
@@ -114,7 +132,30 @@
           }
         ];
       }
+      {
+        job_name = "smartctl";
+        static_configs = [
+          {
+            targets = [ "127.0.0.1:9634" ];
+          }
+        ];
+      }
     ];
+  };
+
+  # smartctl_exporter shells out to smartctl (root: needs raw device access to
+  # /dev/sd* and /dev/nvme*), so unlike the node exporter it runs as root.
+  # Interval keeps the SMART query TTL short enough that a temperature page is
+  # near-realtime; defaults would cache for 5 minutes.
+  systemd.services.smartctl-exporter = {
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.prometheus-smartctl-exporter}/bin/smartctl_exporter --smartctl.path=${pkgs.smartmontools}/bin/smartctl --smartctl.interval=30s --web.listen-address=127.0.0.1:9634";
+      Restart = "on-failure";
+      ProtectSystem = "strict";
+      ProtectHome = true;
+    };
   };
 
   services.loki = {
@@ -268,4 +309,6 @@
     "nginx"
     "docker"
   ];
+
+  users.users.node-exporter.extraGroups = [ "disk" ];
 }
