@@ -18,4 +18,14 @@
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
   };
+
+  # The index absorbs an upsert per edit from index-repo (~150 KB/s measured),
+  # so its state lives on the SATA SSD rather than the system NVMe. The bind
+  # mount targets the DynamicUser state dir, which keeps the upstream
+  # hardening and StateDirectory ownership handling untouched.
+  fileSystems."/var/lib/private/chromadb" = {
+    device = "/drive/state/chromadb";
+    fsType = "none";
+    options = [ "bind" ];
+  };
 }
