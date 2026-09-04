@@ -298,6 +298,9 @@ let
     retry = {
       modelFallback = false;
       usageAwareFallback = false;
+      waitForUsageReset = true;
+      maxDelayMs = 0;
+      maxRetries = 1000;
     };
     async.pollWaitDuration = "1m";
     stt = {
