@@ -54,6 +54,7 @@
             type = "prometheus";
             access = "proxy";
             url = "http://127.0.0.1:${toString config.services.prometheus.port}";
+            isDefault = true;
           }
           {
             name = "Loki";
@@ -77,9 +78,15 @@
             folder = "system";
             options = {
               foldersFromFilesStructure = false;
-              path = pkgs.writeTextDir "system-dashboards/system-temperatures.json" (
-                builtins.readFile ./monitoring/dashboards/system-temperatures.json
-              );
+              path = pkgs.runCommand "grafana-system-dashboards" { nativeBuildInputs = [ pkgs.jq ]; } ''
+                mkdir -p $out
+                sed 's/''${DS_PROMETHEUS}/prometheus/g' \
+                  ${./monitoring/dashboards/smartctl-exporter.json} \
+                  | jq 'del(.__inputs, .__requires)' > $out/smartctl-exporter.json
+                jq 'del(.__inputs, .__requires)' \
+                  ${./monitoring/dashboards/node-exporter-full.json} \
+                  > $out/node-exporter-full.json
+              '';
             };
           }
         ];
@@ -110,6 +117,12 @@
         ];
         enable = true;
       };
+      smartctl = {
+        enable = true;
+        port = 9634;
+        maxInterval = "30s";
+        extraFlags = [ "--smartctl.rescan=2m" ];
+      };
       nginx = {
         enable = true;
       };
@@ -136,27 +149,28 @@
         job_name = "smartctl";
         static_configs = [
           {
-            targets = [ "127.0.0.1:9634" ];
+            targets = [
+              "127.0.0.1:${toString config.services.prometheus.exporters.smartctl.port}"
+            ];
           }
         ];
       }
     ];
   };
 
-  # smartctl_exporter shells out to smartctl (root: needs raw device access to
-  # /dev/sd* and /dev/nvme*), so unlike the node exporter it runs as root.
-  # Interval keeps the SMART query TTL short enough that a temperature page is
-  # near-realtime; defaults would cache for 5 minutes.
-  systemd.services.smartctl-exporter = {
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.prometheus-smartctl-exporter}/bin/smartctl_exporter --smartctl.path=${pkgs.smartmontools}/bin/smartctl --smartctl.interval=30s --web.listen-address=127.0.0.1:9634";
-      Restart = "on-failure";
-      ProtectSystem = "strict";
-      ProtectHome = true;
-    };
-  };
+  # /dev/nvme* is root:root 0600, so the unprivileged smartctl exporter cannot
+  # read NVMe SMART even with CAP_SYS_RAWIO; the nixpkgs module reserves the
+  # smartctl-exporter-access group for exactly this handover.
+  services.udev.extraRules = ''
+    SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", GROUP="smartctl-exporter-access", MODE="0660"
+  '';
+
+  # udev only applies rules to future events, so the rule above leaves the
+  # already-present node at its old ownership until a reboot; re-triggering it
+  # on activation makes a switch enough.
+  system.activationScripts.nvmeSmartAccess.text = ''
+    ${pkgs.systemd}/bin/udevadm trigger --subsystem-match=nvme --action=add
+  '';
 
   services.loki = {
     enable = true;
@@ -309,6 +323,4 @@
     "nginx"
     "docker"
   ];
-
-  users.users.node-exporter.extraGroups = [ "disk" ];
 }
