@@ -689,11 +689,11 @@
       },
       "locked": {
         "dir": "qcow2",
-        "lastModified": 1787963242,
-        "narHash": "sha256-4Z3UnIlLNzb9CZ+9pbDiTQzwMbANVWi+3eBApUKz+6g=",
+        "lastModified": 1788616740,
+        "narHash": "sha256-eAWbCiwF1skoj8e/5t89/AsESswKvbFsJ9Er83cLtF4=",
         "ref": "refs/heads/master",
-        "rev": "76bfb31d5b14404b304bf3e2ea8a15a69c96dcce",
-        "revCount": 56,
+        "rev": "cbe9c9a7cc8feb7702ada6c95ff969116398902a",
+        "revCount": 65,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/ngate-wrapped"
       },
@@ -1002,11 +1002,11 @@
     },
     "nixpkgs_9": {
       "locked": {
-        "lastModified": 1787736819,
-        "narHash": "sha256-cV5xEJJK3BvhU8rEd4mC9UsmDi5qscv/kzGPhBRC5WA=",
+        "lastModified": 1788531059,
+        "narHash": "sha256-hLD4l3QOGBQhkVp3mQ2lJ/YbEi99qUgKapb40KovZ88=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "9fbb54b33e91ee4ca368e35a78e0613c720600b3",
+        "rev": "801bef6abd86b91e51083066b83fb354a11fc640",
         "type": "github"
       },
       "original": {
@@ -1104,11 +1104,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1788547023,
-        "narHash": "sha256-xr/YlrdPgCE/DouJdKVfMhEGldzsvgXs8k5heknctVY=",
+        "lastModified": 1788618012,
+        "narHash": "sha256-lKqwg533LtJaIhh8eLk/pl3wkYWZjUg56QHJj80NJvI=",
         "owner": "can1357",
         "repo": "oh-my-pi",
-        "rev": "5964a0f7649275bcde818f20073193fd032451f2",
+        "rev": "feba7f113fd041542afac0f44c0d3529b81c50a6",
         "type": "github"
       },
       "original": {
