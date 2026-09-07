@@ -50,6 +50,14 @@ let
     rev = "17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8";
     hash = "sha256-lmzmlPj47lWNRZudMSsdIocS4srZYQeG2bQw800Os7U=";
   };
+  humanizerSrc = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/databasus/databasus/bda7237599756ba76401b29e9761b07206e38bd6/.agents/skills/humanizer/SKILL.md";
+    hash = "sha256-fDpFzjSCLTnVs0d08TwQsU2ent9I6EJ9n7/vg/Mt7LA=";
+  };
+  humanizerSkill = pkgs.runCommand "humanizer-skill" { } ''
+    mkdir -p $out
+    cp ${humanizerSrc} $out/SKILL.md
+  '';
 
   skillsFromDir =
     dir:
@@ -66,6 +74,7 @@ let
       desloppify = "${desloppifySrc}/docs";
       plantuml-rendering = "${plantumlSrc}";
       caveman = "${cavemanSrc}/skills/caveman";
+      humanizer = "${humanizerSkill}";
     };
 
   skillLinks = lib.mapAttrsToList (
