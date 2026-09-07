@@ -7,35 +7,38 @@ clients need no custom CA and no SPKI pin.
 
 | Endpoint | Address | Reachable from | Transport |
 |---|---|---|---|
-| DoT | `labile.cc:853` (`192.168.1.2` on LAN, `10.8.0.1` on VPN) | LAN and VPN only | DNS over TLS, RFC 7858 |
+| DoT | `labile.cc:853` (`192.168.1.2` on LAN, `10.8.0.1` on VPN, the public address from anywhere) | anywhere | DNS over TLS, RFC 7858 |
+
+Since 2026-09-07 this is a **deliberately open resolver**. The router forwards
+`tcp/853` from the WAN to the server and `access-control` ends in
+`0.0.0.0/0 allow`, so any client that can reach the name can resolve through it,
+roaming devices included. There is no token and no allowlist, because DoT
+carries neither: the protocol has no path in which to put a secret.
+
+Two consequences follow, and both are decisions rather than oversights. Ad and
+tracker filtering applies to public clients too — a stranger gets the
+household's blocklist, so a false positive looks to them like a site that does
+not exist. And the cache is shared, which makes the endpoint a cache-snooping
+oracle and lets sustained unique-name traffic evict entries the household
+depends on. `docs/dns-resolver.md` covers both, plus the per-client limits that
+accompany the exposure.
+
+Plain DNS is **not** offered outside the VPN. It lives on `10.8.0.1:53` only;
+the `192.168.1.2:53` listener was removed once measurement showed its only users
+were the host's own diagnostics — the LAN reaches this resolver through the
+router's `stubby` over DoT, and 92.5 % of all queries already arrived over TLS.
+`enp37s0` no longer opens 53 at all, which is what keeps an open ACL from
+turning this host into a UDP amplifier. On the server itself, use
+`dig @127.0.0.1 -p 5335`; `dig @192.168.1.2` now answers `connection refused`.
 
 DoH existed until 2026-08-26 as `https://dns.labile.cc/dns-query` and was
-removed as unused. It was the only publicly reachable part of the resolver, and
-it cost a separate daemon, a rate-limit zone, a fail2ban jail and a log format
-to keep an open endpoint honest. The `dns.labile.cc` name went with it: DoT now
-authenticates as `labile.cc`, so no certificate of its own is needed and no
-vhost has to exist to answer the ACME challenge. Any client still configured
-with the old hostname fails verification rather than falling back — measured,
+removed as unused; the `dns.labile.cc` name went with it, so DoT authenticates
+as `labile.cc`. Any client still configured with the old hostname fails
+verification rather than falling back — measured,
 `openssl s_client -verify_hostname dns.labile.cc` against `192.168.1.2:853`
-returns code 62, hostname mismatch, while `labile.cc` returns 0.
-
-Plain DNS on `192.168.1.2:53` and `10.8.0.1:53` stays available unchanged; DoT
-is an addition, not a replacement.
-
-Every client of this resolver now arrives from `192.168.1.0/24`, `10.8.0.0/24`
-or loopback, so ad and tracker filtering applies to all of them, over plain 53
-and DoT alike. The one path that stays unfiltered is `127.0.0.1:5335` on the
-server itself, which exists to compare a filtered answer against an honest one;
-`docs/dns-resolver.md` covers the mechanism and the kill switch.
-
-Which clients this suits: anything that permanently lives on the LAN or the
-VPN — Android phones at home, systemd-resolved boxes, the router's stubby,
-unbound forwarders on other NixOS hosts. DoT is not exposed publicly and cannot
-be: the protocol carries no path and no token, so a public listener would be an
-unlimited open resolver. Devices that roam have no encrypted path to this
-resolver at all, because browsers speak only DoH; their options are the
-AmneziaWG VPN, which puts them on `10.8.0.1` with both plain 53 and DoT
-available, or a third-party resolver with no filtering.
+returns code 62, hostname mismatch, while `labile.cc` returns 0. Browsers speak
+only DoH, so they cannot be pointed here at all; they inherit whatever the
+operating system resolves.
 
 One piece of history worth knowing, because it explains why the router's stubby
 was dead weight for so long: until 2026-08-26 no LAN host could reach any
@@ -88,22 +91,23 @@ hostname":
 labile.cc
 ```
 
-This works on the LAN and nowhere else, and the reason is worth stating
-precisely because an earlier version of this document had it wrong. The LAN
-answer comes from the router's dnsmasq, which carries
-`address=/labile.cc/192.168.1.2` and so maps the apex and every subdomain to the
-server; a phone using DHCP resolves the name that way and reaches
-`192.168.1.2:853` with a matching certificate. This resolver itself recurses
-honestly and answers `93.100.194.40` for the same name — measured on both
-`127.0.0.1:5335` and `192.168.1.2:53` — so a VPN client, which resolves through
-`10.8.0.1`, gets the public address, where nothing listens on 853. In strict
-mode Android then marks the network as having no internet access; in the default
-opportunistic mode it silently falls back to cleartext.
+This now works on any network, which is new as of 2026-09-07 and is the main
+practical gain from opening the listener. The hostname is the same everywhere,
+but it resolves to two different addresses and both of them work: on the LAN the
+router's dnsmasq carries `address=/labile.cc/192.168.1.2`, so a phone on DHCP
+reaches the server directly, while off the LAN the public record
+`93.100.194.40` applies and the router forwards `tcp/853` to the same daemon.
+Either way the certificate matches, because it is issued for the apex name.
 
-VPN clients therefore need one of the explicit-address forms below, with
-`10.8.0.1` as the address and `labile.cc` as the name to verify. Giving Android
-the same treatment would require a per-view answer in unbound, which is not
-configured. Roaming devices have no encrypted path here at all.
+The earlier revisions of this document said the opposite, and the reason is
+worth keeping: this resolver recurses honestly and answers the public address
+for its own name — measured on `127.0.0.1@5335` — so a VPN client, which
+resolves through `10.8.0.1`, gets `93.100.194.40` rather than `10.8.0.1`. That
+used to mean strict mode marked the network as having no internet access. Now
+the public address answers, so the VPN path works too, just by leaving the
+tunnel and coming back through the forward. A client that must stay inside the
+tunnel needs one of the explicit-address forms below, with `10.8.0.1` as the
+address and `labile.cc` as the name to verify.
 
 Installing a private CA into Android's system store requires root, and no
 official documentation describes Private DNS interaction with user-installed
@@ -237,10 +241,10 @@ Hosts that reach the server only over the VPN use
 `10.8.0.1@853#labile.cc`. The `#auth_name` part is mandatory: unbound's
 documentation states that leaving out the `#` and auth name means *any* name
 is accepted, which defeats the point of authenticated encryption. The
-certificate chains to a public CA, so the stock CA bundle suffices. These
-hosts could equally query plain `192.168.1.2:53` — within one switched LAN
-the encryption buys little — but the DoT form is uniform across locations
-and authenticates who is answering.
+certificate chains to a public CA, so the stock CA bundle suffices. Plain 53 is
+no longer an alternative for these hosts: the LAN listener is gone, so DoT is
+the only form that reaches this resolver from `192.168.1.0/24`, and the same
+configuration keeps working when the host leaves the network.
 
 ## OpenWrt router
 
@@ -354,8 +358,8 @@ straight to this resolver loses them:
 - the `labile.cc` split-horizon record. The router carries
   `address=/labile.cc/192.168.1.2`, which covers the apex and every subdomain;
   this resolver has no local data at all and recurses honestly, so it answers
-  the public `93.100.194.40` for the same name — measured on both
-  `127.0.0.1:5335` and `192.168.1.2:53`. A direct client therefore reaches
+  the public `93.100.194.40` for the same name — measured on
+  `127.0.0.1@5335`. A direct client therefore reaches
   services the long way round, through the router's NAT reflection.
 - the router's per-domain VPN policy routing (`server=/domain/vpn-dns#5353`),
   which steers selected domains through the VPN tunnel.

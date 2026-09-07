@@ -10,26 +10,57 @@ replacing it.
 | Address | Purpose |
 |---|---|
 | `127.0.0.1@5335` | administration and verification from the host |
-| `192.168.1.2:53` | LAN clients and the router, when pointed here explicitly |
-| `10.8.0.1:53` | AmneziaWG clients; `modules/awg/default.nix` already accepts `udp/53` on `wg0` |
-| `192.168.1.2@853` | DoT for LAN clients |
+| `10.8.0.1:53` | AmneziaWG clients, the only plain-DNS consumers left; `modules/awg/default.nix` already accepts `udp/53` on `wg0` |
+| `192.168.1.2@853` | DoT, reached by the LAN and, through a router forward, by the internet |
 | `10.8.0.1@853` | DoT for VPN clients |
 
-Port 53 on loopback stays with dnsmasq. `access-control` allows only
-`127.0.0.0/8`, `192.168.1.0/24` and `10.8.0.0/24`; everything else is `deny`,
-which drops silently and gives no amplification surface. That ACL, not the
-firewall, is what keeps 53 and 853 off the internet: the rules are scoped to
-`enp37s0` and `wg0` rather than globally, but public traffic arrives on
-`enp37s0` too, DNAT'ed by the router to `192.168.1.2`, so a mistaken port
-forward would pass the firewall and be refused by unbound instead. Client-facing
-setup for DoT is in `docs/dns-clients.md`.
+Port 53 on loopback stays with dnsmasq. As of 2026-09-07 this resolver is a
+**deliberately open DoT resolver**: `access-control` ends in `0.0.0.0/0 allow`,
+and the router forwards `tcp/853` from the WAN to `192.168.1.2`. Anyone who
+knows the name can resolve through it.
+
+Plain DNS is no longer offered to the LAN, and that is what makes the open
+listener defensible. The `192.168.1.2` plain listener was dropped once its
+traffic was measured: over the daemon's whole lifetime its only clients were
+`192.168.1.1` (the router's stubby, which speaks DoT), `10.8.0.2` (a VPN client)
+and six diagnostic queries from the host itself — 92.5 % of all queries arrived
+over TLS (`num.query.tls` 1 791 122 of `total.num.queries` 1 936 004). Plain 53
+now exists only on `10.8.0.1`, inside the tunnel, and `enp37s0` no longer opens
+53 at all. So loosening the ACL cannot turn this host into a UDP amplifier:
+there is nothing on a publicly reachable address that speaks plain DNS, and DoT
+is TCP, which cannot be spoofed into an amplification vector.
+
+What an open resolver costs is real and unfixable while one cache is shared:
+public clients see decremented TTLs, which makes the endpoint a cache-snooping
+oracle, and sustained unique-name traffic evicts entries the household depends
+on. Separating them means a second unbound instance with its own cache.
+Client-facing setup for DoT is in `docs/dns-clients.md`.
+
+Limits that accompany the open listener, all sized against measurements rather
+than taste:
+
+- `ip-ratelimit: 1000` queries per second per client address. The floor is the
+  router: `stubby` aggregates the whole LAN behind `192.168.1.1` and peaked at
+  345 qps in a measured hour, so anything under ~500 would throttle the
+  household before it throttled an abuser.
+- `incoming-num-tcp: 300`, up from the default 10 per thread. With
+  `num-threads: 2` the daemon had **20** TCP slots in total, and every DoT
+  client holds one; a single scanner could have starved LAN DoT and left the
+  router falling back to Cloudflare.
+- `tcp-idle-timeout: 8000` ms, down from 30 s, so idle public TLS sessions
+  release their slot.
+- `deny-any: yes`, since an open resolver should not answer `ANY`.
 
 ## Encrypted transports
 
 DoT is unbound's own, because that needs nothing but `tls-port` and a
-certificate. It listens on the LAN and VPN addresses only, never publicly: the
-protocol carries no path and no token, so a public listener would be an
-unlimited open resolver with no access control available at any layer.
+certificate. It is the only transport this resolver offers to anything outside
+the VPN, and since 2026-09-07 it is public: the protocol carries no path and no
+token, so there is no access control available at any layer and none is
+pretended. The exposure is a decision, not an accident — the earlier text here
+argued the opposite, and the router forward that contradicted it went unnoticed
+for a day because unbound answered every handshake and then dropped the query,
+which reads externally as a broken DoT server rather than a denied client.
 
 The certificate is the one already issued for the apex name `labile.cc`, shared
 with the web vhost of the same name through group `dns-tls`, whose members are
@@ -66,12 +97,11 @@ shape that works, which is what was removed.
 
 `ratelimit: 1000` stays, capping unbound's outbound queries per target zone so a
 random-subdomain flood cannot leave this host as the address a victim's
-authoritative servers see and blocklist. Its old companion argument is obsolete:
-`ip-ratelimit` was useless while every DoH query arrived as `127.0.0.1`, and now
-that every client is a LAN, VPN or loopback address it would work — it is
-deliberately not enabled, because the remaining clients are trusted and an
-untuned per-IP cap on the router's stubby, which multiplexes the whole LAN
-behind one address, would be a self-inflicted outage.
+authoritative servers see and blocklist. `ip-ratelimit` is now enabled at the
+same figure, guarding the inbound direction, and its sizing constraint is the
+one described under Listeners: the router's `stubby` aggregates the LAN behind a
+single address and peaked at 345 qps, so the per-client cap has to sit far above
+that to avoid a self-inflicted outage.
 
 Query logging is `log-replies` in unbound and nothing else. Not `log-queries` —
 the reply line carries the client, qname, type, class, rcode, timing and answer
@@ -93,23 +123,38 @@ owned `acme:dns-tls` for the apex certificate this resolver shares. Do not
 
 ## Filtering
 
-Ads and trackers are filtered through two RPZ zones, and the filtering applies
-to *tagged clients only*: `access-control-tag` marks `192.168.1.0/24` and
-`10.8.0.0/24` with the tag `ads`, and both `rpz:` clauses carry `tags: "ads"`.
-Since the public DoH endpoint was removed every remaining client is inside one
-of those two netblocks, so in practice everything that asks is filtered. The
-tags are not vestigial for that reason: loopback stays untagged, which keeps
-`127.0.0.1@5335` an honest diagnostic path, and comparing a filtered answer
-against an unfiltered one is then a single `dig -p 5335` rather than a
-`rpz_disable` on the live daemon. Measured, a blocked name answers NOERROR with
-no records for a LAN client on plain 53 and over DoT, and NOERROR with the real
-addresses on the admin port, so the discriminator is the answer count rather
-than the status code. Delete the tags and that comparison is gone.
+Ads and trackers are filtered through two RPZ zones, and since 2026-09-07 the
+filtering applies to *every* client, public ones included:
+`access-control-tag` marks `192.168.1.0/24`, `10.8.0.0/24` and `0.0.0.0/0` with
+the tag `ads`, and both `rpz:` clauses carry `tags: "ads"`. Strangers therefore
+get the household's policy rather than an honest answer, which is the accepted
+cost of the open listener: a false positive somewhere in 452 042 rules will look
+to them like a site that does not exist, and only the operator of this host can
+fix it, through `localAllow` or `rpz_disable`.
+
+Loopback stays honest, and the mechanism deserves stating precisely because the
+manual reads more loosely than the implementation behaves. Tags bind to the
+`access-control` **element** that matched the client, not to the netblock in
+isolation. `127.0.0.0/8` is its own `access-control` element with no
+`access-control-tag` line, so loopback ends up untagged even though `0.0.0.0/0`
+covers it numerically — verified on a scratch daemon, where a config carrying
+only `access-control-tag: 0.0.0.0/0 "ads"` still answered a loopback query with
+the real address. Adding an explicit `access-control-tag: 127.0.0.0/8 ""` line
+changes nothing and was dropped as redundant. `127.0.0.1@5335` is therefore the
+one path that compares a filtered answer against an unfiltered one without
+touching the live filter.
+
+Measured after the cutover, four vantages at once, all for `an.yandex.ru`: a LAN
+client over DoT gets no records, a VPN client on plain 53 gets no records, an
+external source — a network namespace on `203.0.113.5`, matching no
+allow-listed netblock — also gets no records, and the admin port returns the real
+`93.158.134.90`. The discriminator is the answer count rather than the status
+code, since a blocked name answers NOERROR with an empty section.
 
 `respip` must lead `module-config` (`"respip validator iterator"`) or every
 `rpz:` clause is silently inert — no error, no filtering. The obvious way to
-scope filtering, `interface-tag` on the LAN and VPN listeners, does not work
-here: the manual states that any `access-control*:` option overrides all
+scope filtering, `interface-tag` on the listeners, does not work here: the
+manual states that any `access-control*:` option overrides all
 `interface-*:` options for targeted clients, and a test confirmed it — with
 `tags:` set, a tagged listener filtered nothing, while removing `tags:`
 filtered on every listener. Client-address tagging is the only mechanism that
