@@ -1,8 +1,7 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
+{ config
+, lib
+, pkgs
+, ...
 }:
 
 let
@@ -66,7 +65,6 @@ in
 
         interface = [
           "127.0.0.1@${toString localPort}"
-          lanAddress
           vpnAddress
           "${lanAddress}@${toString tlsPort}"
           "${vpnAddress}@${toString tlsPort}"
@@ -80,8 +78,13 @@ in
           "127.0.0.0/8 allow"
           "${lanNetwork} allow"
           "${vpnNetwork} allow"
-          "0.0.0.0/0 deny"
+          "0.0.0.0/0 allow"
         ];
+
+        deny-any = true;
+        ip-ratelimit = 1000;
+        incoming-num-tcp = 300;
+        tcp-idle-timeout = 8000;
 
         access-control-tag = [
           ''${lanNetwork} "${adsTag}"''
@@ -163,11 +166,7 @@ in
 
   networking.firewall.interfaces = {
     "${lanInterface}" = {
-      allowedUDPPorts = [ 53 ];
-      allowedTCPPorts = [
-        53
-        tlsPort
-      ];
+      allowedTCPPorts = [ tlsPort ];
     };
     "${vpnInterface}" = {
       allowedUDPPorts = [ 53 ];
