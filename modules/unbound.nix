@@ -89,6 +89,7 @@ in
         access-control-tag = [
           ''${lanNetwork} "${adsTag}"''
           ''${vpnNetwork} "${adsTag}"''
+          ''0.0.0.0/0 "${adsTag}"''
         ];
 
         ip-freebind = true;
