@@ -6,7 +6,10 @@
 let
   listenPort = 38392;
   awgBY = 27748;
-  danyaVNC = 16666;
+  danyaPorts = {
+    from = 16666;
+    to = 16670;
+  };
 in
 {
   age.secrets.frp = {
@@ -28,12 +31,14 @@ in
       };
     };
   };
-  networking.firewall.allowedTCPPorts = [
-    danyaVNC
+  networking.firewall.allowedTCPPortRanges = [
+    danyaPorts
   ];
   networking.firewall.allowedUDPPorts = [
     listenPort
     awgBY
-    danyaVNC
+  ];
+  networking.firewall.allowedUDPPortRanges = [
+    danyaPorts
   ];
 }
