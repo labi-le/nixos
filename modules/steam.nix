@@ -46,6 +46,9 @@ in
               pkgsi686Linux.libxcomposite
               pkgsi686Linux.libxi
               pkgsi686Linux.libxrandr
+              gtk3
+              libxtst
+              libxxf86vm
             ];
           extraProfile = ''
             export LD_AUDIT="${sls-steam}/library-inject.so:${sls-steam}/SLSsteam.so"
