@@ -265,8 +265,8 @@ let
     compaction = {
       enabled = true;
       methodOrder = [
-        "shake"
         "snapcompact"
+        "shake"
         "remote"
         "soft"
       ];
