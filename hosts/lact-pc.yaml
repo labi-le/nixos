@@ -5,7 +5,7 @@
 # longer save changes -- edit here and rebuild instead.
 # services.lact.settings is deliberately not used: pkgs.formats.yaml quotes map
 # keys ('40': 0.3) and LACT parses the fan curve as BTreeMap<i32, f32>.
-version: 6
+version: 7
 daemon:
   log_level: info
   admin_group: wheel
