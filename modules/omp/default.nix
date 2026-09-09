@@ -98,7 +98,7 @@ let
               maxTokens = 8192;
             }
             {
-              id = "deepseek/deepseek-v4-flash-0731";
+              id = "deepseek/deepseek-v4-flash-0813";
               name = "DeepSeek V4 Flash (CloseRouter)";
               reasoning = true;
               supportsTools = true;
