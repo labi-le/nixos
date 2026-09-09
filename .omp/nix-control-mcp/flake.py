@@ -1,3 +1,4 @@
+import concurrent.futures
 import json
 import time
 
@@ -204,4 +205,87 @@ def tool_flake_age(args, request_id, token):
             timeout=120,
         )
         header["bumped_in_repo"] = out.strip() or None if code == 0 else None
+    return envelope(header), False
+
+
+def remote_url(locked, original):
+    kind = locked.get("type") or original.get("type")
+    if kind == "github":
+        owner = locked.get("owner") or original.get("owner")
+        repo = locked.get("repo") or original.get("repo")
+        if owner and repo:
+            return f"https://github.com/{owner}/{repo}"
+        return None
+    if kind == "git":
+        return locked.get("url") or original.get("url")
+    return None
+
+
+def probe_remote(url, ref, timeout):
+    try:
+        code, out, err = run_split(
+            ["git", "ls-remote", url, ref],
+            timeout=timeout,
+            env_extra={"GIT_TERMINAL_PROMPT": "0", "GIT_SSH_COMMAND": "ssh -oBatchMode=yes"},
+        )
+    except ToolError as exc:
+        return None, str(exc)
+    if code != 0:
+        return None, tail(err.strip(), 3) or f"git ls-remote exited {code}"
+    rev = out.split(None, 1)[0] if out.strip() else None
+    if not rev:
+        return None, f"no ref {ref!r} advertised by {url}"
+    return rev, None
+
+
+def staleness_rank(row):
+    rank = {"behind": 0, "current": 1, "unreachable": 2}.get(row.get("status"), 3)
+    age = row.get("age_days")
+    return (rank, -age if age is not None else float("inf"))
+
+
+def tool_flake_status(args, request_id, token):
+    check_remote = bool(args.get("check_remote", True))
+    timeout = max(1, min(int(args.get("timeout") or 20), 120))
+    lock = json.loads(LOCK.read_text())
+    rows = []
+    probes = []
+    for name, reference in sorted(lock["nodes"][lock["root"]]["inputs"].items()):
+        node_id = resolve_input_node(lock, reference)
+        node = lock["nodes"][node_id]
+        locked = node.get("locked", {})
+        original = node.get("original", {})
+        stamp = locked.get("lastModified")
+        row = {
+            "input": name,
+            "node": node_id,
+            "type": locked.get("type") or original.get("type"),
+            "rev": locked.get("rev"),
+            "date": iso(stamp),
+            "age_days": round((time.time() - stamp) / 86400.0, 1) if stamp else None,
+        }
+        if check_remote:
+            row["remote"] = remote_url(locked, original)
+            if row["remote"]:
+                probes.append((row, original.get("ref") or locked.get("ref") or "HEAD"))
+        rows.append(row)
+    if probes:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            futures = [pool.submit(probe_remote, row["remote"], ref, timeout) for row, ref in probes]
+            settled = [future.result() for future in futures]
+        for (row, _), (rev, error) in zip(probes, settled):
+            if error:
+                row["error"] = error
+                row["status"] = "unreachable"
+            else:
+                row["remote_rev"] = rev
+                row["status"] = "behind" if rev != row["rev"] else "current"
+    rows.sort(key=staleness_rank)
+    header = {
+        "total": len(rows),
+        "behind": sum(1 for row in rows if row.get("status") == "behind"),
+        "unreachable": sum(1 for row in rows if row.get("status") == "unreachable"),
+        "next": "flake_update confirm=yes",
+        "inputs": rows,
+    }
     return envelope(header), False

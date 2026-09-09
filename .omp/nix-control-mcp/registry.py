@@ -1,6 +1,6 @@
 from agenix import tool_secret_list, tool_secret_read, tool_secret_rekey, tool_secret_write
 from config import HOSTS
-from flake import tool_eval, tool_flake_age, tool_flake_update
+from flake import tool_eval, tool_flake_age, tool_flake_status, tool_flake_update
 from routes import tool_route, tool_route_file, tool_routes_audit
 from rules import tool_rules
 from system import (
@@ -185,14 +185,34 @@ TOOLS = [
         "handler": tool_flake_age,
     },
     {
+        "name": "flake_status",
+        "title": "Whole-flake update status",
+        "description": (
+            "Whether the whole system has updates. Lists every root input with node id, type, "
+            "rev, date and age in days, then queries each remote (git ls-remote) to tell "
+            "current from behind, stale rows first. check_remote=false skips the network and "
+            "only reports local ages."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "check_remote": {"type": "boolean", "description": "query each input's remote for the upstream head (default true)"},
+                "timeout": {"type": "integer", "description": "per-probe git ls-remote timeout in seconds (default 20)"},
+            },
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": True},
+        "handler": tool_flake_status,
+    },
+    {
         "name": "health",
         "title": "Unit health",
-        "description": "Failed system and user units, plus the journal for one unit. Use after a switch to verify activation.",
+        "description": "Failed system and user units, recent coredumps, plus the journal for one unit. Use after a switch to verify activation.",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "unit": {"type": "string", "description": "unit name to fetch the journal for"},
                 "lines": {"type": "integer", "description": "journal lines (default 60)"},
+                "coredump_minutes": {"type": "integer", "description": "coredump lookup window in minutes (default 30)"},
             },
         },
         "annotations": {"readOnlyHint": True, "openWorldHint": False},

@@ -1,5 +1,7 @@
 import json
 import re
+import time
+from signal import Signals
 
 from config import (
     FREED_RE,
@@ -21,6 +23,8 @@ from shell import (
 )
 from text import envelope, tail
 
+ACTIVATION_FAILED_RE = re.compile(r"warning: the following (?:user )?units failed: ([^\n]+)")
+
 
 def failed_units():
     system = run(["systemctl", "--failed", "--no-legend", "--plain", "--no-pager"], timeout=60)[1]
@@ -29,6 +33,13 @@ def failed_units():
     )[1]
     parse = lambda text: [line.split()[0] for line in text.splitlines() if line.strip()]
     return {"system": parse(system), "user": parse(user)}
+
+
+def activation_failed_units(log):
+    units = []
+    for match in ACTIVATION_FAILED_RE.finditer(log):
+        units += [unit.strip() for unit in match.group(1).split(",") if unit.strip()]
+    return units
 
 
 def rebuild_argv(action, host):
@@ -91,6 +102,9 @@ def tool_rebuild(args, request_id, token):
         return envelope(header, tail(log, 25)), False
     header["first_error"] = first_error(log)
     header["failed_derivation"] = failed_derivation(log)
+    if action in ("switch", "boot", "test"):
+        header["failed_units"] = failed_units()
+        header["activation_failed_units"] = activation_failed_units(log)
     return envelope(header, tail(log, 120)), True
 
 
@@ -281,8 +295,44 @@ def journal_entries(text):
     ]
 
 
+def recent_coredumps(minutes):
+    try:
+        code, out = run(
+            ["coredumpctl", "list", "--since", f"-{minutes}min", "--no-legend", "--json=short"],
+            timeout=60,
+        )
+    except ToolError:
+        return []
+    if code != 0 or not out.strip():
+        return []
+    try:
+        rows = json.loads(out)
+    except ValueError:
+        return []
+    entries = []
+    for row in rows:
+        stamp = row.get("time")
+        try:
+            signal_name = Signals(row.get("sig")).name
+        except ValueError:
+            signal_name = row.get("sig")
+        entries.append(
+            {
+                "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(stamp / 1_000_000))
+                if stamp
+                else None,
+                "pid": row.get("pid"),
+                "signal": signal_name,
+                "exe": row.get("exe"),
+                "corefile": row.get("corefile"),
+            }
+        )
+    return entries
+
+
 def tool_health(args, request_id, token):
-    header = {"failed_units": failed_units()}
+    minutes = max(1, min(int(args.get("coredump_minutes") or 30), 1440))
+    header = {"failed_units": failed_units(), "coredumps": recent_coredumps(minutes)}
     body = ""
     unit = args.get("unit")
     if unit:
