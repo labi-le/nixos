@@ -153,13 +153,37 @@ in
       (
         final: prev:
         let
+          vmOptionsFile =
+            ide:
+            prev.writeText "${ide.name}-custom.vmoptions" (
+              customVmOptions + "\n" + cfg.${ide.name}.extraVmOptions
+            );
+
           mkIdeWrapper =
             ide:
             final.jetbrains.${ide.packageName}.overrideAttrs (oldAttrs: {
               nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ prev.makeWrapper ];
               postFixup = (oldAttrs.postFixup or "") + ''
+                shopt -s nullglob
+                for candidate in $out/*/bin/*64.vmoptions $out/*/bin/linux/*64.vmoptions; do
+                  case "$candidate" in
+                    *jetbrains_client64.vmoptions) continue ;;
+                  esac
+                  vmoptsSrc=$candidate
+                done
+                shopt -u nullglob
+                if [[ -z ''${vmoptsSrc-} ]]; then
+                  echo "ERROR: no vmoptions file found in $out" >&2
+                  exit 1
+                fi
+
+                vmoptsOut=$out/share/vmoptions/$(basename "$vmoptsSrc")
+                mkdir -p "$(dirname "$vmoptsOut")"
+                cat "$vmoptsSrc" ${vmOptionsFile ide} > "$vmoptsOut"
+
                 wrapProgram $out/bin/${ide.executable} \
                   ${ide.extraWrapperArgs} \
+                  --set ${oldAttrs.vmoptsIDE}_VM_OPTIONS "$vmoptsOut" \
                   --prefix PATH : "${prev.lib.makeBinPath (ide.baseEnv ++ cfg.${ide.name}.extraPackages)}"
               '';
             });
@@ -170,16 +194,7 @@ in
             // lib.listToAttrs (
               map (ide: {
                 name = ide.packageName;
-                value = patchJetBrainsDownloadHost (
-                  prev.jetbrains.${ide.packageName}.override {
-                    vmopts =
-                      (prev.jetbrains.${ide.packageName}.vmopts or "")
-                      + "\n"
-                      + customVmOptions
-                      + "\n"
-                      + cfg.${ide.name}.extraVmOptions;
-                  }
-                );
+                value = patchJetBrainsDownloadHost prev.jetbrains.${ide.packageName};
               }) enabledIdes
             );
         }
