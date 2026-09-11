@@ -327,8 +327,21 @@ in
     pkgs.omp
     pkgs.uv
     pkgs.nodejs
+    pkgs.bun
     pkgs.git
     pkgs.gh
+    pkgs.file
+    pkgs.tinyxxd
+    pkgs.bc
+    pkgs.binutils-unwrapped
+    pkgs.yq-go
+    pkgs.sqlite
+    pkgs.shellcheck
+    (pkgs.python3.withPackages (ps: [
+      ps.pyyaml
+      ps.pillow
+      ps.requests
+    ]))
   ];
 
   services.index-repo = {

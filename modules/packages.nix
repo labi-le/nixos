@@ -79,7 +79,6 @@ in
 
         deal
         wireshark
-        python3
         ffmpeg
         agenix
         age
