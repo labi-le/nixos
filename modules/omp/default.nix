@@ -369,6 +369,7 @@ in
     "L+ ${agentDir}/rules/project-naming.md - - - - ${./rules/project-naming.md}"
     "L+ ${agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
     "L+ ${agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
+    "L+ ${agentDir}/extensions/git-upstream-gate.ts - - - - ${./extensions/git-upstream-gate.ts}"
     "L+ ${agentDir}/extensions/repo-register.js - - - - ${repoRegisterJs}"
   ]
   ++ skillLinks;
