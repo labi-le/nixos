@@ -1,4 +1,4 @@
-Read `skill://caveman` and answer in that mode for every response.
+Read `skill://caveman` ultra mode and answer in that mode for every response.
 
 # Subagent supervision
 
