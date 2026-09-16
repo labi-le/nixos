@@ -3,11 +3,10 @@ providers:
   autoThinkingMaxEffort: max
 modelRoles:
   default: opencode-go/deepseek-v4.1-flash
-  smol: opencode-go/deepseek-v4.1-flash
-  slow: opencode-go/deepseek-v4.1-flash:max
+  smol: opencode-go/deepseek-v4.1-flash:low
+  slow: opencode-go/qwen3.8-flash:xhigh
   vision: opencode-go/deepseek-v4.1-flash:low
   plan: opencode-go/deepseek-v4.1-flash
-  designer: opencode-go/deepseek-v4.1-flash
   commit: opencode-go/deepseek-v4.1-flash:low
   tiny: opencode-go/deepseek-v4.1-flash:low
   task: opencode-go/deepseek-v4.1-flash
@@ -16,7 +15,5 @@ task:
     task: opencode-go/deepseek-v4.1-flash
     sonic: opencode-go/deepseek-v4.1-flash
     scout: opencode-go/deepseek-v4.1-flash:low
-    reviewer: opencode-go/deepseek-v4.1-flash:high
-    designer: opencode-go/deepseek-v4.1-flash
-    librarian: opencode-go/deepseek-v4.1-flash:low
-    security-reviewer: opencode-go/deepseek-v4.1-flash:max
+    reviewer: opencode-go/qwen3.8-flash:xhigh
+    security-reviewer: opencode-go/qwen3.8-max:high
