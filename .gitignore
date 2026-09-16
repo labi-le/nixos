@@ -3,7 +3,6 @@ context.md
 .playwright-mcp/
 .omo/
 .omp/config.yml
-.omp/models-opencode-go.yml
 result
 result-*
 __pycache__/

@@ -1,0 +1,22 @@
+defaultThinkingLevel: auto
+providers:
+  autoThinkingMaxEffort: max
+modelRoles:
+  default: anthropic/claude-opus-5
+  smol: anthropic/claude-haiku-4-5
+  slow: anthropic/claude-opus-5:high
+  vision: anthropic/claude-sonnet-5
+  plan: anthropic/claude-sonnet-5
+  designer: anthropic/claude-sonnet-5
+  commit: anthropic/claude-haiku-4-5
+  tiny: anthropic/claude-haiku-4-5
+  task: anthropic/claude-opus-5
+task:
+  agentModelOverrides:
+    task: anthropic/claude-opus-5
+    sonic: anthropic/claude-opus-5:low
+    scout: anthropic/claude-opus-5:low
+    reviewer: anthropic/claude-opus-5
+    designer: anthropic/claude-opus-5
+    librarian: anthropic/claude-opus-5:low
+    security-reviewer: anthropic/claude-fable-5
