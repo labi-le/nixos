@@ -2,21 +2,21 @@ defaultThinkingLevel: auto
 providers:
   autoThinkingMaxEffort: max
 modelRoles:
-  default: anthropic/claude-opus-5
+  default: opencode-go/deepseek-v4.1-flash
   smol: opencode-go/deepseek-v4.1-flash
-  slow: anthropic/claude-opus-5:max
-  vision: anthropic/claude-sonnet-5
-  plan: anthropic/claude-opus-5
-  designer: anthropic/claude-opus-5
-  commit: opencode-go/deepseek-v4.1-flash
-  tiny: opencode-go/deepseek-v4.1-flash
+  slow: opencode-go/deepseek-v4.1-flash:max
+  vision: opencode-go/deepseek-v4.1-flash:low
+  plan: opencode-go/deepseek-v4.1-flash
+  designer: opencode-go/deepseek-v4.1-flash
+  commit: opencode-go/deepseek-v4.1-flash:low
+  tiny: opencode-go/deepseek-v4.1-flash:low
   task: opencode-go/deepseek-v4.1-flash
 task:
   agentModelOverrides:
     task: opencode-go/deepseek-v4.1-flash
     sonic: opencode-go/deepseek-v4.1-flash
-    scout: opencode-go/deepseek-v4.1-flash
-    reviewer: anthropic/claude-opus-5
-    designer: anthropic/claude-opus-5
-    librarian: opencode-go/deepseek-v4.1-flash
-    security-reviewer: anthropic/claude-fable-5-1
+    scout: opencode-go/deepseek-v4.1-flash:low
+    reviewer: opencode-go/deepseek-v4.1-flash:high
+    designer: opencode-go/deepseek-v4.1-flash
+    librarian: opencode-go/deepseek-v4.1-flash:low
+    security-reviewer: opencode-go/deepseek-v4.1-flash:max
