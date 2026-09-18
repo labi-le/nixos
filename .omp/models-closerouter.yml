@@ -1,0 +1,19 @@
+defaultThinkingLevel: auto
+providers:
+  autoThinkingMaxEffort: max
+modelRoles:
+  default: closerouter/deepseek/deepseek-v4.1-flash
+  smol: closerouter/deepseek/deepseek-v4.1-flash:low
+  slow: closerouter/qwen/qwen3.8-flash:xhigh
+  vision: closerouter/deepseek/deepseek-v4.1-flash:low
+  plan: closerouter/deepseek/deepseek-v4.1-flash
+  commit: closerouter/deepseek/deepseek-v4.1-flash:low
+  tiny: closerouter/deepseek/deepseek-v4.1-flash:low
+  task: closerouter/deepseek/deepseek-v4.1-flash
+task:
+  agentModelOverrides:
+    task: closerouter/deepseek/deepseek-v4.1-flash
+    sonic: closerouter/deepseek/deepseek-v4.1-flash
+    scout: closerouter/deepseek/deepseek-v4.1-flash:low
+    reviewer: closerouter/qwen/qwen3.8-flash:xhigh
+    security-reviewer: closerouter/qwen/qwen3.8-max:high
