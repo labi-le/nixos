@@ -98,8 +98,8 @@ let
               maxTokens = 8192;
             }
             {
-              id = "deepseek/deepseek-v4-flash-0813";
-              name = "DeepSeek V4 Flash (CloseRouter)";
+              id = "deepseek/deepseek-v4.1-flash";
+              name = "DeepSeek V4.1 Flash (CloseRouter)";
               reasoning = true;
               supportsTools = true;
               contextWindow = 1000000;
@@ -255,13 +255,15 @@ let
 
   yaml = pkgs.formats.yaml { };
   configFile = yaml.generate "omp-config.yml" {
-    setupVersion = 1;
+    setupVersion = 2;
     extensions = [ ];
     advisor.enabled = false;
     defaultThinkingLevel = "auto";
     memory.backend = "mnemopi";
     autoResume = true;
     modelRoleStorage = "project";
+    composer.tokenRate = true;
+    hideThinkingBlock = true;
     compaction = {
       enabled = true;
       methodOrder = [
