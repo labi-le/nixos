@@ -4,7 +4,7 @@ providers:
   anthropic:
     serverSideFallback: true
 modelRoles:
-  default: anthropic/claude-opus-5
+  default: anthropic/claude-opus-5:high
   plan: anthropic/claude-fable-5-1:high
   slow: anthropic/claude-fable-5-1:high
   task: anthropic/claude-sonnet-5:medium
