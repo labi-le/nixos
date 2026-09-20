@@ -18,10 +18,22 @@ writeShellScriptBin "openrgb-profile" ''
 
   case "''${1:-default}" in
     default)
-      mouse=(--device "G502 HERO Gaming Mouse" --mode "Spectrum Cycle" --speed 0)
+      args=(
+        --device "ENE DRAM" --mode Static --color FF0000
+        --device "Gigabyte AORUS Radeon RX 9070 XT Elite" --mode Static --color FF0000
+        --device "ASUS TUF GAMING B850M-PLUS WIFI"
+          --zone 0 --size 24 --zone 1 --size 24 --zone 2 --size 24
+          --mode Static --color FF0000
+        --device "G502 HERO Gaming Mouse" --mode Static --color FF0000
+      )
       ;;
     off)
-      mouse=(--device "G502 HERO Gaming Mouse" --mode Off)
+      args=(
+        --device "ENE DRAM" --mode Off
+        --device "Gigabyte AORUS Radeon RX 9070 XT Elite" --mode Static --color 000000
+        --device "ASUS TUF GAMING B850M-PLUS WIFI" --mode Off
+        --device "G502 HERO Gaming Mouse" --mode Off
+      )
       ;;
     *)
       echo "usage: openrgb-profile [--wait] default|off" >&2
@@ -45,9 +57,5 @@ writeShellScriptBin "openrgb-profile" ''
     done
   fi
 
-  exec "$orgb" --client "127.0.0.1:$port" --nodetect \
-    --device "ENE DRAM" --mode Off \
-    --device "Gigabyte AORUS Radeon RX 9070 XT Elite" --mode Static --color 000000 \
-    --device "ASUS TUF GAMING B850M-PLUS WIFI" --mode Off \
-    "''${mouse[@]}"
+  exec "$orgb" --client "127.0.0.1:$port" --nodetect "''${args[@]}"
 ''

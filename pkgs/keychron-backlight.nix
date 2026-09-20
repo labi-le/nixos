@@ -12,11 +12,12 @@ writers.writePython3Bin "keychron-backlight" { flakeIgnore = [ "E501" ]; } ''
   READ_TIMEOUT = 1.0
   CHANNEL_RGB_MATRIX = 0x03
   VALUE_ID_EFFECT = 0x02
+  VALUE_ID_COLOR = 0x04
   CUSTOM_SET_VALUE = 0x07
-  CUSTOM_GET_VALUE = 0x08
   EFFECT_OFF = 0
-  EFFECT_FALLBACK = 7
-  STASH_NAME = "keychron-backlight.effect"
+  EFFECT_SOLID = 1
+  COLOR_RED_HUE = 0
+  COLOR_RED_SAT = 255
 
 
   def find_node():
@@ -63,42 +64,12 @@ writers.writePython3Bin "keychron-backlight" { flakeIgnore = [ "E501" ]; } ''
           os.close(fd)
 
 
-  def get_effect(node):
-      header = [CUSTOM_GET_VALUE, CHANNEL_RGB_MATRIX, VALUE_ID_EFFECT]
-      response = request(node, header)
-      if response is None or len(response) < 4:
-          return None
-      if list(response[:3]) != header:
-          return None
-      return response[3]
-
-
   def set_effect(node, effect):
       request(node, [CUSTOM_SET_VALUE, CHANNEL_RGB_MATRIX, VALUE_ID_EFFECT, effect])
 
 
-  def stash_path():
-      directory = os.environ.get("XDG_RUNTIME_DIR") or "/tmp"
-      return os.path.join(directory, STASH_NAME)
-
-
-  def read_stash():
-      try:
-          with open(stash_path()) as handle:
-              effect = int(handle.read().strip())
-      except (OSError, ValueError):
-          return EFFECT_FALLBACK
-      if 0 <= effect <= 255:
-          return effect
-      return EFFECT_FALLBACK
-
-
-  def write_stash(effect):
-      try:
-          with open(stash_path(), "w") as handle:
-              handle.write(str(effect))
-      except OSError:
-          pass
+  def set_color(node, hue, sat):
+      request(node, [CUSTOM_SET_VALUE, CHANNEL_RGB_MATRIX, VALUE_ID_COLOR, hue, sat])
 
 
   def main():
@@ -110,12 +81,10 @@ writers.writePython3Bin "keychron-backlight" { flakeIgnore = [ "E501" ]; } ''
       if node is None:
           return 0
       if argv[0] == "off":
-          current = get_effect(node)
-          if current is not None and current != EFFECT_OFF:
-              write_stash(current)
           set_effect(node, EFFECT_OFF)
       else:
-          set_effect(node, read_stash())
+          set_color(node, COLOR_RED_HUE, COLOR_RED_SAT)
+          set_effect(node, EFFECT_SOLID)
       return 0
 
 
