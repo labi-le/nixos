@@ -17,6 +17,18 @@ in
     ];
   };
 
+  fileSystems."/backup" = {
+    device = "/dev/disk/by-uuid/d4cd9ea9-f656-438b-bd3f-e7bbbbd9e373";
+    fsType = "ext4";
+    options = [
+      "noauto"
+      "x-systemd.automount"
+      "x-systemd.device-timeout=30s"
+      "x-systemd.mount-timeout=5min"
+      "nofail"
+    ];
+  };
+
   # systemd.services."set-readahead-drive" = {
   #   description = "Set readahead for /dev/sda";
   #   wantedBy = [ "local-fs.target" ];

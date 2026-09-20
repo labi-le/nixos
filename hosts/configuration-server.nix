@@ -11,7 +11,8 @@
     ./../modules/nginx.nix
     ./../modules/litellm.nix
     ./../modules/drive.nix
-    ./../modules/kernel-cachyos.nix
+    ./../modules/kernel-server.nix
+    ./../modules/zfs.nix
     ./../modules/grafana.nix
     ./../modules/monitoring
     inputs.sub-preprocessor.nixosModules.monitoring
@@ -37,6 +38,11 @@
 
   network = {
     enableFirewall = true;
+  };
+
+  zfs = {
+    enable = true;
+    hostId = "204cf2f5";
   };
 
   age.secrets.ngate-env = {
