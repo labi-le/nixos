@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 lib.mkIf config.network.enableFirewall {
 
@@ -23,5 +28,8 @@ lib.mkIf config.network.enableFirewall {
       overalljails = true;
     };
     jails.sshd.settings.journalmatch = "_SYSTEMD_UNIT=sshd.service";
+    banaction = "nftables-multiport";
+    banaction-allports = "nftables-allports";
+    packageFirewall = pkgs.nftables;
   };
 }
