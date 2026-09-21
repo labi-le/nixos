@@ -1,0 +1,516 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Pool health, capacity, throughput and ARC behaviour for the data mirror (SSD + SMR HDD).",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Pool health (data)",
+      "description": "zpool status boiled down to one value. Anything but ONLINE means the mirror has already lost redundancy or worse.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_pool_health{pool=\"data\"}",
+          "instant": true,
+          "legendFormat": "{{pool}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "ONLINE", "color": "green", "index": 0 },
+                "1": { "text": "DEGRADED", "color": "red", "index": 1 },
+                "2": { "text": "FAULTED", "color": "red", "index": 2 },
+                "3": { "text": "OFFLINE", "color": "red", "index": 3 },
+                "4": { "text": "UNAVAIL", "color": "red", "index": 4 },
+                "5": { "text": "REMOVED", "color": "red", "index": 5 },
+                "6": { "text": "SUSPENDED", "color": "red", "index": 6 }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "noValue": "no data"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "gauge",
+      "title": "Pool capacity used",
+      "description": "Allocated / total pool size. 1.99 TB total, 190 GB allocated at last check.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_pool_allocated_bytes{pool=\"data\"} / zfs_pool_size_bytes{pool=\"data\"}",
+          "instant": true,
+          "legendFormat": "{{pool}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.8 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "gauge",
+      "title": "Pool fragmentation",
+      "description": "Free-space fragmentation ratio reported by zpool. High values make ZFS work harder to find contiguous free space for new writes.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_pool_fragmentation_ratio{pool=\"data\"}",
+          "instant": true,
+          "legendFormat": "{{pool}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.3 },
+              { "color": "red", "value": 0.6 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "stat",
+      "title": "Exporter collector liveness",
+      "description": "zfs_exporter's own scrape success per collector. Distinguishes a dead exporter from a genuinely healthy pool -- if this goes red, every other panel here is stale, not good news.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_scrape_collector_success",
+          "instant": true,
+          "legendFormat": "{{collector}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "DOWN", "color": "red", "index": 0 },
+                "1": { "text": "UP", "color": "green", "index": 1 }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "noValue": "no data"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "bargauge",
+      "title": "Used space per dataset",
+      "description": "Current zfs_dataset_used_bytes for each dataset under data.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_dataset_used_bytes{pool=\"data\",type=\"filesystem\"}",
+          "instant": true,
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "table",
+      "title": "Dataset space accounting",
+      "description": "Used, logical used, available and the derived compression ratio (logical used / used) per dataset.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 6,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_dataset_used_bytes{pool=\"data\",type=\"filesystem\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_dataset_logical_used_bytes{pool=\"data\",type=\"filesystem\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_dataset_available_bytes{pool=\"data\",type=\"filesystem\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "C"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "zfs_dataset_logical_used_bytes{pool=\"data\",type=\"filesystem\"} / zfs_dataset_used_bytes{pool=\"data\",type=\"filesystem\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "D"
+        }
+      ],
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "pool": true,
+              "type": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "name": "Dataset",
+              "Value #A": "Used",
+              "Value #B": "Logical used",
+              "Value #C": "Available",
+              "Value #D": "Compression ratio"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Compression ratio" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "decimals", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Dataset" },
+            "properties": [{ "id": "unit", "value": "none" }]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "timeseries",
+      "title": "Dataset throughput (bytes read/written)",
+      "description": "rate(node_zfs_zpool_dataset_nread[5m]) and rate(node_zfs_zpool_dataset_nwritten[5m]) per dataset. Sustained write throughput is the number that matters here -- the pool's SMR member is the bottleneck.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_zpool_dataset_nread{zpool=\"data\",dataset=~\"data/.*\"}[5m])",
+          "legendFormat": "{{dataset}} read",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_zpool_dataset_nwritten{zpool=\"data\",dataset=~\"data/.*\"}[5m])",
+          "legendFormat": "{{dataset}} write",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "binBps",
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": false }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "timeseries",
+      "title": "Dataset IOPS",
+      "description": "rate(node_zfs_zpool_dataset_reads[5m]) and rate(node_zfs_zpool_dataset_writes[5m]) per dataset.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 8,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_zpool_dataset_reads{zpool=\"data\",dataset=~\"data/.*\"}[5m])",
+          "legendFormat": "{{dataset}} reads",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_zpool_dataset_writes{zpool=\"data\",dataset=~\"data/.*\"}[5m])",
+          "legendFormat": "{{dataset}} writes",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": false }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "timeseries",
+      "title": "ZIL commits per dataset",
+      "description": "rate(node_zfs_zpool_dataset_zil_commit_count[5m]) per dataset. data/code is the one dataset still paying for sync=standard, so it is the dataset to watch here.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "id": 9,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_zpool_dataset_zil_commit_count{zpool=\"data\",dataset=~\"data/.*\"}[5m])",
+          "legendFormat": "{{dataset}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": false }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "timeseries",
+      "title": "ZIL commit errors and stalls per dataset",
+      "description": "rate(node_zfs_zpool_dataset_zil_commit_error_count[5m]) and rate(node_zfs_zpool_dataset_zil_commit_stall_count[5m]) per dataset. Should sit at zero; any sustained non-zero value means synchronous writes are being held up.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "id": 10,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_zpool_dataset_zil_commit_error_count{zpool=\"data\",dataset=~\"data/.*\"}[5m])",
+          "legendFormat": "{{dataset}} errors",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_zpool_dataset_zil_commit_stall_count{zpool=\"data\",dataset=~\"data/.*\"}[5m])",
+          "legendFormat": "{{dataset}} stalls",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": false }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "timeseries",
+      "title": "ARC size vs target maximum",
+      "description": "node_zfs_arc_size against node_zfs_arc_c_max. ARC pinned at its ceiling under memory pressure means less caching headroom for the working set.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+      "id": 11,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "node_zfs_arc_size",
+          "legendFormat": "ARC size",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "node_zfs_arc_c_max",
+          "legendFormat": "ARC target max",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": false }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "pluginVersion": "13.0.0"
+    },
+    {
+      "type": "timeseries",
+      "title": "ARC hit ratio",
+      "description": "rate(node_zfs_arc_hits[5m]) / (rate(node_zfs_arc_hits[5m]) + rate(node_zfs_arc_misses[5m])). A falling ratio means the working set no longer fits in ARC.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+      "id": 12,
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(node_zfs_arc_hits[5m]) / (rate(node_zfs_arc_hits[5m]) + rate(node_zfs_arc_misses[5m]))",
+          "legendFormat": "hit ratio",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": false }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "min"] },
+        "tooltip": { "mode": "multi" }
+      },
+      "pluginVersion": "13.0.0"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": ["zfs", "storage"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "ZFS",
+  "uid": "zfsxk9f2mq7a1",
+  "weekStart": ""
+}

@@ -86,6 +86,9 @@
                 jq 'del(.__inputs, .__requires)' \
                   ${./monitoring/dashboards/node-exporter-full.json} \
                   > $out/node-exporter-full.json
+                jq 'del(.__inputs, .__requires)' \
+                  ${./monitoring/dashboards/zfs.json} \
+                  > $out/zfs.json
               '';
             };
           }
@@ -114,6 +117,7 @@
           "uname"
           "vmstat"
           "time"
+          "zfs"
         ];
         enable = true;
       };
@@ -125,6 +129,11 @@
       };
       nginx = {
         enable = true;
+      };
+      zfs = {
+        enable = true;
+        port = 9134;
+        pools = [ "data" ];
       };
     };
 
@@ -155,6 +164,16 @@
           }
         ];
       }
+      {
+        job_name = "zfs";
+        static_configs = [
+          {
+            targets = [
+              "127.0.0.1:${toString config.services.prometheus.exporters.zfs.port}"
+            ];
+          }
+        ];
+      }
     ];
   };
 
@@ -171,6 +190,8 @@
   system.activationScripts.nvmeSmartAccess.text = ''
     ${pkgs.systemd}/bin/udevadm trigger --subsystem-match=nvme --action=add
   '';
+
+  systemd.services.prometheus-zfs-exporter.serviceConfig.DeviceAllow = [ "/dev/zfs rw" ];
 
   services.loki = {
     enable = true;
