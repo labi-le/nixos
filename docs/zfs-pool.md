@@ -29,18 +29,53 @@ zpool create -o ashift=12 -o autotrim=on -O compression=zstd -O atime=off -O xat
 
 | Dataset | Mountpoint | recordsize | compression | Other | Holds |
 |---|---|---|---|---|---|
-| `data` | `/drive` | inherited | zstd | — | root, otherwise empty |
-| `data/code` | `/drive/code` | 128K | zstd | — | freqtrade container source/state; general-purpose default recordsize, benefits from zstd on source text |
-| `data/sync` | `/drive/sync` | 1M | lz4 | — | large, mostly-sequential file transfers; 1M matches large sequential I/O, lz4 is cheap CPU for content that often isn't very compressible |
-| `data/state` | `/drive/state` | 16K | lz4 | `logbias=latency` | small, latency-sensitive state (e.g. ChromaDB's SQLite-backed store, bind-mounted from `modules/chromadb.nix`); small recordsize limits read-modify-write amplification on small random writes, `logbias=latency` tells ZFS to route synchronous writes through the ZIL for lower latency instead of optimizing for throughput |
-| `data/tmp` | `/drive/tmp` | 1M | lz4 | — | scratch space, large sequential I/O |
+| `data` | `/drive` | inherited | zstd | `sync=standard` | root, otherwise empty |
+| `data/code` | `/drive/code` | 128K | zstd | `sync=standard` | freqtrade container source/state; general-purpose default recordsize, benefits from zstd on source text |
+| `data/sync` | `/drive/sync` | 1M | lz4 | `sync=standard` | large, mostly-sequential file transfers; 1M matches large sequential I/O, lz4 is cheap CPU for content that often isn't very compressible |
+| `data/state` | `/drive/state` | 16K | lz4 | `logbias=latency`, `sync=disabled` | small, latency-sensitive state (e.g. ChromaDB's SQLite-backed store, bind-mounted from `modules/chromadb.nix`); small recordsize limits read-modify-write amplification on small random writes, `logbias=latency` tells ZFS to route synchronous writes through the ZIL for lower latency instead of optimizing for throughput |
+| `data/tmp` | `/drive/tmp` | 1M | lz4 | `sync=disabled` | scratch space, large sequential I/O |
 
 Measured compression ratios from `zfs get compressratio`: pool `data` 1.25x, `data/code` 1.22x (zstd), `data/state` 1.29x (lz4), `data/sync` 1.04x (lz4), `data/tmp` 2.66x (lz4). Only `data/code` runs zstd; the rest use lz4 because their content is already compressed or latency-sensitive. `data/sync` at 1.04x exemplifies why zstd would not pay for large sequential transfers: lz4's 1.04x is the minimal overhead of the algorithm itself.
+
+`sync` is set per-dataset for durability reasons, not compression reasons; see [Durability](#durability-syncdisabled-on-datastate-and-datatmp) below for the full rationale and measurements behind `sync=disabled` on `data/state` and `data/tmp`.
 
 ## Performance characteristics that matter operationally
 
 - **Asynchronous writes are cheap for the SMR half.** ZFS batches dirty data into transaction groups (txg, ~5 s by default) and flushes each txg as a large, mostly-sequential write. SMR drives are pathologically slow at small random writes but tolerate large sequential ones reasonably well, so ordinary buffered I/O on this pool does not expose the HDD's shingled-write penalty.
-- **Every `fsync` waits on the HDD.** There is no separate log device (SLOG). Synchronous writes (`fsync`, `O_SYNC`, NFS `sync` exports, database commits) must be committed to the pool's own ZIL before returning, and with a mirror vdev that means waiting on the slower member — the SMR disk. A SLOG would remove this wait for small sync writes, but there is currently no free space on the system NVMe to carve one out without shrinking its ext4 partition offline; this is deferred, not solved.
+- **Every `fsync` waits on the HDD, for the datasets that still ask for one.** There is no separate log device (SLOG). Synchronous writes (`fsync`, `O_SYNC`, NFS `sync` exports, database commits) must be committed to the pool's own ZIL before returning, and with a mirror vdev that means waiting on the slower member — the SMR disk. `data/code` and `data/sync` still pay this cost; `data/state` and `data/tmp` opt out of it entirely via `sync=disabled` (see [Durability](#durability-syncdisabled-on-datastate-and-datatmp) below). A SLOG would remove the wait for the datasets that keep `sync=standard`, but there is currently no free space on the system NVMe to carve one out without shrinking its ext4 partition offline; this is deferred, not solved.
+
+## Durability: `sync=disabled` on `data/state` and `data/tmp`
+
+`sync=disabled` is set on `data/state` and `data/tmp`; `data/code`, `data/sync` and the pool root keep `sync=standard` (ZFS's default — synchronous writes wait for `fsync`/`O_SYNC` to reach the ZIL before returning). This property lives in pool metadata, not in this repository: a `nixos-rebuild` does not set it, and a pool re-created from scratch needs it re-applied by hand:
+
+```
+zfs set sync=disabled data/state
+zfs set sync=disabled data/tmp
+```
+
+**Why this can't corrupt anything.** ZFS is always crash-consistent regardless of `sync`: a transaction group either lands whole or not at all, a power cut rolls the pool back to the last completed txg, and both mirror halves stay identical. Redundancy (the mirror) protects against a dead disk, never against lost power — that's what `sync` governs instead. `sync=disabled` therefore cannot corrupt the pool and cannot produce torn state; it only widens the window of acknowledged-but-not-yet-committed writes to roughly one txg interval (~5 s), and write ordering is still preserved, so on power loss the dataset rolls back to some consistent point in time, never a mangled one. This is categorically different from, say, disabling barriers on ext4.
+
+**What `fsync` actually buys.** The pool-consistency guarantee above is unconditional and doesn't depend on `sync` at all. What `sync=standard` adds on top is a promise *to the calling application* that a particular write has landed before the call returns — and that promise only matters if something outside the machine is relying on it: an application that has already acknowledged an action to a human or another system, and would need to un-acknowledge it after a rollback. The question per dataset is whether such an external observer exists.
+
+- `data/state` holds ChromaDB's store (a rebuildable vector index — worst case, reindex) and the ngate VM's qcow2 overlay (a guest OS that just replays its own journal after what looks, from inside the VM, like an ordinary power cut). No external observer remembers the last few seconds either way, so `sync=disabled`.
+- `data/tmp` is scratch space by definition, so `sync=disabled`.
+- `data/code` is the exception and keeps `sync=standard`: it holds freqtrade's `tradesv3.sqlite`, and the exchange remembers positions the bot may have already acknowledged. Losing acknowledged-but-uncommitted trade state here is exactly the external-observer mismatch `fsync` exists to prevent.
+- `data/sync` also keeps `sync=standard`; it wasn't part of this change.
+- The NFS export in `modules/drive.nix` is already declared `async`, so the server already declines to honour client-side durability requests over NFS — nothing was given up there by this change that wasn't already given up.
+
+**Measurements**, all `dd bs=8k oflag=dsync` on this pool:
+
+| Configuration | Latency per op |
+|---|---|
+| `sync=standard` (pool default, before this change) | 20.0 ms |
+| `sync=standard`, `logbias=throughput` | 19.3 ms — no improvement, ruled out by measurement, not theory |
+| `sync=disabled` (`data/state`, after) | 0.003 ms, sustaining 2.7 GB/s |
+| `data/code`, still `sync=standard` | 21.3 ms |
+| NVMe root, same test, for reference | 0.35 ms |
+
+`/proc/diskstats` during the `sync=standard` run attributes essentially the entire cost to the SMR member: `sda` (ST2000DM008) 704 writes / 7035 ms busy = 10.0 ms/write; `sdb` (Netac SSD) 713 writes / 111 ms busy = 0.16 ms/write. The SMR disk is ~60x slower per synchronous write and is the whole cost of `sync=standard` on this pool.
+
+**Future option: a SLOG.** A dedicated log device would restore the `fsync` guarantee cheaply — the NVMe-root measurement above (0.35 ms) is roughly the ceiling a SLOG on this NVMe could reach. Not done yet: the NVMe (Patriot M.2 P300 512GB) has no free space, since `nvme0n1p2` runs to the end of the disk, and shrinking it needs an offline `resize2fs` from external media. The board (MSI B450M PRO-VDH MAX) has a single M.2 slot, already occupied by that NVMe, and its PCIe x16 slot holds a Radeon RX 6700 XT; its one remaining PCIe slot is free, so a small Optane drive on an M.2-to-PCIe adapter would fit there instead. A non-mirrored SLOG is safe to lose on a modern pool: losing it only costs whatever sync writes were in flight at the moment of loss, never the pool itself.
 
 ## Torrents: deliberately single-copy, off the pool
 
