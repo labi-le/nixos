@@ -7,8 +7,6 @@
     device = "/dev/disk/by-uuid/d4cd9ea9-f656-438b-bd3f-e7bbbbd9e373";
     fsType = "ext4";
     options = [
-      "noauto"
-      "x-systemd.automount"
       "x-systemd.device-timeout=30s"
       "x-systemd.mount-timeout=5min"
       "nofail"
@@ -73,13 +71,4 @@
     ];
   };
 
-  # boot.kernelPatches = [
-  #   {
-  #     name = "disable-nfs-readplus";
-  #     patch = null;
-  #     extraConfig = ''
-  #       NFS_V4_2_READ_PLUS n
-  #     '';
-  #   }
-  # ];
 }
