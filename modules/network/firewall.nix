@@ -22,5 +22,6 @@ lib.mkIf config.network.enableFirewall {
       maxtime = "168h";
       overalljails = true;
     };
+    jails.sshd.settings.journalmatch = "_SYSTEMD_UNIT=sshd.service";
   };
 }

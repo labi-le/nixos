@@ -31,6 +31,26 @@ in
       };
     };
   };
+
+  environment.etc."fail2ban/filter.d/frp-auth.conf".text = ''
+    [Init]
+    maxlines = 2
+
+    [Definition]
+    failregex = ^.*client login info: ip \[<HOST>:\d+\].*\n.*register control error: token in login doesn't match token from configuration.*$
+    ignoreregex =
+  '';
+
+  services.fail2ban.jails.frp-auth.settings = {
+    enabled = true;
+    filter = "frp-auth";
+    backend = "systemd";
+    journalmatch = "_SYSTEMD_UNIT=frp-server.service";
+    port = "38392";
+    protocol = "udp";
+    maxretry = 3;
+    findtime = 600;
+  };
   networking.firewall.allowedTCPPortRanges = [
     danyaPorts
   ];
