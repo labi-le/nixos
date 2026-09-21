@@ -1,20 +1,7 @@
-{ pkgs, ... }:
+{ ... }:
 
-let
-  device = "/dev/disk/by-uuid/b631c90c-690f-4cf0-9775-56c53f69f5b5";
-in
 {
-  fileSystems."/drive" = {
-    device = device;
-    fsType = "ext4";
-    options = [
-      "noauto"
-      "x-systemd.automount"
-      "x-systemd.device-timeout=5s"
-      "x-systemd.mount-timeout=10s"
-      "nofail"
-    ];
-  };
+  boot.zfs.extraPools = [ "data" ];
 
   fileSystems."/backup" = {
     device = "/dev/disk/by-uuid/d4cd9ea9-f656-438b-bd3f-e7bbbbd9e373";
@@ -28,18 +15,39 @@ in
     ];
   };
 
-  # systemd.services."set-readahead-drive" = {
-  #   description = "Set readahead for /dev/sda";
-  #   wantedBy = [ "local-fs.target" ];
-  #   serviceConfig.Type = "oneshot";
-  #   serviceConfig.ExecStart = "${pkgs.util-linux}/bin/blockdev --setra 1024 ${device}";
-  # };
+  fileSystems."/drive/torrents" = {
+    device = "/backup/torrents";
+    fsType = "none";
+    options = [
+      "bind"
+      "nofail"
+      "x-systemd.requires-mounts-for=/backup"
+      "x-systemd.requires=zfs-mount.service"
+    ];
+  };
+
+  fileSystems."/drive/torrents_db" = {
+    device = "/backup/torrents_db";
+    fsType = "none";
+    options = [
+      "bind"
+      "nofail"
+      "x-systemd.requires-mounts-for=/backup"
+      "x-systemd.requires=zfs-mount.service"
+    ];
+  };
 
   services.nfs = {
     server = {
       enable = true;
       exports = ''
         /drive 192.168.1.0/24(rw,async,no_subtree_check,insecure)
+        /drive/code 192.168.1.0/24(rw,async,no_subtree_check,insecure)
+        /drive/sync 192.168.1.0/24(rw,async,no_subtree_check,insecure)
+        /drive/state 192.168.1.0/24(rw,async,no_subtree_check,insecure)
+        /drive/tmp 192.168.1.0/24(rw,async,no_subtree_check,insecure)
+        /drive/torrents 192.168.1.0/24(rw,async,no_subtree_check,insecure)
+        /drive/torrents_db 192.168.1.0/24(rw,async,no_subtree_check,insecure)
       '';
       nproc = 16;
     };

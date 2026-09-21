@@ -29,8 +29,6 @@
     user = "labile";
     group = "users";
 
-    # State stays at the module default /var/lib/tidal-syncer, managed as a
-    # systemd StateDirectory. The library lives on the ext4 behind /drive.
     paths.music = "/drive/sync/music";
 
     tidalAuth = {
@@ -64,12 +62,5 @@
     dashboard.enable = true;
   };
 
-  # The derived RequiresMountsFor=/drive/sync/music already orders the unit after
-  # drive.automount, but that only proves /drive is mounted, and /drive carries an
-  # autofs layer on top of the ext4 -- an empty stub would still look mounted. The
-  # library itself is what must be present: an empty music root never self-heals,
-  # because the skip decision reads only the database and never the disk, so every
-  # track keeps counting as done while nothing is downloaded and the favourites
-  # .m3u8 export is rewritten from stale paths.
   systemd.services.tidal-syncer.unitConfig.AssertDirectoryNotEmpty = "/drive/sync/music";
 }

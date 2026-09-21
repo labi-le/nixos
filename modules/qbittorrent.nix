@@ -50,4 +50,9 @@
       };
     };
   };
+
+  systemd.services.qbittorrent.unitConfig = {
+    RequiresMountsFor = "/drive/torrents /drive/torrents_db";
+    AssertPathIsMountPoint = "/drive/torrents";
+  };
 }

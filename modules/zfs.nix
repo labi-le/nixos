@@ -17,7 +17,7 @@ in
     autoScrub = mkOption {
       type = types.bool;
       default = false;
-      description = "Enable periodic scrubbing of ZFS pools. Off until a pool exists: with none, zfs-scrub.service runs zpool scrub -w with an empty pool list and fails on every trigger.";
+      description = "Enable periodic scrubbing of ZFS pools. Defaults off because it is a deliberate per-host opt-in: a monthly full-pool read is heavy I/O whose cost depends on pool size and member disk types (an SMR HDD scrubs far slower than an SSD), so a new ZFS host should choose its own schedule rather than inherit one silently. Hosts with a pool set this to true explicitly.";
     };
 
     trim = mkOption {
