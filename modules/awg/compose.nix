@@ -18,6 +18,10 @@
     environmentFiles = [
       "/run/agenix/awg-env"
     ];
+    environment = {
+      WG_POST_UP = "true";
+      WG_POST_DOWN = "true";
+    };
     volumes = [
       "amneziawg_etc_wireguard:/etc/wireguard:rw"
     ];

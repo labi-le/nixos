@@ -95,3 +95,65 @@ Two traps in checking this:
 - **A worker abort does not restart the unit.** `systemctl show nginx
   -p ExecMainStartTimestamp` stays put across these failures, so uptime
   proves nothing about whether connections were dropped.
+
+## Boot-time race: nginx fails-to-start before external DNS works
+
+`nginx -t` (the pre-start config test) resolves every `proxy_pass` hostname
+at process startup, not lazily. On `server` a handful of vhosts proxy to
+external hosts (e.g. `radio.gachibass.us.to`), and the host's stub resolver
+is `dnsmasq` on `127.0.0.1:53` (`/etc/resolv.conf`), which forwards to the
+router at `192.168.1.1`; the separate recursive `unbound` instance on
+`127.0.0.1:5335` is not in this path at all (`resolveLocalQueries = false`
+in `modules/unbound.nix`) and cannot answer for it — see
+`docs/dns-resolver.md`.
+
+The actual failure on 2026-09-21 was not a slow first recursive lookup: it
+was that dnsmasq's start job was deleted as collateral damage of the
+`local-fs.target` / `var-lib-private-chromadb.mount` / `drive.mount` /
+`network.target` ordering cycle (see the `modules/drive.nix` row in
+`docs/routes.md`). unbound started at 15:04:07; `nginx-pre-start` then
+failed at :10, :20, :30 and :41 and hit `start-limit-hit` at 15:04:51 — but
+dnsmasq itself did not start until 15:16:39, so the host had no listener at
+all on `127.0.0.1:53` for the first twelve minutes of the boot. No retry
+budget, however large, covers a resolver that has not started yet; only
+fixing the ordering cycle does. `nginx.service` was also only ordered after
+`network.target`, so this fix additionally orders it after and wants both
+`dnsmasq.service` and `network-online.target`. The latter is already wanted
+by several other units on this host (`docker.service`, `unbound.service`,
+`nfs-server.service`,
+`loki.service`, `qbittorrent.service`, `tidal-syncer.service`,
+`ngate-wrapped-vm.service`, every `acme-order-renew-*.service`), so pulling
+it in here does not depend on another module doing it first — the `wants`
+entry on `nginx.service` stands on its own regardless of what else on the
+host happens to want it too.
+
+nixpkgs sets `Restart = "always"`, `RestartSec = "10s"` and
+`startLimitIntervalSec = 60` for `nginx.service`
+(`nixos/modules/services/web-servers/nginx/default.nix`), so retries are
+spaced a fixed ~10s apart, not the 10-30s this file previously claimed. The
+shipped 5-per-60s limiter therefore latches after about 41s of failures —
+exactly what the recorded incident shows: pre-start failures at :10, :20,
+:30 and :41, `start-limit-hit` at 15:04:51. `unitConfig.StartLimitIntervalSec`
+is widened to `1800` with `StartLimitBurst = 150` rather than disabled: at
+the fixed 10s spacing that is roughly twenty-five minutes of continuous
+retrying before the unit gives up, comfortably covering a twelve-minute
+resolver outage like this one while still latching eventually.
+
+The limiter is not simply turned off (`StartLimitIntervalSec = 0`) because
+with `Restart = always` and no limiter at all, nginx can never reach
+`ActiveState=failed` — a start failure just returns it to
+`activating (auto-restart)` forever. That would make a genuinely broken
+config (bad vhost, missing cert, wrong `proxy_pass`) fail silently: the unit
+never shows up in `systemctl --failed`, never trips the
+`node_systemd_units{state="failed"}` panel in
+`modules/monitoring/dashboards/node-exporter-full.json`, and stops being
+covered by the "switch exits 0 with no failed units" contract in
+`docs/nix-project-rules.md:47`.
+
+**Rejected alternative:** rewrite the vhosts' `proxy_pass` to a variable plus
+a `resolver` directive, which defers hostname resolution to request time
+instead of config-test time. That would dodge the boot race, but it changes
+how upstream selection and connection reuse behave (variable `proxy_pass`
+disables some of nginx's static upstream handling, e.g. keepalive pooling to
+a fixed upstream), which is a behavior change beyond fixing the race — out
+of scope here.

@@ -378,4 +378,19 @@ in
       Persistent = true;
     };
   };
+
+  systemd.services.nginx = {
+    after = [
+      "dnsmasq.service"
+      "network-online.target"
+    ];
+    wants = [
+      "dnsmasq.service"
+      "network-online.target"
+    ];
+    unitConfig = {
+      StartLimitIntervalSec = lib.mkForce 1800;
+      StartLimitBurst = 150;
+    };
+  };
 }

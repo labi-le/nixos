@@ -13,7 +13,6 @@ in
       "x-systemd.device-timeout=5s"
       "x-systemd.mount-timeout=10s"
       "nofail"
-      "_netdev"
     ];
   };
 
