@@ -31,7 +31,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Display monitors (declarations) | `modules/monitors.nix` | Values set in per-host config |
 | Docker daemon | `modules/docker.nix` | |
 | Polkit rules | `modules/polkit.nix` | |
-| NVMe drive tuning | `modules/nvme.nix` | |
+| NVMe drive tuning | `modules/nvme.nix`; incident + rationale: `docs/nvme.md` | DRAM-less Patriot M.2 P300 512GB: `services.fstrim.interval` is `daily` (upstream default `weekly`), and `systemd.services.fstrim` sets `restartIfChanged = false` plus `Restart = "on-failure"` / `RestartSec = "5min"`, because a `nixos-rebuild switch` once SIGTERMed the unit mid-run and nothing retried it until the next weekly tick — 132.3 GiB went untrimmed, collapsing sustained writes to 32-55 MB/s (reads unaffected at 841 MB/s) until a manual `fstrim` restored 1.7 GB/s / 606 MB/s. Full measurements in `docs/nvme.md`. The ZFS pool needs none of this (`autotrim=on`, `docs/zfs-pool.md`) |
 | GNOME keyring | `modules/keyring.nix` | |
 | Locale, timezone | `modules/locale.nix` | |
 | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | |
