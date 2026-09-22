@@ -12,6 +12,7 @@
   imports = [
     ./contact-points.nix
     ./frp.nix
+    ./storage.nix
     ./tidal-syncer.nix
   ];
 }

@@ -52,7 +52,7 @@
   };
 
   systemd.services.qbittorrent.unitConfig = {
-    RequiresMountsFor = "/drive/torrents /drive/torrents_db";
+    RequiresMountsFor = "/drive/torrents";
     AssertPathIsMountPoint = "/drive/torrents";
   };
 }

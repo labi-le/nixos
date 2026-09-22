@@ -24,17 +24,6 @@
     ];
   };
 
-  fileSystems."/drive/torrents_db" = {
-    device = "/backup/torrents_db";
-    fsType = "none";
-    options = [
-      "bind"
-      "nofail"
-      "x-systemd.requires-mounts-for=/backup"
-      "x-systemd.requires=zfs-mount.service"
-    ];
-  };
-
   services.nfs = {
     server = {
       enable = true;
@@ -45,7 +34,6 @@
         /drive/state 192.168.1.0/24(rw,async,no_subtree_check,insecure)
         /drive/tmp 192.168.1.0/24(rw,async,no_subtree_check,insecure)
         /drive/torrents 192.168.1.0/24(rw,async,no_subtree_check,insecure)
-        /drive/torrents_db 192.168.1.0/24(rw,async,no_subtree_check,insecure)
       '';
       nproc = 16;
     };
