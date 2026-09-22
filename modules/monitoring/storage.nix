@@ -479,7 +479,7 @@
                     uid = "prometheus";
                   };
                   editorMode = "code";
-                  expr = ''increase(smartctl_device_media_errors{device="nvme0"}[24h])'';
+                  expr = ''increase(smartctl_device_media_errors[24h])'';
                   instant = true;
                   range = false;
                   intervalMs = 1000;
@@ -535,7 +535,7 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "NVMe media error count grew in the last 24h on server: run 'smartctl -a /dev/nvme0' to inspect the current count and trend.";
+              summary = "NVMe media error count grew in the last 24h on server: run 'smartctl -a /dev/{{ $labels.device }}' to inspect the current count and trend.";
             };
             labels = {
               severity = "warning";

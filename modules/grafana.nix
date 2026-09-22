@@ -125,7 +125,12 @@
         enable = true;
         port = 9634;
         maxInterval = "30s";
-        extraFlags = [ "--smartctl.rescan=2m" ];
+        devices = [
+          "/dev/disk/by-id/ata-Netac_SSD_2TB_AA0202311172T2132225"
+          "/dev/disk/by-id/ata-ST2000DM008-2UB102_ZFL5JZ53"
+          "/dev/disk/by-id/ata-ST4000DM004-2CV104_Z9703DGK"
+          "/dev/disk/by-id/nvme-Patriot_M.2_P300_512GB_P300WCBA25041508682"
+        ];
       };
       nginx = {
         enable = true;
