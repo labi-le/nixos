@@ -48,10 +48,9 @@
 
   swapDevices = lib.mkForce [
     {
-      device = "/backup/swapfile";
-      size = 32768;
+      device = "/swapfile";
+      size = 16384;
       priority = 10;
-      options = [ "nofail" ];
     }
   ];
 
