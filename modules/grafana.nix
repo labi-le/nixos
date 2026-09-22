@@ -1,5 +1,81 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  smartctlCfg = config.services.prometheus.exporters.smartctl;
+
+  smartctlDeviceScript = pkgs.writeShellScript "smartctl-exporter-devices" ''
+    set -euo pipefail
+    export LC_ALL=C
+
+    declare -A best_path
+    declare -A best_tier
+
+    while IFS= read -r name; do
+      case "$name" in
+        *-part*) continue ;;
+      esac
+
+      entry="/dev/disk/by-id/$name"
+      target="$("${pkgs.coreutils}/bin/readlink" -f "$entry")" || continue
+
+      case "$name" in
+        nvme-nvme.*|nvme-eui.*) tier=4 ;;
+        ata-*_1|nvme-*_1) tier=5 ;;
+        ata-*|nvme-*) tier=1 ;;
+        wwn-*) tier=2 ;;
+        usb-*|scsi-*) tier=3 ;;
+        *)
+          echo "smartctl-exporter-devices: skipping $name -> $target (unrecognized by-id alias family, no SMART tier assigned)" >&2
+          continue
+          ;;
+      esac
+
+      current="''${best_tier[$target]:-9}"
+      if (( tier < current )); then
+        best_tier[$target]=$tier
+        best_path[$target]=$entry
+      fi
+    done < <("${pkgs.coreutils}/bin/ls" -1 "/dev/disk/by-id" 2>/dev/null | "${pkgs.coreutils}/bin/sort" || true)
+
+    if (( ''${#best_path[@]} == 0 )); then
+      echo "smartctl-exporter-devices: no disks found under /dev/disk/by-id, refusing to start with zero monitored devices" >&2
+      exit 1
+    fi
+
+    readarray -t sorted_devices < <(printf '%s\n' "''${best_path[@]}" | "${pkgs.coreutils}/bin/sort")
+
+    device_args=()
+    for path in "''${sorted_devices[@]}"; do
+      device_args+=("--smartctl.device=$path")
+    done
+
+    exec "${pkgs.prometheus-smartctl-exporter}/bin/smartctl_exporter" \
+      "--web.listen-address=${smartctlCfg.listenAddress}:${toString smartctlCfg.port}" \
+      "--smartctl.interval=${smartctlCfg.maxInterval}" \
+      ${lib.escapeShellArgs smartctlCfg.extraFlags} \
+      "''${device_args[@]}"
+  '';
+
+  smartctlUnit = "prometheus-smartctl-exporter.service";
+
+  smartctlDispatchScript = pkgs.writeShellScript "smartctl-exporter-dispatch" ''
+    set -euo pipefail
+
+    state="$("${pkgs.systemd}/bin/systemctl" show --property=ActiveState --value "${smartctlUnit}")"
+
+    case "$state" in
+      failed)
+        "${pkgs.systemd}/bin/systemctl" reset-failed "${smartctlUnit}"
+        "${pkgs.systemd}/bin/systemctl" start --no-block "${smartctlUnit}"
+        ;;
+      active|activating|reloading)
+        "${pkgs.systemd}/bin/systemctl" try-restart --no-block "${smartctlUnit}"
+        ;;
+      *)
+        ;;
+    esac
+  '';
+in
 {
   age.secrets.grafana = {
     file = ../secrets/grafana.age;
@@ -125,12 +201,6 @@
         enable = true;
         port = 9634;
         maxInterval = "30s";
-        devices = [
-          "/dev/disk/by-id/ata-Netac_SSD_2TB_AA0202311172T2132225"
-          "/dev/disk/by-id/ata-ST2000DM008-2UB102_ZFL5JZ53"
-          "/dev/disk/by-id/ata-ST4000DM004-2CV104_Z9703DGK"
-          "/dev/disk/by-id/nvme-Patriot_M.2_P300_512GB_P300WCBA25041508682"
-        ];
       };
       nginx = {
         enable = true;
@@ -182,11 +252,23 @@
     ];
   };
 
+  systemd.services.prometheus-smartctl-exporter.serviceConfig.ExecStart = lib.mkForce "${smartctlDeviceScript}";
+  systemd.services.prometheus-smartctl-exporter.startLimitIntervalSec = 60;
+  systemd.services.prometheus-smartctl-exporter.startLimitBurst = 50;
+
+  assertions = [
+    {
+      assertion = smartctlCfg.devices == [ ] && !(lib.any (e: e == "--smartctl.device" || lib.hasPrefix "--smartctl.device=" e) smartctlCfg.extraFlags);
+      message = "services.prometheus.exporters.smartctl.devices and extraFlags entries starting with --smartctl.device= (or the bare --smartctl.device argument form) are both ignored: modules/grafana.nix overrides ExecStart with a by-id autodiscovery wrapper (see docs/smartctl-exporter.md). Unset devices, drop the --smartctl.device extraFlags entry, and edit smartctlDeviceScript's tier logic in modules/grafana.nix instead.";
+    }
+  ];
+
   # /dev/nvme* is root:root 0600, so the unprivileged smartctl exporter cannot
   # read NVMe SMART even with CAP_SYS_RAWIO; the nixpkgs module reserves the
   # smartctl-exporter-access group for exactly this handover.
   services.udev.extraRules = ''
     SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", GROUP="smartctl-exporter-access", MODE="0660"
+    ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", KERNEL!="loop*", KERNEL!="zram*", KERNEL!="dm-*", KERNEL!="sr*", KERNEL!="md*", KERNEL!="zd*", RUN+="${smartctlDispatchScript}"
   '';
 
   # udev only applies rules to future events, so the rule above leaves the
