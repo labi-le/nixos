@@ -263,7 +263,7 @@ let
     autoResume = true;
     modelRoleStorage = "project";
     composer.tokenRate = true;
-    hideThinkingBlock = true;
+    hideThinkingBlock = false;
     compaction = {
       enabled = true;
       methodOrder = [
