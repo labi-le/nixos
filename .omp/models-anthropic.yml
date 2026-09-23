@@ -18,6 +18,6 @@ task:
   agentModelOverrides:
     task: "@task"
     sonic: "@smol"
-    scout: "@smol"
-    reviewer: anthropic/claude-opus-5:high
+    scout: anthropic/claude-sonnet-5:low
+    reviewer: anthropic/claude-opus-5-5:high
     security-reviewer: "@slow"

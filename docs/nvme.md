@@ -83,3 +83,26 @@ evicted paths from `cache.nixos.org` (locally built derivations, like custom
 kernels, must be rebuilt). This is the accepted tradeoff for preventing the
 NVMe from filling up and collapsing write performance on a DRAM-less controller.
 See `docs/nix-reference.md` for cache push details.
+## Thermal throttling mitigation via APST
+
+### Measurement
+
+At 1 MB/s of sustained writes, the drive operates at 62 °C in PS0 (operational, 8 W). Without a heatsink, observed temperatures reach 100 °C under load; with a heatsink, still 80 °C. The Patriot P300 supports Autonomous Power State Transitions (APST):
+
+- PS0: operational, 8 W (continuous operation)
+- PS1: 4 W (tolerable 1-5 ms latency)
+- PS2: 3 W (tolerable 20-50 ms latency)
+- PS3: 0.03 W non-operational, 5 ms entry + 10 ms exit latency (15 ms round-trip total)
+- PS4: 0.005 W non-operational, 54 ms entry + 45 ms exit latency (~100 ms round-trip, firmware-unreliable)
+
+With `nvme_core.default_ps_max_latency_us=0`, the kernel disables APST entirely, keeping the drive in PS0 permanently (`nvme get-feature -f 0x0c` shows `APSTE: Disabled`). This disables power-saving but was the original default to avoid APST firmware bugs that corrupt state or stall I/O.
+
+### Configuration
+
+`modules/kernel-server.nix` sets `nvme_core.default_ps_max_latency_us=15000` to allow the controller to use PS3 (15 ms round-trip latency, 0.03 W consumption) and block PS4 (whose ~100 ms wake time could stall NFS, mail, and cache services, and whose deepest firmware paths are the source of most APST dropout bugs).
+
+The kernel only transitions to a non-operational power state whose entry + exit latency is ≤ `default_ps_max_latency_us`. Setting this to 15000 microseconds balances thermal reduction with latency risk: PS3's 15 ms round-trip is acceptable for this server's workload, while PS4's ~100 ms is not. The upstream default (100000) would allow PS4 and is too aggressive for a synchronously-served NFS mount.
+
+### Regression watch
+
+APST firmware bugs manifest as `nvme nvme0: controller is down; will reset` or `I/O timeout` in `journalctl -k`. Monitor for these messages after the next boot. Recovery is to revert `nvme_core.default_ps_max_latency_us` to `0` in `modules/kernel-server.nix` and rebuild.

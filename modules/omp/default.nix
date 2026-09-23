@@ -95,7 +95,7 @@ let
               reasoning = true;
               supportsTools = true;
               contextWindow = 1000000;
-              maxTokens = 8192;
+              maxTokens = 32768;
             }
             {
               id = "deepseek/deepseek-v4.1-flash";
@@ -103,7 +103,7 @@ let
               reasoning = true;
               supportsTools = true;
               contextWindow = 1000000;
-              maxTokens = 8192;
+              maxTokens = 32768;
             }
             {
               id = "qwen/qwen3.8-max";
@@ -112,29 +112,6 @@ let
               supportsTools = true;
               contextWindow = 1000000;
               maxTokens = 32768;
-            }
-          ];
-        };
-        llamacpp-local = {
-          baseUrl = "http://192.168.1.2:8095/v1";
-          api = "openai-completions";
-          auth = "none";
-          models = [
-            {
-              id = "qwen3.8-27b";
-              name = "Qwen3.8 27B IQ3_XXS (pet)";
-              reasoning = true;
-              supportsTools = true;
-              input = [ "text" ];
-              compat.reasoningContentField = "reasoning_content";
-              contextWindow = 40960;
-              maxTokens = 8192;
-              cost = {
-                input = 0;
-                output = 0;
-                cacheRead = 0;
-                cacheWrite = 0;
-              };
             }
           ];
         };
@@ -262,6 +239,7 @@ let
     memory.backend = "mnemopi";
     autoResume = true;
     modelRoleStorage = "project";
+    modelRoles.dictation = "local/whisper-small";
     composer.tokenRate = true;
     hideThinkingBlock = false;
     compaction = {
@@ -313,10 +291,8 @@ let
       maxDelayMs = 0;
       maxRetries = 1000;
     };
-    async.pollWaitDuration = "1m";
     stt = {
       enabled = true;
-      modelName = "balanced";
       language = "ru";
       submitTrigger = "never";
     };
