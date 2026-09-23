@@ -535,7 +535,7 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "NVMe media error count grew in the last 24h on server: run 'smartctl -a /dev/{{ $labels.device }}' to inspect the current count and trend.";
+              summary = "NVMe media error count grew in the last 24h on server: run 'smartctl -a /dev/disk/by-id/{{ $labels.device }}' to inspect the current count and trend.";
             };
             labels = {
               severity = "warning";
