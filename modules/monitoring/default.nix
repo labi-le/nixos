@@ -11,6 +11,8 @@
 {
   imports = [
     ./contact-points.nix
+    ./container-state.nix
+    ./failures.nix
     ./frp.nix
     ./storage.nix
     ./tidal-syncer.nix

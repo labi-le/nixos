@@ -195,6 +195,10 @@ in
           "time"
           "zfs"
         ];
+        extraFlags = [
+          "--collector.systemd.enable-restarts-metrics"
+          "--collector.textfile.directory=/var/lib/prometheus-node-textfile-collector"
+        ];
         enable = true;
       };
       smartctl = {
@@ -209,6 +213,17 @@ in
         enable = true;
         port = 9134;
         pools = [ "data" ];
+      };
+      process = {
+        enable = true;
+        port = 9256;
+        extraFlags = [ "-threads=false" ];
+        settings.process_names = [
+          {
+            name = "{{.Comm}}";
+            cmdline = [ ".+" ];
+          }
+        ];
       };
     };
 
@@ -245,6 +260,16 @@ in
           {
             targets = [
               "127.0.0.1:${toString config.services.prometheus.exporters.zfs.port}"
+            ];
+          }
+        ];
+      }
+      {
+        job_name = "process";
+        static_configs = [
+          {
+            targets = [
+              "127.0.0.1:${toString config.services.prometheus.exporters.process.port}"
             ];
           }
         ];
