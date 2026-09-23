@@ -72,7 +72,13 @@
     mode = "0400";
   };
 
-  nix.gc.automatic = lib.mkForce false;
+  nix.gc = lib.mkForce {
+    automatic = true;
+    dates = "*-*-01,15 04:00:00";
+    options = "";
+    persistent = true;
+    randomizedDelaySec = "1h";
+  };
   nix.settings.trusted-users = [ "labile" ];
   users.users.labile.openssh.authorizedKeys.keys = [
     "command=\"nix-store --serve --write\",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIK4XUt2RWmKFHA+eKh4mP6k580R5pk/0IsuK/XRgSUx cache-push"

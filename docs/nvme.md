@@ -62,3 +62,24 @@ to accumulate before anything would have run TRIM again.
 The `data` pool (`/drive`, see `docs/zfs-pool.md`) needs none of this: it
 runs with `autotrim=on`, so its TRIM is continuous and independent of
 `fstrim.service`/`fstrim.timer`. This document concerns the ext4 root only.
+
+## Automatic garbage collection
+
+`/nix` holds ~208 GiB. The Grafana alert `storage-root-filling` (root below
+15% free) was triggered because `nix-store --gc --print-dead` showed ~95 GiB
+of unreferenced paths. Root free space is critical on a DRAM-less NVMe: when
+free blocks run low, write speed collapses catastrophically as the controller
+has no pre-erased blocks available and must do read-modify-write GC on every
+write.
+
+`nix.gc.automatic = true`, `nix.gc.dates = "*-*-01,15 04:00:00"`, `nix.gc.options = ""`,
+and `nix.gc.randomizedDelaySec = "1h"` enable automatic garbage collection
+without deleting any system generations (empty `options` means no `-d` or
+`--delete-older-than` flags, so `nix-collect-garbage` removes only dead paths
+referenced by none of the generations). GC runs on the 1st and 15th of each
+month and evicts paths pushed to the local cache `https://cache.labile.cc` by
+other hosts via harmonia. Clients then miss on the local cache and refetch
+evicted paths from `cache.nixos.org` (locally built derivations, like custom
+kernels, must be rebuilt). This is the accepted tradeoff for preventing the
+NVMe from filling up and collapsing write performance on a DRAM-less controller.
+See `docs/nix-reference.md` for cache push details.

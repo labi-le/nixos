@@ -222,8 +222,10 @@ Both wrap `nix copy --to ssh://labile@labile.cc`; set `CACHE_PUSH_TARGET` to
 copy elsewhere.
 The local cache has priority `-1` so it wins over `cache.nixos.org`
 (`10`) and cachix mirrors (`20+`). Rotating the signing key requires updating
-the public key constant in `settings.nix`. GC is disabled on `server`: evicted
-store paths break the narinfos it serves.
+the public key constant in `settings.nix`. Automatic GC runs on the 1st and
+15th of each month on `server` and evicts cache paths pushed by other hosts;
+clients refetch evicted paths from the upstream cache. See `docs/nvme.md` for
+the tradeoff that makes this necessary.
 
 ## Nginx / ACME Operations
 
