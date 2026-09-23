@@ -9,7 +9,7 @@ let
     ($name | tojson) as $nameLabel |
     "docker_container_running{name=" + $nameLabel + "} " + (if .State.Running then "1" else "0" end),
     "docker_container_restart_count{name=" + $nameLabel + "} " + (.RestartCount | tostring),
-    (if .State.Health == null or .State.Health.Status == "starting" then empty else
+    (if (.State.Running | not) or .State.Health == null or .State.Health.Status == "starting" then empty else
       "docker_container_healthy{name=" + $nameLabel + "} " + (if .State.Health.Status == "healthy" then "1" else "0" end)
     end),
     "docker_container_restart_policy_info{name=" + $nameLabel + ",policy=" + (.HostConfig.RestartPolicy.Name | tojson) + "} 1"
@@ -27,7 +27,7 @@ let
       echo '# TYPE docker_container_running gauge'
       echo '# HELP docker_container_restart_count Number of times Docker has restarted the container.'
       echo '# TYPE docker_container_restart_count counter'
-      echo '# HELP docker_container_healthy Docker health check status: 1 healthy, 0 unhealthy. Omitted for containers without a health check.'
+      echo '# HELP docker_container_healthy Docker health check status: 1 healthy, 0 unhealthy. Omitted for containers without a health check or for stopped containers.'
       echo '# TYPE docker_container_healthy gauge'
       echo '# HELP docker_container_restart_policy_info Docker restart policy configured for the container; value is always 1.'
       echo '# TYPE docker_container_restart_policy_info gauge'

@@ -96,6 +96,7 @@ with no configured healthcheck and while a container's health status is
 during a container's `start_period` — `mailcowdockerized-clamd-mailcow-1`
 alone declares `start_period=6m0s`, longer than this rule's own `for =
 5m`. `noDataState = "OK"`, same reasoning.
+The metric is also omitted for stopped containers (Docker preserves the last health status after exit, which would cause false alerts for containers intentionally stopped in a failed state, like freqtrade with an unhealthy check).
 
 **Container-state exporter stale** (`container-state-stale`, critical,
 `for = 1m`) is the rule that makes the three rules above safe to leave

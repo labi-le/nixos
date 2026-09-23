@@ -733,5 +733,11 @@
         ];
       }
     ];
+    deleteRules = [
+      {
+        orgId = 1;
+        uid = "storage-backup-filling";
+      }
+    ];
   };
 }
