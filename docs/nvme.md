@@ -123,16 +123,17 @@ throttle points, the 16 GiB `/swapfile` was removed from
 `hosts/configuration-server.nix` (via `lib.mkForce [ ]`). Until a dedicated
 SATA SSD is added for swap (outside the ZFS mirror, which has an OpenZFS #7734
 deadlock with swap), memory pressure beyond zram capacity will trigger the OOM
-killer instead of disk paging. The HCTM thresholds below (70/80 °C) stay in
-place as a secondary defense for remaining thermal issues.
+place as a secondary defense in case the throttle mechanism proves effective,
+but this is unverified on this firmware (see Measured effect below).
 
 ### Configuration (`modules/nvme.nix`)
 
 Feature 0x10 encodes TMT1 in bits 31:16 and TMT2 in bits 15:0, each in
 kelvin. `systemd.services.nvme-hctm` runs
-`nvme set-feature -f 0x10 -V 0x01570161` at boot, setting TMT1 = 343 K =
-70 °C and TMT2 = 353 K = 80 °C: light throttling at 70 °C, heavy throttling
-at 80 °C, full speed below 70 °C, comfortably inside the drive's 45–120 °C
+`nvme set-feature -f 0x10 -V 0x01570161` at boot, requesting TMT1 = 343 K =
+70 °C and TMT2 = 353 K = 80 °C to the controller (the host's requested
+throttle points; whether the firmware acts on them is unknown), keeping the
+drive at full speed below 70 °C and comfortably inside the drive's 45–120 °C
 manageable range. Feature 0x10 is controller-scoped, not namespace-scoped:
 the live test confirmed the controller rejects `set-feature -f 0x10` when
 given the namespace block device directly (`NVMe status: Feature Not
@@ -159,15 +160,17 @@ tagged `NVME_EVENT=connected` on the controller's sysfs device, regardless
 of transport — confirmed by reading the running kernel's
 (6.18.41) `drivers/nvme/host/core.c` and `drivers/nvme/host/pci.c`.
 
-### Verifying it throttles
+### Measured effect (2026-09-24)
 
-`nvme smart-log /dev/nvme0` shows `Thermal Management T1 Trans Count` /
-`T2 Trans Count` (how many times each threshold was crossed) and
-`Thermal Management T1 Total Time` / `T2 Total Time` (cumulative seconds
-spent throttled at each level, in minutes per the spec but reported in
-seconds by `nvme-cli`). Both should start incrementing once the drive holds
-near 70–80 °C under sustained write load; they stayed at 0 at the factory
-100/110 °C thresholds even at 74 °C.
+Feature 0x10 was confirmed at `0x01570161` (TMT1 343 K = 70 °C, TMT2 353 K = 80 °C). The `nvme-hctm` service applied it and the controller accepted it. However, the composite temperature rose above TMT1 during normal operation (72 °C observed 2026-09-24 00:23, 00:38, 00:39, 00:42, 00:46), yet `nvme smart-log` reported `Thermal Management T1 Trans Count 0` and `T2 Trans Count 0` at 02:10, and `T1 Total Time 0`, `T2 Total Time 0`. The NVMe specification increments the T1 transition count each time rising temperature above TMT1 triggers throttling, so either HCTM is accepted but not acted on by this firmware, or the counters are not populated. Throughput cannot settle the question either way: in a 00:05 benchmark, sustained writes swung between 26 and 180 MB/s from SLC-cache folding regardless of temperature. **Conclusion: HCTM on this drive is unverified.** It is retained because it is harmless, but it must not be relied on as thermal protection.
+
+Actual temperature reduction on this host came from:
+- APST (62 °C idle before, 55–60 °C after enabling PS3 transitions).
+- Removing the 16 GiB `/swapfile` to reduce write-induced heating.
+
+The 69–72 °C plateau from 23:50 to 00:55 on 2026-09-24 was from two write benchmarks and `fstrim` on 181 GiB + 27 GiB of data, keeping the drive 75–95% busy. Once the workload completed around 01:15, temperature fell to 55–60 °C. Residual activity after 01:20 (3–4 MB/s reads at ~10% busy, probably page-cache refaults under memory pressure) limits how often APST can idle the drive.
+
+### Verifying throttles (if re-enabled on a different firmware)
 
 ### Reverting
 
