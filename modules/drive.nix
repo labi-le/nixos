@@ -3,7 +3,7 @@
 {
   boot.zfs.extraPools = [ "data" ];
 
-  fileSystems."/backup" = {
+  fileSystems."/torrents" = {
     device = "/dev/disk/by-uuid/d4cd9ea9-f656-438b-bd3f-e7bbbbd9e373";
     fsType = "ext4";
     options = [
@@ -14,12 +14,12 @@
   };
 
   fileSystems."/drive/torrents" = {
-    device = "/backup/torrents";
+    device = "/torrents/torrents";
     fsType = "none";
     options = [
       "bind"
       "nofail"
-      "x-systemd.requires-mounts-for=/backup"
+      "x-systemd.requires-mounts-for=/torrents"
       "x-systemd.requires=zfs-mount.service"
     ];
   };

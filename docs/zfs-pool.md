@@ -79,7 +79,7 @@ zfs set sync=disabled data/tmp
 
 ## Torrents: deliberately single-copy, off the pool
 
-`/backup/torrents` lives on the separate 4 TB ext4 disk (`/backup`) and is bind-mounted to `/drive/torrents` (see `modules/drive.nix`) purely so qBittorrent's fastresume files — which embed absolute paths for existing torrents — keep working. The data itself is **not** on the `data` pool and has no second copy. This is intentional: torrent content is independently re-fetchable from swarms, so it doesn't need mirror redundancy or pool space, and keeping it off the pool avoids doubling the SMR write load with the highest-churn dataset on the host. `/backup/torrents_db` was a same-era bind for a second directory; it held qBittorrent's resume data under the old layout but has been empty since resume data moved to `/var/lib/qBittorrent/qBittorrent/data/BT_backup` on the NVMe root. The `fileSystems."/drive/torrents_db"` bind, its NFS export line, and qbittorrent's `RequiresMountsFor` entry for it were removed; the empty directory itself was left in place on `/backup` rather than deleted.
+`/torrents/torrents` lives on the separate 4 TB ext4 disk (`/torrents`) and is bind-mounted to `/drive/torrents` (see `modules/drive.nix`) purely so qBittorrent's fastresume files — which embed absolute paths for existing torrents — keep working. The data itself is **not** on the `data` pool and has no second copy. This is intentional: torrent content is independently re-fetchable from swarms, so it doesn't need mirror redundancy or pool space, and keeping it off the pool avoids doubling the SMR write lo...
 
 ## Swap must never go on this pool
 

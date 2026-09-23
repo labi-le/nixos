@@ -281,8 +281,8 @@
             };
           }
           {
-            uid = "storage-backup-filling";
-            title = "Backup disk (/backup) is below 15% free";
+            uid = "storage-torrents-filling";
+            title = "Torrents disk (/torrents) is below 15% free";
             condition = "C";
             data = [
               {
@@ -299,7 +299,7 @@
                     uid = "prometheus";
                   };
                   editorMode = "code";
-                  expr = ''node_filesystem_avail_bytes{mountpoint="/backup"} / node_filesystem_size_bytes{mountpoint="/backup"}'';
+                  expr = ''node_filesystem_avail_bytes{mountpoint="/torrents"} / node_filesystem_size_bytes{mountpoint="/torrents"}'';
                   instant = true;
                   range = false;
                   intervalMs = 1000;
@@ -355,7 +355,7 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "Backup disk '/backup' (the only copy of the torrent data) is below 15% free on server: run 'df -h /backup' and prune or expand before it fills.";
+              summary = "Torrents disk '/torrents' (the only copy of the torrent data) is below 15% free on server: run 'df -h /torrents' and prune or expand before it fills.";
             };
             labels = {
               severity = "warning";
