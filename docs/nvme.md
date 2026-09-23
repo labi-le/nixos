@@ -118,8 +118,13 @@ Factory feature 0x10 was `0x0175017f`: TMT1 (light throttle) = 373 K =
 100 °C, TMT2 (heavy throttle) = 383 K = 110 °C. `nvme smart-log`'s
 `Thermal Management T1/T2 Trans Count` were both 0 even after the drive was
 observed at 74 °C during a `cargo build` that filled zram and drove swap
-writes — the factory thresholds are too high to ever engage on this drive
-under this host's workload.
+writes. To prevent swap-out traffic from heating the NVMe beyond its thermal
+throttle points, the 16 GiB `/swapfile` was removed from
+`hosts/configuration-server.nix` (via `lib.mkForce [ ]`). Until a dedicated
+SATA SSD is added for swap (outside the ZFS mirror, which has an OpenZFS #7734
+deadlock with swap), memory pressure beyond zram capacity will trigger the OOM
+killer instead of disk paging. The HCTM thresholds below (70/80 °C) stay in
+place as a secondary defense for remaining thermal issues.
 
 ### Configuration (`modules/nvme.nix`)
 

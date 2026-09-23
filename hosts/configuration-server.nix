@@ -46,13 +46,7 @@
     autoScrub = true;
   };
 
-  swapDevices = lib.mkForce [
-    {
-      device = "/swapfile";
-      size = 16384;
-      priority = 10;
-    }
-  ];
+  swapDevices = lib.mkForce [ ];
 
   age.secrets.ngate-env = {
     file = ../secrets/ngate-env.age;
