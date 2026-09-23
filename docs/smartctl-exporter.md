@@ -166,8 +166,10 @@ group-handover rule: `ACTION=="add"` on a whole `SUBSYSTEM=="block"` disk
 disks), `sr*` (optical), `md*` (software RAID arrays), and `zd*` (ZFS
 zvols — this host runs ZFS and ships `60-zvol.rules`) — none of which can
 produce a `--smartctl.device` argument, so none of them should be able to
-restart the exporter and race a real scrape into a data gap that pages
-`storage-smart-failure`) runs `smartctlDispatchScript`
+restart the exporter and race a real scrape into a data gap — a brief
+restart-induced gap like that no longer pages `storage-smart-failure`
+(`noDataState = "OK"` there since the 2026-09-23 incident, see
+`docs/zfs-pool.md`, "Storage alerting") — runs `smartctlDispatchScript`
 (`modules/grafana.nix`), a small wrapper that reads the unit's
 `ActiveState` and dispatches on it rather than unconditionally
 `try-restart`ing:

@@ -441,11 +441,11 @@
                 };
               }
             ];
-            noDataState = "Alerting";
+            noDataState = "OK";
             execErrState = "KeepLast";
-            for = "0m";
+            for = "2m";
             annotations = {
-              summary = "SMART status reports failure on device '{{ $labels.device }}' on server: run 'smartctl -a /dev/{{ $labels.device }}' immediately and plan replacement.";
+              summary = "SMART status reports failure on device '{{ $labels.device }}' on server: run 'smartctl -a /dev/disk/by-id/{{ $labels.device }}' immediately and plan replacement.";
             };
             labels = {
               severity = "critical";
@@ -626,6 +626,96 @@
             for = "10m";
             annotations = {
               summary = "zfs_exporter is not exporting metrics on server: check 'systemctl status prometheus-zfs-exporter' and 'journalctl -u prometheus-zfs-exporter -n 50'.";
+            };
+            labels = {
+              severity = "warning";
+              service = "storage";
+            };
+            isPaused = false;
+            notification_settings = {
+              receiver = "telegram-admin";
+              group_by = [ "alertname" ];
+              group_wait = "30s";
+              group_interval = "5m";
+              repeat_interval = "6h";
+            };
+          }
+          {
+            uid = "storage-smartctl-exporter-down";
+            title = "smartctl_exporter is not exporting metrics";
+            condition = "C";
+            data = [
+              {
+                refId = "A";
+                relativeTimeRange = {
+                  from = 600;
+                  to = 0;
+                };
+                datasourceUid = "prometheus";
+                model = {
+                  refId = "A";
+                  datasource = {
+                    type = "prometheus";
+                    uid = "prometheus";
+                  };
+                  editorMode = "code";
+                  expr = ''up{job="smartctl"}'';
+                  instant = true;
+                  range = false;
+                  intervalMs = 1000;
+                  maxDataPoints = 43200;
+                };
+              }
+              {
+                refId = "B";
+                relativeTimeRange = {
+                  from = 0;
+                  to = 0;
+                };
+                datasourceUid = "__expr__";
+                model = {
+                  refId = "B";
+                  type = "reduce";
+                  datasource = {
+                    type = "__expr__";
+                    uid = "__expr__";
+                  };
+                  expression = "A";
+                  reducer = "last";
+                };
+              }
+              {
+                refId = "C";
+                relativeTimeRange = {
+                  from = 0;
+                  to = 0;
+                };
+                datasourceUid = "__expr__";
+                model = {
+                  refId = "C";
+                  type = "threshold";
+                  datasource = {
+                    type = "__expr__";
+                    uid = "__expr__";
+                  };
+                  expression = "B";
+                  conditions = [
+                    {
+                      type = "query";
+                      evaluator = {
+                        type = "lt";
+                        params = [ 1 ];
+                      };
+                    }
+                  ];
+                };
+              }
+            ];
+            noDataState = "Alerting";
+            execErrState = "KeepLast";
+            for = "10m";
+            annotations = {
+              summary = "smartctl_exporter is not exporting metrics on server: SMART monitoring is blind, not that a drive is failing. Check 'systemctl status prometheus-smartctl-exporter' and 'journalctl -u prometheus-smartctl-exporter -n 50'.";
             };
             labels = {
               severity = "warning";
