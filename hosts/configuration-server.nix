@@ -27,6 +27,7 @@
     ./../modules/network
     ./../modules/chromadb.nix
     ./../modules/swap.nix
+    ./../modules/oom.nix
     ./../modules/tmpfs.nix
     ./../modules/harmonia.nix
     ./../modules/unbound.nix

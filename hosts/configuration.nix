@@ -12,6 +12,7 @@
     ./../modules/thunar.nix
     ./../modules/kernel-cachyos.nix
     ./../modules/swap.nix
+    ./../modules/oom.nix
     ./../modules/tmpfs.nix
     ./../modules/radeon.nix
     # ./../modules/vm.nix
