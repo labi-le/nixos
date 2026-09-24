@@ -79,6 +79,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 |---|---|
 | PC host config entry point | `hosts/configuration.nix` |
 | Home drive mount | `modules/home-drive.nix` |
+| `/drive` -> `/home/drive` symlink for offloaded build jobs, isolated for easy removal after the project ends | `modules/drive-link.nix` |
 | AMD GPU (Radeon) | `modules/radeon.nix` |
 | AMD GPU (extra) | `modules/amd/default.nix` |
 | UxPlay (AirPlay) | `modules/uxplay.nix` |

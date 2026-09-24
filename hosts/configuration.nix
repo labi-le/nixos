@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./../modules/drive-link.nix
     ./../modules/home-drive.nix
     ./../modules/base.nix
     ./../modules/sound.nix
