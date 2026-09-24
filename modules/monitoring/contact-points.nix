@@ -37,6 +37,7 @@
   services.grafana.provision.alerting.contactPoints.settings =
     let
       template = ''
+        {{ if eq .Status "resolved" }}<b>RESOLVED</b>{{ else }}<b>FIRING</b>{{ end }}
         {{ with index .Alerts 0 }}{{ .Annotations.summary }}
         {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
         {{ end }}{{ if .Annotations.Error }}<pre>evaluation error: {{ .Annotations.Error }}</pre>
