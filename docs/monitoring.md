@@ -36,6 +36,8 @@ between its pool-health rules and its `*-exporter-down` rules — the whole
 point of this file is that a service dying silently (mailcow) or a check
 itself dying silently (the SMART exporter false-negative from the same
 day) must never be the reason nobody was paged.
+The three event-based rules (`oom-kill`, `systemd-restart-loop`, `container-restart-loop`) route to `telegram-admin-events` instead, which disables resolved messages; these rules fire on metric increases over time windows (`[5m]` or `[15m]`), so their resolved state just means the window passed without further increases, not meaningful recovery.
+
 
 **Systemd unit failed** (`systemd-unit-failed`, critical, `for = 2m`)
 fires on `node_systemd_unit_state{state="failed"} > 0`. `noDataState =

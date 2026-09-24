@@ -42,12 +42,13 @@
         {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
         {{ end }}{{ if .Annotations.Error }}<pre>evaluation error: {{ .Annotations.Error }}</pre>
         {{ end }}{{ end }}'';
-      telegram = name: chatids: {
+      telegram = name: chatids: disableResolveMessage: {
         orgId = 1;
         inherit name;
         receivers = map (chatid: {
           uid = "${name}-${chatid}";
           type = "telegram";
+          inherit disableResolveMessage;
           settings = {
             bottoken = "$__env{TELEGRAM_BOT_TOKEN}";
             inherit chatid;
@@ -59,12 +60,13 @@
     {
       apiVersion = 1;
       contactPoints = [
-        (telegram "telegram-admin" [ "395448554" ])
+        (telegram "telegram-admin" [ "395448554" ] false)
+        (telegram "telegram-admin-events" [ "395448554" ] true)
         (telegram "telegram-frp-users" [
           "395448554"
           "5423484768"
           "1504733669"
-        ])
+        ] false)
       ];
     };
 }

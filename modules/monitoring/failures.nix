@@ -183,7 +183,7 @@
             };
             isPaused = false;
             notification_settings = {
-              receiver = "telegram-admin";
+              receiver = "telegram-admin-events";
               group_by = [ "alertname" ];
               group_wait = "30s";
               group_interval = "5m";
@@ -273,7 +273,7 @@
             };
             isPaused = false;
             notification_settings = {
-              receiver = "telegram-admin";
+              receiver = "telegram-admin-events";
               group_by = [ "alertname" ];
               group_wait = "30s";
               group_interval = "5m";
@@ -633,7 +633,7 @@
             };
             isPaused = false;
             notification_settings = {
-              receiver = "telegram-admin";
+              receiver = "telegram-admin-events";
               group_by = [ "alertname" ];
               group_wait = "30s";
               group_interval = "5m";
