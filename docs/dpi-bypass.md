@@ -92,8 +92,9 @@ The error shape names the cause, and they are opposites:
 | handshake hangs to timeout | ISP SNI filter, no bypass applied | remove from exclude |
 | instant `WRONG_VERSION_NUMBER`, plaintext reply | desync applied to a server that cannot take it | add to exclude |
 
-The router's own log settles it without guessing — `/tmp/zapret+nfqws+3+main.log`
-prints `exclude hostlist check for <host>` with its verdict, and
+The router's own log settles it without guessing —
+`/tmp/zapret+nfqws+3+main.log` prints `exclude hostlist check for <host>` with
+its verdict, and
 `grep -oE "hostname='[^']*'"` over that file lists the names real clients are
 actually asking for. That is how the `.cn` endpoints were found: nothing on the
 PC ever requests them.
