@@ -10,10 +10,12 @@ modelRoles:
   commit: opencode-go/deepseek-v4.1-flash:low
   tiny: opencode-go/deepseek-v4.1-flash:low
   task: opencode-go/deepseek-v4.1-flash
+  judge: opencode-go/deepseek-v4.1-flash
 task:
+  eager: preferred
   agentModelOverrides:
-    task: opencode-go/deepseek-v4.1-flash
-    sonic: opencode-go/deepseek-v4.1-flash
+    task: "@task"
+    sonic: "@smol"
     scout: opencode-go/deepseek-v4.1-flash:low
     reviewer: opencode-go/qwen3.8-flash:xhigh
     security-reviewer: opencode-go/qwen3.8-max:high
