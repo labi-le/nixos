@@ -278,7 +278,7 @@ let
     };
     autolearn.enabled = true;
     task = {
-      eager = "always";
+      eager = "preferred";
       enableLsp = true;
       maxRuntimeMs = 0;
       isolation.enabled = true;
