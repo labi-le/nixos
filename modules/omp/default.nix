@@ -128,7 +128,18 @@ let
           type = "stdio";
           command = "uvx";
           args = [
+            "--from"
             "chroma-mcp"
+            "python"
+            "-c"
+            ''
+              import functools
+              import sys
+              import chroma_mcp.server as server
+
+              server.print = functools.partial(print, file=sys.stderr)
+              server.main()
+            ''
             "--client-type"
             "http"
             "--host"
