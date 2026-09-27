@@ -1,0 +1,21 @@
+defaultThinkingLevel: auto
+providers:
+  autoThinkingMaxEffort: max
+modelRoles:
+  default: tokenharbor/deepseek-v4-flash:free
+  smol: tokenharbor/deepseek-v4-flash:free
+  slow: tokenharbor/deepseek-v4-flash:free
+  vision: tokenharbor/deepseek-v4-flash:free
+  plan: tokenharbor/deepseek-v4-flash:free
+  commit: tokenharbor/deepseek-v4-flash:free
+  tiny: tokenharbor/deepseek-v4-flash:free
+  task: tokenharbor/deepseek-v4-flash:free
+  judge: tokenharbor/deepseek-v4-flash:free
+task:
+  eager: preferred
+  agentModelOverrides:
+    task: "@task"
+    sonic: "@smol"
+    scout: tokenharbor/deepseek-v4-flash:free
+    reviewer: tokenharbor/deepseek-v4-flash:free
+    security-reviewer: tokenharbor/deepseek-v4-flash:free
