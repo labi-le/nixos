@@ -1,21 +1,33 @@
 defaultThinkingLevel: auto
+
 providers:
-  autoThinkingMaxEffort: max
+  autoThinkingMaxEffort: xhigh
+
 modelRoles:
-  default: openai-codex/gpt-6-sol
+  default: openai-codex/gpt-6-sol:medium
+
   plan: openai-codex/gpt-6-astra:high
   slow: openai-codex/gpt-6-astra:high
-  task: openai-codex/gpt-6-sol:medium
+  task: openai-codex/gpt-6-astra:high
+
   smol: openai-codex/gpt-6-luna:low
-  vision: openai-codex/gpt-6-sol
-  commit: openai-codex/gpt-6-luna
-  tiny: openai-codex/gpt-6-luna
-  judge: openai-codex/gpt-6-sol
+  tiny: openai-codex/gpt-6-luna:low
+  commit: openai-codex/gpt-6-luna:low
+
+  vision: openai-codex/gpt-6-sol:medium
+  judge: openai-codex/gpt-6-sol:medium
+
 task:
   eager: preferred
+
   agentModelOverrides:
     task: "@task"
+
     sonic: "@smol"
-    scout: openai-codex/gpt-6-luna:low
-    reviewer: openai-codex/gpt-6-astra:high
+    scout: "@smol"
+
+    reviewer: "@slow"
     security-reviewer: "@slow"
+
+  agentPrewalk:
+    task: openai-codex/gpt-6-sol:medium
