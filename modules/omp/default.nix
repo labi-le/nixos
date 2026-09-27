@@ -17,6 +17,13 @@ let
       envName;
   closerouterApiKey = litellmKey "LITELLM_CLOSEROUTER";
 
+  tokenharborSecret = config.age.secrets.tokenharbor-env or null;
+  tokenharborKey =
+    if tokenharborSecret != null then
+      "!${pkgs.gnused}/bin/sed -n 's/^TOKENHARBOR_API_KEY=//p' ${tokenharborSecret.path}"
+    else
+      "TOKENHARBOR_API_KEY";
+
   userCfg = config.users.users.${user.name};
   agentDir = "${userCfg.home}/.omp/agent";
 
@@ -112,6 +119,21 @@ let
               supportsTools = true;
               contextWindow = 1000000;
               maxTokens = 32768;
+            }
+          ];
+        };
+        tokenharbor = {
+          baseUrl = "https://tokenharbor.ai/v1";
+          api = "openai-completions";
+          apiKey = tokenharborKey;
+          models = [
+            {
+              id = "deepseek-v4-flash:free";
+              name = "DeepSeek V4 Flash (Token Harbor, free tier)";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 393216;
             }
           ];
         };

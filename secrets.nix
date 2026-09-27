@@ -23,6 +23,7 @@ in
   "secrets/tidal-syncer.age".publicKeys = [ server ];
 
   "secrets/litellm-env.age".publicKeys = all;
+  "secrets/tokenharbor-env.age".publicKeys = all;
   "secrets/cache-push-key.age".publicKeys = all;
 
   "secrets/opencode/gitlab-work.age".publicKeys = [

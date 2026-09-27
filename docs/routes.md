@@ -35,7 +35,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | GNOME keyring | `modules/keyring.nix` | |
 | Locale, timezone | `modules/locale.nix` | |
 | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | |
-| LLM gateway API key for omp hosts (agenix `opencode-litellm-master-key`, consumed by `modules/omp/default.nix`) | `modules/opencode-secrets.nix` | Enabled for pc, server, notebook (hosts listed in the module) |
+| LLM gateway and provider API keys for omp hosts (agenix `opencode-litellm-master-key` for the litellm gateway and `tokenharbor-env` for the `tokenharbor` omp provider, both consumed by `modules/omp/default.nix`) | `modules/opencode-secrets.nix` | Enabled for pc, server, notebook (hosts listed in the module) |
 | Environment variables | `modules/env.nix` | |
 | Network entry point | `modules/network/default.nix` | Imports DNS, firewall, hosts, proxy sub-modules |
 | Network DNS | `modules/network/dns.nix` | Imported by `modules/network/default.nix` |
