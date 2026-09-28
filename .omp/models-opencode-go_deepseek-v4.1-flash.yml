@@ -4,9 +4,9 @@ providers:
 modelRoles:
   default: opencode-go/deepseek-v4.1-flash
   smol: opencode-go/deepseek-v4.1-flash:low
-  slow: opencode-go//deepseek-v4.1-flash:xhigh
+  slow: opencode-go//deepseek-v4.1-flash:max
   vision: opencode-go/deepseek-v4.1-flash:low
-  plan: opencode-go/deepseek-v4.1-flash
+  plan: opencode-go/deepseek-v4.1-flash:max
   commit: opencode-go/deepseek-v4.1-flash:low
   tiny: opencode-go/deepseek-v4.1-flash:low
   task: opencode-go/deepseek-v4.1-flash
@@ -17,5 +17,5 @@ task:
     task: "@task"
     sonic: "@smol"
     scout: opencode-go/deepseek-v4.1-flash:low
-    reviewer: opencode-go/deepseek-v4.1-flash:xhigh
+    reviewer: opencode-go/deepseek-v4.1-flash:max
     security-reviewer: opencode-go/deepseek-v4.1-flash:max
