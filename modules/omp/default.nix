@@ -275,6 +275,7 @@ let
     extensions = [ ];
     advisor.enabled = false;
     defaultThinkingLevel = "auto";
+    extendedContext = true;
     memory.backend = "mnemopi";
     autoResume = true;
     modelRoleStorage = "project";
