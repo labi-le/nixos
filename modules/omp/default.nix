@@ -263,6 +263,12 @@ let
     }
   );
 
+  delegationGate = pkgs.runCommand "omp-delegation-gate" { } ''
+    mkdir -p $out
+    cp ${./extensions/delegation-gate.ts} $out/delegation-gate.ts
+    cp ${./extensions/delegation-policy.ts} $out/delegation-policy.ts
+  '';
+
   yaml = pkgs.formats.yaml { };
   configFile = yaml.generate "omp-config.yml" {
     setupVersion = 2;
@@ -381,6 +387,7 @@ in
     "L+ ${agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
     "L+ ${agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
     "L+ ${agentDir}/extensions/git-upstream-gate.ts - - - - ${./extensions/git-upstream-gate.ts}"
+    "L+ ${agentDir}/extensions/delegation-gate.ts - - - - ${delegationGate}/delegation-gate.ts"
     "L+ ${agentDir}/extensions/repo-register.js - - - - ${repoRegisterJs}"
   ]
   ++ skillLinks;
