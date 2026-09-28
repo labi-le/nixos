@@ -24,6 +24,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 |---|---|---|
 | Bootloader, kernel parameters | `modules/boot.nix` | |
 | Sudo configuration, NOPASSWD rules | `modules/sudo.nix` | `timestamp_timeout=-1` plus NOPASSWD for exactly two absolute binaries, `nixos-rebuild` and `nix-collect-garbage`, so `make switch` / `make cleanup` never prompt while the login password stays strong; every other command still needs it |
+| Persistent Rust/C/C++ compiler cache daemon | `modules/sccache.nix` |
 | Systemd services | `modules/systemd.nix` | |
 | Journald logging | `modules/journald.nix` | |
 | ZSH configuration | `modules/shell.nix` | |

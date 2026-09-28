@@ -51,6 +51,7 @@
 
       commonModules = [
         ./settings.nix
+        ./modules/sccache.nix
         inputs.stylix.nixosModules.stylix
         inputs.nixvim.nixosModules.nixvim
         inputs.chaotic.nixosModules.default
