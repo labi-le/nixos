@@ -30,32 +30,14 @@ let
   superpowersSrc = pkgs.fetchFromGitHub {
     owner = "obra";
     repo = "superpowers";
-    rev = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797";
-    hash = "sha256-EsGNO0dULWf5Bx6bGrCv2kI2Z8aKH0kRvGiuN23wChQ=";
-  };
-  agentSkillsSrc = pkgs.fetchFromGitHub {
-    owner = "labi-le";
-    repo = "agent-skills";
-    rev = "57c9f2cf09ba23fe7962e73f0026dc545c4c6bc3";
-    hash = "sha256-DUqUjWDqJk828se7ChbsZaflXfbvRNyQM+zU2psoDYU=";
-  };
-  desloppifySrc = pkgs.fetchFromGitHub {
-    owner = "peteromallet";
-    repo = "desloppify";
-    rev = "3a7735d531a96b6a226bfbdc9fd662b14195f857";
-    hash = "sha256-USFofGy0SUZV0oeh5x5KAWeFReD45GxlyYqpmc23NFM=";
-  };
-  plantumlSrc = pkgs.fetchFromGitHub {
-    owner = "asolfre";
-    repo = "plantuml-rendering-skill";
-    rev = "5191edd2b30b8729a3ada1b61db381f3132d6764";
-    hash = "sha256-SOkpdeAkC68unov70AseGrK3GB0FK/HdR9MxgsqaNr0=";
+    rev = "8ca22dba9a94f28898bbce59f2537ff4d87c747d";
+    hash = "sha256-BWPiXoXV+jePP+wn/Z+Af4iehIL7oei00plaWaTzq8s=";
   };
   cavemanSrc = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
-    rev = "17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8";
-    hash = "sha256-lmzmlPj47lWNRZudMSsdIocS4srZYQeG2bQw800Os7U=";
+    rev = "2fd153c67988e980fb0b2455c90832159a6a5a25";
+    hash = "sha256-KFfU8LmNajKLZcOXOFisn4beTcg2YL+rpasr39UgSZE=";
   };
   humanizerSrc = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/databasus/databasus/bda7237599756ba76401b29e9761b07206e38bd6/.agents/skills/humanizer/SKILL.md";
@@ -74,15 +56,10 @@ let
       )
     );
 
-  vendoredSkills =
-    skillsFromDir "${superpowersSrc}/skills"
-    // skillsFromDir "${agentSkillsSrc}/skills"
-    // {
-      desloppify = "${desloppifySrc}/docs";
-      plantuml-rendering = "${plantumlSrc}";
-      caveman = "${cavemanSrc}/skills/caveman";
-      humanizer = "${humanizerSkill}";
-    };
+  vendoredSkills = skillsFromDir "${superpowersSrc}/skills" // {
+    caveman = "${cavemanSrc}/skills/caveman";
+    humanizer = "${humanizerSkill}";
+  };
 
   skillLinks = lib.mapAttrsToList (
     name: dir: "L+ ${agentDir}/skills/${name} - - - - ${dir}"
