@@ -251,6 +251,15 @@ let
         sys.exit(main())
   '';
 
+  toggleDirectMonitor = pkgs.writeShellScript "scarlett-toggle-monitor" ''
+    card=$(${pkgs.gawk}/bin/awk '/Scarlett/ {print $1; exit}' /proc/asound/cards)
+    [ -n "$card" ] || exit 0
+    amixer() { ${pkgs.alsa-utils}/bin/amixer -c "$card" "$@"; }
+    if amixer cset numid=10 toggle | ${pkgs.gnugrep}/bin/grep -q 'values=on'; then
+      amixer cget numid=8 | ${pkgs.gnugrep}/bin/grep -q 'values=on' || amixer cset numid=8 on
+    fi
+  '';
+
   binds = workspaceBinds // {
     "Mod+Return".spawn = [ "foot" "--app-id=tmux-switcher" "tmux-session-switcher" ];
     "Mod+Shift+Return".spawn = [ "foot" ];
@@ -291,7 +300,7 @@ let
     "Mod+Shift+p".spawn = [ "wl-uploader" "--ocr" ];
     "XF86AudioRaiseVolume".spawn = [ pactl "set-sink-volume" "@DEFAULT_SINK@" "+2%" ];
     "XF86AudioLowerVolume".spawn = [ pactl "set-sink-volume" "@DEFAULT_SINK@" "-2%" ];
-    "XF86AudioMute".spawn = [ pactl "set-sink-mute" "@DEFAULT_SINK@" "toggle" ];
+    "XF86AudioMute".spawn = [ "${toggleDirectMonitor}" ];
     "XF86AudioPlay".spawn = [ "playerctl" "play" ];
     "XF86AudioPause".spawn = [ "playerctl" "pause" ];
     "XF86AudioNext".spawn = [ "playerctl" "next" ];
