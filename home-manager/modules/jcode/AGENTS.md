@@ -28,7 +28,7 @@ Before finishing a turn while the todo still holds `pending` or `in_progress` ta
 - Handle short edits, integration, and verification directly.
 - Respect blocked tasks: a blocked task is not actionable work.
 - Update the todo as work progresses, and do not finish with actionable work outstanding.
-- Repeating the same check for an unchanged todo is nagging, not diligence: act on it or record why the remaining work is deliberately not being delegated.
+- Do not repeat the check for an unchanged todo unless something completed since the last check, such as a subagent, a tool result, or an edited todo. Repeating it otherwise is nagging, not diligence: act on the finding or record why the remaining work is deliberately not being delegated.
 
 This is the port of omp's delegation gate, which blocked session stop with the same instruction. jcode covers the mechanical half natively with auto-poke (`[features] auto_poke`, `Ctrl+P`), so treat this as the reasoning half and not as a replacement.
 
