@@ -1,6 +1,7 @@
 {
   imports = [
     ./sway.nix
+    ./niri.nix
     ./waybar.nix
     ./wofi.nix
     ./mako.nix

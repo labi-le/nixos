@@ -1,4 +1,9 @@
-{ pkgs, osConfig, ... }:
+{
+  lib,
+  pkgs,
+  osConfig,
+  ...
+}:
 let
   getMonitorNameByPosition = osConfig.monitorNameByPosition;
 
@@ -6,9 +11,19 @@ let
   rightMonitor = getMonitorNameByPosition "right";
   second = if rightMonitor != first then rightMonitor else null;
 
+  niriEnabled = osConfig.programs.niri.enable;
+
+  workspacesModule = if niriEnabled then "niri/workspaces" else "sway/workspaces";
+  languageModule = if niriEnabled then "niri/language" else "sway/language";
+
+  languageConfig = lib.optionalAttrs niriEnabled {
+    format = "{}";
+    "format-en" = "EN";
+    "format-ru" = "RU";
+  };
+
   workspacesConfig = {
     all-outputs = false;
-    disable-scroll = true;
     format = "{icon}";
     format-icons = builtins.listToAttrs (
       map (n: {
@@ -17,7 +32,8 @@ let
       }) (map toString (builtins.genList (x: x + 1) 8))
     );
 
-  };
+  }
+  // lib.optionalAttrs (!niriEnabled) { disable-scroll = true; };
 in
 {
   stylix.targets.waybar.enable = false;
@@ -29,13 +45,13 @@ in
         output = first;
         height = 0;
         position = "top";
-        modules-left = [ "sway/workspaces" ];
+        modules-left = [ workspacesModule ];
         modules-center = [
           "clock"
 
         ];
         modules-right = [
-          "sway/language"
+          languageModule
           "network"
           "custom/vpn"
           # "memory"
@@ -46,7 +62,8 @@ in
 
           "tray"
         ];
-        "sway/workspaces" = workspacesConfig;
+        "${workspacesModule}" = workspacesConfig;
+        "${languageModule}" = languageConfig;
         backlight = {
           format = "{icon} {percent}%";
           format-icons = [
@@ -129,8 +146,8 @@ in
         output = second;
         height = 0;
         position = "top";
-        modules-left = [ "sway/workspaces" ];
-        "sway/workspaces" = workspacesConfig;
+        modules-left = [ workspacesModule ];
+        "${workspacesModule}" = workspacesConfig;
       }
     ];
 

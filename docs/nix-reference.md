@@ -107,28 +107,33 @@ age.secrets.mysecret = {
 
 ## Monitor Configuration
 
-Monitors are configured in the host configuration, such as
-`hosts/configuration.nix`:
+Monitors are configured per host in the host configuration, such as
+`hosts/configuration.nix`. The values below are the pc host's:
 
 ```nix
 monitors = {
-  "DP-3" = {
+  "DP-1" = {
     mode = "2560x1440@179.999Hz";
     geometry = "1920 0";
     position = "right";
+    primary = true;
   };
   "DP-2" = {
-    mode = "1920x1080@165Hz";
+    mode = "1920x1080@165.002Hz";
     geometry = "0 0";
     position = "left";
   };
 };
 ```
 
-Get monitor names with:
+Use the exact refresh the panel reports: niri only matches a mode string that
+matches the DRM mode bit for bit (`1920x1080@165` does not match a 165.002 Hz
+mode and niri silently falls back to the preferred mode). Read the refresh from
+the EDID instead of guessing:
 
 ```bash
-nix run nixpkgs#wlr-randr
+niri msg outputs     # current mode plus every mode the output offers
+nix run nixpkgs#wlr-randr   # outside niri, or for sway
 ```
 
 ## Main Hosts

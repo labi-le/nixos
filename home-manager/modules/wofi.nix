@@ -34,7 +34,11 @@
 
       case $selected in
         logout)
-          swaymsg exit;;
+          if [ "$XDG_CURRENT_DESKTOP" = niri ]; then
+            niri msg action quit
+          else
+            swaymsg exit
+          fi;;
         suspend)
           exec systemctl suspend;;
         reboot)

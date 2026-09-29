@@ -9,6 +9,7 @@
     ./../modules/greeter.nix
     ./../modules/uxplay.nix
     ./../modules/wayland.nix
+    ./../modules/niri.nix
     ./../modules/nfs.nix
     ./../modules/thunar.nix
     ./../modules/kernel-cachyos.nix
@@ -94,7 +95,7 @@
       primary = true;
     };
     "DP-2" = {
-      mode = "1920x1080@165Hz";
+      mode = "1920x1080@165.002Hz";
       geometry = "0 0";
       position = "left";
     };
