@@ -132,6 +132,22 @@ let
     );
   };
 
+  embeddingModelOnnx = pkgs.fetchurl {
+    url = "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/onnx/model.onnx";
+    hash = "sha256-b9XXL+RYnxifjrwAZELbtSm7fOOPgIIRJoJSRhYEZFI=";
+  };
+
+  embeddingModelTokenizer = pkgs.fetchurl {
+    url = "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer.json";
+    hash = "sha256-vlDDYo8r9bteOn8XsfdGEbJWGjon7qsF5aow9BFXIDc=";
+  };
+
+  embeddingModel = pkgs.runCommand "jcode-embedding-model-all-MiniLM-L6-v2" { } ''
+    mkdir -p $out
+    cp ${embeddingModelOnnx} $out/model.onnx
+    cp ${embeddingModelTokenizer} $out/tokenizer.json
+  '';
+
   toml = pkgs.formats.toml { };
   configFile = toml.generate "jcode-config.toml" {
     server = {
@@ -492,8 +508,10 @@ in
   systemd.tmpfiles.rules = [
     "d ${jcodeDir} 0700 ${userName} ${userCfg.group} -"
     "d ${jcodeDir}/skills 0700 ${userName} ${userCfg.group} -"
+    "d ${jcodeDir}/models 0700 ${userName} ${userCfg.group} -"
     "d ${configDir} 0700 ${userName} ${userCfg.group} -"
     "f ${jcodeDir}/no_telemetry 0600 ${userName} ${userCfg.group} -"
+    "L+ ${jcodeDir}/models/all-MiniLM-L6-v2 - - - - ${embeddingModel}"
     "L+ ${jcodeDir}/mcp.json - - - - ${mcpJson}"
     "L+ ${jcodeDir}/config.toml - - - - ${configFile}"
     "L+ ${jcodeDir}/prompt-overlay.md - - - - ${./prompt-overlay.md}"

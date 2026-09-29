@@ -51,7 +51,9 @@ final: prev: {
   nix-index-with-small-db = inputs.nix-index-database.packages.${system}.nix-index-with-small-db;
   index-repo = inputs.index-repo.packages.${system}.default;
   omp = inputs.omp.packages.${system}.default;
-  jcode = inputs.jcode.packages.${system}.default;
+  jcode = (inputs.jcode.packages.${system}.default).overrideAttrs (old: {
+    cargoBuildFeatures = (old.cargoBuildFeatures or [ ]) ++ [ "embeddings" ];
+  });
   # langfuse still pins wrapt<2.0 while nixpkgs ships 2.2.2, so
   # pythonRuntimeDepsCheck fails and takes the whole litellm build (and with it
   # the system closure) down. That check asserts metadata, not actual
