@@ -1,5 +1,11 @@
 {
   "mcpServers": {
+    "nixos": {
+      "type": "stdio",
+      "command": "nix",
+      "args": ["run", "github:utensils/mcp-nixos", "--"],
+      "timeout_secs": 300
+    },
     "nix-control": {
       "type": "stdio",
       "command": "python3",
