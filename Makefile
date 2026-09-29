@@ -25,7 +25,7 @@ fmt:
 	nix-shell -p nixfmt --command 'nixfmt .'
 
 gate-matrix:
-	@python3 scripts/jcode-gate-matrix.py
+	@python3 modules/jcode/gate-matrix.py
 
 upgrade:
 	nix flake update && sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
