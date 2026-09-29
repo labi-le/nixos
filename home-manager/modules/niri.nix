@@ -313,7 +313,7 @@ in
       PartOf = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${niriAutoWidth}/bin/niri-auto-width";
+      ExecStart = "${niriAutoWidth}";
       Restart = "on-failure";
       RestartSec = 2;
     };
