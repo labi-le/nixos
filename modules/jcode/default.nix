@@ -218,6 +218,30 @@ let
         chat = true;
         side_panel = true;
       };
+      colors = {
+        user = "#8be9fd";
+        ai = "#50fa7b";
+        tool = "#6272a4";
+        file_link = "#8be9fd";
+        dim = "#6272a4";
+        accent = "#bd93f9";
+        system = "#ff79c6";
+        queued = "#f1fa8c";
+        asap = "#ff79c6";
+        pending = "#6272a4";
+        user_text = "#f8f8f2";
+        user_bg = "#44475a";
+        ai_text = "#f8f8f2";
+        header_icon = "#8be9fd";
+        header_name = "#bd93f9";
+        header_session = "#f8f8f2";
+        success = "#50fa7b";
+        warning = "#ffb86c";
+        error = "#ff5555";
+        info = "#bd93f9";
+        border = "#6272a4";
+        selection_bg = "#44475a";
+      };
     };
 
     features = {
