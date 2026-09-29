@@ -389,7 +389,7 @@ let
     };
 
     compaction = {
-      mode = "reactive";
+      mode = "semantic";
       lookahead_turns = 15;
       ewma_alpha = 0.3;
       proactive_floor = 0.4;
