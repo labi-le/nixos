@@ -17,12 +17,19 @@ let
       key = toString n;
       name = "l${toString n}";
       output = osConfig.monitorNameByPosition "left";
-    }) (lib.range 0 4)
+    }) (lib.range 1 5)
     ++ map (n: {
       key = toString n;
       name = "r${toString n}";
       output = osConfig.monitorNameByPosition "right";
-    }) (lib.range 5 9);
+    }) (lib.range 6 9)
+    ++ [
+      {
+        key = "0";
+        name = "r0";
+        output = osConfig.monitorNameByPosition "right";
+      }
+    ];
 
   workspaceNodes = map (slot: {
     workspace = {
