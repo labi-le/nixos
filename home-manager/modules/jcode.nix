@@ -3,6 +3,136 @@
 let
   homeDirectory = config.home.homeDirectory;
 
+  superpowersSrc = pkgs.fetchFromGitHub {
+    owner = "obra";
+    repo = "superpowers";
+    rev = "8ca22dba9a94f28898bbce59f2537ff4d87c747d";
+    hash = "sha256-BWPiXoXV+jePP+wn/Z+Af4iehIL7oei00plaWaTzq8s=";
+  };
+  cavemanSrc = pkgs.fetchFromGitHub {
+    owner = "JuliusBrussee";
+    repo = "caveman";
+    rev = "2fd153c67988e980fb0b2455c90832159a6a5a25";
+    hash = "sha256-KFfU8LmNajKLZcOXOFisn4beTcg2YL+rpasr39UgSZE=";
+  };
+  agentSkillsSrc = pkgs.fetchFromGitHub {
+    owner = "labi-le";
+    repo = "agent-skills";
+    rev = "57c9f2cf09ba23fe7962e73f0026dc545c4c6bc3";
+    hash = "sha256-DUqUjWDqJk828se7ChbsZaflXfbvRNyQM+zU2psoDYU=";
+  };
+  plantumlSkillSrc = pkgs.fetchFromGitHub {
+    owner = "asolfre";
+    repo = "plantuml-rendering-skill";
+    rev = "5191edd2b30b8729a3ada1b61db381f3132d6764";
+    hash = "sha256-SOkpdeAkC68unov70AseGrK3GB0FK/HdR9MxgsqaNr0=";
+  };
+  humanizerSrc = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/databasus/databasus/bda7237599756ba76401b29e9761b07206e38bd6/.agents/skills/humanizer/SKILL.md";
+    hash = "sha256-fDpFzjSCLTnVs0d08TwQsU2ent9I6EJ9n7/vg/Mt7LA=";
+  };
+  humanizerSkill = pkgs.runCommand "jcode-humanizer-skill" { } ''
+    mkdir -p $out
+    cp ${humanizerSrc} $out/SKILL.md
+  '';
+
+  skillsFromDir =
+    dir:
+    pkgs.lib.mapAttrs (name: _: "${dir}/${name}") (
+      pkgs.lib.filterAttrs (
+        name: type: type == "directory" && builtins.pathExists "${dir}/${name}/SKILL.md"
+      ) (builtins.readDir dir)
+    );
+
+  vendoredSkills =
+    (skillsFromDir "${superpowersSrc}/skills")
+    // (skillsFromDir "${agentSkillsSrc}/skills")
+    // {
+      caveman = "${cavemanSrc}/skills/caveman";
+      humanizer = humanizerSkill;
+      plantuml-rendering = plantumlSkillSrc;
+    };
+
+  skillFiles = pkgs.lib.mapAttrs' (
+    name: dir: pkgs.lib.nameValuePair ".jcode/skills/${name}" { source = dir; }
+  ) vendoredSkills;
+
+  mcpJson = pkgs.writeText "jcode-mcp.json" (
+    builtins.toJSON {
+      mcpServers = {
+        chroma = {
+          type = "stdio";
+          command = "uvx";
+          args = [
+            "--from"
+            "chroma-mcp"
+            "python"
+            "-c"
+            ''
+              import functools
+              import sys
+              import chroma_mcp.server as server
+
+              server.print = functools.partial(print, file=sys.stderr)
+              server.main()
+            ''
+            "--client-type"
+            "http"
+            "--host"
+            "192.168.1.2"
+            "--port"
+            "8000"
+            "--ssl"
+            "false"
+          ];
+          timeout_secs = 120;
+        };
+        context7 = {
+          type = "stdio";
+          command = "${pkgs.mcp-proxy}/bin/mcp-proxy";
+          args = [
+            "--transport"
+            "streamablehttp"
+            "https://mcp.context7.com/mcp"
+          ];
+          timeout_secs = 60;
+        };
+      };
+    }
+  );
+
+  preToolGate = pkgs.writeShellScriptBin "jcode-pre-tool-gate" ''
+    exec ${pkgs.python3}/bin/python3 ${./jcode/gates.py}
+  '';
+
+  providerEnvFiles = [
+    {
+      secret = "opencode-litellm-master-key";
+      variable = "LITELLM_CLOSEROUTER";
+      file = "closerouter.env";
+    }
+    {
+      secret = "tokenharbor-env";
+      variable = "TOKENHARBOR_API_KEY";
+      file = "tokenharbor.env";
+    }
+  ];
+
+  writeProviderEnv =
+    entry:
+    let
+      source = "/run/agenix/${entry.secret}";
+    in
+    ''
+      if [ -r ${source} ]; then
+        value="$(${pkgs.gnused}/bin/sed -n 's/^${entry.variable}=//p' ${source} | ${pkgs.coreutils}/bin/head -n1)"
+        if [ -n "$value" ]; then
+          printf '%s=%s\n' '${entry.variable}' "$value" > "${homeDirectory}/.config/jcode/${entry.file}"
+          chmod 600 "${homeDirectory}/.config/jcode/${entry.file}"
+        fi
+      fi
+    '';
+
 in
 {
   programs.jcode = {
@@ -168,8 +298,52 @@ in
       };
 
       hooks = {
+        pre_tool = "${preToolGate}/bin/jcode-pre-tool-gate";
         pre_tool_transform_timeout_ms = 500;
         pre_tool_timeout_ms = 5000;
+      };
+
+      providers = {
+        closerouter = {
+          type = "openai-compatible";
+          base_url = "https://api.closerouter.dev/v1";
+          api_key_env = "LITELLM_CLOSEROUTER";
+          env_file = "closerouter.env";
+          default_model = "deepseek/deepseek-v4.1-flash";
+          model_catalog = true;
+          models = [
+            {
+              id = "deepseek/deepseek-v4-pro-0813";
+              reasoning = true;
+              context_window = 1000000;
+            }
+            {
+              id = "deepseek/deepseek-v4.1-flash";
+              reasoning = true;
+              context_window = 1000000;
+            }
+            {
+              id = "qwen/qwen3.8-max";
+              reasoning = true;
+              context_window = 1000000;
+            }
+          ];
+        };
+        tokenharbor = {
+          type = "openai-compatible";
+          base_url = "https://tokenharbor.ai/v1";
+          api_key_env = "TOKENHARBOR_API_KEY";
+          env_file = "tokenharbor.env";
+          default_model = "deepseek-v4-flash:free";
+          model_catalog = true;
+          models = [
+            {
+              id = "deepseek-v4-flash:free";
+              reasoning = true;
+              context_window = 1000000;
+            }
+          ];
+        };
       };
 
       ambient = {
@@ -260,4 +434,15 @@ in
       };
     };
   };
+
+  home.file = skillFiles // {
+    ".jcode/mcp.json".source = mcpJson;
+    ".jcode/prompt-overlay.md".source = ./jcode/prompt-overlay.md;
+    "AGENTS.md".source = ./jcode/AGENTS.md;
+  };
+
+  home.activation.jcodeProviderEnv = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    run mkdir -p "${homeDirectory}/.config/jcode"
+    ${builtins.concatStringsSep "\n" (map writeProviderEnv providerEnvFiles)}
+  '';
 }
