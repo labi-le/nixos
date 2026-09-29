@@ -20,6 +20,18 @@ Agent availability alone is no reason to delegate. Prefer direct work for small 
 
 Every delegated brief: goal, relevant files/search area, constraints, acceptance criteria; include known relevant tests, linters, type checks, or other project verification. Workers do not commit. Do not create a commit unless the user requests it or the surrounding workflow explicitly requires it.
 
+# Delegation stop check (top-level)
+
+Before finishing a turn while the todo still holds `pending` or `in_progress` tasks, run the delegation check:
+
+- If subagent capacity is free, reassess the remaining work and delegate a concrete independent task only when that saves net effort. Do not create agents to fill slots.
+- Handle short edits, integration, and verification directly.
+- Respect blocked tasks: a blocked task is not actionable work.
+- Update the todo as work progresses, and do not finish with actionable work outstanding.
+- Repeating the same check for an unchanged todo is nagging, not diligence: act on it or record why the remaining work is deliberately not being delegated.
+
+This is the port of omp's delegation gate, which blocked session stop with the same instruction. jcode covers the mechanical half natively with auto-poke (`[features] auto_poke`, `Ctrl+P`), so treat this as the reasoning half and not as a replacement.
+
 # Task workflow (top-level)
 
 1. **Understand:** Inspect enough context to determine scope and risk; handle trivial discovery directly.
