@@ -107,8 +107,8 @@ let
     "Mod+Ctrl+Right".focus-monitor-right = { };
     "Mod+Ctrl+Up".focus-monitor-up = { };
     "Mod+Ctrl+Down".focus-monitor-down = { };
-    "Mod+Ctrl+Shift+Left".move-workspace-to-monitor-previous = { };
-    "Mod+Ctrl+Shift+Right".move-workspace-to-monitor-next = { };
+    "Mod+Alt+Shift+Left".move-workspace-to-monitor-previous = { };
+    "Mod+Alt+Shift+Right".move-workspace-to-monitor-next = { };
     "Mod+Shift+Left".move-column-left = { };
     "Mod+Shift+Right".move-column-right = { };
     "Mod+Shift+Up".move-window-up = { };
