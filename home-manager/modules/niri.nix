@@ -286,7 +286,7 @@ let
     "Mod+z".spawn = [ "pkill" "-SIGUSR2" "-f" "^waybar" ];
     "Mod+Shift+i".power-off-monitors = { };
     "Print".spawn = [ grimshot "copy" "area" ];
-    "Mod+Print".spawn = [ grimshot "copy" "active" ];
+    "Mod+Print".spawn = [ "niri" "msg" "action" "screenshot-window" ];
     "Mod+p".spawn = [ "wl-uploader" ];
     "Mod+Shift+p".spawn = [ "wl-uploader" "--ocr" ];
     "XF86AudioRaiseVolume".spawn = [ pactl "set-sink-volume" "@DEFAULT_SINK@" "+2%" ];
