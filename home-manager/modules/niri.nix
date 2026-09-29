@@ -10,7 +10,47 @@ let
   grimshot = "${pkgs.sway-contrib.grimshot}/bin/grimshot";
   pactl = "${pkgs.pulseaudio}/bin/pactl";
   brightnessctl = "${pkgs.brightnessctl}/bin/brightnessctl";
+  openrgbProfile = "${pkgs.openrgb-profile}/bin/openrgb-profile";
+  keychronBacklight = "${pkgs.keychron-backlight}/bin/keychron-backlight";
   wallpaper = "Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
+
+  niriPower = pkgs.writeShellScript "niri-power" ''
+    state="''${1:-toggle}"
+    marker="''${XDG_RUNTIME_DIR}/niri-power-off"
+
+    if [ "$state" = toggle ]; then
+      if [ -e "$marker" ]; then
+        state=on
+      else
+        state=off
+      fi
+    fi
+
+    case "$state" in
+      on)
+        ${pkgs.niri}/bin/niri msg action power-on-monitors
+        ${openrgbProfile} default
+        ${keychronBacklight} on
+        ${pkgs.coreutils}/bin/rm -f "$marker"
+        ;;
+      off)
+        ${pkgs.niri}/bin/niri msg action power-off-monitors
+        ${openrgbProfile} off
+        ${keychronBacklight} off
+        : > "$marker"
+        ;;
+      *)
+        echo "usage: niri-power on|off|toggle" >&2
+        exit 2
+        ;;
+    esac
+  '';
+
+  niriIdlePower = pkgs.writeShellScript "niri-idle-power" ''
+    exec ${pkgs.swayidle}/bin/swayidle -w \
+      timeout 1200 '${niriPower} off' \
+      resume       '${niriPower} on'
+  '';
 
   workspaceSlots =
     map (n: {
@@ -293,7 +333,7 @@ let
     "Mod+r".spawn = [ "thunar" ];
     "Mod+o".spawn = [ "google-chrome-stable" ];
     "Mod+z".spawn = [ "pkill" "-SIGUSR2" "-f" "^waybar" ];
-    "Mod+Shift+i".power-off-monitors = { };
+    "Mod+Shift+i".spawn = [ "${niriPower}" "toggle" ];
     "Print".spawn = [ grimshot "copy" "area" ];
     "Mod+Print".spawn = [ "niri" "msg" "action" "screenshot-window" ];
     "Mod+p".spawn = [ "wl-uploader" ];
@@ -323,6 +363,22 @@ in
     };
     Service = {
       ExecStart = "${niriAutoWidth}";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
+
+  systemd.user.services.niri-idle-power = lib.mkIf osConfig.programs.niri.enable {
+    Unit = {
+      Description = "Turn off monitors and peripherals after 20 minutes idle, and back on with input";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${niriIdlePower}";
       Restart = "on-failure";
       RestartSec = 2;
     };
