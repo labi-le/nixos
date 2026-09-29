@@ -472,15 +472,14 @@ in
     "d ${jcodeDir}/skills 0700 ${userName} ${userCfg.group} -"
     "d ${configDir} 0700 ${userName} ${userCfg.group} -"
     "L+ ${jcodeDir}/mcp.json - - - - ${mcpJson}"
+    "L+ ${jcodeDir}/config.toml - - - - ${configFile}"
     "L+ ${jcodeDir}/prompt-overlay.md - - - - ${./prompt-overlay.md}"
     "L+ ${homeDirectory}/AGENTS.md - - - - ${./AGENTS.md}"
   ]
   ++ skillLinks;
 
-  system.activationScripts.jcodeConfig = lib.stringAfter [ "users" ] ''
+  system.activationScripts.jcodeProviderEnv = lib.stringAfter [ "users" ] ''
     mkdir -p ${jcodeDir} ${configDir}
-    rm -f ${jcodeDir}/config.toml
-    install -m 600 -o ${userName} -g ${userCfg.group} ${configFile} ${jcodeDir}/config.toml
     chown ${userName}:${userCfg.group} ${jcodeDir} ${configDir}
     ${builtins.concatStringsSep "\n" (map writeProviderEnv providerEnvFiles)}
   '';
