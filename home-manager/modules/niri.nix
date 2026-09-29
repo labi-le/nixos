@@ -12,7 +12,24 @@ let
   brightnessctl = "${pkgs.brightnessctl}/bin/brightnessctl";
   wallpaper = "Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
 
-  workspaces = lib.genList (n: toString (n + 1)) 9;
+  workspaceSlots =
+    map (n: {
+      key = toString n;
+      name = "l${toString n}";
+      output = osConfig.monitorNameByPosition "left";
+    }) (lib.range 0 4)
+    ++ map (n: {
+      key = toString n;
+      name = "r${toString n}";
+      output = osConfig.monitorNameByPosition "right";
+    }) (lib.range 5 9);
+
+  workspaceNodes = map (slot: {
+    workspace = {
+      _args = [ slot.name ];
+      open-on-output = slot.output;
+    };
+  }) workspaceSlots;
 
   spawnAtStartup = [
     { spawn-at-startup._args = [ "waybar" ]; }
@@ -49,16 +66,16 @@ let
   ) osConfig.monitors;
 
   workspaceBinds = lib.listToAttrs (
-    lib.concatMap (n: [
+    lib.concatMap (slot: [
       {
-        name = "Mod+${n}";
-        value.focus-workspace = lib.toInt n;
+        name = "Mod+${slot.key}";
+        value.focus-workspace = slot.name;
       }
       {
-        name = "Mod+Shift+${n}";
-        value.move-column-to-workspace = lib.toInt n;
+        name = "Mod+Shift+${slot.key}";
+        value.move-column-to-workspace = slot.name;
       }
-    ]) workspaces
+    ]) workspaceSlots
   );
 
   binds = workspaceBinds // {
@@ -123,7 +140,7 @@ in
 
       hotkey-overlay.skip-at-startup = { };
 
-      _children = spawnAtStartup ++ outputNodes;
+      _children = spawnAtStartup ++ outputNodes ++ workspaceNodes;
 
       input = {
         keyboard.xkb = {

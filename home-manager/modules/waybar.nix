@@ -26,10 +26,21 @@ let
     all-outputs = false;
     format = "{icon}";
     format-icons = builtins.listToAttrs (
-      map (n: {
-        name = n;
-        value = n;
-      }) (map toString (builtins.genList (x: x + 1) 8))
+      lib.concatMap (x: [
+        {
+          name = toString x;
+          value = toString x;
+        }
+      ] ++ lib.optionals niriEnabled [
+        {
+          name = "l${toString x}";
+          value = toString x;
+        }
+        {
+          name = "r${toString x}";
+          value = toString x;
+        }
+      ]) (lib.range 0 9)
     );
 
   }
