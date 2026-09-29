@@ -203,6 +203,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Thunar (user config) | `home-manager/modules/thunar.nix` |
 | yt-dlp | `home-manager/modules/yt-dlp.nix` |
 | XDG user dirs | `home-manager/modules/xdg.nix` |
+| Jcode coding agent: `programs.jcode.settings` (module from `inputs.jcode.homeManagerModules.default`, wired in `flake.nix` `homeManagerConfig.sharedModules`; jcode input is pinned to upstream PR 1570) generates `~/.jcode/config.toml` as a read-only store symlink, so `settings` is the whole file, TUI setting saves and startup config migrations fail with EACCES, and the pre-Nix file is kept as `config.toml.hm-backup`; `programs.jcode.manageConfig = false` restores a writable user-owned file. `dictation.key` cannot be declared: the module's credential guard matches the word `key`, and the built-in default is `off`. Package install stays in `modules/packages.nix` so the HM-less `server` keeps jcode | `home-manager/modules/jcode.nix` | pc, fx516, notebook |
 
 ## Cross-Cutting Tasks
 

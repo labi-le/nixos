@@ -68,6 +68,7 @@ in
         alias ddu='docker update --restart=no $(docker ps -qa)'
         alias dsa='docker stop $(docker ps -qa)'
         alias lz='lazygit'
+        alias jc='jcode'
         if command -v zellij >/dev/null 2>&1; then
           alias zza='zellij attach'
           zz() {

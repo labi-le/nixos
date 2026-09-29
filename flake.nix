@@ -37,6 +37,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     omp.url = "github:can1357/oh-my-pi";
+    jcode = {
+      url = "github:1jehuang/jcode/pull/1570/head";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -80,6 +84,7 @@
           sharedModules = [
             inputs.index-repo.homeManagerModules.default
             inputs.omp.homeManagerModules.default
+            inputs.jcode.homeManagerModules.default
           ];
           backupFileExtension = "hm-backup";
         };
