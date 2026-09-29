@@ -108,10 +108,10 @@ let
     "Mod+Shift+r".switch-preset-column-width = { };
     "Mod+bracketleft".focus-column-first = { };
     "Mod+bracketright".focus-column-last = { };
-    "Mod+Left".focus-column-left = { };
-    "Mod+Right".focus-column-right = { };
-    "Mod+Up".focus-window-up = { };
-    "Mod+Down".focus-window-down = { };
+    "Mod+Left".focus-column-or-monitor-left = { };
+    "Mod+Right".focus-column-or-monitor-right = { };
+    "Mod+Up".focus-window-or-workspace-up = { };
+    "Mod+Down".focus-window-or-workspace-down = { };
     "Mod+Ctrl+Left".focus-monitor-left = { };
     "Mod+Ctrl+Right".focus-monitor-right = { };
     "Mod+Ctrl+Up".focus-monitor-up = { };
@@ -182,6 +182,9 @@ in
 
       layout = {
         gaps = 2;
+        default-column-width = {
+          proportion = 1.0;
+        };
         border = {
           width = 1;
           active-color = "#7b2cbf";
