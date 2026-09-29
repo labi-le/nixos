@@ -105,6 +105,18 @@ let
     exec ${pkgs.python3}/bin/python3 ${./jcode/gates.py}
   '';
 
+  upstreamGate = pkgs.writeShellScriptBin "jcode-upstream-gate" ''
+    exec ${pkgs.python3}/bin/python3 ${./jcode/git_upstream_gate.py}
+  '';
+
+  repoRegister = pkgs.writeTextFile {
+    name = "jcode-repo-register";
+    executable = true;
+    text = builtins.replaceStrings [ "@indexRepo@" ] [ "${pkgs.index-repo}" ] (
+      builtins.readFile ./jcode/repo-register.sh
+    );
+  };
+
   providerEnvFiles = [
     {
       secret = "opencode-litellm-master-key";
@@ -298,9 +310,14 @@ in
       };
 
       hooks = {
-        pre_tool = "${preToolGate}/bin/jcode-pre-tool-gate";
+        pre_tool = [
+          "${preToolGate}/bin/jcode-pre-tool-gate"
+          "${upstreamGate}/bin/jcode-upstream-gate"
+        ];
+        session_start = "${repoRegister} start";
+        turn_start = "${repoRegister} start";
         pre_tool_transform_timeout_ms = 500;
-        pre_tool_timeout_ms = 5000;
+        pre_tool_timeout_ms = 8000;
       };
 
       providers = {
