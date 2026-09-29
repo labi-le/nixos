@@ -460,6 +460,8 @@ let
     '';
 in
 {
+  environment.sessionVariables.JCODE_NO_TELEMETRY = "1";
+
   systemd.tmpfiles.rules = [
     "d ${jcodeDir} 0700 ${userName} ${userCfg.group} -"
     "d ${jcodeDir}/skills 0700 ${userName} ${userCfg.group} -"
