@@ -112,8 +112,12 @@ let
     }
   );
 
-  preToolGate = pkgs.writeShellScriptBin "jcode-pre-tool-gate" ''
-    exec ${pkgs.python3}/bin/python3 ${./gates.py}
+  commitGate = pkgs.writeShellScriptBin "jcode-commit-gate" ''
+    exec ${pkgs.python3}/bin/python3 ${./commit-gate.py}
+  '';
+
+  commentGate = pkgs.writeShellScriptBin "jcode-comment-gate" ''
+    exec ${pkgs.python3}/bin/python3 ${./comment-gate.py}
   '';
 
   upstreamGate = pkgs.writeShellScriptBin "jcode-upstream-gate" ''
@@ -290,7 +294,8 @@ let
 
     hooks = {
       pre_tool = [
-        "${preToolGate}/bin/jcode-pre-tool-gate"
+        "${commitGate}/bin/jcode-commit-gate"
+        "${commentGate}/bin/jcode-comment-gate"
         "${upstreamGate}/bin/jcode-upstream-gate"
       ];
       session_start = "${repoRegister} start";

@@ -8,7 +8,8 @@ import sys
 import tempfile
 
 JCODE = pathlib.Path(__file__).resolve().parent
-GATE = JCODE / "gates.py"
+COMMENT_GATE = JCODE / "comment-gate.py"
+COMMIT_GATE = JCODE / "commit-gate.py"
 UPSTREAM = JCODE / "git_upstream_gate.py"
 REGISTER = JCODE / "repo-register.sh"
 
@@ -124,7 +125,7 @@ def main():
 
         print("== commit gate")
         for command, expected in COMMIT_CASES:
-            code, message = gate(GATE, "bash", {"command": command, "cwd": str(repo)})
+            code, message = gate(COMMIT_GATE, "bash", {"command": command, "cwd": str(repo)})
             failures = check_report(failures, f"exit={code} want={expected}", code == expected, command[:60])
 
         print("== upstream gate")
@@ -134,7 +135,7 @@ def main():
 
         print("== comment gate")
         for tool, payload, expected in COMMENT_CASES:
-            code, message = gate(GATE, tool, payload)
+            code, message = gate(COMMENT_GATE, tool, payload)
             failures = check_report(failures, f"exit={code} want={expected}", code == expected, f"{tool} {payload.get('file_path')}")
 
         print("== repo register hook")
