@@ -217,7 +217,7 @@ let
     };
 
     features = {
-      check_updates = true;
+      check_updates = false;
       memory = true;
       swarm = true;
       mermaid = true;
