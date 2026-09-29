@@ -38,6 +38,15 @@ let
     };
   }) workspaceSlots;
 
+  windowRuleNodes = [
+    {
+      window-rule = {
+        match._props.app-id = "^(foot|tmux-switcher)$";
+        background-effect.blur = true;
+      };
+    }
+  ];
+
   spawnAtStartup = [
     { spawn-at-startup._args = [ "waybar" ]; }
     {
@@ -149,7 +158,7 @@ in
 
       hotkey-overlay.skip-at-startup = { };
 
-      _children = spawnAtStartup ++ outputNodes ++ workspaceNodes;
+      _children = spawnAtStartup ++ outputNodes ++ workspaceNodes ++ windowRuleNodes;
 
       input = {
         keyboard.xkb = {
@@ -162,6 +171,13 @@ in
           dwt = { };
           natural-scroll = { };
         };
+      };
+
+      blur = {
+        passes = 2;
+        offset = 2.5;
+        noise = 0.02;
+        saturation = 1.2;
       };
 
       layout = {
