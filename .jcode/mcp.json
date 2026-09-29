@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "nix-control": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["-B", ".omp/nix-control-mcp"],
+      "timeout_secs": 3600
+    }
+  }
+}
