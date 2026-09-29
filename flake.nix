@@ -84,7 +84,6 @@
           sharedModules = [
             inputs.index-repo.homeManagerModules.default
             inputs.omp.homeManagerModules.default
-            inputs.jcode.homeManagerModules.default
           ];
           backupFileExtension = "hm-backup";
         };

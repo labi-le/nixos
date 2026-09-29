@@ -16,7 +16,6 @@
     ./thunar.nix
     ./yt-dlp.nix
     ./xdg.nix
-    ./jcode.nix
   ];
 
 }

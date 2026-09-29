@@ -8,7 +8,7 @@ import sys
 import tempfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-JCODE = REPO / "home-manager" / "modules" / "jcode"
+JCODE = REPO / "modules" / "jcode"
 GATE = JCODE / "gates.py"
 UPSTREAM = JCODE / "git_upstream_gate.py"
 REGISTER = JCODE / "repo-register.sh"
