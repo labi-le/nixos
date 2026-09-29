@@ -94,6 +94,163 @@ let
     ]) workspaceSlots
   );
 
+  niriAutoWidth = pkgs.writers.writePython3 "niri-auto-width" { } ''
+    import json
+    import subprocess
+    import sys
+    import time
+
+    NIRI = "${pkgs.niri}/bin/niri"
+    POLL_INTERVAL = 0.1
+    POLL_TIMEOUT = 1.5
+    FULL_FRACTION = 0.95
+
+
+    def niri_json(*args):
+        proc = subprocess.run(
+            [NIRI, "msg", "-j"] + list(args),
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            return None
+        try:
+            return json.loads(proc.stdout)
+        except ValueError:
+            return None
+
+
+    def log(message):
+        sys.stderr.write("niri-auto-width: %s\n" % message)
+        sys.stderr.flush()
+
+
+    def output_widths(outputs):
+        widths = {}
+        if not isinstance(outputs, dict):
+            return widths
+        for name, output in outputs.items():
+            modes = output.get("modes") or []
+            index = output.get("current_mode")
+            if index is None or index >= len(modes):
+                continue
+            widths[name] = modes[index]["width"]
+        return widths
+
+
+    def workspace_of(window, workspaces):
+        for candidate in workspaces:
+            if candidate.get("id") == window.get("workspace_id"):
+                return candidate
+        return None
+
+
+    def decide(window, windows, workspaces, widths, focused_id):
+        if window.get("id") != focused_id:
+            return False, "not focused"
+        if window.get("is_floating"):
+            return False, "floating"
+        if window.get("is_fullscreen"):
+            return False, "fullscreen"
+        workspace_id = window.get("workspace_id")
+        siblings = [
+            w for w in windows if w.get("workspace_id") == workspace_id
+        ]
+        if len(siblings) != 1:
+            return False, "workspace holds %d windows" % len(siblings)
+        workspace = workspace_of(window, workspaces)
+        if workspace is None:
+            return False, "workspace not found"
+        width = widths.get(workspace.get("output"))
+        if not width:
+            return False, "unknown output width"
+        tile_width = window["layout"]["tile_size"][0]
+        if tile_width >= FULL_FRACTION * width:
+            return False, "already full width %s of %s" % (
+                tile_width,
+                width,
+            )
+        return True, "expanded %s of %s" % (tile_width, width)
+
+
+    def wait_for_focus(window_id):
+        deadline = time.monotonic() + POLL_TIMEOUT
+        while True:
+            focused = niri_json("focused-window")
+            if focused and focused.get("id") == window_id:
+                return True
+            if time.monotonic() >= deadline:
+                return False
+            time.sleep(POLL_INTERVAL)
+
+
+    def expand_column_width():
+        subprocess.run(
+            [NIRI, "msg", "action", "set-column-width", "100%"],
+            capture_output=True,
+            text=True,
+        )
+
+
+    def handle_new_windows(seen):
+        windows = niri_json("windows")
+        if windows is None:
+            log("windows query failed")
+            return
+        pending = [w["id"] for w in windows if w["id"] not in seen]
+        if not pending:
+            return
+        workspaces = niri_json("workspaces") or []
+        widths = output_widths(niri_json("outputs"))
+        for window_id in pending:
+            seen.add(window_id)
+            if not wait_for_focus(window_id):
+                log("window %d skipped, not focused" % window_id)
+                continue
+            current = niri_json("windows") or []
+            window = next(
+                (w for w in current if w.get("id") == window_id), None
+            )
+            if window is None:
+                log("window %d skipped, gone" % window_id)
+                continue
+            expand, reason = decide(
+                window, current, workspaces, widths, window_id
+            )
+            if expand:
+                expand_column_width()
+            log("window %d %s" % (window_id, reason))
+
+
+    def main():
+        stream = subprocess.Popen(
+            [NIRI, "msg", "--json", "event-stream"],
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        seen = set()
+        for line in stream.stdout:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(event, dict):
+                continue
+            if "WindowOpenedOrChanged" in event:
+                handle_new_windows(seen)
+            elif "WindowsChanged" in event:
+                handle_new_windows(seen)
+        log("event stream closed")
+        return 1
+
+
+    if __name__ == "__main__":
+        sys.exit(main())
+  '';
+
   binds = workspaceBinds // {
     "Mod+Return".spawn = [ "foot" "--app-id=tmux-switcher" "tmux-session-switcher" ];
     "Mod+Shift+Return".spawn = [ "foot" ];
@@ -149,6 +306,22 @@ in
     "niri/config.kdl".force = true;
   };
 
+  systemd.user.services.niri-auto-width = lib.mkIf osConfig.programs.niri.enable {
+    Unit = {
+      Description = "Expand a lone niri window to the full column width";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${niriAutoWidth}/bin/niri-auto-width";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
+
   wayland.windowManager.niri = lib.mkIf osConfig.programs.niri.enable {
     enable = true;
     portalPackage = null;
@@ -183,7 +356,7 @@ in
       layout = {
         gaps = 2;
         default-column-width = {
-          proportion = 1.0;
+          proportion = 0.5;
         };
         border = {
           width = 1;
