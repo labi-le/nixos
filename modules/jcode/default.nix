@@ -489,12 +489,11 @@ let
     '';
 in
 {
-  environment.sessionVariables.JCODE_NO_TELEMETRY = "1";
-
   systemd.tmpfiles.rules = [
     "d ${jcodeDir} 0700 ${userName} ${userCfg.group} -"
     "d ${jcodeDir}/skills 0700 ${userName} ${userCfg.group} -"
     "d ${configDir} 0700 ${userName} ${userCfg.group} -"
+    "f ${jcodeDir}/no_telemetry 0600 ${userName} ${userCfg.group} -"
     "L+ ${jcodeDir}/mcp.json - - - - ${mcpJson}"
     "L+ ${jcodeDir}/config.toml - - - - ${configFile}"
     "L+ ${jcodeDir}/prompt-overlay.md - - - - ${./prompt-overlay.md}"
