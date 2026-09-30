@@ -35,7 +35,7 @@ in
 
 {
   age.secrets.opencode-go-pool-env = {
-    file = ../secrets/opencode-go-pool-env.age;
+    file = ../../secrets/opencode-go-pool-env.age;
     mode = "0400";
   };
 
