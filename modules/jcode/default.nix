@@ -353,11 +353,11 @@ let
           }
         ];
       };
-      labile = {
+      pool = {
         type = "openai-compatible";
         base_url = "https://llm.labile.cc/v1";
         api_key_env = "LITELLM_MASTER_KEY";
-        env_file = "labile.env";
+        env_file = "pool.env";
         default_model = "opencode-go-pool";
         model_catalog = true;
         models = [
@@ -484,7 +484,7 @@ let
     {
       secret = "opencode-litellm-master-key";
       variable = "LITELLM_MASTER_KEY";
-      file = "labile.env";
+      file = "pool.env";
     }
   ];
 
