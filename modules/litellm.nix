@@ -1,9 +1,19 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   poolSize = 4;
   poolModel = "openai/deepseek-v4.1-flash";
   poolAgent = "jcode/0.89.3";
+
+  usagePlugin = pkgs.runCommand "litellm-opencode-usage" { } ''
+    mkdir -p $out
+    cp ${../pkgs/litellm-opencode-usage.py} $out/opencode_go_usage.py
+  '';
 
   sessionIdOf =
     index:
@@ -31,6 +41,11 @@ in
 
   systemd.services.litellm.serviceConfig.EnvironmentFile =
     lib.mkAfter [ config.age.secrets.opencode-go-pool-env.path ];
+
+  systemd.services.litellm.serviceConfig.Environment = [
+    "OPENCODE_USAGE_LIMIT_PERCENT=80"
+    "OPENCODE_USAGE_SYNC_SECONDS=20"
+  ];
 
   services.litellm = {
     enable = true;
@@ -70,6 +85,7 @@ in
       litellm_settings = {
         telemetry = false;
         drop_params = true;
+        callbacks = [ "${usagePlugin}/opencode_go_usage.opencode_go_usage_sync" ];
       };
     };
   };
