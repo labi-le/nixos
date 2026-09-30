@@ -62,6 +62,10 @@ in
           model = poolModel;
           api_base = "https://opencode.ai/zen/go/v1";
           api_key = "os.environ/LITELLM_OPENCODE_GO_KEY_${toString (index + 1)}";
+          extra_headers = {
+            "x-opencode-session" = "opencode-go-pool-${toString (index + 1)}";
+            "user-agent" = "labile-litellm-pool/1.0";
+          };
           timeout = 900;
           stream_timeout = 180;
           max_retries = 0;
