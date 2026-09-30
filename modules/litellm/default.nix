@@ -12,7 +12,7 @@ let
 
   usagePlugin = pkgs.runCommand "litellm-opencode-usage" { } ''
     mkdir -p $out
-    cp ${../pkgs/litellm-opencode-usage.py} $out/opencode_go_usage.py
+    cp ${./opencode-usage.py} $out/opencode_go_usage.py
   '';
 
   sessionIdOf =

@@ -9,7 +9,7 @@
   imports = [
     ./../modules/base.nix
     ./../modules/nginx.nix
-    ./../modules/litellm.nix
+    ./../modules/litellm
     ./../modules/drive.nix
     ./../modules/kernel-server.nix
     ./../modules/zfs.nix
