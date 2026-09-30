@@ -8,7 +8,6 @@
 let
   poolSize = 4;
   poolModel = "openai/deepseek-v4.1-flash";
-  poolAgent = "jcode/0.89.3";
 
   usagePlugin = pkgs.runCommand "litellm-opencode-usage" { } ''
     mkdir -p $out
@@ -56,7 +55,6 @@ in
           api_key = "os.environ/LITELLM_OPENCODE_GO_KEY_${toString (index + 1)}";
           extra_headers = {
             "x-opencode-session" = sessionIdOf (index + 1);
-            "user-agent" = poolAgent;
           };
           timeout = 900;
           stream_timeout = 180;
