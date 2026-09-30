@@ -1,6 +1,19 @@
-{ config, ... }:
+{ config, lib, ... }:
+
+let
+  poolSize = 4;
+  poolModel = "deepseek-v4.1-flash";
+in
 
 {
+  age.secrets.opencode-go-pool-env = {
+    file = ../secrets/opencode-go-pool-env.age;
+    mode = "0400";
+  };
+
+  systemd.services.litellm.serviceConfig.EnvironmentFile =
+    lib.mkAfter [ config.age.secrets.opencode-go-pool-env.path ];
+
   services.litellm = {
     enable = true;
     host = "127.0.0.1";
@@ -42,7 +55,18 @@
             max_retries = 0;
           };
         }
-      ];
+      ]
+      ++ lib.imap0 (index: _: {
+        model_name = "opencode-go-pool";
+        litellm_params = {
+          model = poolModel;
+          api_base = "https://opencode.ai/zen/go/v1";
+          api_key = "os.environ/LITELLM_OPENCODE_GO_KEY_${toString (index + 1)}";
+          timeout = 900;
+          stream_timeout = 180;
+          max_retries = 0;
+        };
+      }) (lib.range 1 poolSize);
       general_settings = {
         master_key = "os.environ/LITELLM_MASTER_KEY";
         background_health_checks = false;
