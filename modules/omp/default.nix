@@ -313,6 +313,7 @@ let
       language = "ru";
       submitTrigger = "never";
     };
+    spelling.autocomplete = "off";
   };
 in
 {

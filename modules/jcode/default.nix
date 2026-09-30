@@ -353,6 +353,21 @@ let
           }
         ];
       };
+      labile = {
+        type = "openai-compatible";
+        base_url = "https://llm.labile.cc/v1";
+        api_key_env = "LITELLM_POOL_KEY";
+        env_file = "labile.env";
+        default_model = "opencode-go-pool";
+        model_catalog = true;
+        models = [
+          {
+            id = "opencode-go-pool";
+            reasoning = true;
+            context_window = 1000000;
+          }
+        ];
+      };
       tokenharbor = {
         type = "openai-compatible";
         base_url = "https://tokenharbor.ai/v1";
@@ -465,6 +480,11 @@ let
       secret = "tokenharbor-env";
       variable = "TOKENHARBOR_API_KEY";
       file = "tokenharbor.env";
+    }
+    {
+      secret = "opencode-litellm-master-key";
+      variable = "LITELLM_MASTER_KEY";
+      file = "labile.env";
     }
   ];
 
