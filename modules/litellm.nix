@@ -41,12 +41,6 @@ in
 
   systemd.services.litellm.serviceConfig.EnvironmentFile =
     lib.mkAfter [ config.age.secrets.opencode-go-pool-env.path ];
-
-  systemd.services.litellm.serviceConfig.Environment = [
-    "OPENCODE_USAGE_LIMIT_PERCENT=80"
-    "OPENCODE_USAGE_SYNC_SECONDS=20"
-  ];
-
   services.litellm = {
     enable = true;
     host = "127.0.0.1";
