@@ -2,7 +2,7 @@
 
 let
   poolSize = 4;
-  poolModel = "deepseek-v4.1-flash";
+  poolModel = "openai/deepseek-v4.1-flash";
 in
 
 {
@@ -25,7 +25,7 @@ in
         {
           model_name = "research-free";
           litellm_params = {
-            model = "deepseek-v4-flash-free";
+            model = "openai/deepseek-v4-flash-free";
             api_base = "https://opencode.ai/zen/v1";
             api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
             timeout = 15;
@@ -36,7 +36,7 @@ in
         {
           model_name = "research-free";
           litellm_params = {
-            model = "mimo-v2.5-free";
+            model = "openai/mimo-v2.5-free";
             api_base = "https://opencode.ai/zen/v1";
             api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
             timeout = 15;
@@ -47,7 +47,7 @@ in
         {
           model_name = "research-free";
           litellm_params = {
-            model = "qwen3.6-plus-free";
+            model = "openai/qwen3.6-plus-free";
             api_base = "https://opencode.ai/zen/v1";
             api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
             timeout = 15;
