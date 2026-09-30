@@ -21,42 +21,7 @@ in
     openFirewall = true;
     environmentFile = config.age.secrets.litellm-env.path;
     settings = {
-      model_list = [
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/deepseek-v4-flash-free";
-            api_base = "https://opencode.ai/zen/v1";
-            api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/mimo-v2.5-free";
-            api_base = "https://opencode.ai/zen/v1";
-            api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-        {
-          model_name = "research-free";
-          litellm_params = {
-            model = "openai/qwen3.6-plus-free";
-            api_base = "https://opencode.ai/zen/v1";
-            api_key = "os.environ/LITELLM_OPENCODE_ZEN_API_KEY";
-            timeout = 15;
-            stream_timeout = 15;
-            max_retries = 0;
-          };
-        }
-      ]
-      ++ lib.imap0 (index: _: {
+      model_list = lib.imap0 (index: _: {
         model_name = "opencode-go-pool";
         litellm_params = {
           model = poolModel;
