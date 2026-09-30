@@ -63,8 +63,6 @@ in
       }) (lib.range 1 poolSize);
       general_settings = {
         master_key = "os.environ/LITELLM_MASTER_KEY";
-        background_health_checks = true;
-        health_check_interval = 120;
         enable_health_check_routing = true;
       };
       router_settings = {
