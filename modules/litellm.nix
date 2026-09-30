@@ -56,22 +56,16 @@ in
       }) (lib.range 1 poolSize);
       general_settings = {
         master_key = "os.environ/LITELLM_MASTER_KEY";
-        background_health_checks = false;
-        enable_health_check_routing = false;
+        background_health_checks = true;
+        health_check_interval = 120;
+        enable_health_check_routing = true;
       };
       router_settings = {
-        timeout = 15;
-        cooldown_time = 60;
-        disable_cooldowns = true;
+        timeout = 900;
+        cooldown_time = 600;
         routing_strategy = "simple-shuffle";
         enable_weighted_failover = true;
         num_retries = 3;
-        allowed_fails_policy = {
-          AuthenticationErrorAllowedFails = 0;
-          TimeoutErrorAllowedFails = 1;
-          RateLimitErrorAllowedFails = 1;
-          InternalServerErrorAllowedFails = 1;
-        };
       };
       litellm_settings = {
         telemetry = false;
