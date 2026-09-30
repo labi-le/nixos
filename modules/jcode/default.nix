@@ -356,7 +356,7 @@ let
       labile = {
         type = "openai-compatible";
         base_url = "https://llm.labile.cc/v1";
-        api_key_env = "LITELLM_POOL_KEY";
+        api_key_env = "LITELLM_MASTER_KEY";
         env_file = "labile.env";
         default_model = "opencode-go-pool";
         model_catalog = true;
