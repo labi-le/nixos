@@ -3,6 +3,24 @@
 let
   poolSize = 4;
   poolModel = "openai/deepseek-v4.1-flash";
+  poolAgent = "jcode/0.89.3";
+
+  sessionIdOf =
+    index:
+    let
+      hex = builtins.hashString "sha256" "opencode-go session ${toString index}";
+    in
+    lib.concatStrings [
+      (builtins.substring 0 8 hex)
+      "-"
+      (builtins.substring 8 4 hex)
+      "-"
+      (builtins.substring 12 4 hex)
+      "-"
+      (builtins.substring 16 4 hex)
+      "-"
+      (builtins.substring 20 12 hex)
+    ];
 in
 
 {
@@ -28,8 +46,8 @@ in
           api_base = "https://opencode.ai/zen/go/v1";
           api_key = "os.environ/LITELLM_OPENCODE_GO_KEY_${toString (index + 1)}";
           extra_headers = {
-            "x-opencode-session" = "opencode-go-pool-${toString (index + 1)}";
-            "user-agent" = "labile-litellm-pool/1.0";
+            "x-opencode-session" = sessionIdOf (index + 1);
+            "user-agent" = poolAgent;
           };
           timeout = 900;
           stream_timeout = 180;
