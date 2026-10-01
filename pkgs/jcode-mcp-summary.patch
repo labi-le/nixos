@@ -1,0 +1,73 @@
+--- a/crates/jcode-tui/src/tui/ui_tools.rs	2026-10-01 01:53:11.791990533 +0300
++++ b/crates/jcode-tui/src/tui/ui_tools.rs	2026-10-01 01:53:16.355180987 +0300
+@@ -1553,6 +1553,32 @@
+                 .unwrap_or("debug_socket");
+             truncate_middle_display(cmd, bounded(40))
+         }
++        "mcp_call" => {
++            let tool_name = tool
++                .input
++                .get("tool")
++                .and_then(|v| v.as_str())
++                .unwrap_or("mcp_call");
++            match tool.input.get("server").and_then(|v| v.as_str()) {
++                Some(server) if !server.is_empty() => format!(
++                    "{} ({})",
++                    truncate_identifier_display(tool_name, bounded(24)),
++                    truncate_identifier_display(server, bounded(24))
++                ),
++                _ => truncate_identifier_display(tool_name, bounded(40)),
++            }
++        }
++        "mcp_search" => tool
++            .input
++            .get("query")
++            .and_then(|v| v.as_str())
++            .map(|q| {
++                format!(
++                    "'{}'",
++                    truncate_query_display(q, bounded(40).saturating_sub(2))
++                )
++            })
++            .unwrap_or_default(),
+         name if name.starts_with("mcp__") => tool
+             .input
+             .as_object()
+--- a/crates/jcode-tui/src/tui/ui_tests/tools.rs	2026-10-01 01:53:11.795616904 +0300
++++ b/crates/jcode-tui/src/tui/ui_tests/tools.rs	2026-10-01 01:53:17.322221349 +0300
+@@ -723,6 +723,35 @@
+ }
+ 
+ #[test]
++fn test_tool_summary_covers_mcp_calls() {
++    let call = ToolCall {
++        id: "call_mcp_call".to_string(),
++        name: "mcp_call".to_string(),
++        input: serde_json::json!({
++            "server": "example",
++            "tool": "example_tool",
++            "arguments": {},
++            "intent": "query"
++        }),
++        intent: None,
++        thought_signature: None,
++    };
++    let summary = tools_ui::get_tool_summary_with_budget(&call, 50, Some(60));
++    assert!(summary.contains("example_tool"), "summary={summary:?}");
++    assert!(summary.contains("example"), "summary={summary:?}");
++
++    let search = ToolCall {
++        id: "call_mcp_search".to_string(),
++        name: "mcp_search".to_string(),
++        input: serde_json::json!({ "query": "browser automation" }),
++        intent: None,
++        thought_signature: None,
++    };
++    let summary = tools_ui::get_tool_summary_with_budget(&search, 50, Some(60));
++    assert!(summary.contains("browser automation"), "summary={summary:?}");
++}
++
++#[test]
+ fn test_tool_summary_read_supports_start_line_end_line() {
+     let tool = ToolCall {
+         id: "call_read_range".to_string(),
