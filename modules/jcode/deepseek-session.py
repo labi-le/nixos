@@ -6,13 +6,13 @@ import json
 import os
 import re
 import urllib.error
-import urllib.parse
 import urllib.request
 import time
 from pathlib import Path
 
 PROXY = os.environ.get("FDS_PROXY", "http://127.0.0.1:9655").rstrip("/")
 AGENT_KEY = os.environ.get("FDS_AGENT_KEY", "jcode")
+NEW_CHAT_MODEL = os.environ.get("FDS_NEW_CHAT_MODEL", "deepseek-v4-flash")
 ENV_FILE_NAME = os.environ.get("FDS_ENV_FILE", "deepseek-web.env")
 
 ENV_KEY = "JCODE_OPENAI_EXTRA_BODY"
@@ -79,15 +79,26 @@ def write_owner(state_file: Path, session_id: str) -> None:
 
 
 def start_new_chat() -> str:
+    payload = json.dumps(
+        {
+            "model": NEW_CHAT_MODEL,
+            "messages": [{"role": "user", "content": "/new"}],
+            "session": AGENT_KEY,
+            "stream": False,
+        }
+    ).encode()
     request = urllib.request.Request(
-        f"{PROXY}/reset-session?agent={urllib.parse.quote(AGENT_KEY)}", method="POST"
+        f"{PROXY}/v1/chat/completions",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
     )
     try:
         with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
             json.load(response)
         return "new-chat"
     except urllib.error.HTTPError as error:
-        return "no-chat" if error.code == 404 else "reset-failed"
+        return "new-chat-failed" if error.code != 404 else "no-chat"
     except (OSError, ValueError, urllib.error.URLError):
         return "unreachable"
 
@@ -182,7 +193,7 @@ def transition(
         f"{event or 'hook'} source={source or '-'} session={session_id} "
         f"previous={owner or '-'} outcome={outcome}",
     )
-    return 0 if outcome != "reset-failed" else 1
+    return 0 if outcome in ("new-chat", "no-chat", "unreachable") else 1
 
 
 if __name__ == "__main__":
