@@ -166,6 +166,28 @@ make cleanup             # remove old generations and apply configuration
 make optimise            # optimise nix store
 ```
 
+## Pre-flight Config Eval
+
+`eval_all` on the nix-control MCP server evaluates one attribute on every
+`nixosConfiguration` at once, by default `config.system.build.toplevel.drvPath`,
+and lists the hosts that fail. No root, no rebuild, so it catches a broken shared
+file -- an overlay or package definition removed from `overlays.nix`, a module
+that no longer evaluates -- including on hosts that are not being rebuilt today.
+`nixos-rebuild switch` only ever evaluates its own host.
+
+```json
+{}
+{"hosts": ["pc"]}
+{"attr": "services.nginx.package"}
+```
+
+Running four nix evaluators of this flake in parallel is not reliable on a
+loaded desktop. Measured 2026-10-01 on pc (32 GiB RAM, zram swap full): the pc
+evaluation died with `error: interrupted by the user` while the other three
+succeeded, reproducibly, and exited 0 when run alone. The tool retries such a
+transient failure (interrupt, lock, EOF) once on its own and marks the row
+`attempts: 2`; a real error is never retried.
+
 ## ChromaDB As Persistent Memory
 
 ChromaDB runs at `192.168.1.2:8000` and is connected via MCP. Data persists

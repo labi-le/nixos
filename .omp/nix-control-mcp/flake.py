@@ -2,7 +2,7 @@ import concurrent.futures
 import json
 import time
 
-from config import LOCK, MISSING_ATTR_RE, OWNER, REPO
+from config import HOSTS, LOCK, MISSING_ATTR_RE, OWNER, REPO, TRANSIENT_NIX_RE
 from jobs import await_job, finish_job, read_log, start_job
 from protocol import ToolError
 from shell import first_error, nix_noise, require_host, run, run_split
@@ -103,6 +103,49 @@ def tool_eval(args, request_id, token):
         except ValueError:
             pass
     return envelope(header, clamp(out.rstrip("\n"))), False
+
+
+def tool_eval_all(args, request_id, token):
+    requested = args.get("hosts") or list(HOSTS)
+    if isinstance(requested, str):
+        requested = [requested]
+    unknown = [host for host in requested if host not in HOSTS]
+    if unknown:
+        raise ToolError(
+            f"unknown host(s) {', '.join(unknown)}; expected one of {', '.join(HOSTS)}"
+        )
+    attr = (args.get("attr") or "system.build.toplevel.drvPath").strip().lstrip(".")
+    raw = bool(args.get("raw", True))
+
+    def probe(host):
+        argv = ["nix", "eval", "--impure", f".#nixosConfigurations.{host}.config.{attr}"]
+        argv += ["--raw"] if raw else ["--json"]
+        code, out, err = run_split(argv, timeout=1800)
+        row = {"host": host, "ok": code == 0}
+        if code == 0:
+            row["value"] = out.strip()
+        else:
+            row["error"] = tail(nix_noise(err), 12)
+        return row
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(requested)) as pool:
+        futures = {host: pool.submit(probe, host) for host in requested}
+        rows = [futures[host].result() for host in requested]
+    for index, row in enumerate(rows):
+        if row["ok"] or not TRANSIENT_NIX_RE.search(row.get("error", "")):
+            continue
+        retried = probe(row["host"])
+        retried["attempts"] = 2
+        rows[index] = retried
+    broken = [row["host"] for row in rows if not row["ok"]]
+    header = {
+        "attr": f"config.{attr}",
+        "checked": len(rows),
+        "broken": broken,
+        "next": "rebuild action=switch" if broken else None,
+        "hosts": rows,
+    }
+    return envelope(header), bool(broken)
 
 
 def lock_revisions(lock):

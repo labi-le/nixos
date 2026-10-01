@@ -48,3 +48,7 @@ CONDITION_KEYS = ("condition", "ttsr_trigger", "ttsrTrigger")
 DEDUP_THRESHOLD = 60
 TRIVIAL_LINE = 12
 MISSING_ATTR_RE = re.compile(r"attribute '[^']+' missing|does not provide attribute")
+TRANSIENT_NIX_RE = re.compile(
+    r"interrupted by the user|unexpected end-of-file|connection reset|"
+    r"database is locked|waiting for (a )?lock|timed out"
+)
