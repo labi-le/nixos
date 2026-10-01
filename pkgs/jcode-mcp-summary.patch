@@ -1,5 +1,5 @@
---- a/crates/jcode-tui/src/tui/ui_tools.rs	2026-10-01 01:53:11.791990533 +0300
-+++ b/crates/jcode-tui/src/tui/ui_tools.rs	2026-10-01 01:53:16.355180987 +0300
+--- a/crates/jcode-tui/src/tui/ui_tools.rs	2026-10-01 14:15:21.195009835 +0300
++++ b/crates/jcode-tui/src/tui/ui_tools.rs	2026-10-01 14:15:21.208007413 +0300
 @@ -1553,6 +1553,32 @@
                  .unwrap_or("debug_socket");
              truncate_middle_display(cmd, bounded(40))
@@ -33,8 +33,49 @@
          name if name.starts_with("mcp__") => tool
              .input
              .as_object()
---- a/crates/jcode-tui/src/tui/ui_tests/tools.rs	2026-10-01 01:53:11.795616904 +0300
-+++ b/crates/jcode-tui/src/tui/ui_tests/tools.rs	2026-10-01 01:53:17.322221349 +0300
+--- a/crates/jcode-tui/src/tui/ui_messages.rs	2026-10-01 14:15:21.199253336 +0300
++++ b/crates/jcode-tui/src/tui/ui_messages.rs	2026-10-01 14:16:02.325697135 +0300
+@@ -4141,6 +4141,38 @@
+         }
+     }
+ 
++    // MCP calls hide their payload behind a generic `arguments` object, and
++    // native MCP tools behind the input itself, so the one-line summary cannot
++    // say what was requested. One dimmed line per argument keeps the call
++    // diagnosable from the transcript alone.
++    let mcp_arguments = if tc.name == "mcp_call" {
++        tc.input.get("arguments").and_then(|value| value.as_object())
++    } else if tc.name.starts_with("mcp__") {
++        tc.input.as_object()
++    } else {
++        None
++    };
++    if tools_ui::show_tool_call_details()
++        && !is_error
++        && let Some(args) = mcp_arguments
++        && !args.is_empty()
++    {
++        for (key, value) in args {
++            if key == "intent" {
++                continue;
++            }
++            let rendered = match value {
++                serde_json::Value::String(text) => text.clone(),
++                other => other.to_string(),
++            };
++            let detail = format!("    {key}: {rendered}");
++            lines.push(super::truncate_line_with_ellipsis_to_width(
++                &Line::from(Span::styled(detail, Style::default().fg(dim_color()))),
++                row_width,
++            ));
++        }
++    }
++
+     // Fallback command preview on a second line only when the row has no
+     // intent. With an intent present, the command summary is inline-only: it
+     // shows on the tool row when it fits and is dropped otherwise, never
+--- a/crates/jcode-tui/src/tui/ui_tests/tools.rs	2026-10-01 14:15:21.204007249 +0300
++++ b/crates/jcode-tui/src/tui/ui_tests/tools.rs	2026-10-01 14:15:21.208334629 +0300
 @@ -723,6 +723,35 @@
  }
  
