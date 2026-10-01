@@ -166,6 +166,19 @@ make cleanup             # remove old generations and apply configuration
 make optimise            # optimise nix store
 ```
 
+## Rebuild Memory Cap
+
+`switch`, `boot`, `upgrade` and `dry-run` run inside a user `systemd-run` scope
+with `-p MemoryMax=$MEMORY_MAX -p MemorySwapMax=0` (`MEMORY_MAX` defaults to `8G`;
+raise it per run with `make MEMORY_MAX=16G switch`). A full evaluation of one host
+peaked at 4.0 GB (pc) and 2.7 GB (server) RSS, measured 2026-10-01 on a 32 GiB box
+whose zram swap was full, so 8G is room for the evaluation while a runaway one is
+killed instead of thrashing the machine. The scope covers the rebuild client,
+where evaluation happens; builds run in nix-daemon, outside it, and would need a
+`MemoryMax` on that unit to be capped too. The scope belongs to the user manager,
+so the recipe has to run as the logged-in user (`make switch`), not under
+`sudo make`.
+
 ## Pre-flight Config Eval
 
 `eval_all` on the nix-control MCP server evaluates one attribute on every
@@ -181,8 +194,8 @@ that no longer evaluates -- including on hosts that are not being rebuilt today.
 {"attr": "services.nginx.package"}
 ```
 
-Running four nix evaluators of this flake in parallel is not reliable on a
-loaded desktop. Measured 2026-10-01 on pc (32 GiB RAM, zram swap full): the pc
+Running four nix evaluators of this flake in parallel is not reliable on a loaded
+machine. Measured 2026-10-01 on server (32 GiB RAM, zram swap full): the pc
 evaluation died with `error: interrupted by the user` while the other three
 succeeded, reproducibly, and exited 0 when run alone. The tool retries such a
 transient failure (interrupt, lock, EOF) once on its own and marks the row
