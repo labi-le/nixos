@@ -9,10 +9,8 @@ let
   cfg = config.jcode.deepseekWeb;
 
   sessionHook = pkgs.writeShellScriptBin "jcode-deepseek-session" ''
-    export FDS_PROFILE=${lib.escapeShellArg cfg.profileName}
     export FDS_PROXY=${lib.escapeShellArg cfg.endpoint}
-    export FDS_KEY_PREFIX=${lib.escapeShellArg cfg.keyPrefix}
-    export FDS_FALLBACK_KEY=${lib.escapeShellArg cfg.fallbackKey}
+    export FDS_AGENT_KEY=${lib.escapeShellArg cfg.agentKey}
     export FDS_ENV_FILE=${lib.escapeShellArg cfg.envFileName}
     exec ${pkgs.python3}/bin/python3 ${./deepseek-session.py}
   '';
@@ -47,7 +45,8 @@ in
       default = true;
       description = ''
         Enable the local FreeDeepseekAPI provider profile and the hook that
-        keeps its proxy-side session in sync with the jcode session.
+        starts a fresh proxy chat whenever the jcode session behind the shared
+        proxy agent changes.
       '';
     };
 
@@ -68,22 +67,22 @@ in
       default = "deepseek-web.env";
       description = ''
         File name under the jcode config directory that carries
-        JCODE_OPENAI_EXTRA_BODY. The session hook rewrites it with the agent key
-        of the current jcode session, and the provider picks that key up when it
-        is built.
+        JCODE_OPENAI_EXTRA_BODY. The session hook rewrites it with the proxy
+        agent key, and the provider picks that key up when it is built.
       '';
     };
 
-    keyPrefix = lib.mkOption {
+    agentKey = lib.mkOption {
       type = lib.types.strMatching "[A-Za-z0-9._-]+";
       default = "jcode";
-      description = "Prefix of the proxy agent key derived from the jcode session id.";
-    };
-
-    fallbackKey = lib.mkOption {
-      type = lib.types.strMatching "[A-Za-z0-9._-]+";
-      default = "jcode";
-      description = "Agent key used until the session hook has written the env file.";
+      description = ''
+        Single proxy agent key. The proxy is sticky per key, so every jcode
+        session shares one agent and the hook starts a new proxy chat on the
+        key whenever the owning jcode session changes. The agent key has to
+        stay constant: the provider resolves extra_body once, when the server
+        builds it, so a key derived from the session id would be frozen for the
+        life of that server.
+      '';
     };
 
     contextWindow = lib.mkOption {
@@ -102,7 +101,7 @@ in
         requires_api_key = false;
         default_model = "deepseek-v4-flash";
         env_file = cfg.envFileName;
-        extra_body.session = cfg.fallbackKey;
+        extra_body.session = cfg.agentKey;
         models = map (model: {
           inherit (model) id reasoning name;
           context_window = cfg.contextWindow;

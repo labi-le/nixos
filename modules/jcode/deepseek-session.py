@@ -11,10 +11,8 @@ import urllib.request
 import time
 from pathlib import Path
 
-PROFILE = os.environ.get("FDS_PROFILE", "deepseek-web")
 PROXY = os.environ.get("FDS_PROXY", "http://127.0.0.1:9655").rstrip("/")
-KEY_PREFIX = os.environ.get("FDS_KEY_PREFIX", "jcode")
-FALLBACK_KEY = os.environ.get("FDS_FALLBACK_KEY", "jcode")
+AGENT_KEY = os.environ.get("FDS_AGENT_KEY", "jcode")
 ENV_FILE_NAME = os.environ.get("FDS_ENV_FILE", "deepseek-web.env")
 
 ENV_KEY = "JCODE_OPENAI_EXTRA_BODY"
@@ -23,7 +21,6 @@ LOG_FILE_NAME = "deepseek-session.log"
 LOCK_FILE_NAME = "deepseek-session.lock"
 LOG_LIMIT_BYTES = 64 * 1024
 LOCK_WAIT_SECONDS = 20
-PENDING_LIMIT = 8
 HTTP_TIMEOUT = 5
 
 ASSIGNMENT = re.compile(r"^\s*(?:export\s+)?" + re.escape(ENV_KEY) + r"\s*=")
@@ -32,10 +29,6 @@ ASSIGNMENT = re.compile(r"^\s*(?:export\s+)?" + re.escape(ENV_KEY) + r"\s*=")
 def config_dir() -> Path:
     base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
     return Path(base) / "jcode"
-
-
-def agent_key(session_id: str) -> str:
-    return f"{KEY_PREFIX}-{session_id}"
 
 
 def env_session_value(env_file: Path) -> str:
@@ -56,62 +49,47 @@ def env_session_value(env_file: Path) -> str:
     return ""
 
 
-def write_env_file(env_file: Path, key: str) -> None:
+def write_env_file(env_file: Path) -> None:
     try:
         kept = [
             line for line in env_file.read_text().splitlines() if not ASSIGNMENT.match(line)
         ]
     except OSError:
         kept = []
-    kept.append(f"{ENV_KEY}={json.dumps({'session': key}, separators=(',', ':'))}")
+    kept.append(f"{ENV_KEY}={json.dumps({'session': AGENT_KEY}, separators=(',', ':'))}")
     tmp = env_file.with_name(f"{env_file.name}.tmp{os.getpid()}")
     tmp.write_text("\n".join(kept) + "\n")
     tmp.chmod(0o600)
     tmp.replace(env_file)
 
 
-def read_state(state_file: Path) -> tuple[str, str, list[str]]:
+def read_owner(state_file: Path) -> str:
     try:
         lines = [line for line in state_file.read_text().splitlines() if line]
     except OSError:
-        return "", "", []
-    session = lines[0] if lines else ""
-    in_use = lines[1] if len(lines) > 1 else ""
-    return session, in_use, lines[2:]
+        return ""
+    return lines[0] if lines else ""
 
 
-def write_state(state_file: Path, session: str, in_use: str, pending: list[str]) -> None:
+def write_owner(state_file: Path, session_id: str) -> None:
     tmp = state_file.with_name(f"{state_file.name}.tmp{os.getpid()}")
-    tmp.write_text("\n".join([session, in_use, *pending]) + "\n")
+    tmp.write_text(session_id + "\n")
     tmp.chmod(0o600)
     tmp.replace(state_file)
 
 
-def live_sessions() -> set[str] | None:
-    try:
-        with urllib.request.urlopen(f"{PROXY}/v1/sessions", timeout=HTTP_TIMEOUT) as response:
-            payload = json.load(response)
-    except (OSError, ValueError, urllib.error.URLError):
-        return None
-    agents = payload.get("agents")
-    if not isinstance(agents, list):
-        return None
-    return {
-        entry.get("agent", "")
-        for entry in agents
-        if isinstance(entry, dict) and entry.get("session_id")
-    }
-
-
-def reset_session(name: str) -> bool:
+def start_new_chat() -> str:
     request = urllib.request.Request(
-        f"{PROXY}/reset-session?agent={urllib.parse.quote(name)}", method="POST"
+        f"{PROXY}/reset-session?agent={urllib.parse.quote(AGENT_KEY)}", method="POST"
     )
     try:
-        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT):
-            return True
-    except (OSError, urllib.error.URLError):
-        return False
+        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
+            json.load(response)
+        return "new-chat"
+    except urllib.error.HTTPError as error:
+        return "no-chat" if error.code == 404 else "reset-failed"
+    except (OSError, ValueError, urllib.error.URLError):
+        return "unreachable"
 
 
 def append_log(log_file: Path, message: str) -> None:
@@ -129,29 +107,7 @@ def append_log(log_file: Path, message: str) -> None:
         pass
 
 
-def sweep(pending: list[str], keep: set[str]) -> tuple[list[str], list[str]]:
-    live = live_sessions()
-    if live is None:
-        return [], pending
-    cleared: list[str] = []
-    remaining: list[str] = []
-    for name in pending:
-        if name in keep or name not in live:
-            remaining.append(name)
-        elif reset_session(name):
-            cleared.append(name)
-        else:
-            remaining.append(name)
-    return cleared, remaining
-
-
 def main() -> int:
-    active = os.environ.get("JCODE_NAMED_PROVIDER_PROFILE") or os.environ.get(
-        "JCODE_PROVIDER_PROFILE_NAME"
-    )
-    if active != PROFILE:
-        return 0
-
     session_id = os.environ.get("JCODE_HOOK_SESSION_ID", "")
     if not session_id:
         return 0
@@ -162,7 +118,6 @@ def main() -> int:
     env_file = home / ENV_FILE_NAME
     state_file = home / STATE_FILE_NAME
     log_file = home / LOG_FILE_NAME
-    key = agent_key(session_id)
 
     try:
         home.mkdir(parents=True, exist_ok=True)
@@ -182,51 +137,52 @@ def main() -> int:
                         return 0
                     deadline -= 1
                     time.sleep(1)
-            return transition(home, env_file, state_file, log_file, session_id, key, event, source)
+            return transition(
+                env_file, state_file, log_file, session_id, event, source
+            )
     except OSError:
         return 0
 
 
 def transition(
-    home: Path,
     env_file: Path,
     state_file: Path,
     log_file: Path,
     session_id: str,
-    key: str,
     event: str,
     source: str,
 ) -> int:
-    in_use = env_session_value(env_file) or FALLBACK_KEY
-    previous_session, previous_in_use, pending = read_state(state_file)
-    if session_id == previous_session and in_use == key and not pending:
+    if env_session_value(env_file) != AGENT_KEY:
+        try:
+            write_env_file(env_file)
+        except OSError as error:
+            append_log(
+                log_file,
+                f"write-failed event={event or 'hook'} error={error.__class__.__name__}",
+            )
+            return 1
+
+    owner = read_owner(state_file)
+    if owner == session_id:
         return 0
 
-    if previous_session and previous_session != session_id and previous_in_use:
-        pending = [previous_in_use, *pending]
-    pending = [
-        name for name in dict.fromkeys(pending) if name and name not in (key, in_use)
-    ][:PENDING_LIMIT]
-
-    cleared, remaining = sweep(pending, keep={key, in_use})
+    outcome = start_new_chat()
 
     try:
-        write_env_file(env_file, key)
-        write_state(state_file, session_id, in_use, remaining)
+        write_owner(state_file, session_id)
     except OSError as error:
         append_log(
             log_file,
-            f"write-failed event={event or 'hook'} key={key} error={error.__class__.__name__}",
+            f"write-failed event={event or 'hook'} error={error.__class__.__name__}",
         )
         return 1
 
     append_log(
         log_file,
-        f"{event or 'hook'} source={source or '-'} key={key} in_use={in_use} "
-        f"previous={previous_session or '-'} cleared={','.join(cleared) or '-'} "
-        f"pending={','.join(remaining) or '-'}",
+        f"{event or 'hook'} source={source or '-'} session={session_id} "
+        f"previous={owner or '-'} outcome={outcome}",
     )
-    return 0
+    return 0 if outcome != "reset-failed" else 1
 
 
 if __name__ == "__main__":
