@@ -4,7 +4,17 @@ Angie 1.11.8 (nginx 1.29.3 core, OpenSSL 3.6.3), `modules/nginx.nix`. Every
 proxied vhost comes from the `proxy` helper, which pins `kTLS = true` *after*
 merging caller arguments — passing `kTLS = false` as an argument is silently
 overridden, so an exception needs `lib.recursiveUpdate` around the call, the
-way `cache.labile.cc` and `llm.labile.cc` do it.
+way `cache.labile.cc` does it.
+
+`lib.recursiveUpdate` on a vhost only replaces scalar keys (`kTLS`,
+`enableACME`, `forceSSL`) and recurses into attribute sets. Pointing it at
+`locations."/".extraConfig` replaces the location's config string outright,
+because a plain string and `lib.mkAfter …` are both non-attribute values, so
+the right side wins and the module merge never sees the left. That silently
+dropped `include ip_whitelist.conf; deny all;` from `llm.labile.cc`, which
+served a supposedly internal vhost to the internet until commit `7c761f0`.
+Per-vhost extra location config now goes through the helper's
+`locationExtraConfig` argument, which appends instead of replacing.
 
 ## KTLS breaks concurrent HTTP/2 downloads
 
