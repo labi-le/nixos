@@ -1,6 +1,6 @@
 from agenix import tool_secret_list, tool_secret_read, tool_secret_rekey, tool_secret_write
 from config import HOSTS
-from flake import tool_eval, tool_flake_age, tool_flake_status, tool_flake_update
+from flake import tool_eval, tool_eval_all, tool_flake_age, tool_flake_status, tool_flake_update
 from routes import tool_route, tool_route_file, tool_routes_audit
 from rules import tool_rules
 from system import (
@@ -82,6 +82,37 @@ TOOLS = [
         },
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
         "handler": tool_eval,
+    },
+    {
+        "name": "eval_all",
+        "title": "Evaluate every host",
+        "description": (
+            "Evaluate one attribute across every nixosConfiguration at once (default "
+            "config.system.build.toplevel.drvPath) and report which hosts fail, in seconds and "
+            "without root. Catches drift in shared files -- an overlay or package definition "
+            "removed from overlays.nix, a broken module -- including hosts that are not being "
+            "rebuilt today; a plain rebuild only checks its own host. Hosts are evaluated in "
+            "parallel; a host that fails with a transient nix error (interrupted by the user, "
+            "a lock or EOF) is retried once on its own, so a flaky failure does not read as a "
+            "broken config. `attr` is read under `config.`; `hosts` narrows the set."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "hosts": {
+                    "type": "array",
+                    "items": {"type": "string", "enum": list(HOSTS)},
+                    "description": "subset to check (default: all four)",
+                },
+                "attr": {
+                    "type": "string",
+                    "description": "path under config., default system.build.toplevel.drvPath",
+                },
+                "raw": {"type": "boolean", "description": "print string values with --raw (default true)"},
+            },
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+        "handler": tool_eval_all,
     },
     {
         "name": "generations",

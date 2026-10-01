@@ -133,7 +133,11 @@ in
       keepalive_requests    100;
     ";
     appendHttpConfig = ''
-      access_log /var/log/nginx/access.log;
+      log_format full '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
+                      '"$scheme://$host$request_uri"';
+
+      access_log /var/log/nginx/access.log full;
       error_log /var/log/nginx/error.log;
 
       proxy_headers_hash_max_size 1024;

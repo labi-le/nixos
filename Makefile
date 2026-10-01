@@ -3,6 +3,8 @@
 HOSTNAME := $(shell hostname)
 CPUS := $(shell nproc)
 HARDWARE_FILE := hosts/hardware-$(HOSTNAME).nix
+MEMORY_MAX ?= 8G
+SCOPE := systemd-run --user --scope --quiet -p MemoryMax=$(MEMORY_MAX) -p MemorySwapMax=0 --
 
 disko:
 	sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./disko.nix
@@ -11,10 +13,10 @@ fix-flake:
 	@git add --intent-to-add .
 
 dry-run:
-	@nix build .#nixosConfigurations.$(HOSTNAME).config.system.build.toplevel --dry-run
+	@$(SCOPE) nix build .#nixosConfigurations.$(HOSTNAME).config.system.build.toplevel --dry-run
 
 switch:
-	sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --show-trace
+	$(SCOPE) sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --show-trace
 
 generate-hardware: 
 	@echo "Generating hardware configuration for $(HOSTNAME)"
@@ -28,10 +30,10 @@ gate-matrix:
 	@python3 modules/jcode/gate-matrix.py
 
 upgrade:
-	nix flake update && sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
+	nix flake update && $(SCOPE) sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure --cores $(CPUS)
 
 boot:
-	sudo nixos-rebuild boot --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --install-bootloader
+	$(SCOPE) sudo nixos-rebuild boot --flake ./#$(HOSTNAME) --impure --cores $(CPUS) --install-bootloader
 
 cleanup: boot
 	sudo nix-collect-garbage -d && make switch

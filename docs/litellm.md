@@ -6,6 +6,12 @@
 proxied by `llm.labile.cc`. Keys, spend and models live in PostgreSQL, not in
 the container, so they survive restarts, rebuilds and image updates.
 
+jcode consumes the group as its default provider (`pool/opencode-go-pool` in
+`modules/jcode/default.nix`) on every host that receives the master key, so
+interactive turns shuffle across the four accounts; hosts outside the secret's
+recipients (fx516) keep the direct `opencode-go` profile. omp does not use this
+gateway; it authenticates against `closerouter` and `tokenharbor` directly.
+
 ## Why containers instead of `services.litellm`
 
 The nixpkgs package cannot talk to a database at all, in three separate ways:
