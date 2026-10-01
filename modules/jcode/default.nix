@@ -192,6 +192,20 @@ let
 
   extensionProviders = config.jcode.extensions.providers;
 
+  hasPoolCredential = (config.age.secrets.opencode-litellm-master-key or null) != null;
+
+  defaultRoute =
+    if hasPoolCredential then
+      {
+        provider = "pool";
+        model = "opencode-go-pool";
+      }
+    else
+      {
+        provider = "opencode-go";
+        model = "deepseek-v4.1-flash";
+      };
+
   providerNameCollisions = lib.attrNames (
     builtins.intersectAttrs baseProviders extensionProviders
   );
@@ -351,8 +365,8 @@ let
     };
 
     provider = {
-      default_model = "deepseek-v4.1-flash";
-      default_provider = "opencode-go";
+      default_model = defaultRoute.model;
+      default_provider = defaultRoute.provider;
       openai_reasoning_effort = "low";
       anthropic_cache_ttl_1h = true;
       openai_service_tier = "priority";
