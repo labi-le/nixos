@@ -52,7 +52,7 @@ in
     };
 
     profileName = lib.mkOption {
-      type = lib.types.str;
+      type = lib.types.strMatching "[A-Za-z0-9_-]+";
       default = "deepseek-web";
       description = "jcode provider profile name that points at the local proxy.";
     };
@@ -64,7 +64,7 @@ in
     };
 
     envFileName = lib.mkOption {
-      type = lib.types.str;
+      type = lib.types.strMatching "[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*";
       default = "deepseek-web.env";
       description = ''
         File name under the jcode config directory that carries
@@ -75,13 +75,13 @@ in
     };
 
     keyPrefix = lib.mkOption {
-      type = lib.types.str;
+      type = lib.types.strMatching "[A-Za-z0-9._-]+";
       default = "jcode";
       description = "Prefix of the proxy agent key derived from the jcode session id.";
     };
 
     fallbackKey = lib.mkOption {
-      type = lib.types.str;
+      type = lib.types.strMatching "[A-Za-z0-9._-]+";
       default = "jcode";
       description = "Agent key used until the session hook has written the env file.";
     };

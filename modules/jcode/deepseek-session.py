@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
-"""Keep the local FreeDeepseekAPI agent key in sync with the jcode session.
-
-jcode hooks (session_start, turn_start) call this script. It gives every jcode
-session its own agent key on the local proxy and drops the chat the previous
-session used, so a cleared jcode session also starts from an empty DeepSeek
-chat. The key is handed to jcode through the provider env file, which the
-provider reads when it is built for a session.
-"""
-
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import re
 import urllib.error
 import urllib.parse
 import urllib.request
+import time
 from pathlib import Path
 
 PROFILE = os.environ.get("FDS_PROFILE", "deepseek-web")
@@ -27,7 +20,13 @@ ENV_FILE_NAME = os.environ.get("FDS_ENV_FILE", "deepseek-web.env")
 ENV_KEY = "JCODE_OPENAI_EXTRA_BODY"
 STATE_FILE_NAME = "deepseek-session.state"
 LOG_FILE_NAME = "deepseek-session.log"
+LOCK_FILE_NAME = "deepseek-session.lock"
 LOG_LIMIT_BYTES = 64 * 1024
+LOCK_WAIT_SECONDS = 20
+PENDING_LIMIT = 8
+HTTP_TIMEOUT = 5
+
+ASSIGNMENT = re.compile(r"^\s*(?:export\s+)?" + re.escape(ENV_KEY) + r"\s*=")
 
 
 def config_dir() -> Path:
@@ -39,25 +38,68 @@ def agent_key(session_id: str) -> str:
     return f"{KEY_PREFIX}-{session_id}"
 
 
-def current_key(env_file: Path) -> str:
+def env_session_value(env_file: Path) -> str:
     try:
-        content = env_file.read_text()
+        lines = env_file.read_text().splitlines()
     except OSError:
-        return FALLBACK_KEY
-    match = re.search(r'"session"\s*:\s*"([^"]*)"', content)
-    return match.group(1) if match else FALLBACK_KEY
+        return ""
+    for line in lines:
+        if not ASSIGNMENT.match(line):
+            continue
+        raw = line.split("=", 1)[1].strip()
+        try:
+            parsed = json.loads(raw)
+        except ValueError:
+            continue
+        if isinstance(parsed, dict) and isinstance(parsed.get("session"), str):
+            return parsed["session"]
+    return ""
 
 
-def live_sessions() -> set[str]:
+def write_env_file(env_file: Path, key: str) -> None:
     try:
-        with urllib.request.urlopen(f"{PROXY}/v1/sessions", timeout=5) as response:
+        kept = [
+            line for line in env_file.read_text().splitlines() if not ASSIGNMENT.match(line)
+        ]
+    except OSError:
+        kept = []
+    kept.append(f"{ENV_KEY}={json.dumps({'session': key}, separators=(',', ':'))}")
+    tmp = env_file.with_name(f"{env_file.name}.tmp{os.getpid()}")
+    tmp.write_text("\n".join(kept) + "\n")
+    tmp.chmod(0o600)
+    tmp.replace(env_file)
+
+
+def read_state(state_file: Path) -> tuple[str, str, list[str]]:
+    try:
+        lines = [line for line in state_file.read_text().splitlines() if line]
+    except OSError:
+        return "", "", []
+    session = lines[0] if lines else ""
+    in_use = lines[1] if len(lines) > 1 else ""
+    return session, in_use, lines[2:]
+
+
+def write_state(state_file: Path, session: str, in_use: str, pending: list[str]) -> None:
+    tmp = state_file.with_name(f"{state_file.name}.tmp{os.getpid()}")
+    tmp.write_text("\n".join([session, in_use, *pending]) + "\n")
+    tmp.chmod(0o600)
+    tmp.replace(state_file)
+
+
+def live_sessions() -> set[str] | None:
+    try:
+        with urllib.request.urlopen(f"{PROXY}/v1/sessions", timeout=HTTP_TIMEOUT) as response:
             payload = json.load(response)
     except (OSError, ValueError, urllib.error.URLError):
-        return set()
+        return None
+    agents = payload.get("agents")
+    if not isinstance(agents, list):
+        return None
     return {
         entry.get("agent", "")
-        for entry in payload.get("agents", [])
-        if entry.get("session_id")
+        for entry in agents
+        if isinstance(entry, dict) and entry.get("session_id")
     }
 
 
@@ -66,27 +108,10 @@ def reset_session(name: str) -> bool:
         f"{PROXY}/reset-session?agent={urllib.parse.quote(name)}", method="POST"
     )
     try:
-        with urllib.request.urlopen(request, timeout=5):
+        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT):
             return True
     except (OSError, urllib.error.URLError):
         return False
-
-
-def write_env_file(env_file: Path, key: str) -> None:
-    lines = []
-    try:
-        lines = [
-            line
-            for line in env_file.read_text().splitlines()
-            if not line.startswith(f"{ENV_KEY}=")
-        ]
-    except OSError:
-        pass
-    lines.append(f'{ENV_KEY}={{"session":"{key}"}}')
-    tmp = env_file.with_name(env_file.name + f".tmp{os.getpid()}")
-    tmp.write_text("\n".join(lines) + "\n")
-    tmp.chmod(0o600)
-    tmp.replace(env_file)
 
 
 def append_log(log_file: Path, message: str) -> None:
@@ -94,10 +119,30 @@ def append_log(log_file: Path, message: str) -> None:
         with log_file.open("a") as handle:
             handle.write(message + "\n")
         if log_file.stat().st_size > LOG_LIMIT_BYTES:
-            tail = log_file.read_text().splitlines()[-200:]
-            log_file.write_text("\n".join(tail) + "\n")
+            data = log_file.read_bytes()[-LOG_LIMIT_BYTES // 2 :]
+            cut = data.find(b"\n")
+            tmp = log_file.with_name(f"{log_file.name}.tmp{os.getpid()}")
+            tmp.write_bytes(data[cut + 1 :] if cut >= 0 else data)
+            tmp.chmod(0o600)
+            tmp.replace(log_file)
     except OSError:
         pass
+
+
+def sweep(pending: list[str], keep: set[str]) -> tuple[list[str], list[str]]:
+    live = live_sessions()
+    if live is None:
+        return [], pending
+    cleared: list[str] = []
+    remaining: list[str] = []
+    for name in pending:
+        if name in keep or name not in live:
+            remaining.append(name)
+        elif reset_session(name):
+            cleared.append(name)
+        else:
+            remaining.append(name)
+    return cleared, remaining
 
 
 def main() -> int:
@@ -117,40 +162,69 @@ def main() -> int:
     env_file = home / ENV_FILE_NAME
     state_file = home / STATE_FILE_NAME
     log_file = home / LOG_FILE_NAME
-
     key = agent_key(session_id)
-    in_use = current_key(env_file)
-    try:
-        state = state_file.read_text().splitlines()
-    except OSError:
-        state = []
-    previous_session = state[0] if state else ""
-    previous_key = state[1] if len(state) > 1 else ""
 
-    if session_id == previous_session and in_use == key:
+    try:
+        home.mkdir(parents=True, exist_ok=True)
+    except OSError:
         return 0
 
-    cleared = []
-    if previous_session or event == "session_start":
-        try:
-            live = live_sessions()
-        except Exception:
-            live = set()
-        stale = {name for name in (in_use, previous_key) if name and name != key}
-        cleared = sorted(name for name in stale if name in live)
-        for name in cleared:
-            reset_session(name)
-
-    write_env_file(env_file, key)
+    lock_file = home / LOCK_FILE_NAME
     try:
-        state_file.write_text(f"{session_id}\n{in_use}\n")
+        with lock_file.open("a+") as lock:
+            deadline = LOCK_WAIT_SECONDS
+            while True:
+                try:
+                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except OSError:
+                    if deadline <= 0:
+                        return 0
+                    deadline -= 1
+                    time.sleep(1)
+            return transition(home, env_file, state_file, log_file, session_id, key, event, source)
     except OSError:
-        pass
+        return 0
+
+
+def transition(
+    home: Path,
+    env_file: Path,
+    state_file: Path,
+    log_file: Path,
+    session_id: str,
+    key: str,
+    event: str,
+    source: str,
+) -> int:
+    in_use = env_session_value(env_file) or FALLBACK_KEY
+    previous_session, previous_in_use, pending = read_state(state_file)
+    if session_id == previous_session and in_use == key and not pending:
+        return 0
+
+    if previous_session and previous_session != session_id and previous_in_use:
+        pending = [previous_in_use, *pending]
+    pending = [
+        name for name in dict.fromkeys(pending) if name and name not in (key, in_use)
+    ][:PENDING_LIMIT]
+
+    cleared, remaining = sweep(pending, keep={key, in_use})
+
+    try:
+        write_env_file(env_file, key)
+        write_state(state_file, session_id, in_use, remaining)
+    except OSError as error:
+        append_log(
+            log_file,
+            f"write-failed event={event or 'hook'} key={key} error={error.__class__.__name__}",
+        )
+        return 1
 
     append_log(
         log_file,
-        f"{event or 'hook'} source={source or '-'} key={key} "
-        f"in_use={in_use} previous={previous_session or '-'} cleared={','.join(cleared) or '-'}",
+        f"{event or 'hook'} source={source or '-'} key={key} in_use={in_use} "
+        f"previous={previous_session or '-'} cleared={','.join(cleared) or '-'} "
+        f"pending={','.join(remaining) or '-'}",
     )
     return 0
 

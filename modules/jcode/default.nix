@@ -132,6 +132,70 @@ let
     );
   };
 
+  baseProviders = {
+    closerouter = {
+      type = "openai-compatible";
+      base_url = "https://api.closerouter.dev/v1";
+      api_key_env = "LITELLM_CLOSEROUTER";
+      env_file = "closerouter.env";
+      default_model = "deepseek/deepseek-v4.1-flash";
+      model_catalog = true;
+      models = [
+        {
+          id = "deepseek/deepseek-v4-pro-0813";
+          reasoning = true;
+          context_window = 1000000;
+        }
+        {
+          id = "deepseek/deepseek-v4.1-flash";
+          reasoning = true;
+          context_window = 1000000;
+        }
+        {
+          id = "qwen/qwen3.8-max";
+          reasoning = true;
+          context_window = 1000000;
+        }
+      ];
+    };
+    pool = {
+      type = "openai-compatible";
+      base_url = "https://llm.labile.cc/v1";
+      api_key_env = "LITELLM_MASTER_KEY";
+      env_file = "pool.env";
+      default_model = "opencode-go-pool";
+      model_catalog = true;
+      models = [
+        {
+          id = "opencode-go-pool";
+          reasoning = true;
+          context_window = 1000000;
+        }
+      ];
+    };
+    tokenharbor = {
+      type = "openai-compatible";
+      base_url = "https://tokenharbor.ai/v1";
+      api_key_env = "TOKENHARBOR_API_KEY";
+      env_file = "tokenharbor.env";
+      default_model = "deepseek-v4-flash:free";
+      model_catalog = true;
+      models = [
+        {
+          id = "deepseek-v4-flash:free";
+          reasoning = true;
+          context_window = 1000000;
+        }
+      ];
+    };
+  };
+
+  extensionProviders = config.jcode.extensions.providers;
+
+  providerNameCollisions = lib.attrNames (
+    builtins.intersectAttrs baseProviders extensionProviders
+  );
+
   toml = pkgs.formats.toml { };
   configFile = toml.generate "jcode-config.toml" {
     server = {
@@ -321,69 +385,13 @@ let
         "${commentGate}/bin/jcode-comment-gate"
         "${upstreamGate}/bin/jcode-upstream-gate"
       ];
-      session_start = "${repoRegister} start";
-      turn_start = "${repoRegister} start";
+      session_start = [ "${repoRegister} start" ] ++ config.jcode.extensions.hooks.session_start;
+      turn_start = [ "${repoRegister} start" ] ++ config.jcode.extensions.hooks.turn_start;
       pre_tool_transform_timeout_ms = 500;
       pre_tool_timeout_ms = 8000;
     };
 
-    providers = {
-      closerouter = {
-        type = "openai-compatible";
-        base_url = "https://api.closerouter.dev/v1";
-        api_key_env = "LITELLM_CLOSEROUTER";
-        env_file = "closerouter.env";
-        default_model = "deepseek/deepseek-v4.1-flash";
-        model_catalog = true;
-        models = [
-          {
-            id = "deepseek/deepseek-v4-pro-0813";
-            reasoning = true;
-            context_window = 1000000;
-          }
-          {
-            id = "deepseek/deepseek-v4.1-flash";
-            reasoning = true;
-            context_window = 1000000;
-          }
-          {
-            id = "qwen/qwen3.8-max";
-            reasoning = true;
-            context_window = 1000000;
-          }
-        ];
-      };
-      pool = {
-        type = "openai-compatible";
-        base_url = "https://llm.labile.cc/v1";
-        api_key_env = "LITELLM_MASTER_KEY";
-        env_file = "pool.env";
-        default_model = "opencode-go-pool";
-        model_catalog = true;
-        models = [
-          {
-            id = "opencode-go-pool";
-            reasoning = true;
-            context_window = 1000000;
-          }
-        ];
-      };
-      tokenharbor = {
-        type = "openai-compatible";
-        base_url = "https://tokenharbor.ai/v1";
-        api_key_env = "TOKENHARBOR_API_KEY";
-        env_file = "tokenharbor.env";
-        default_model = "deepseek-v4-flash:free";
-        model_catalog = true;
-        models = [
-          {
-            id = "deepseek-v4-flash:free";
-            reasoning = true;
-            context_window = 1000000;
-          }
-        ];
-      };
-    };
+    providers = baseProviders // extensionProviders;
 
     ambient = {
       enabled = false;
@@ -505,21 +513,65 @@ let
     '';
 in
 {
-  systemd.tmpfiles.rules = [
-    "d ${jcodeDir} 0700 ${userName} ${userCfg.group} -"
-    "d ${jcodeDir}/skills 0700 ${userName} ${userCfg.group} -"
-    "d ${configDir} 0700 ${userName} ${userCfg.group} -"
-    "f ${jcodeDir}/no_telemetry 0600 ${userName} ${userCfg.group} -"
-    "L+ ${jcodeDir}/mcp.json - - - - ${mcpJson}"
-    "L+ ${jcodeDir}/config.toml - - - - ${configFile}"
-    "L+ ${jcodeDir}/prompt-overlay.md - - - - ${./prompt-overlay.md}"
-    "L+ ${homeDirectory}/AGENTS.md - - - - ${./AGENTS.md}"
-  ]
-  ++ skillLinks;
+  imports = [ ./deepseek-web.nix ];
 
-  system.activationScripts.jcodeProviderEnv = lib.stringAfter [ "users" ] ''
-    mkdir -p ${jcodeDir} ${configDir}
-    chown ${userName}:${userCfg.group} ${jcodeDir} ${configDir}
-    ${builtins.concatStringsSep "\n" (map writeProviderEnv providerEnvFiles)}
-  '';
+  options.jcode.extensions = {
+    providers = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
+      default = { };
+      description = ''
+        Extra jcode provider profiles, merged into the generated config.toml.
+        Plug-in modules such as modules/jcode/deepseek-web.nix use this instead
+        of editing the profile list inline.
+      '';
+    };
+
+    hooks = lib.mkOption {
+      type = lib.types.submodule {
+        options = {
+          session_start = lib.mkOption {
+            type = lib.types.listOf lib.types.str;
+            default = [ ];
+            description = "Extra session_start hook commands, appended after the built-in ones.";
+          };
+          turn_start = lib.mkOption {
+            type = lib.types.listOf lib.types.str;
+            default = [ ];
+            description = "Extra turn_start hook commands, appended after the built-in ones.";
+          };
+        };
+      };
+      default = { };
+      description = "Extra jcode hook commands contributed by plug-in modules.";
+    };
+  };
+
+  config = {
+    assertions = [
+      {
+        assertion = providerNameCollisions == [ ];
+        message = "jcode.extensions.providers redefines built-in jcode profiles: ${
+          lib.concatStringsSep ", " providerNameCollisions
+        }";
+      }
+    ];
+
+    systemd.tmpfiles.rules = [
+      "d ${jcodeDir} 0700 ${userName} ${userCfg.group} -"
+      "d ${jcodeDir}/skills 0700 ${userName} ${userCfg.group} -"
+      "d ${configDir} 0700 ${userName} ${userCfg.group} -"
+      "f ${jcodeDir}/no_telemetry 0600 ${userName} ${userCfg.group} -"
+      "L+ ${jcodeDir}/mcp.json - - - - ${mcpJson}"
+      "L+ ${jcodeDir}/config.toml - - - - ${configFile}"
+      "L+ ${jcodeDir}/prompt-overlay.md - - - - ${./prompt-overlay.md}"
+      "L+ ${homeDirectory}/AGENTS.md - - - - ${./AGENTS.md}"
+    ]
+    ++ skillLinks;
+
+    system.activationScripts.jcodeProviderEnv = lib.stringAfter [ "users" ] ''
+      mkdir -p ${jcodeDir} ${configDir}
+      chown ${userName}:${userCfg.group} ${jcodeDir} ${configDir}
+      ${builtins.concatStringsSep "\n" (map writeProviderEnv providerEnvFiles)}
+    '';
+  };
 }
