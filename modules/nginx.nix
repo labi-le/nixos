@@ -286,7 +286,7 @@ in
       };
       "llm.labile.cc" = proxy {
         addr = "http://127.0.0.1:27015";
-        internal = true;
+        # internal = true;
         locationExtraConfig = ''
           proxy_read_timeout 300s;
           proxy_connect_timeout 10s;
