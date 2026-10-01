@@ -158,18 +158,20 @@ let
         }
       ];
     };
-    pool = {
+    deepseek-pool = {
       type = "openai-compatible";
       base_url = "https://llm.labile.cc/v1";
       api_key_env = "LITELLM_MASTER_KEY";
       env_file = "pool.env";
       default_model = "opencode-go-pool";
       model_catalog = true;
+      supports_reasoning_effort = true;
       models = [
         {
           id = "opencode-go-pool";
           reasoning = true;
           context_window = 1000000;
+          input = [ "text" "image" ];
         }
       ];
     };
