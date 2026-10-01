@@ -153,6 +153,7 @@ in
           addr,
           internal ? false,
           websockets ? false,
+          locationExtraConfig ? "",
           ...
         }@args:
         let
@@ -167,7 +168,7 @@ in
               "";
           locationCfg = {
             proxyPass = addr;
-            extraConfig = ipRestrictionsConfig;
+            extraConfig = ipRestrictionsConfig + locationExtraConfig;
           }
           // lib.optionalAttrs websockets {
             proxyWebsockets = true;
@@ -181,6 +182,7 @@ in
           "addr"
           "internal"
           "websockets"
+          "locationExtraConfig"
         ])
         // {
           kTLS = true;
@@ -282,19 +284,15 @@ in
       "cache.labile.cc" = lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:5000"; }) {
         kTLS = false;
       };
-      "llm.labile.cc" =
-        lib.recursiveUpdate
-          (proxy {
-            addr = "http://127.0.0.1:27015";
-            internal = true;
-          })
-          {
-            locations."/".extraConfig = lib.mkAfter ''
-              proxy_read_timeout 300s;
-              proxy_connect_timeout 10s;
-              proxy_send_timeout 60s;
-            '';
-          };
+      "llm.labile.cc" = proxy {
+        addr = "http://127.0.0.1:27015";
+        internal = true;
+        locationExtraConfig = ''
+          proxy_read_timeout 300s;
+          proxy_connect_timeout 10s;
+          proxy_send_timeout 60s;
+        '';
+      };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };
       "mail.labile.cc" = proxy {
