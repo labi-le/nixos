@@ -14,6 +14,9 @@ PROXY = os.environ.get("FDS_PROXY", "http://127.0.0.1:9655").rstrip("/")
 AGENT_KEY = os.environ.get("FDS_AGENT_KEY", "jcode")
 NEW_CHAT_MODEL = os.environ.get("FDS_NEW_CHAT_MODEL", "deepseek-v4-flash")
 ENV_FILE_NAME = os.environ.get("FDS_ENV_FILE", "deepseek-web.env")
+ALLOWED_MODELS = frozenset(
+    (os.environ.get("FDS_MODELS") or "deepseek-v4-flash").split()
+)
 
 ENV_KEY = "JCODE_OPENAI_EXTRA_BODY"
 STATE_FILE_NAME = "deepseek-session.state"
@@ -121,6 +124,10 @@ def append_log(log_file: Path, message: str) -> None:
 def main() -> int:
     session_id = os.environ.get("JCODE_HOOK_SESSION_ID", "")
     if not session_id:
+        return 0
+
+    model = os.environ.get("JCODE_HOOK_MODEL", "")
+    if model not in ALLOWED_MODELS:
         return 0
 
     event = os.environ.get("JCODE_HOOK_EVENT", "")

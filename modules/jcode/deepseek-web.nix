@@ -12,6 +12,7 @@ let
     export FDS_PROXY=${lib.escapeShellArg cfg.endpoint}
     export FDS_AGENT_KEY=${lib.escapeShellArg cfg.agentKey}
     export FDS_ENV_FILE=${lib.escapeShellArg cfg.envFileName}
+    export FDS_MODELS=${lib.escapeShellArg (lib.concatStringsSep " " (map (model: model.id) models))}
     exec ${pkgs.python3}/bin/python3 ${./deepseek-session.py}
   '';
 
