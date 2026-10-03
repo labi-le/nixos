@@ -106,6 +106,17 @@ Two traps in checking this:
   -p ExecMainStartTimestamp` stays put across these failures, so uptime
   proves nothing about whether connections were dropped.
 
+## Unprivileged log access
+
+`modules/nginx.nix` grants the configured primary user read-only ACL access
+to `/var/log/nginx`. The directory grants listing and traversal; existing
+log files, including rotated archives, grant reading only. A default ACL
+on the directory carries access into newly created logs. No membership in
+the nginx group or world-readable permissions is required. These logs can
+contain sensitive request paths and query strings; access is limited to
+the primary user.
+
+
 ## Boot-time race: nginx fails-to-start before external DNS works
 
 `nginx -t` (the pre-start config test) resolves every `proxy_pass` hostname

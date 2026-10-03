@@ -2,6 +2,7 @@
   lib,
   pkgs,
   config,
+  user,
   ...
 }:
 
@@ -365,6 +366,8 @@ in
   # in command: allow`, leaving a localhost-only whitelist that locks out the LAN.
   systemd.tmpfiles.rules = [
     "f ${ipWhiteList} 0644 nginx nginx - ${lib.concatStringsSep "\\n" staticAllows}"
+    "a+ /var/log/nginx - - - - u:${user.name}:r-x,d:u:${user.name}:r-x"
+    "a+ /var/log/nginx/* - - - - u:${user.name}:r--"
   ];
 
   systemd.services.updateNginxIP = {
