@@ -42,6 +42,24 @@
 - If `flake.nix` inputs change, include the corresponding `flake.lock` update in
   the same change set.
 
+## Makefile Resource Limits
+
+The `switch`, `boot`, `upgrade`, and `dry-run` targets use a user scope
+with `MEMORY_HIGH=8G` for reclaim/throttling and `MEMORY_MAX=10G` as an
+emergency hard limit. Swap remains disabled inside that scope. The hard
+limit can still cause an OOM kill; these settings do not guarantee that a
+build fits in memory or completes.
+
+Build parallelism defaults to `MAX_JOBS=1` and `CPUS=2`. These control
+concurrent local derivations and the suggested cores per derivation,
+respectively. Override them explicitly, for example:
+`make switch MAX_JOBS=1 CPUS=4 MEMORY_HIGH=8G MEMORY_MAX=12G`.
+
+The scope covers the client, evaluation, and direct descendants. Work
+delegated to the separately running Nix daemon or remote builders does
+not inherit its memory limits. The nix-control rebuild tool has its own
+invocation and does not consume these Makefile variables.
+
 ## Verification Gate
 
 - Verification succeeds only when `switch` exits 0 with no failed units and no
