@@ -10,6 +10,19 @@ receivers), `storage.nix` (ZFS/SMART, see `docs/zfs-pool.md`),
 container-state textfile exporter service+timer) and `failures.nix` (this
 page).
 
+## Temporary filesystem capacity
+
+The `storage-tmp-filling` rule in `storage.nix` warns through
+`telegram-admin` when `/tmp` is at least 90% full for five minutes.
+It evaluates once per minute using
+`1 - node_filesystem_avail_bytes{mountpoint="/tmp"} / node_filesystem_size_bytes{mountpoint="/tmp"}`.
+Missing data alerts; evaluation errors keep the last state. Notifications
+repeat every six hours, matching the root-filesystem rule.
+
+This covers the binary-cache incident where nginx could not buffer NAR
+responses under `/tmp/nginx_proxy` because temporary build directories had
+filled the server's tmpfs. The alert does not delete temporary files.
+
 ## Incident, 2026-09-23
 
 Two independent failures on the same day exposed the same blind spot —

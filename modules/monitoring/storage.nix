@@ -281,6 +281,96 @@
             };
           }
           {
+            uid = "storage-tmp-filling";
+            title = "Temporary filesystem (/tmp) is at least 90% full";
+            condition = "C";
+            data = [
+              {
+                refId = "A";
+                relativeTimeRange = {
+                  from = 600;
+                  to = 0;
+                };
+                datasourceUid = "prometheus";
+                model = {
+                  refId = "A";
+                  datasource = {
+                    type = "prometheus";
+                    uid = "prometheus";
+                  };
+                  editorMode = "code";
+                  expr = ''1 - node_filesystem_avail_bytes{mountpoint="/tmp"} / node_filesystem_size_bytes{mountpoint="/tmp"}'';
+                  instant = true;
+                  range = false;
+                  intervalMs = 1000;
+                  maxDataPoints = 43200;
+                };
+              }
+              {
+                refId = "B";
+                relativeTimeRange = {
+                  from = 0;
+                  to = 0;
+                };
+                datasourceUid = "__expr__";
+                model = {
+                  refId = "B";
+                  type = "reduce";
+                  datasource = {
+                    type = "__expr__";
+                    uid = "__expr__";
+                  };
+                  expression = "A";
+                  reducer = "last";
+                };
+              }
+              {
+                refId = "C";
+                relativeTimeRange = {
+                  from = 0;
+                  to = 0;
+                };
+                datasourceUid = "__expr__";
+                model = {
+                  refId = "C";
+                  type = "threshold";
+                  datasource = {
+                    type = "__expr__";
+                    uid = "__expr__";
+                  };
+                  expression = "B";
+                  conditions = [
+                    {
+                      type = "query";
+                      evaluator = {
+                        type = "gte";
+                        params = [ 0.9 ];
+                      };
+                    }
+                  ];
+                };
+              }
+            ];
+            noDataState = "Alerting";
+            execErrState = "KeepLast";
+            for = "5m";
+            annotations = {
+              summary = "Temporary filesystem /tmp is at least 90% full on server: run 'df -h /tmp' and 'sudo du -xhd1 /tmp' to identify large temporary build directories. A full /tmp interrupts nginx binary-cache downloads.";
+            };
+            labels = {
+              severity = "warning";
+              service = "storage";
+            };
+            isPaused = false;
+            notification_settings = {
+              receiver = "telegram-admin";
+              group_by = [ "alertname" ];
+              group_wait = "30s";
+              group_interval = "5m";
+              repeat_interval = "6h";
+            };
+          }
+          {
             uid = "storage-torrents-filling";
             title = "Torrents disk (/torrents) is below 15% free";
             condition = "C";
