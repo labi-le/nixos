@@ -52,32 +52,6 @@ let
       resume       '${niriPower} on'
   '';
 
-  workspaceSlots =
-    map (n: {
-      key = toString n;
-      name = "l${toString n}";
-      output = osConfig.monitorNameByPosition "left";
-    }) (lib.range 1 5)
-    ++ map (n: {
-      key = toString n;
-      name = "r${toString n}";
-      output = osConfig.monitorNameByPosition "right";
-    }) (lib.range 6 9)
-    ++ [
-      {
-        key = "0";
-        name = "r0";
-        output = osConfig.monitorNameByPosition "right";
-      }
-    ];
-
-  workspaceNodes = map (slot: {
-    workspace = {
-      _args = [ slot.name ];
-      open-on-output = slot.output;
-    };
-  }) workspaceSlots;
-
   windowRuleNodes = [
     {
       window-rule = {
@@ -122,16 +96,16 @@ let
   ) osConfig.monitors;
 
   workspaceBinds = lib.listToAttrs (
-    lib.concatMap (slot: [
+    lib.concatMap (n: [
       {
-        name = "Mod+${slot.key}";
-        value.focus-workspace = slot.name;
+        name = "Mod+${toString n}";
+        value.focus-workspace = n;
       }
       {
-        name = "Mod+Shift+${slot.key}";
-        value.move-column-to-workspace = slot.name;
+        name = "Mod+Shift+${toString n}";
+        value.move-column-to-workspace = n;
       }
-    ]) workspaceSlots
+    ]) (lib.range 1 9)
   );
 
   niriAutoWidth = pkgs.writers.writePython3 "niri-auto-width" { } ''
@@ -396,7 +370,7 @@ in
 
       hotkey-overlay.skip-at-startup = { };
 
-      _children = spawnAtStartup ++ outputNodes ++ workspaceNodes ++ windowRuleNodes;
+      _children = spawnAtStartup ++ outputNodes ++ windowRuleNodes;
 
       input = {
         keyboard.xkb = {
