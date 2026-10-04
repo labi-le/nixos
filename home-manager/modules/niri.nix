@@ -292,10 +292,10 @@ let
     "Mod+Right".focus-column-or-monitor-right = { };
     "Mod+Up".focus-window-or-workspace-up = { };
     "Mod+Down".focus-window-or-workspace-down = { };
-    "Mod+Ctrl+Left".focus-monitor-left = { };
-    "Mod+Ctrl+Right".focus-monitor-right = { };
-    "Mod+Ctrl+Up".focus-monitor-up = { };
-    "Mod+Ctrl+Down".focus-monitor-down = { };
+    "Mod+Alt+Left".focus-monitor-left = { };
+    "Mod+Alt+Right".focus-monitor-right = { };
+    "Mod+Alt+Up".focus-monitor-up = { };
+    "Mod+Alt+Down".focus-monitor-down = { };
     "Mod+Alt+Shift+Left".move-workspace-to-monitor-previous = { };
     "Mod+Alt+Shift+Right".move-workspace-to-monitor-next = { };
     "Mod+Shift+Left".move-column-left = { };
