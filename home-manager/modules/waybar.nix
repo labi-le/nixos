@@ -22,7 +22,6 @@ let
     "format-ru" = "RU";
   };
 
-
   workspacesConfig = {
     all-outputs = false;
     format = "{icon}";
