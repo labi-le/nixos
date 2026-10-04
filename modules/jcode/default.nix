@@ -529,7 +529,10 @@ let
     '';
 in
 {
-  imports = [ ./deepseek-web.nix ];
+  imports = [
+    ./deepseek-web.nix
+    ./space-bunny.nix
+  ];
 
   options.jcode.extensions = {
     providers = lib.mkOption {
