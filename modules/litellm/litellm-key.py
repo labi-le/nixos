@@ -92,6 +92,15 @@ def remaining(value):
     return f"{int(left // 86400)}d"
 
 
+def money(value):
+    value = value or 0.0
+    if value == 0:
+        return "0"
+    if abs(value) >= 0.0001:
+        return f"{value:.4f}"
+    return f"{value:.2e}"
+
+
 def render(rows):
     widths = [max(len(str(row[column])) for row in rows) for column in range(len(rows[0]))]
     for index, row in enumerate(rows):
@@ -115,8 +124,8 @@ def cmd_keys():
             (
                 key.get("key_alias") or "-",
                 remaining(key.get("expires")),
-                f"{key.get('spend') or 0:.4f}",
-                f"{key.get('total_spend') or 0:.4f}",
+                money(key.get("spend")),
+                money(key.get("total_spend")),
                 ",".join(key.get("models") or []) or "all",
                 "yes" if key.get("blocked") else "no",
             )
@@ -136,7 +145,7 @@ def cmd_logs(count):
                 alias_of(row, names),
                 row.get("model") or row.get("model_group") or "-",
                 (row.get("call_type") or "-").lstrip("/"),
-                f"{row.get('spend') or 0:.4f}",
+                money(row.get("spend")),
                 row.get("total_tokens") or 0,
                 int(row.get("request_duration_ms") or 0),
                 row.get("status") or "-",
@@ -160,11 +169,11 @@ def cmd_totals(days):
     rows = [("alias", "spend", "tokens", "requests")]
     for alias in sorted(totals):
         spend, tokens, count = totals[alias]
-        rows.append((alias, f"{spend:.4f}", tokens, count))
+        rows.append((alias, money(spend), tokens, count))
     rows.append(
         (
             "TOTAL",
-            f"{sum(value[0] for value in totals.values()):.4f}",
+            money(sum(value[0] for value in totals.values())),
             sum(value[1] for value in totals.values()),
             sum(value[2] for value in totals.values()),
         )

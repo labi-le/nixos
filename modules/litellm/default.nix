@@ -39,6 +39,9 @@ let
         timeout = 900;
         stream_timeout = 180;
         max_retries = 0;
+        input_cost_per_token = 3.0e-7;
+        output_cost_per_token = 1.2e-6;
+        cache_read_input_token_cost = 6.0e-9;
       };
     }) (lib.range 1 poolSize);
     general_settings = {

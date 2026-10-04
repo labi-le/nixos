@@ -117,13 +117,30 @@ queries `/key/list` for the alias list on every tab press.
 Revoking deletes the row; nothing keeps the key value, so a revoked key cannot
 be restored, only replaced.
 
-Traffic authenticated with the master key — everything omp and jcode send —
-is logged under the alias `master`, and a key hash that matches no key in the
-DB shows as `other`; neither is a virtual key. Measured 2026-10-04: three days
-of log held 1456 `master` requests against 22 for both virtual keys, and
-`spend` was `0.0000` throughout because the pool model has no entry in
-litellm's cost map — tokens, not spend, is the number that tracks pool
-consumption.
+### Pricing
+
+`spend` does not come from litellm's cost map — `openai/deepseek-v4.1-flash`
+has no entry there, which is why every figure read `0.0000` until
+2026-10-04. The deployments now carry explicit costs in
+`modules/litellm/default.nix`, taken from the OpenCode Zen price list:
+DeepSeek V4.1 Flash, $0.30 per 1M input, $1.20 per 1M output, $0.006 per 1M
+cached read ([pricing](https://opencode.ai/docs/zen), read 2026-10-04), that
+is `3.0e-7`, `1.2e-6` and `6.0e-9` per token.
+
+The number is a billing equivalent, not money the pool actually charges: the
+four accounts are a flat subscription, and Zen reports consumption only as a
+percentage of the rolling, weekly and monthly windows
+(`https://opencode.ai/zen/go/v1/usage`).
+
+Rows written before 2026-10-04 stay at `0` — cost is computed when the request
+is logged and never rewritten. Verified on a fresh request: 32 prompt and 3
+completion tokens produced `1.32e-05`, exactly `32×3.0e-7 + 3×1.2e-6`. The CLI
+prints anything below `0.0001` in scientific notation, so a live row reads
+`1.32e-05` rather than `0.0000`.
+
+Traffic authenticated with the master key — everything omp and jcode send — is
+logged under the alias `master`, and a key hash that matches no key in the DB
+shows as `other`; neither is a virtual key.
 
 `totals` reads the whole request log and filters locally. Do not swap it for
 `/spend/logs?start_date=…&end_date=…`: with dates that endpoint switches shape
