@@ -109,6 +109,11 @@ value, and the proxy stores a key as `sha256(key)`, which is why an alias has
 to be unique for them to work — the tool refuses and asks for the explicit
 `sk-…` when two keys share one.
 
+zsh completion ships in the same package as
+`share/zsh/site-functions/_litellm-key`, which the system zsh already has on
+`fpath`, so it needs no shell configuration. Completing `extend` or `revoke`
+queries `/key/list` for the alias list on every tab press.
+
 Revoking deletes the row; nothing keeps the key value, so a revoked key cannot
 be restored, only replaced.
 
