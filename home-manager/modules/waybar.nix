@@ -22,8 +22,8 @@ let
     "format-ru" = "RU";
   };
 
-  trailingEmptyWorkspaceStyle = lib.optionalString niriEnabled ''
-    #workspaces button.empty:not(#niri-workspace-l1):not(#niri-workspace-l2):not(#niri-workspace-l3):not(#niri-workspace-l4):not(#niri-workspace-l5):not(#niri-workspace-r6):not(#niri-workspace-r7):not(#niri-workspace-r8):not(#niri-workspace-r9):not(#niri-workspace-r0) {
+  emptyWorkspaceStyle = lib.optionalString niriEnabled ''
+    #workspaces button.empty {
         min-width: 0;
         padding: 0;
         margin: 0;
@@ -172,7 +172,7 @@ in
     ];
 
     style = ''
-${trailingEmptyWorkspaceStyle}
+${emptyWorkspaceStyle}
       * {
           border-radius: 10px;
           font-family: 'SFProDisplay Nerd Font';
