@@ -23,13 +23,7 @@ let
   };
 
   trailingEmptyWorkspaceStyle = lib.optionalString niriEnabled ''
-    button#niri-workspace-6.empty,
-    button#niri-workspace-7.empty,
-    button#niri-workspace-8.empty,
-    button#niri-workspace-9.empty,
-    button#niri-workspace-10.empty,
-    button#niri-workspace-11.empty,
-    button#niri-workspace-12.empty {
+    #workspaces button.empty:not(#niri-workspace-l1):not(#niri-workspace-l2):not(#niri-workspace-l3):not(#niri-workspace-l4):not(#niri-workspace-l5):not(#niri-workspace-r6):not(#niri-workspace-r7):not(#niri-workspace-r8):not(#niri-workspace-r9):not(#niri-workspace-r0) {
         min-width: 0;
         padding: 0;
         margin: 0;
