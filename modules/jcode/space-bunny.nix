@@ -9,11 +9,9 @@ let
   cfg = config.jcode.spaceBunny;
 
   effortLevels = [
-    "minimal"
     "low"
     "medium"
     "high"
-    "xhigh"
     "max"
   ];
 
@@ -63,11 +61,14 @@ in
       type = lib.types.enum effortLevels;
       default = "high";
       description = ''
-        Effort the profile starts at, and the level jcode sends on the wire
-        until /effort changes it. The endpoint answers 400 for `none`,
-        `swarm` and `swarm-deep`, so the enum covers only the values it
-        accepts; picking one here means every request carries a usable effort
-        instead of failing validation upstream.
+        Effort the profile starts at, and the level jcode puts on the wire
+        until /effort changes it. The enum is narrow on purpose and covers
+        only the levels jcode actually transmits to an OpenAI-compatible
+        endpoint: `low`, `medium`, `high`, `max`. `minimal` and `xhigh` parse
+        as valid efforts but are dropped before the request is built, so the
+        body carries no `reasoning_effort` at all and the endpoint applies
+        its own default, and `none`, `swarm` and `swarm-deep` are either
+        dropped the same way or rejected by the endpoint with HTTP 400.
       '';
     };
   };
