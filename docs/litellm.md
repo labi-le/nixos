@@ -96,12 +96,18 @@ from `/run/agenix/opencode-litellm-master-key`; override with `LITELLM_URL`,
 ```
 litellm-key                 # alias, expiry, spend, models, blocked
 litellm-key logs 50         # last 50 request rows
+litellm-key logs -f         # keep printing new rows, Ctrl-C to stop
 litellm-key totals 7        # spend, tokens, requests per alias, last 7 days
 litellm-key create vanya    # new key, 365 days, models from LITELLM_MODELS
 litellm-key create guest 30 # 30 days instead of a year
 litellm-key extend vanya 30d
 litellm-key revoke vanya
 ```
+
+`logs -f` polls `/spend/logs` every 5 seconds
+(`LITELLM_FOLLOW_SECONDS`) and prints only request ids it has not shown yet,
+which means a row appears roughly when litellm flushes it, not when the
+request returns.
 
 `create` prints the key exactly once, so it is the only moment that value can
 be captured. `extend` and `revoke` accept either the alias or the full `sk-…`

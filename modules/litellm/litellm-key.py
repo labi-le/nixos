@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -13,13 +14,14 @@ KEY_FILES = (
     "/run/agenix/litellm-env",
 )
 MODELS = [name for name in os.environ.get("LITELLM_MODELS", "opencode-go-pool").split(",") if name]
-USAGE = """usage: litellm-key [keys | logs [N] | totals [DAYS]]
+USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
                      | create ALIAS [DAYS]
                      | extend TARGET [DURATION]
                      | revoke TARGET
 
   keys                     per-key alias, expiry, spend, models (default)
-  logs [N]                 last N request log rows, default 20
+  logs [-f] [N]            last N request log rows, default 20; -f keeps
+                           printing new ones
   totals [DAYS]            spend, tokens and requests per alias over the last
                            DAYS days, default 7; reads the full request log,
                            so a very busy proxy makes this slow
@@ -133,25 +135,46 @@ def cmd_keys():
     render(rows)
 
 
-def cmd_logs(count):
-    _, names = keys_and_names()
+LOG_HEADER = ("time", "alias", "model", "call", "spend", "tokens", "ms", "status")
+FOLLOW_SECONDS = float(os.environ.get("LITELLM_FOLLOW_SECONDS", "5"))
+
+
+def sorted_logs():
     logs = call("/spend/logs")
-    logs.sort(key=lambda row: row.get("startTime") or "", reverse=True)
-    rows = [("time", "alias", "model", "call", "spend", "tokens", "ms", "status")]
-    for row in logs[:count]:
-        rows.append(
-            (
-                (row.get("startTime") or "")[:19].replace("T", " "),
-                alias_of(row, names),
-                row.get("model") or row.get("model_group") or "-",
-                (row.get("call_type") or "-").lstrip("/"),
-                money(row.get("spend")),
-                row.get("total_tokens") or 0,
-                int(row.get("request_duration_ms") or 0),
-                row.get("status") or "-",
-            )
-        )
-    render(rows)
+    logs.sort(key=lambda row: row.get("startTime") or "")
+    return logs
+
+
+def log_row(row, names):
+    return (
+        (row.get("startTime") or "")[:19].replace("T", " "),
+        alias_of(row, names),
+        row.get("model") or row.get("model_group") or "-",
+        (row.get("call_type") or "-").lstrip("/"),
+        money(row.get("spend")),
+        row.get("total_tokens") or 0,
+        int(row.get("request_duration_ms") or 0),
+        row.get("status") or "-",
+    )
+
+
+def cmd_logs(count, follow=False):
+    _, names = keys_and_names()
+    logs = sorted_logs()
+    render([LOG_HEADER] + [log_row(row, names) for row in logs[-count:]])
+    if not follow:
+        return
+    seen = {row.get("request_id") for row in logs}
+    while True:
+        time.sleep(FOLLOW_SECONDS)
+        try:
+            fresh = sorted_logs()
+        except SystemExit:
+            continue
+        new = [row for row in fresh if row.get("request_id") not in seen]
+        seen.update(row.get("request_id") for row in new)
+        if new:
+            render([LOG_HEADER] + [log_row(row, names) for row in new])
 
 
 def cmd_totals(days):
@@ -212,7 +235,16 @@ def main(argv):
     elif command == "keys":
         cmd_keys()
     elif command == "logs":
-        cmd_logs(int(arguments[0]) if arguments else 20)
+        count = None
+        follow = False
+        for token in arguments:
+            if token in ("-f", "--follow"):
+                follow = True
+            elif token.isdigit():
+                count = int(token)
+            else:
+                sys.exit(USAGE)
+        cmd_logs(count if count is not None else 20, follow)
     elif command == "totals":
         cmd_totals(int(arguments[0]) if arguments else 7)
     elif command == "create":
@@ -232,4 +264,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    try:
+        main(sys.argv)
+    except KeyboardInterrupt:
+        pass
