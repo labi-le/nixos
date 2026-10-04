@@ -104,6 +104,9 @@ litellm-key extend vanya 30d
 litellm-key revoke vanya
 ```
 
+The stored timestamps are UTC; the `time` column and the `totals` window line
+are converted to the host zone (MSK), so `logs` reads like `date`.
+
 `logs -f` polls `/spend/logs` every 5 seconds
 (`LITELLM_FOLLOW_SECONDS`) and prints only request ids it has not shown yet,
 which means a row appears roughly when litellm flushes it, not when the

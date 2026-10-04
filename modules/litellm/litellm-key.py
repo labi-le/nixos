@@ -94,6 +94,16 @@ def remaining(value):
     return f"{int(left // 86400)}d"
 
 
+def local_time(value):
+    if not value:
+        return "-"
+    try:
+        moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return value[:19].replace("T", " ")
+    return moment.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+
+
 def money(value):
     value = value or 0.0
     if value == 0:
@@ -147,7 +157,7 @@ def sorted_logs():
 
 def log_row(row, names):
     return (
-        (row.get("startTime") or "")[:19].replace("T", " "),
+        local_time(row.get("startTime")),
         alias_of(row, names),
         row.get("model") or row.get("model_group") or "-",
         (row.get("call_type") or "-").lstrip("/"),
@@ -188,7 +198,7 @@ def cmd_totals(days):
         entry[0] += row.get("spend") or 0.0
         entry[1] += row.get("total_tokens") or 0
         entry[2] += 1
-    print(f"window: last {days}d, since {cutoff[:19]}Z")
+    print(f"window: last {days}d, since {local_time(cutoff)}")
     rows = [("alias", "spend", "tokens", "requests")]
     for alias in sorted(totals):
         spend, tokens, count = totals[alias]
