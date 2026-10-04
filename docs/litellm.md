@@ -184,7 +184,27 @@ master key sees the quota with an empty `key` block. The route 503s with
 `Retry-After: 30` until the first poll (at most one interval after start).
 
 The same poller drives the cooldown that keeps a spent account out of rotation,
-and refreshes at most every `OPENCODE_USAGE_SYNC_SECONDS` (120s).
+and refreshes at most every `OPENCODE_USAGE_SYNC_SECONDS` (120s). The poller has
+exactly one entry point, the startup hook: an earlier revision also registered
+it as a config `callbacks` entry, which litellm loads by path under the module
+name `/app/opencode_go_usage`, not importable, so the callback loader crashed
+the proxy. Keep the module a plain module with `install_usage_route` and no
+`CustomLogger` subclass.
+
+Verify cooldown against a real router rather than the live log, since a spent
+account is usually cooldowned by its own 429 before the poller sees it:
+
+```sh
+docker exec litellm python3 -c '
+from litellm.router import Router
+import yaml
+r = Router(model_list=yaml.safe_load(open("/app/config.yaml"))["model_list"], cooldown_time=600)
+r.cooldown_cache.add_deployment_to_cooldown(
+    model_id=r.model_list[0]["model_info"]["id"],
+    original_exception=Exception("probe"), exception_status=429, cooldown_time=600)
+print(r.cooldown_cache.get_active_cooldowns(
+    model_ids=[d["model_info"]["id"] for d in r.model_list], parent_otel_span=None))'
+```
 
 `totals` reads the whole request log and filters locally. Do not swap it for
 `/spend/logs?start_date=…&end_date=…`: with dates that endpoint switches shape

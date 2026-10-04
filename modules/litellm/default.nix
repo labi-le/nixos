@@ -59,7 +59,6 @@ let
     litellm_settings = {
       telemetry = false;
       drop_params = true;
-      callbacks = [ "/app/opencode_go_usage.opencode_go_usage_sync" ];
     };
   };
 

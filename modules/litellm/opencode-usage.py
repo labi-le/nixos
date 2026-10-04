@@ -1,11 +1,9 @@
 import asyncio
 import hashlib
 import os
-import sys
 import time
 
 import httpx
-from litellm.integrations.custom_logger import CustomLogger
 
 KEY_ENV_PREFIX = "LITELLM_OPENCODE_GO_KEY_"
 MASTER_KEY_ENV = "LITELLM_MASTER_KEY"
@@ -17,9 +15,8 @@ USER_AGENT = os.environ.get("OPENCODE_USAGE_USER_AGENT", "jcode/0.89.3")
 SESSION = "litellm-usage-sync"
 WINDOWS = ("rolling", "weekly", "monthly")
 
-_state = sys.modules.setdefault(
-    "opencode_go_usage", sys.modules[__name__]
-).__dict__.setdefault("_state", {"snapshot": None, "task": None})
+_snapshot = None
+_task = None
 
 
 def pool_env_keys():
@@ -153,13 +150,13 @@ def install_usage_route():
             info = authorize(request.headers.get("authorization", ""))
         except ValueError as error:
             return JSONResponse(status_code=401, content={"detail": str(error)})
-        if _state["snapshot"] is None:
+        if _snapshot is None:
             return JSONResponse(
                 status_code=503,
                 content={"detail": "usage snapshot not ready"},
                 headers={"Retry-After": "30"},
             )
-        body = dict(_state["snapshot"])
+        body = dict(_snapshot)
         body["key"] = key_usage(info)
         return JSONResponse(content=body)
 
@@ -168,8 +165,9 @@ def install_usage_route():
 
 
 def ensure_task():
-    if _state["task"] is None or _state["task"].done():
-        _state["task"] = asyncio.create_task(_sync_forever())
+    global _task
+    if _task is None or _task.done():
+        _task = asyncio.create_task(_sync_forever())
 
 
 async def _sync_forever():
@@ -182,6 +180,7 @@ async def _sync_forever():
 
 
 async def sync_once():
+    global _snapshot
     from litellm.proxy.proxy_server import llm_router
 
     keys = pool_env_keys()
@@ -213,15 +212,4 @@ async def sync_once():
             windows = {window: usage.get(window) or {} for window in WINDOWS}
             accounts.append({"limited": limited, "windows": windows})
     if accounts:
-        _state["snapshot"] = build_snapshot(accounts)
-
-
-class OpencodeGoUsageSync(CustomLogger):
-    async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
-        ensure_task()
-
-    async def async_log_failure_event(self, kwargs, response_obj, start_time, end_time):
-        ensure_task()
-
-
-opencode_go_usage_sync = OpencodeGoUsageSync()
+        _snapshot = build_snapshot(accounts)
