@@ -103,6 +103,10 @@ in
         config.age.secrets.opencode-go-pool-env.path
         dbEnv
       ];
+      environment = {
+        PYTHONPATH = "/app";
+        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route";
+      };
       volumes = [
         "${configYaml}:/app/config.yaml:ro"
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"

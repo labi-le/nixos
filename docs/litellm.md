@@ -151,6 +151,41 @@ Traffic authenticated with the master key — everything omp and jcode send — 
 logged under the alias `master`, and a key hash that matches no key in the DB
 shows as `other`; neither is a virtual key.
 
+## Pool quota API
+
+`GET /v1/usage` is served by the proxy itself (`modules/litellm/opencode-usage.py`,
+installed through `LITELLM_WORKER_STARTUP_HOOKS`), not by any upstream. It
+reports the four OpenCode Go accounts as one shared pool, because the quota
+belongs to the accounts and every key spends the same four:
+
+```json
+{
+  "provider": "opencode-go-pool",
+  "plan": "OpenCode Go",
+  "fetched_at": "2026-10-04T20:41:27Z",
+  "usage": {
+    "rolling": {"percent": 68, "status": "ok", "resetsAt": "2026-10-04T21:00:00Z"},
+    "weekly": {"percent": 75, "status": "ok", "resetsAt": null},
+    "monthly": {"percent": 25, "status": "ok", "resetsAt": null}
+  },
+  "key": {"alias": "friend", "spend_usd": 1.23, "max_budget_usd": null, "expires_at": null}
+}
+```
+
+`rolling` is the 5-hour window, `weekly` the 7-day one, `monthly` anchors on the
+subscription anniversary. `percent` is the mean across accounts that answered, so
+it reaches 100 only when the whole pool is spent; `status` becomes `rate-limited`
+only then, and `resetsAt` is the earliest reset among the throttled accounts.
+`key` is that key's own litellm spend, separate from the shared pool quota.
+
+Any key works: a `/key/info` lookup against the proxy authenticates the bearer,
+so a model-scoped virtual key sees the pool quota plus its own spend, and the
+master key sees the quota with an empty `key` block. The route 503s with
+`Retry-After: 30` until the first poll (at most one interval after start).
+
+The same poller drives the cooldown that keeps a spent account out of rotation,
+and refreshes at most every `OPENCODE_USAGE_SYNC_SECONDS` (120s).
+
 `totals` reads the whole request log and filters locally. Do not swap it for
 `/spend/logs?start_date=…&end_date=…`: with dates that endpoint switches shape
 and returns a per-day aggregate, including days with no traffic, so counting

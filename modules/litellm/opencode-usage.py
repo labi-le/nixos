@@ -1,10 +1,14 @@
 import asyncio
+import hashlib
 import os
+import sys
+import time
 
 import httpx
 from litellm.integrations.custom_logger import CustomLogger
 
 KEY_ENV_PREFIX = "LITELLM_OPENCODE_GO_KEY_"
+MASTER_KEY_ENV = "LITELLM_MASTER_KEY"
 USAGE_URL = os.environ.get("OPENCODE_USAGE_URL", "https://opencode.ai/zen/go/v1/usage")
 SYNC_INTERVAL_SECONDS = int(os.environ.get("OPENCODE_USAGE_SYNC_SECONDS", "120"))
 COOLDOWN_SECONDS = int(os.environ.get("OPENCODE_USAGE_COOLDOWN_SECONDS", "600"))
@@ -13,8 +17,12 @@ USER_AGENT = os.environ.get("OPENCODE_USAGE_USER_AGENT", "jcode/0.89.3")
 SESSION = "litellm-usage-sync"
 WINDOWS = ("rolling", "weekly", "monthly")
 
+_state = sys.modules.setdefault(
+    "opencode_go_usage", sys.modules[__name__]
+).__dict__.setdefault("_state", {"snapshot": None, "task": None})
 
-def pool_env_keys() -> dict[str, str]:
+
+def pool_env_keys():
     return {
         name: value
         for name, value in os.environ.items()
@@ -22,13 +30,13 @@ def pool_env_keys() -> dict[str, str]:
     }
 
 
-def resolve_api_key(configured: str) -> str:
+def resolve_api_key(configured):
     if configured.startswith("os.environ/"):
         return os.environ.get(configured.split("/", 1)[1], "")
     return configured
 
 
-def exhausted_window(usage: dict) -> str | None:
+def exhausted_window(usage):
     for window in WINDOWS:
         data = usage.get(window) or {}
         if data.get("status") == "rate-limited":
@@ -40,7 +48,7 @@ def exhausted_window(usage: dict) -> str | None:
     return None
 
 
-async def fetch_usage(client: httpx.AsyncClient, key: str) -> dict:
+async def fetch_usage(client, key):
     response = await client.get(
         USAGE_URL,
         headers={
@@ -53,66 +61,167 @@ async def fetch_usage(client: httpx.AsyncClient, key: str) -> dict:
     return response.json().get("usage") or {}
 
 
-class OpencodeGoUsageSync(CustomLogger):
-    def __init__(self):
-        super().__init__()
-        self._task: asyncio.Task | None = None
+def model_ids_by_key():
+    from litellm.proxy.proxy_server import llm_router
 
-    async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
-        await self._ensure_task()
+    if llm_router is None:
+        return {}
+    mapping = {}
+    for deployment in llm_router.model_list:
+        params = deployment.get("litellm_params") or {}
+        model_id = (deployment.get("model_info") or {}).get("id")
+        api_key = resolve_api_key(str(params.get("api_key") or ""))
+        if api_key and model_id:
+            mapping[api_key] = model_id
+    return mapping
 
-    async def async_log_failure_event(self, kwargs, response_obj, start_time, end_time):
-        await self._ensure_task()
 
-    async def _ensure_task(self):
-        if self._task is None or self._task.done():
-            self._task = asyncio.create_task(self._sync_forever())
+def aggregate_window(window, accounts):
+    percents = [
+        account["windows"][window]["percent"]
+        for account in accounts
+        if isinstance((account["windows"][window] or {}).get("percent"), (int, float))
+    ]
+    limited = [account for account in accounts if account["limited"] == window]
+    resets = [
+        account["windows"][window]["resetsAt"]
+        for account in accounts
+        if account["windows"][window].get("resetsAt")
+    ]
+    return {
+        "percent": round(sum(percents) / len(percents)) if percents else 0,
+        "status": "rate-limited" if len(limited) == len(accounts) else "ok",
+        "resetsAt": min(resets) if limited and resets else None,
+    }
 
-    async def _sync_forever(self):
-        while True:
+
+def build_snapshot(accounts):
+    return {
+        "provider": "opencode-go-pool",
+        "plan": "OpenCode Go",
+        "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "usage": {window: aggregate_window(window, accounts) for window in WINDOWS},
+    }
+
+
+def key_usage(key_info):
+    return {
+        "alias": key_info.get("key_alias"),
+        "spend_usd": key_info.get("spend"),
+        "max_budget_usd": key_info.get("max_budget"),
+        "expires_at": key_info.get("expires"),
+    }
+
+
+def key_info_for(token):
+    if not token:
+        return {}
+    try:
+        response = httpx.get(
+            "http://127.0.0.1:4000/key/info",
+            params={"key": token},
+            headers={"Authorization": f"Bearer {os.environ.get(MASTER_KEY_ENV, '')}"},
+            timeout=5,
+        )
+        if response.status_code == 200:
+            return response.json() or {}
+    except Exception:
+        return {}
+    return {}
+
+
+def authorize(authorization):
+    token = authorization.split(" ", 1)[-1].strip() if authorization else ""
+    master = os.environ.get(MASTER_KEY_ENV, "")
+    if not token:
+        raise ValueError("missing bearer token")
+    if master and token == master:
+        return {}
+    info = key_info_for(hashlib.sha256(token.encode()).hexdigest())
+    if not info:
+        raise ValueError("invalid key")
+    return info
+
+
+def install_usage_route():
+    from fastapi import Request
+    from fastapi.responses import JSONResponse
+    from litellm.proxy.proxy_server import app
+
+    async def usage(request: Request):
+        try:
+            info = authorize(request.headers.get("authorization", ""))
+        except ValueError as error:
+            return JSONResponse(status_code=401, content={"detail": str(error)})
+        if _state["snapshot"] is None:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "usage snapshot not ready"},
+                headers={"Retry-After": "30"},
+            )
+        body = dict(_state["snapshot"])
+        body["key"] = key_usage(info)
+        return JSONResponse(content=body)
+
+    app.add_api_route("/v1/usage", usage, methods=["GET"])
+    ensure_task()
+
+
+def ensure_task():
+    if _state["task"] is None or _state["task"].done():
+        _state["task"] = asyncio.create_task(_sync_forever())
+
+
+async def _sync_forever():
+    while True:
+        try:
+            await sync_once()
+        except Exception:
+            pass
+        await asyncio.sleep(SYNC_INTERVAL_SECONDS)
+
+
+async def sync_once():
+    from litellm.proxy.proxy_server import llm_router
+
+    keys = pool_env_keys()
+    if llm_router is None or not keys:
+        return
+    model_ids = model_ids_by_key()
+    if not model_ids:
+        return
+    accounts = []
+    async with httpx.AsyncClient(timeout=10) as client:
+        for key in keys.values():
+            model_id = model_ids.get(key)
+            if model_id is None:
+                continue
             try:
-                await self._sync_once()
+                usage = await fetch_usage(client, key)
             except Exception:
-                pass
-            await asyncio.sleep(SYNC_INTERVAL_SECONDS)
-
-    async def _sync_once(self):
-        from litellm.proxy.proxy_server import llm_router
-
-        if llm_router is None:
-            return
-        keys = pool_env_keys()
-        if not keys:
-            return
-        model_ids = {}
-        for deployment in llm_router.model_list:
-            params = deployment.get("litellm_params") or {}
-            model_id = (deployment.get("model_info") or {}).get("id")
-            api_key = resolve_api_key(str(params.get("api_key") or ""))
-            if api_key and model_id:
-                model_ids[api_key] = model_id
-        if not model_ids:
-            return
-        async with httpx.AsyncClient(timeout=10) as client:
-            for key in keys.values():
-                model_id = model_ids.get(key)
-                if model_id is None:
-                    continue
-                try:
-                    usage = await fetch_usage(client, key)
-                except Exception:
-                    continue
-                window = exhausted_window(usage)
-                if window is None:
-                    continue
+                continue
+            limited = exhausted_window(usage)
+            if limited is not None:
                 llm_router.cooldown_cache.add_deployment_to_cooldown(
                     model_id=model_id,
                     original_exception=Exception(
-                        f"opencode usage window {window} at limit"
+                        f"opencode usage window {limited} at limit"
                     ),
                     exception_status=429,
                     cooldown_time=COOLDOWN_SECONDS,
                 )
+            windows = {window: usage.get(window) or {} for window in WINDOWS}
+            accounts.append({"limited": limited, "windows": windows})
+    if accounts:
+        _state["snapshot"] = build_snapshot(accounts)
+
+
+class OpencodeGoUsageSync(CustomLogger):
+    async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
+        ensure_task()
+
+    async def async_log_failure_event(self, kwargs, response_obj, start_time, end_time):
+        ensure_task()
 
 
 opencode_go_usage_sync = OpencodeGoUsageSync()
