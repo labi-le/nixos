@@ -22,14 +22,6 @@ let
     "format-ru" = "RU";
   };
 
-  emptyWorkspaceStyle = lib.optionalString niriEnabled ''
-    #workspaces button.empty {
-        min-width: 0;
-        padding: 0;
-        margin: 0;
-        color: transparent;
-    }
-  '';
 
   workspacesConfig = {
     all-outputs = false;
@@ -172,7 +164,6 @@ in
     ];
 
     style = ''
-${emptyWorkspaceStyle}
       * {
           border-radius: 10px;
           font-family: 'SFProDisplay Nerd Font';
