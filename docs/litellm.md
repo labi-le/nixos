@@ -86,6 +86,45 @@ the running container are enough. Changing models, router settings or the
 pool-usage callback does need one: those are rendered by Nix and mounted
 read-only at `/app/config.yaml` and `/app/opencode_go_usage.py`.
 
+## Keys and usage from the command line
+
+`litellm-key` (`modules/litellm/litellm-key.nix`, installed by the litellm
+module, so it exists only on `server`) talks to the proxy with the master key
+from `/run/agenix/opencode-litellm-master-key`; override with `LITELLM_URL`,
+`LITELLM_KEY_FILE` and `LITELLM_MODELS`:
+
+```
+litellm-key                 # alias, expiry, spend, models, blocked
+litellm-key logs 50         # last 50 request rows
+litellm-key totals 7        # spend, tokens, requests per alias, last 7 days
+litellm-key create vanya    # new key, 365 days, models from LITELLM_MODELS
+litellm-key create guest 30 # 30 days instead of a year
+litellm-key extend vanya 30d
+litellm-key revoke vanya
+```
+
+`create` prints the key exactly once, so it is the only moment that value can
+be captured. `extend` and `revoke` accept either the alias or the full `sk-…`
+value, and the proxy stores a key as `sha256(key)`, which is why an alias has
+to be unique for them to work — the tool refuses and asks for the explicit
+`sk-…` when two keys share one.
+
+Revoking deletes the row; nothing keeps the key value, so a revoked key cannot
+be restored, only replaced.
+
+Traffic authenticated with the master key — everything omp and jcode send —
+is logged under the alias `master`, and a key hash that matches no key in the
+DB shows as `other`; neither is a virtual key. Measured 2026-10-04: three days
+of log held 1456 `master` requests against 22 for both virtual keys, and
+`spend` was `0.0000` throughout because the pool model has no entry in
+litellm's cost map — tokens, not spend, is the number that tracks pool
+consumption.
+
+`totals` reads the whole request log and filters locally. Do not swap it for
+`/spend/logs?start_date=…&end_date=…`: with dates that endpoint switches shape
+and returns a per-day aggregate, including days with no traffic, so counting
+requests from it silently under-reports.
+
 ## Gotchas
 
 `LITELLM_SALT_KEY` must never change: it encrypts provider credentials stored

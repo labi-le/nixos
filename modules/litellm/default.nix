@@ -74,6 +74,8 @@ in
     mode = "0400";
   };
 
+  environment.systemPackages = [ (pkgs.callPackage ./litellm-key.nix { }) ];
+
   systemd.tmpfiles.rules = [
     "d /var/lib/litellm-db 0700 999 999 -"
   ];
