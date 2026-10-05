@@ -41,20 +41,13 @@ in
         1M context, text and image input, adjustable effort with `max` as the
         ceiling.
 
-        `supports_reasoning_effort = true` is *not* sufficient on its own.
-        Measured 2026-10-05 in the real TUI on the bunny route, with a private
-        daemon socket and the real store config: the status bar starts at the
-        declared `high`, `/effort high` succeeds ("Reasoning effort → High"),
-        but bare `/effort` and `Alt+Left`/`Alt+Right` print "Reasoning effort
-        not available for this provider." That message is a different one from
-        the "not supported by the current model/profile" text, which names
-        this flag as its escape hatch, so the flag removes the refusal with
-        that wording and nothing else: the interactive ladder is still gated
-        on `provider.available_efforts()` being non-empty, and nothing
-        declarable in this module populates it. Setting `model_catalog = true`
-        did not help - the endpoint's `/models` payload publishes no effort
-        metadata, so the catalog contributes no levels either. `allow_provider_pinning`
-        was also tried and changed nothing about the ladder.
+        `supports_reasoning_effort = true` is what unlocks the ladder at all:
+        without it jcode refuses /effort and Alt+left/right with "Reasoning
+        effort is not supported by the current model/profile". It is a
+        provider-level switch, not a per-model one, so it cannot be inferred
+        from the model's `reasoning = true`. `disable_reasoning_heuristics`
+        stops jcode from adding `reasoning_effort` on a model-name guess for
+        endpoints that reject it.
       '';
     };
 
@@ -76,8 +69,6 @@ in
         body carries no `reasoning_effort` at all and the endpoint applies
         its own default, and `none`, `swarm` and `swarm-deep` are either
         dropped the same way or rejected by the endpoint with HTTP 400.
-        `/effort <level>` sets it even though the interactive ladder is
-        unavailable; Alt+Left/Alt+Right do not.
       '';
     };
   };
