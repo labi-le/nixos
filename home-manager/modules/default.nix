@@ -6,7 +6,7 @@
     ./wofi.nix
     ./mako.nix
     ./git.nix
-    # ./alacritty.nix  # disabled — foot.nix is the terminal
+    ./alacritty.nix
     ./foot.nix
     ./zellij.nix
     ./ssh.nix

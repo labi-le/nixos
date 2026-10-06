@@ -8,7 +8,6 @@
 
 let
   browser = "google-chrome-stable";
-  terminal = "foot";
   bar = "waybar";
   menu = "wofi";
   filemanager = "thunar";
@@ -96,7 +95,7 @@ in
     wrapperFeatures.gtk = true;
     config = {
       modifier = common;
-      terminal = terminal;
+      terminal = lib.escapeShellArgs osConfig.terminal.launch;
       menu = menu;
       bars = [
         {
@@ -178,7 +177,7 @@ in
       floating = {
         modifier = common;
         criteria = [
-          { app_id = "foot"; }
+          { app_id = osConfig.terminal.appId; }
           {
             class = "Yad";
             instance = "yad";
@@ -233,7 +232,7 @@ in
         {
           command = "floating disable";
           criteria = {
-            app_id = "foot";
+            app_id = osConfig.terminal.appId;
             workspace = workspaces.terminal;
           };
         }
@@ -361,8 +360,8 @@ in
         }
       ];
       keybindings = {
-        "${common}+Return" = "exec ${terminal} --app-id=tmux-switcher tmux-session-switcher";
-        "${common}+Shift+Return" = "exec ${terminal}";
+        "${common}+Return" = "exec ${lib.escapeShellArgs osConfig.terminal.launchTmuxSwitcher}";
+        "${common}+Shift+Return" = "exec ${lib.escapeShellArgs osConfig.terminal.launch}";
         "${common}+Shift+e" = "exec wofi-powermenu";
         "${common}+q" = "kill";
         "BTN_MIDDLE" = "kill --border";
@@ -520,7 +519,7 @@ in
       title_align center
       titlebar_padding 10 5
 
-      for_window [app_id="foot"] blur enable
+      for_window [app_id="${osConfig.terminal.appId}"] blur enable
       layer_effects "mako" {
         blur enable;
         blur_ignore_transparent enable;

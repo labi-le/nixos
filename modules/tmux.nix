@@ -60,8 +60,8 @@
 
       # Forward the kitty keyboard protocol (CSI-u) to apps running inside tmux.
       # Lets TUIs distinguish Shift+Enter from Enter (-> newline) and receive
-      # unambiguous Esc events (-> reliable double-Esc). Needs foot (CSI u)
-      # + tmux >= 3.5 for extended-keys-format.
+      # unambiguous Esc events (-> reliable double-Esc). Needs a CSI u
+      # terminal + tmux >= 3.5 for extended-keys-format.
       set -s extended-keys on
       set -as terminal-features '*:extkeys'
       set -s extended-keys-format csi-u

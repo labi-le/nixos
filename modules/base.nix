@@ -13,6 +13,7 @@
     ./keyring.nix
     ./locale.nix
     ./users.nix
+    ./terminal.nix
     ./env.nix
     ./network
     ./packages.nix

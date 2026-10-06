@@ -55,7 +55,7 @@ let
   windowRuleNodes = [
     {
       window-rule = {
-        match._props.app-id = "^(foot|tmux-switcher)$";
+        match._props.app-id = "^(${osConfig.terminal.appId}|tmux-switcher)$";
         background-effect.blur = true;
       };
     }
@@ -275,8 +275,8 @@ let
   '';
 
   binds = workspaceBinds // {
-    "Mod+Return".spawn = [ "foot" "--app-id=tmux-switcher" "tmux-session-switcher" ];
-    "Mod+Shift+Return".spawn = [ "foot" ];
+    "Mod+Return".spawn = osConfig.terminal.launchTmuxSwitcher;
+    "Mod+Shift+Return".spawn = osConfig.terminal.launch;
     "Mod+d".spawn = [ "wofi" ];
     "Mod+Shift+e".spawn = [ "wofi-powermenu" ];
     "Mod+q".close-window = { };

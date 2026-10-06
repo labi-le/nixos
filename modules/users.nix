@@ -55,7 +55,6 @@ in
 
       environment.variables = {
         EDITOR = "nvim";
-        TERMINAL = "foot";
         NIXPKGS_ALLOW_UNFREE = "1";
       };
 

@@ -29,6 +29,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Journald logging | `modules/journald.nix` | |
 | ZSH configuration | `modules/shell.nix` | |
 | tmux terminal multiplexer (prefix `Ctrl+a`) | `modules/tmux.nix` | |
+| Terminal switch — one place to change the default terminal: `terminal.name` (`foot` or `alacritty`, default `alacritty`) derives `desktop`, `appId`, `launch`, `launchTmuxSwitcher` argv lists and the `TERMINAL` env var; Home Manager consumers (foot/alacritty enable gates, `xdg-terminal-exec`, mimeapps terminal association, niri/sway keybinds and app_id window rules) read `osConfig.terminal` | `modules/terminal.nix` | |
 | Display monitors (declarations) | `modules/monitors.nix` | Values set in per-host config |
 | Docker daemon | `modules/docker.nix` | |
 | Polkit rules | `modules/polkit.nix` | |
@@ -198,8 +199,8 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Mako notifications | `home-manager/modules/mako.nix` |
 | Niri compositor config (KDL: inputs, monitor layout from `osConfig.monitors`, gaps `2`, thin purple frames via `layout.border`/`layout.focus-ring` width 1 `#7b2cbf`/`#c77dff`, binds, spawn-at-startup) gated on `osConfig.programs.niri.enable`, so it is inert unless the host enables `modules/niri.nix`; `portalPackage = null` because the system module owns portal packages. The "Important Hotkeys" overlay is off on both paths: `hotkey-overlay { skip-at-startup }` plus no bind for `show-hotkey-overlay`. Monitor focus is `Mod+Alt+arrows` -> `focus-monitor-*` (plain `Mod+arrows` stay window/column focus, `Mod+Shift+arrows` stay window/column moves, and `Mod+Alt+Shift+Left/Right` move the workspace to the previous/next monitor). `Mod+z` reloads waybar with `pkill -SIGUSR2 -f ^waybar`: waybar's SIGUSR1 default is a *visibility toggle*, SIGUSR2 is the reload signal (`waybar.5`), and procps matches names as an unanchored regex, so the nixpkgs wrapper name `.waybar-wrapped` never needed the `-f` fallback - it is kept because it pins the target set to the waybar process. `xdg.configFile."niri/config.kdl".force = true` is load-bearing: jcode's launch-hotkey setup merges its binds into that file, and jcode's atomic writer keeps the previous content as `config.bak` (a hard link, so right after a rebuild it is the store symlink) plus timestamped `config.kdl.bak-jcode-hotkeys-*` copies; without `force` the next rebuild aborts with `Existing file ...config.kdl.hm-backup would be clobbered` - `force` skips home-manager's link-target pre-check, so switches stay repeatable while home-manager still moves the jcode copy to `config.kdl.hm-backup` | `home-manager/modules/niri.nix` |
 | Git user config | `home-manager/modules/git.nix` |
-| Alacritty terminal (disabled — import commented in `default.nix`, package kept as fallback) | `home-manager/modules/alacritty.nix` |
-| Foot terminal — **default** (Wayland/C, minimalist, no tabs — panes via multiplexer; sixel images for omp) | `home-manager/modules/foot.nix` |
+| Foot terminal — enable gate (`programs.foot.enable` gated on `osConfig.terminal.name == "foot"`); colors/opacity/font from the stylix foot target in `modules/stylix.nix`; sixel renders but omp targets kitty graphics, so images unreliable | `home-manager/modules/foot.nix` |
+| Alacritty terminal — **default** (`terminal.name = "alacritty"`); Shift+Enter CSI-u binding; Wayland app_id from `osConfig.terminal.appId` via `window.class.general` | `home-manager/modules/alacritty.nix` |
 | Zellij multiplexer (parallel to tmux; direct Ctrl+a/d/x chords) | `home-manager/modules/zellij.nix` |
 | SSH user config | `home-manager/modules/ssh.nix` |
 | MIME type associations | `home-manager/modules/mimeapps.nix` |

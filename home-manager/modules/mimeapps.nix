@@ -1,10 +1,11 @@
-{ ... }:
+{ osConfig, ... }:
 
 {
   xdg = {
     configFile = {
       "mimeapps.list".force = true;
     };
+    terminal-exec.settings.default = [ osConfig.terminal.desktop ];
     mimeApps =
       let
         discord = "equibop.desktop";
@@ -16,7 +17,7 @@
         archive-manager = "xarchiver.desktop";
         browser = "google-chrome.desktop";
         pdf = "org.pwmt.zathura.desktop";
-        terminal = "foot.desktop";
+        terminal = osConfig.terminal.desktop;
       in
       {
         enable = true;
