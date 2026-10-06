@@ -46,6 +46,8 @@
       set -s extended-keys on
       set -as terminal-features '*:extkeys'
       set -s extended-keys-format csi-u
+
+      set -g allow-passthrough on
     '';
   };
 }

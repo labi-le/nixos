@@ -1,8 +1,9 @@
-{ osConfig, ... }:
+{ osConfig, pkgs, ... }:
 
 {
   programs.alacritty = {
     enable = osConfig.terminal.name == "alacritty";
+    package = pkgs.alacritty-graphics;
     settings = {
       window.class = {
         instance = osConfig.terminal.appId;
