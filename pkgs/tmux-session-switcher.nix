@@ -21,7 +21,7 @@ writeShellScriptBin "tmux-session-switcher" ''
     [ -z "$name" ] && exit 0
     clients=$(tmux list-clients -t "=$name" 2>/dev/null | wc -l)
     if [ "$clients" -gt 0 ]; then
-      ${swayfx}/bin/swaymsg "[app_id=\"tmux-switcher\" title=\"^$name$\"] focus" >/dev/null 2>&1
+      ${swayfx}/bin/swaymsg "[app_id=\"tmux.switcher\" title=\"^$name$\"] focus" >/dev/null 2>&1
       exit 0
     fi
     printf '\033]2;%s\007' "$name"

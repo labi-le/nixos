@@ -7,6 +7,7 @@
     ./mako.nix
     ./git.nix
     ./alacritty.nix
+    ./ghostty.nix
     ./foot.nix
     ./zellij.nix
     ./ssh.nix

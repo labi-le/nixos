@@ -55,7 +55,7 @@ let
   windowRuleNodes = [
     {
       window-rule = {
-        match._props.app-id = "^(${osConfig.terminal.appId}|tmux-switcher)$";
+        match._props.app-id = "^(${osConfig.terminal.appId}|tmux.switcher)$";
         background-effect.blur = true;
       };
     }

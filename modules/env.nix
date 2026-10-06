@@ -13,8 +13,5 @@
     # Without this, uv picks NixOS Python whose ld.so bypasses nix-ld,
     # breaking numpy/onnxruntime imports in tools like chroma-mcp.
     UV_PYTHON_PREFERENCE = "only-managed";
-
-    # omp maps the alacritty identity to no image protocol; the graphics fork speaks sixel.
-    PI_FORCE_IMAGE_PROTOCOL = "sixel";
   };
 }
