@@ -4,7 +4,7 @@ providers:
 modelRoles:
   default: opencode-go/deepseek-v4.1-flash
   smol: opencode-go/deepseek-v4.1-flash:low
-  slow: opencode-go//deepseek-v4.1-flash:max
+  slow: opencode-go/deepseek-v4.1-flash:max
   vision: opencode-go/deepseek-v4.1-flash:low
   plan: opencode-go/deepseek-v4.1-flash:max
   commit: opencode-go/deepseek-v4.1-flash:low
