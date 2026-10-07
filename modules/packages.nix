@@ -38,6 +38,7 @@ in
         unzip
         jq
         openssl
+        ghostty.terminfo
 
         dig
         nmap
