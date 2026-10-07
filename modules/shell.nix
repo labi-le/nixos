@@ -39,6 +39,14 @@
     shellAliases = {
       eh = "grep -o '^[^=]*'";
     };
-    interactiveShellInit = lib.mkAfter (builtins.readFile ./zsh-command-not-found.sh);
+    interactiveShellInit = lib.mkAfter ''
+      ${builtins.readFile ./zsh-command-not-found.sh}
+
+      _keyboard_mode_reset() {
+        printf '\033[>4;0m\033[<u\033[=0;1u'
+      }
+      autoload -Uz add-zsh-hook
+      add-zsh-hook precmd _keyboard_mode_reset
+    '';
   };
 }
