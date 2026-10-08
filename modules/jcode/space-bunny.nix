@@ -27,7 +27,13 @@ in
       type = lib.types.bool;
       default = true;
       description = ''
-        Declare OpenCode Go's space-bunny-free model with its real capabilities.
+        Declare OpenCode Go's space-bunny-free model with its real
+        capabilities. The profile talks to the Zen tier
+        (`https://opencode.ai/zen/v1`), not the Go tier: on 2026-10-08 the Go
+        tier dropped `space-bunny-free` from `/models` and answers every chat
+        request for it with HTTP 400 "Upstream request failed: Model is
+        unavailable." - Zen still serves the id, and one account key
+        authenticates both tiers.
         The provider's /models catalog publishes no reasoning or context
         metadata, so jcode otherwise treats the model as non-reasoning and
         offers no /effort ladder. This profile carries the models.dev values:
@@ -54,7 +60,7 @@ in
   config = lib.mkIf cfg.enable {
     jcode.extensions.providers.${cfg.profileName} = {
       type = "openai-compatible";
-      base_url = "https://opencode.ai/zen/go/v1";
+      base_url = "https://opencode.ai/zen/v1";
       api_key_env = "OPENCODE_GO_API_KEY";
       env_file = "opencode-go.env";
       default_model = "space-bunny-free";
