@@ -36,7 +36,7 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    omp.url = "github:can1357/oh-my-pi";
+    omp.url = "github:labi-le/omp-flake";
     llm-agents.url = "github:numtide/llm-agents.nix";
   };
 

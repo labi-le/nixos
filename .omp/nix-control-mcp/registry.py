@@ -87,14 +87,15 @@ TOOLS = [
         "name": "eval_all",
         "title": "Evaluate every host",
         "description": (
-            "Evaluate one attribute across every nixosConfiguration at once (default "
-            "config.system.build.toplevel.drvPath) and report which hosts fail, in seconds and "
-            "without root. Catches drift in shared files -- an overlay or package definition "
-            "removed from overlays.nix, a broken module -- including hosts that are not being "
-            "rebuilt today; a plain rebuild only checks its own host. Hosts are evaluated in "
-            "parallel; a host that fails with a transient nix error (interrupted by the user, "
-            "a lock or EOF) is retried once on its own, so a flaky failure does not read as a "
-            "broken config. `attr` is read under `config.`; `hosts` narrows the set."
+            "Evaluate one attribute across every nixosConfiguration (default "
+            "config.system.build.toplevel.drvPath) and report which hosts fail without root. "
+            "Catches drift in shared files, including hosts that are not being rebuilt today; "
+            "a plain rebuild only checks its own host. Hosts run sequentially, and a shared "
+            "file lock admits only one eval_all call across server threads and processes. "
+            "Evaluators use a user systemd scope in the shared nix-control-eval.slice "
+            "(MemoryHigh=6G, MemoryMax=8G, no swap); systemd failure never falls back to "
+            "unbounded evaluation. Transient nix errors are retried once; SIGKILL and OOM "
+            "failures are not retried. `attr` is read under `config.`; `hosts` narrows the set."
         ),
         "inputSchema": {
             "type": "object",
