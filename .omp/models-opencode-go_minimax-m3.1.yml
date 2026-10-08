@@ -2,20 +2,20 @@ defaultThinkingLevel: auto
 providers:
   autoThinkingMaxEffort: max
 modelRoles:
-  default: opencode-go/space-bunny-free:max
-  smol: opencode-go/space-bunny-free:low
-  slow: opencode-go/space-bunny-free:max
-  vision: opencode-go/space-bunny-free:max
-  plan: opencode-go/space-bunny-free:max
-  commit: opencode-go/space-bunny-free:low
-  tiny: opencode-go/space-bunny-free:low
-  task: opencode-go/space-bunny-free:max
-  judge: opencode-go/space-bunny-free:max
+  default: opencode-zen/space-bunny-free:xhigh
+  smol: opencode-zen/space-bunny-free:low
+  slow: opencode-zen/space-bunny-free:xhigh
+  vision: opencode-zen/space-bunny-free:xhigh
+  plan: opencode-zen/space-bunny-free:xhigh
+  commit: opencode-zen/space-bunny-free:low
+  tiny: opencode-zen/space-bunny-free:low
+  task: opencode-zen/space-bunny-free:xhigh
+  judge: opencode-zen/space-bunny-free:xhigh
 task:
   eager: preferred
   agentModelOverrides:
     task: "@task"
     sonic: "@smol"
-    scout: opencode-go/space-bunny-free:low
-    reviewer: opencode-go/space-bunny-free:max
+    scout: opencode-zen/space-bunny-free:low
+    reviewer: opencode-zen/space-bunny-free:xhigh
     security-reviewer: "@slow"
