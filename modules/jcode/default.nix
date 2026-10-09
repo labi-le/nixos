@@ -77,6 +77,8 @@ let
           args = [
             "--from"
             "chroma-mcp"
+            "--with"
+            "pydantic<2.14"
             "python"
             "-c"
             ''
