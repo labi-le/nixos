@@ -36,7 +36,10 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    omp.url = "github:labi-le/omp-flake";
+    omp = {
+      url = "github:can1357/oh-my-pi";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
@@ -63,6 +66,7 @@
         inputs.nur.modules.nixos.default
         inputs.belphegor.nixosModules.default
         inputs.wl-uploader.nixosModules.default
+        inputs.omp.nixosModules.default
         ./modules/shell/registry.nix
       ];
 

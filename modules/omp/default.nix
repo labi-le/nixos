@@ -319,8 +319,12 @@ in
 {
   imports = [ inputs.index-repo.nixosModules.default ];
 
+  programs.omp = {
+    enable = true;
+    package = pkgs.omp;
+  };
+
   environment.systemPackages = [
-    pkgs.omp
     pkgs.uv
     pkgs.nodejs
     pkgs.bun

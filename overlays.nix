@@ -50,7 +50,7 @@ final: prev: {
   apple-fonts = inputs.apple-fonts.packages.${system};
   nix-index-with-small-db = inputs.nix-index-database.packages.${system}.nix-index-with-small-db;
   index-repo = inputs.index-repo.packages.${system}.default;
-  omp = inputs.omp.packages.${system}.default;
+  omp = inputs.llm-agents.packages.${system}.omp;
   jcode = inputs.llm-agents.packages.${system}.jcode;
   # langfuse still pins wrapt<2.0 while nixpkgs ships 2.2.2, so
   # pythonRuntimeDepsCheck fails and takes the whole litellm build (and with it
