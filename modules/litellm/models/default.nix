@@ -36,6 +36,9 @@ let
       reasoning_effort_levels = group.reasoningEffortLevels;
       supports_vision = group.supportsVision;
       supports_function_calling = group.supportsFunctionCalling;
+    }
+    // lib.optionalAttrs (group.offPeakPricing != null) {
+      off_peak_pricing = group.offPeakPricing;
     };
     litellm_params = {
       model = group.upstream;

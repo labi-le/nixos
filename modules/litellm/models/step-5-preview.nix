@@ -6,6 +6,7 @@
   inputCostPerToken = 0.0;
   outputCostPerToken = 0.0;
   cacheReadInputTokenCost = 0.0;
+  offPeakPricing = null;
   maxInputTokens = 1000000;
   maxOutputTokens = 65536;
   reasoningEffortLevels = [
