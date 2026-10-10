@@ -18,9 +18,10 @@ MODELS = [name for name in os.environ.get("LITELLM_MODELS", "deepseek-v4.1-flash
 USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
                      | create ALIAS [DAYS]
                      | extend TARGET [DURATION]
+                     | budget TARGET AMOUNT [DURATION]
                      | revoke TARGET
 
-  keys                     per-key alias, expiry, spend, models (default)
+  keys                     per-key alias, expiry, spend, budget, models (default)
   logs [-f] [N]            last N request log rows, default 20; -f keeps
                            printing new ones
   totals [DAYS]            spend, tokens and requests per alias over the last
@@ -32,6 +33,13 @@ USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
   extend TARGET [DURATION] move the expiry to now + DURATION, default 365d; a
                            negative DURATION moves the current expiry back by
                            that much and never past now
+  budget TARGET AMOUNT [DURATION]
+                           cap TARGET's spend at AMOUNT dollars per DURATION,
+                           default 1d; once the window's spend reaches the cap
+                           the key is refused with HTTP 429, and the window
+                           resets at the proxy's budget reset time, midnight
+                           UTC unless litellm_settings changes it; the word
+                           off instead of AMOUNT removes the cap
   revoke TARGET            delete the key; this cannot be undone
 
 TARGET is an alias or a full sk-... value; DURATION is a litellm duration such
@@ -149,9 +157,16 @@ def alias_of(row, names):
     return names.get(raw, "other")
 
 
+def key_budget(key):
+    amount = key.get("max_budget")
+    if amount is None:
+        return "-"
+    return f"{amount:g}/{key.get('budget_duration') or 'total'}"
+
+
 def cmd_keys():
     keys, _ = keys_and_names()
-    rows = [("alias", "expires", "spend", "total", "models", "blocked")]
+    rows = [("alias", "expires", "spend", "total", "budget", "models", "blocked")]
     for key in sorted(keys, key=lambda item: item.get("key_alias") or ""):
         rows.append(
             (
@@ -159,6 +174,7 @@ def cmd_keys():
                 remaining(key.get("expires")),
                 money(key.get("spend")),
                 money(key.get("total_spend")),
+                key_budget(key),
                 ",".join(key.get("models") or []) or "all",
                 "yes" if key.get("blocked") else "no",
             )
@@ -264,6 +280,26 @@ def cmd_extend(target, duration):
     print(f"{answer.get('key_alias')} now expires {answer.get('expires')}")
 
 
+def cmd_budget(target, amount, duration):
+    key = target_key(target)
+    if amount.lower() in ("off", "none", "unlimited"):
+        request = {"key": key["token"], "max_budget": None, "budget_duration": None}
+    else:
+        try:
+            request = {"key": key["token"], "max_budget": float(amount), "budget_duration": duration}
+        except ValueError:
+            sys.exit(f"litellm-key: invalid budget {amount}; use a number of dollars or off")
+    answer = call("/key/update", request)
+    alias = answer.get("key_alias") or target
+    if answer.get("max_budget") is None:
+        print(f"{alias} budget removed")
+        return
+    print(
+        f"{alias} budget ${answer['max_budget']:g} per {answer.get('budget_duration')}, "
+        f"spend resets {local_time(answer.get('budget_reset_at'))}"
+    )
+
+
 def cmd_revoke(target):
     token = target_token(target)
     answer = call("/key/delete", {"keys": [token]})
@@ -298,6 +334,10 @@ def main(argv):
         if not arguments:
             sys.exit(USAGE)
         cmd_extend(arguments[0], arguments[1] if len(arguments) > 1 else "365d")
+    elif command == "budget":
+        if len(arguments) < 2:
+            sys.exit(USAGE)
+        cmd_budget(arguments[0], arguments[1], arguments[2] if len(arguments) > 2 else "1d")
     elif command == "revoke":
         if not arguments:
             sys.exit(USAGE)

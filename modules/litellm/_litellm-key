@@ -8,6 +8,7 @@ _litellm-key() {
     'totals:aggregate usage per alias'
     'create:create a key'
     'extend:move a key expiry by a duration (negative shortens it)'
+    'budget:cap a key spend per window (off removes the cap)'
     'revoke:delete a key'
     'help:show the usage text'
   )
@@ -18,7 +19,7 @@ _litellm-key() {
   fi
 
   case $words[2] in
-    extend | revoke)
+    extend | budget | revoke)
       aliases=(${(f)"$(litellm-key keys 2>/dev/null | awk 'NR > 2 && NF { print $1 }')"})
       (( ${#aliases} )) && _describe -t aliases 'alias' aliases
       ;;

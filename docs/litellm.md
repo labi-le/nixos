@@ -208,7 +208,7 @@ from `/run/agenix/opencode-litellm-master-key`; override with `LITELLM_URL`,
 `LITELLM_KEY_FILE` and `LITELLM_MODELS`:
 
 ```
-litellm-key                 # alias, expiry, spend, models, blocked
+litellm-key                 # alias, expiry, spend, budget, models, blocked
 litellm-key logs 50         # last 50 request rows
 litellm-key logs -f         # keep printing new rows, Ctrl-C to stop
 litellm-key totals 7        # spend, tokens, requests per alias, last 7 days
@@ -216,6 +216,8 @@ litellm-key create vanya    # new key, 365 days, models from LITELLM_MODELS
 litellm-key create guest 30 # 30 days instead of a year
 litellm-key extend vanya 30d
 litellm-key extend vanya -30d # 30 days off the current expiry
+litellm-key budget vanya 5 1d # cap vanya at $5 per day
+litellm-key budget vanya off  # remove the cap
 litellm-key revoke vanya
 ```
 
@@ -249,10 +251,34 @@ becomes permanent; a negative duration never reaches the proxy. DURATION is a
 litellm duration (`30d`, `12h`, `2mo`), a bare number of days, or a negative
 one; a negative `mo` counts 30 days.
 
+`budget` rides litellm's `max_budget`/`budget_duration` pair through
+`/key/update`, so an existing key can be capped without touching the running
+container. Measured 2026-10-11 against the deployed 1.103.2, key capped at
+`max_budget: 1e-09, budget_duration: 1d`: the first call answered `200`, the
+second `429 Budget has been exceeded! Key=… Current cost: 3.58e-05, Max budget:
+1e-09`. `_virtual_key_max_budget_check` compares the key's spend counter before
+the current request's own cost lands, so a capped key overshoots its cap by
+exactly one request, and the refusal is hard — the cap is a wall, not a warning.
+`soft_budget` is the alert-only variant and `throttle_on_budget_exceeded` the
+throttle one; neither is set here.
+
+`budget_reset_at` is the next boundary, not the window's start: a key created at
+23:39 UTC with `budget_duration: 1d` carried `2026-10-11 00:00:00`. One day
+means the next `reset_time_of_day` in `litellm_settings.timezone` — both unset
+here, so midnight UTC; `7d` means the next Monday and `30d` the 1st of the next
+month, at the same time of day. It is a calendar boundary, not 24 hours from
+creation and not a rolling window. The proxy's `reset_budget_job` zeroes the
+key's `spend` and advances the timestamp once the boundary passes: that key
+answered `200`, `429`, then `200` again after 00:00 UTC, with `budget_reset_at`
+moved to the following midnight. The boundary is configurable —
+`litellm_settings.timezone = "Europe/Moscow"` in `modules/litellm/config.nix`
+puts it at MSK midnight — and that is a config change, so it needs the rebuild
+that key administration otherwise does not.
+
 zsh completion ships in the same package as
 `share/zsh/site-functions/_litellm-key`, which the system zsh already has on
-`fpath`, so it needs no shell configuration. Completing `extend` or `revoke`
-queries `/key/list` for the alias list on every tab press.
+`fpath`, so it needs no shell configuration. Completing `extend`, `budget` or
+`revoke` queries `/key/list` for the alias list on every tab press.
 
 Revoking deletes the row; nothing keeps the key value, so a revoked key cannot
 be restored, only replaced.
