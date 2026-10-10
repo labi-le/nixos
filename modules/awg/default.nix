@@ -21,14 +21,12 @@ let
       printf 'table ip awg\n'
       printf 'delete table ip awg\n'
       printf 'table ip awg {\n'
-      printf '  chain prerouting {\n'
-      printf '    type nat hook prerouting priority dstnat + 10; policy accept;\n'
       if [ -n "$WAN_IP" ]; then
+        printf '  chain prerouting {\n'
+        printf '    type nat hook prerouting priority dstnat + 10; policy accept;\n'
         printf '    iifname "wg0" ip daddr %s dnat to 192.168.1.2\n' "$WAN_IP"
+        printf '  }\n'
       fi
-      printf '    iifname "wg0" ip daddr 10.8.0.1 tcp dport 53 dnat to 192.168.1.1:53\n'
-      printf '    iifname "wg0" ip daddr 10.8.0.1 udp dport 53 dnat to 192.168.1.1:53\n'
-      printf '  }\n'
       printf '  chain postrouting {\n'
       printf '    type nat hook postrouting priority srcnat + 10; policy accept;\n'
       printf '    ip saddr 10.8.0.0/24 oifname "enp37s0" masquerade\n'
@@ -61,15 +59,15 @@ in
     allowedUDPPorts = [ 51820 ];
 
     extraCommands = ''
-      iptables -A INPUT -i wg0 -d 10.0.0.0/8 -j DROP
-      iptables -A INPUT -i wg0 -d 172.16.0.0/12 -j DROP
-      iptables -A INPUT -i wg0 -d 192.168.0.0/16 -j DROP
+      # RFC1918
+      iptables -A INPUT  -i wg0 -d 10.8.0.1 -p udp --dport 53 -j ACCEPT
+      iptables -A INPUT  -i wg0 -d 10.0.0.0/8     -j DROP
+      iptables -A INPUT  -i wg0 -d 172.16.0.0/12  -j DROP
+      iptables -A INPUT  -i wg0 -d 192.168.0.0/16 -j DROP
 
-      iptables -A FORWARD -i wg0 -m conntrack --ctstate DNAT -p udp --dport 53 -j ACCEPT
-      iptables -A FORWARD -i wg0 -m conntrack --ctstate DNAT -p tcp --dport 53 -j ACCEPT
-      iptables -A FORWARD -i wg0 -d 198.18.1.0/24 -j ACCEPT
-      iptables -A FORWARD -i wg0 -d 10.0.0.0/8 -j DROP
-      iptables -A FORWARD -i wg0 -d 172.16.0.0/12 -j DROP
+      iptables -A FORWARD -i wg0 -d 10.8.0.1 -p udp --dport 53 -j ACCEPT
+      iptables -A FORWARD -i wg0 -d 10.0.0.0/8     -j DROP
+      iptables -A FORWARD -i wg0 -d 172.16.0.0/12  -j DROP
       iptables -A FORWARD -i wg0 -d 192.168.0.0/16 -j DROP
     '';
   };

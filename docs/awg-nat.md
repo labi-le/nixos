@@ -42,38 +42,6 @@ reaching the server's own public (`external.lan`) address, redirected to
 the LAN address `192.168.1.2`, and masquerade for VPN traffic leaving
 `enp37s0` — are reproduced on the host in a dedicated table, `table ip
 awg`, installed by `systemd.services.awg-nat` (`modules/awg/default.nix`).
-
-A third rule in the same prerouting chain sends plain DNS aimed at the
-tunnel address into the router's resolver:
-
-```
-iifname "wg0" ip daddr 10.8.0.1 tcp dport 53 dnat to 192.168.1.1:53
-iifname "wg0" ip daddr 10.8.0.1 udp dport 53 dnat to 192.168.1.1:53
-```
-
-`WG_DEFAULT_DNS` stays `10.8.0.1`, so existing client profiles do not
-change, but the query no longer lands on unbound. The router answers
-through dnsmasq and mihomo, which is the only place `fast.com` and the
-other `vpn`/`telegram`/`warp` names become `198.18.1.0/24`. Unbound on
-`10.8.0.1:53` remains bound but receives nothing from `wg0`; DoT on
-`10.8.0.1:853` is intentionally left alone, and a client configured that
-way still gets real addresses.
-
-The two DNS rules are emitted whether or not `external.lan` resolved.
-Only the hairpin line is conditional. A failed lookup still exits 1 so
-the unit retries, but the DNS redirect and the masquerade are already
-installed.
-
-The firewall side has to match the post-DNAT packet. `iptables` sees the
-rewritten destination, so the old `FORWARD` exception for
-`10.8.0.1 udp/53` would have dropped the redirected query under the
-`192.168.0.0/16` rule. The replacement accepts `conntrack --ctstate DNAT`
-for tcp/53 and udp/53, and accepts `198.18.1.0/24` before the RFC1918
-drops. Without the second accept the phone would resolve a fake address
-and then be unable to send a packet to it. The router already tproxies
-that range into mihomo with no ingress-interface match, and the server
-routes it to `192.168.1.1`.
-
 A separate table means nothing here collides with docker's or the VM's
 rules in `table ip nat`; nothing is added to that shared table.
 `environment.WG_POST_UP`/`WG_POST_DOWN` in `modules/awg/compose.nix` are
