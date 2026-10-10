@@ -410,6 +410,8 @@ in
     "L+ ${agentDir}/rules/commit-style.md - - - - ${./rules/commit-style.md}"
     "L+ ${agentDir}/rules/code-comments.md - - - - ${./rules/code-comments.md}"
     "L+ ${agentDir}/rules/project-naming.md - - - - ${./rules/project-naming.md}"
+    "L+ ${agentDir}/rules/chroma-first.md - - - - ${./rules/chroma-first.md}"
+    "L+ ${agentDir}/rules/chroma-first-shell.md - - - - ${./rules/chroma-first-shell.md}"
     "L+ ${agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
     "L+ ${agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
     "L+ ${agentDir}/extensions/git-upstream-gate.ts - - - - ${./extensions/git-upstream-gate.ts}"
