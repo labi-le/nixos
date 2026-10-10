@@ -707,11 +707,11 @@
         "nixpkgs": "nixpkgs_7"
       },
       "locked": {
-        "lastModified": 1787312572,
-        "narHash": "sha256-CzffFzNlAdTum0lhjV+COVd4NxNgpj2htuvAwWlPwd4=",
+        "lastModified": 1791666756,
+        "narHash": "sha256-CAH8IvztG8sHK2UppJ/Z/vuOwOjXYqwuSV7zCwfa8SU=",
         "ref": "refs/heads/main",
-        "rev": "e86da1efbf49824e5ff3537001962fd1647b32fd",
-        "revCount": 96,
+        "rev": "d958be82e357050df4103a6e98e3df67c1e83af3",
+        "revCount": 112,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/index-repo"
       },
@@ -729,11 +729,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1791522838,
-        "narHash": "sha256-Q6VbwYvayJgN/7x4jI7KnSkd5NGyUwfUw57Dho4jJAE=",
+        "lastModified": 1791668524,
+        "narHash": "sha256-DLtkboR2GRhtoRzfFMBJCCv5dQjOAjBhgI7ENqm+OMk=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "4bb57cff45b5554a02dba0cf7a8c7f4f010a864d",
+        "rev": "1f66efd395d3509dc0704c9647fbfb6bf3c2cae3",
         "type": "github"
       },
       "original": {
@@ -1183,11 +1183,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1791532102,
-        "narHash": "sha256-K+IL61WEwpmpD/kN64BuMrM2YhdaMW/myl5qCs6OH7w=",
+        "lastModified": 1791651872,
+        "narHash": "sha256-t3OZP4E0mWFJU0RW3OMcGU2G52p5uasQdVPhITHnZec=",
         "owner": "can1357",
         "repo": "oh-my-pi",
-        "rev": "6c99a355d64fe43e027b047ce97859a566afd760",
+        "rev": "fa5ff4a3a977a28b93d025f4cf50f046e019f18c",
         "type": "github"
       },
       "original": {
@@ -1383,11 +1383,11 @@
         "nixpkgs": "nixpkgs_15"
       },
       "locked": {
-        "lastModified": 1789422754,
-        "narHash": "sha256-XqZj5Qe4MXVPeFHIS7TCSUTjKbwl0jdTYUqEu2nMGPg=",
+        "lastModified": 1791666046,
+        "narHash": "sha256-PIVX6V/qcCDp8n87XJNQr+e8JLiUmYzhDb96BYcssYM=",
         "ref": "refs/heads/master",
-        "rev": "0e81665fe105bbf95b2418992749beb446e00537",
-        "revCount": 442,
+        "rev": "c6d72dc74f9875c834d625665a99a40e42476dd3",
+        "revCount": 446,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/sub-preprocessor"
       },
@@ -1586,11 +1586,11 @@
     },
     "tidal-syncer": {
       "locked": {
-        "lastModified": 1789141835,
-        "narHash": "sha256-+eiYLIqo7ALP7X2jYMCzoRC8A7C6b3Tqcc59N+BfLoE=",
+        "lastModified": 1791652517,
+        "narHash": "sha256-kXut7iCyG7XlMlb0KsvqpsJnefGu3mToAyWROhiFzZE=",
         "ref": "refs/heads/main",
-        "rev": "bce60cbdd09899ef6fab6b1120b4fbdad68d1671",
-        "revCount": 53,
+        "rev": "cb5cf33459e532e761116ddc9682759e49102968",
+        "revCount": 69,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/tidal-syncer"
       },
