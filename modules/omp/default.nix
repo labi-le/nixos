@@ -139,8 +139,8 @@ let
               supportsTools = true;
             }
             {
-              id = "claude-haiku-4-5";
-              name = "Claude Haiku 4.5";
+              id = "claude-haiku-5-5";
+              name = "Claude Haiku 5.5";
               reasoning = true;
               supportsTools = true;
             }
@@ -165,30 +165,6 @@ let
             {
               id = "gemini-3.1-pro-low";
               name = "Gemini 3.1 Pro Low";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "gemini-3.1-flash-lite";
-              name = "Gemini 3.1 Flash Lite";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "gemini-3.1-flash-image";
-              name = "Gemini 3.1 Flash Image";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "glm-5.3";
-              name = "GLM-5.3";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "grok-4.7";
-              name = "Grok 4.7";
               reasoning = true;
               supportsTools = true;
             }
