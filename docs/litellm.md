@@ -220,11 +220,32 @@ be restored, only replaced.
 
 `spend` does not come from litellm's cost map — `openai/deepseek-v4.1-flash`
 has no entry there, which is why every figure read `0.0000` until
-2026-10-04. The deployments now carry explicit costs in
-`modules/litellm/default.nix`, taken from the OpenCode Zen price list:
-DeepSeek V4.1 Flash, $0.30 per 1M input, $1.20 per 1M output, $0.006 per 1M
-cached read ([pricing](https://opencode.ai/docs/zen), read 2026-10-04), that
-is `3.0e-7`, `1.2e-6` and `6.0e-9` per token.
+2026-10-04. The deployments carry explicit costs in
+`modules/litellm/models/deepseek-v4.1-flash.nix`, taken from the OpenCode Go
+price list ([Go plans](https://opencode.ai/docs/go), read 2026-10-10), which
+bills DeepSeek V4.1 Flash in two tariffs: **peak** — $0.30 per 1M input, $1.20
+output, $0.006 cached read — and **off-peak**, exactly half: $0.15, $0.60,
+$0.003. Peak hours are 01:00–04:00 and 06:00–10:00 UTC, Monday to Friday; every
+other hour, weekends included, is off-peak.
+
+The declared standard rates are the peak ones (`3.0e-7`, `1.2e-6`, `6.0e-9` per
+token) and the half rates sit in `model_info.off_peak_pricing`, litellm's own
+time-windowed pricing: `hours_utc` carries the three daily off-peak windows
+(`00:00-01:00`, `04:00-06:00`, `10:00-00:00` — a window that ends at midnight
+wraps, so it means 10:00–24:00) and `windows` adds the weekend, where the whole
+day is off-peak, as `weekdays = [ "sat" "sun" ]` with an equal-ended
+`00:00-00:00` window. An off-peak rate *replaces* the standard rate while a
+window is open rather than discounting it, and any rate left unset falls back to
+the standard one.
+
+Nothing recomputes this by hand: `spend` is already the tariff that applied when
+the request was logged. Verified 2026-10-10 on the deployed proxy — rows logged
+before the change read exactly the peak figure (`191730`/`632` tokens →
+`0.001942296`), rows after read exactly half (`205278`/`1622` →
+`0.001640484`), and a 39/32-token request logged `2.505e-05`, which is
+`39×1.5e-7 + 32×6e-7`. The window logic was also checked against the deployed
+block at twelve timestamps: Mon 01:30, 02:00, 07:00 and 09:59 peak; Mon 00:30,
+05:00, 10:00, 23:59, Fri 23:00, Sat 02:00, Sat 09:00 and Sun 23:00 off-peak.
 
 The number is a billing equivalent, not money the pool actually charges: the
 four accounts are a flat subscription, and Zen reports consumption only as a
