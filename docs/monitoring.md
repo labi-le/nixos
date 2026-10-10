@@ -10,6 +10,28 @@ receivers), `storage.nix` (ZFS/SMART, see `docs/zfs-pool.md`),
 container-state textfile exporter service+timer) and `failures.nix` (this
 page).
 
+## Telegram message format
+
+All three contact points share one message template (`contact-points.nix`).
+A notification is a status line — `FIRING` or `RESOLVED` plus the rule
+title, which is the `alertname` label Grafana derives from the rule title and
+which `group_by = [ "alertname" ]` guarantees is the same for every alert in
+one message — then one line per alert from its `summary` annotation, then,
+while firing, that alert's `command` annotation inside a Telegram `<pre>`
+block. `<pre>` is the point of the whole layout: Telegram turns a formatted
+block into a copyable element, so the first recovery command is a tap away
+instead of a command to hand-pick out of a prose sentence. The rules
+therefore carry two annotations: `summary` (short, instance-level, no
+commands — it is also what the Grafana UI shows next to the rule title) and
+`command` (one shell command per line, made target-specific with
+`{{ $labels.* }}`). Resolved messages drop the command block and the frp
+rule's matched log line, because recovery does not need a runbook. The
+`evaluation error:` block survives in both states: with `execErrState =
+"Error"` Grafana builds a `DatasourceError` instance that carries the rule's
+annotations but none of the query labels, so without it such a page would be
+a summary with an empty body and no hint that the cause was an evaluation
+failure.
+
 ## Temporary filesystem capacity
 
 The `storage-tmp-filling` rule in `storage.nix` warns through

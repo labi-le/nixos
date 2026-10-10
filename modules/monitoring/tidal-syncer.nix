@@ -121,7 +121,8 @@
             execErrState = "KeepLast";
             for = "0m";
             annotations = {
-              summary = "TIDAL session expired on server: run 'tidal-syncer-login' (or 'systemctl start tidal-syncer-login' and watch 'journalctl -fu tidal-syncer-login' for the verification URL) to re-authorize.";
+              summary = "session expired — re-authorize";
+              command = "tidal-syncer-login";
             };
             labels = {
               severity = "warning";
@@ -223,7 +224,8 @@
             execErrState = "KeepLast";
             for = "10m";
             annotations = {
-              summary = "tidal-syncer is not exporting metrics: check 'systemctl status tidal-syncer' and 'journalctl -u tidal-syncer -n 50' on the server.";
+              summary = "metrics stopped — is the daemon running?";
+              command = "systemctl status tidal-syncer\njournalctl -u tidal-syncer -n 50";
             };
             labels = {
               severity = "warning";

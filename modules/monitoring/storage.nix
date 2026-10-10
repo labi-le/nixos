@@ -85,7 +85,8 @@
             execErrState = "KeepLast";
             for = "1m";
             annotations = {
-              summary = "ZFS pool 'data' is not ONLINE on server: run 'zpool status -v data' to see which member degraded, faulted, or is offline.";
+              summary = "a vdev member is degraded, faulted or offline";
+              command = "zpool status -v data";
             };
             labels = {
               severity = "critical";
@@ -175,7 +176,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "ZFS pool 'data' is over 80% allocated on server: run 'zfs list -o name,used,avail,refer data' and 'zpool list data' to plan expansion or pruning before performance degrades.";
+              summary = "over 80% allocated — plan expansion or pruning";
+              command = "zfs list -o name,used,avail,refer data\nzpool list data";
             };
             labels = {
               severity = "warning";
@@ -265,7 +267,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "Root filesystem is below 15% free on server: run 'df -h /' -- the NVMe is DRAM-less and write throughput collapses once it runs low on free blocks to erase, so this is a performance alert as much as a capacity one.";
+              summary = "below 15% free — write throughput collapses once free blocks run out";
+              command = "df -h /";
             };
             labels = {
               severity = "warning";
@@ -355,7 +358,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "Temporary filesystem /tmp is at least 90% full on server: run 'df -h /tmp' and 'sudo du -xhd1 /tmp' to identify large temporary build directories. A full /tmp interrupts nginx binary-cache downloads.";
+              summary = "at least 90% full — a full /tmp breaks nginx binary-cache downloads";
+              command = "df -h /tmp\nsudo du -xhd1 /tmp";
             };
             labels = {
               severity = "warning";
@@ -445,7 +449,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "Torrents disk '/torrents' (the only copy of the torrent data) is below 15% free on server: run 'df -h /torrents' and prune or expand before it fills.";
+              summary = "below 15% free — this data has no other copy";
+              command = "df -h /torrents";
             };
             labels = {
               severity = "warning";
@@ -535,7 +540,8 @@
             execErrState = "KeepLast";
             for = "2m";
             annotations = {
-              summary = "SMART status reports failure on device '{{ $labels.device }}' on server: run 'smartctl -a /dev/disk/by-id/{{ $labels.device }}' immediately and plan replacement.";
+              summary = "SMART failure on {{ $labels.device }} — plan replacement";
+              command = "smartctl -a /dev/disk/by-id/{{ $labels.device }}";
             };
             labels = {
               severity = "critical";
@@ -625,7 +631,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "NVMe media error count grew in the last 24h on server: run 'smartctl -a /dev/disk/by-id/{{ $labels.device }}' to inspect the current count and trend.";
+              summary = "media error count grew in the last 24h on {{ $labels.device }}";
+              command = "smartctl -a /dev/disk/by-id/{{ $labels.device }}";
             };
             labels = {
               severity = "warning";
@@ -715,7 +722,8 @@
             execErrState = "KeepLast";
             for = "10m";
             annotations = {
-              summary = "zfs_exporter is not exporting metrics on server: check 'systemctl status prometheus-zfs-exporter' and 'journalctl -u prometheus-zfs-exporter -n 50'.";
+              summary = "metrics stopped — ZFS monitoring is blind";
+              command = "systemctl status prometheus-zfs-exporter\njournalctl -u prometheus-zfs-exporter -n 50";
             };
             labels = {
               severity = "warning";
@@ -805,7 +813,8 @@
             execErrState = "KeepLast";
             for = "10m";
             annotations = {
-              summary = "smartctl_exporter is not exporting metrics on server: SMART monitoring is blind, not that a drive is failing. Check 'systemctl status prometheus-smartctl-exporter' and 'journalctl -u prometheus-smartctl-exporter -n 50'.";
+              summary = "metrics stopped — SMART monitoring is blind (not a drive failure)";
+              command = "systemctl status prometheus-smartctl-exporter\njournalctl -u prometheus-smartctl-exporter -n 50";
             };
             labels = {
               severity = "warning";

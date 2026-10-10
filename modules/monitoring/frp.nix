@@ -90,7 +90,8 @@
             execErrState = "KeepLast";
             for = "0m";
             annotations = {
-              summary = "frp reverse proxy: tunnel connections are dropping on the server; check 'systemctl status frp-server' and 'journalctl -u frp-server -n 50'.";
+              summary = "connections dropping in the last 5m";
+              command = "systemctl status frp-server\njournalctl -u frp-server -n 50";
             };
             labels = {
               severity = "warning";

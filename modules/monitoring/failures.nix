@@ -85,7 +85,8 @@
             execErrState = "KeepLast";
             for = "2m";
             annotations = {
-              summary = "systemd unit {{ $labels.name }} is in the failed state on server: run 'systemctl status {{ $labels.name }}' and 'journalctl -u {{ $labels.name }} -n 50' to see why.";
+              summary = "{{ $labels.name }} failed";
+              command = "systemctl status {{ $labels.name }}\njournalctl -u {{ $labels.name }} -n 50";
             };
             labels = {
               severity = "critical";
@@ -175,7 +176,8 @@
             execErrState = "KeepLast";
             for = "0s";
             annotations = {
-              summary = "systemd service {{ $labels.name }} restarted more than 5 times in the last 15 minutes on server: run 'systemctl status {{ $labels.name }}' and 'journalctl -u {{ $labels.name }} -n 100' to find the crash loop.";
+              summary = "{{ $labels.name }} restarted more than 5 times in 15m";
+              command = "systemctl status {{ $labels.name }}\njournalctl -u {{ $labels.name }} -n 100";
             };
             labels = {
               severity = "critical";
@@ -265,7 +267,8 @@
             execErrState = "KeepLast";
             for = "0s";
             annotations = {
-              summary = "Docker container {{ $labels.name }} restarted more than 3 times in the last 15 minutes on server: run 'docker inspect {{ $labels.name }}' and 'docker logs --tail 100 {{ $labels.name }}' to see why it is crash-looping.";
+              summary = "{{ $labels.name }} restarted more than 3 times in 15m";
+              command = "docker inspect {{ $labels.name }}\ndocker logs --tail 100 {{ $labels.name }}";
             };
             labels = {
               severity = "critical";
@@ -355,7 +358,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "Docker container {{ $labels.name }} is not running on server even though its restart policy is always: run 'docker ps -a --filter name={{ $labels.name }}' and 'docker logs --tail 100 {{ $labels.name }}' to see why it stopped.";
+              summary = "{{ $labels.name }} is not running";
+              command = "docker ps -a --filter name={{ $labels.name }}\ndocker logs --tail 100 {{ $labels.name }}";
             };
             labels = {
               severity = "critical";
@@ -445,7 +449,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "Docker container {{ $labels.name }} is reporting an unhealthy health check on server: run 'docker inspect {{ $labels.name }} | jq .State.Health' to see the failing check.";
+              summary = "{{ $labels.name }} failed its health check";
+              command = "docker inspect {{ $labels.name }} | jq .State.Health";
             };
             labels = {
               severity = "warning";
@@ -535,7 +540,8 @@
             execErrState = "KeepLast";
             for = "1m";
             annotations = {
-              summary = "The docker-container-state-exporter has not updated its metrics file in over 3 minutes, or has never run, on server: container-state monitoring (container-down, container-unhealthy, container-restart-loop) is blind. Run 'systemctl status docker-container-state-exporter.timer' and 'journalctl -u docker-container-state-exporter -n 50'.";
+              summary = "no metric update for more than 3m — container checks are blind";
+              command = "systemctl status docker-container-state-exporter.timer\njournalctl -u docker-container-state-exporter -n 50";
             };
             labels = {
               severity = "critical";
@@ -625,7 +631,8 @@
             execErrState = "KeepLast";
             for = "0s";
             annotations = {
-              summary = "The kernel OOM killer has killed a process on server in the last 5 minutes: run 'journalctl -k --grep=\"Out of memory\"' and 'dmesg -T | grep -i \"killed process\"' to identify what was killed, and check the process-exporter dashboard for the memory hog around that time.";
+              summary = "a process was killed in the last 5m";
+              command = "journalctl -k --grep=\"Out of memory\"\ndmesg -T | grep -i \"killed process\"";
             };
             labels = {
               severity = "critical";
@@ -715,7 +722,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "Prometheus scrape target job={{ $labels.job }} instance={{ $labels.instance }} is down on server: check that its exporter unit is running (e.g. 'systemctl status prometheus-node-exporter', 'prometheus-nginx-exporter', 'prometheus-process-exporter', 'sub-preprocessor', or 'frp-server') and see 'curl -s 127.0.0.1:3020/api/v1/targets' for scrape health.";
+              summary = "{{ $labels.job }} target {{ $labels.instance }} is down";
+              command = "curl -s 127.0.0.1:3020/api/v1/targets | jq -r '.data.activeTargets[] | select(.health != \"up\") | .scrapeUrl, .lastError'";
             };
             labels = {
               severity = "critical";

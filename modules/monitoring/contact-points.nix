@@ -37,9 +37,10 @@
   services.grafana.provision.alerting.contactPoints.settings =
     let
       template = ''
-        {{ if eq .Status "resolved" }}<b>RESOLVED</b>{{ else }}<b>FIRING</b>{{ end }}
-        {{ with index .Alerts 0 }}{{ .Annotations.summary }}
-        {{ end }}{{ range .Alerts }}{{ if .Labels.message }}<pre>{{ .Labels.message }}</pre>
+        {{ if eq .Status "resolved" }}<b>RESOLVED · {{ .GroupLabels.alertname }}</b>{{ else }}<b>FIRING · {{ .GroupLabels.alertname }}</b>{{ end }}
+        {{ range .Alerts }}{{ .Annotations.summary }}
+        {{ if and (ne $.Status "resolved") .Labels.message }}<pre>{{ .Labels.message }}</pre>
+        {{ end }}{{ if and (ne $.Status "resolved") .Annotations.command }}<pre>{{ .Annotations.command }}</pre>
         {{ end }}{{ if .Annotations.Error }}<pre>evaluation error: {{ .Annotations.Error }}</pre>
         {{ end }}{{ end }}'';
       telegram = name: chatids: disableResolveMessage: {
