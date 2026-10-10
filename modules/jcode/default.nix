@@ -135,6 +135,56 @@ let
   };
 
   baseProviders = {
+    byesu = {
+      type = "openai-compatible";
+      base_url = "https://byesu.com/v1";
+      api_key_env = "BYESU_API_KEY";
+      env_file = "byesu.env";
+      default_model = "claude-haiku-5-5";
+      model_catalog = true;
+      models = [
+        {
+          id = "claude-opus-5-5";
+          reasoning = true;
+          context_window = 1000000;
+        }
+        {
+          id = "claude-sonnet-5-5";
+          reasoning = true;
+          context_window = 1000000;
+        }
+        {
+          id = "claude-haiku-5-5";
+          reasoning = true;
+          context_window = 1000000;
+        }
+        {
+          id = "gemini-3.8-flash";
+          reasoning = true;
+          context_window = 1048576;
+        }
+        {
+          id = "gemini-3.8-flash-high";
+          reasoning = true;
+          context_window = 1048576;
+        }
+        {
+          id = "gemini-pro-agent";
+          reasoning = true;
+          context_window = 1048576;
+        }
+        {
+          id = "gemini-3.1-pro-low";
+          reasoning = true;
+          context_window = 1048576;
+        }
+        {
+          id = "kimi-k3";
+          reasoning = true;
+          context_window = 1048576;
+        }
+      ];
+    };
     closerouter = {
       type = "openai-compatible";
       base_url = "https://api.closerouter.dev/v1";
@@ -497,6 +547,11 @@ let
   };
 
   providerEnvFiles = [
+    {
+      secret = "byesu-env";
+      variable = "BYESU_API_KEY";
+      file = "byesu.env";
+    }
     {
       secret = "opencode-litellm-master-key";
       variable = "LITELLM_CLOSEROUTER";
