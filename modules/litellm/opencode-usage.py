@@ -7,6 +7,7 @@ import httpx
 
 KEY_ENV_PREFIX = "LITELLM_OPENCODE_GO_KEY_"
 MASTER_KEY_ENV = "LITELLM_MASTER_KEY"
+METERED_KEY = "opencode_usage_metered"
 USAGE_URL = os.environ.get("OPENCODE_USAGE_URL", "https://opencode.ai/zen/go/v1/usage")
 SYNC_INTERVAL_SECONDS = int(os.environ.get("OPENCODE_USAGE_SYNC_SECONDS", "120"))
 COOLDOWN_SECONDS = int(os.environ.get("OPENCODE_USAGE_COOLDOWN_SECONDS", "600"))
@@ -66,10 +67,14 @@ def model_ids_by_key():
     mapping = {}
     for deployment in llm_router.model_list:
         params = deployment.get("litellm_params") or {}
-        model_id = (deployment.get("model_info") or {}).get("id")
+        info = deployment.get("model_info") or {}
+        model_id = info.get("id")
         api_key = resolve_api_key(str(params.get("api_key") or ""))
-        if api_key and model_id:
-            mapping[api_key] = model_id
+        if not (api_key and model_id):
+            continue
+        if info.get(METERED_KEY) is False:
+            continue
+        mapping.setdefault(api_key, []).append(model_id)
     return mapping
 
 
@@ -192,8 +197,8 @@ async def sync_once():
     accounts = []
     async with httpx.AsyncClient(timeout=10) as client:
         for key in keys.values():
-            model_id = model_ids.get(key)
-            if model_id is None:
+            key_model_ids = model_ids.get(key) or []
+            if not key_model_ids:
                 continue
             try:
                 usage = await fetch_usage(client, key)
@@ -201,14 +206,15 @@ async def sync_once():
                 continue
             limited = exhausted_window(usage)
             if limited is not None:
-                llm_router.cooldown_cache.add_deployment_to_cooldown(
-                    model_id=model_id,
-                    original_exception=Exception(
-                        f"opencode usage window {limited} at limit"
-                    ),
-                    exception_status=429,
-                    cooldown_time=COOLDOWN_SECONDS,
-                )
+                for model_id in key_model_ids:
+                    llm_router.cooldown_cache.add_deployment_to_cooldown(
+                        model_id=model_id,
+                        original_exception=Exception(
+                            f"opencode usage window {limited} at limit"
+                        ),
+                        exception_status=429,
+                        cooldown_time=COOLDOWN_SECONDS,
+                    )
             windows = {window: usage.get(window) or {} for window in WINDOWS}
             accounts.append({"limited": limited, "windows": windows})
     if accounts:

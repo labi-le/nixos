@@ -7,10 +7,40 @@ proxied by `llm.labile.cc`. Keys, spend and models live in PostgreSQL, not in
 the container, so they survive restarts, rebuilds and image updates.
 
 jcode consumes the group as its default provider (`pool/opencode-go-pool` in
-`modules/jcode/default.nix`) on every host that receives the master key, so
+`modules/jcode/default.nix`, the compatibility alias of the group now named
+`deepseek-v4.1-flash`) on every host that receives the master key, so
 interactive turns shuffle across the four accounts; hosts outside the secret's
 recipients (fx516) keep the direct `opencode-go` profile. omp does not use this
 gateway; it authenticates against `closerouter` and `tokenharbor` directly.
+
+## Model groups
+
+Two groups are served, both from `https://opencode.ai/zen/go/v1` with the same
+four account keys:
+
+- `deepseek-v4.1-flash` — the four-account pool of `openai/deepseek-v4.1-flash`
+  deployments. It was called `opencode-go-pool` until 2026-10-10; that name
+  survives as a `router_settings.model_group_alias`, so every client, key and
+  log that still says `opencode-go-pool` keeps working. The alias resolves
+  before the key-permission check, which appends the alias target to the
+  candidate names (`_can_object_call_model`), so a key scoped to *either* name
+  can call the group through *either* name — an old key keeps working after a
+  client switches to the new name, and a new key keeps working after a client
+  falls back to the old one.
+- `step-5-preview` — `openai/step-5-preview-free`, the free Go-tier model
+  (upstream publishes `step-5-preview-free`; the group name is deliberately
+  shorter, and it is what `/v1/models` and the spend log show).
+
+The free group's deployments carry `model_info.opencode_usage_metered = false`
+and zero costs, and the pool-usage callback skips exactly those deployments:
+the rolling/weekly/monthly windows meter the subscription, not the free model,
+so benching a free deployment because the paid quota ran out would withdraw the
+model for no reason. A free deployment still cooldowns on a real upstream error
+(429/5xx, `cooldown_time = 600`), and the callback benches *every* metered
+deployment that shares an account key — which is what keeps the paid pool
+protected now that two groups share the same four keys. The `/v1/usage`
+snapshot keeps its `provider: opencode-go-pool` label: it names the account
+pool, not a model group.
 
 ## Why containers instead of `services.litellm`
 
@@ -50,7 +80,7 @@ show it again, so capture it before the shell prints anything else:
 ```
 curl -sX POST https://llm.labile.cc/key/generate \
   -H "Authorization: Bearer $MASTER" -H 'Content-Type: application/json' \
-  -d '{"key_alias":"friend","duration":"365d","models":["opencode-go-pool"]}'
+  -d '{"key_alias":"friend","duration":"365d","models":["deepseek-v4.1-flash"]}'
 ```
 
 Extend or shorten — `duration` sets the expiry to *now + duration*; it does
@@ -237,7 +267,7 @@ in the database, upstream documents no rotation, and a new value produces
 once, in the same secret as `DATABASE_URL`.
 
 The vhost carries no IP restriction since commit `93392bf`, so a key is the
-only gate. Every key spends the same four `opencode-go-pool` accounts.
+only gate. Every key spends the same four `deepseek-v4.1-flash` accounts.
 
 The data directory `/var/lib/litellm-db` is `999:999` mode `700`. On the host
 uid 999 is a dynamic user named `nm-iodine` — identical number, unrelated

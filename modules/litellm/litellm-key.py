@@ -14,7 +14,7 @@ KEY_FILES = (
     "/run/agenix/opencode-litellm-master-key",
     "/run/agenix/litellm-env",
 )
-MODELS = [name for name in os.environ.get("LITELLM_MODELS", "opencode-go-pool").split(",") if name]
+MODELS = [name for name in os.environ.get("LITELLM_MODELS", "deepseek-v4.1-flash").split(",") if name]
 USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
                      | create ALIAS [DAYS]
                      | extend TARGET [DURATION]
@@ -27,7 +27,7 @@ USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
                            DAYS days, default 7; reads the full request log,
                            so a very busy proxy makes this slow
   create ALIAS [DAYS]      new key for ALIAS, default 365 days, models from
-                           LITELLM_MODELS (default opencode-go-pool); the key
+                           LITELLM_MODELS (default deepseek-v4.1-flash); the key
                            is printed once and cannot be read back
   extend TARGET [DURATION] move the expiry to now + DURATION, default 365d; a
                            negative DURATION moves the current expiry back by
