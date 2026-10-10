@@ -193,6 +193,8 @@ let
             "chroma-mcp"
             "--with"
             "pydantic<2.14"
+            "--with"
+            "chromadb==${config.services.chromadb.package.version}"
             "python"
             "-c"
             ''
