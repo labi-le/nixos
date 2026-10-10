@@ -79,6 +79,8 @@ let
             "chroma-mcp"
             "--with"
             "pydantic<2.14"
+            "--with"
+            "chromadb==${config.services.chromadb.package.version}"
             "python"
             "-c"
             ''
@@ -92,11 +94,11 @@ let
             "--client-type"
             "http"
             "--host"
-            "192.168.1.2"
+            config.services.index-repo.host
             "--port"
-            "8000"
+            (toString config.services.index-repo.port)
             "--ssl"
-            "false"
+            (lib.boolToString config.services.index-repo.ssl)
           ];
           timeout_secs = 120;
         };

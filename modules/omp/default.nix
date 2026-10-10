@@ -208,11 +208,11 @@ let
             "--client-type"
             "http"
             "--host"
-            "192.168.1.2"
+            config.services.index-repo.host
             "--port"
-            "8000"
+            (toString config.services.index-repo.port)
             "--ssl"
-            "false"
+            (lib.boolToString config.services.index-repo.ssl)
           ];
         };
         context7 = {
@@ -229,32 +229,9 @@ let
     }
   );
 
-  repoRegisterJs = pkgs.writeText "repo-register.js" ''
-    import { execFile, spawnSync } from "node:child_process";
-    import { promisify } from "node:util";
-    import { existsSync } from "node:fs";
-    import { join } from "node:path";
-
-    const run = promisify(execFile);
-    const INDEX_REPO = "${pkgs.index-repo}/bin/index-repo";
-
-    async function ensureRegistered(ctx) {
-      if (process.env.CODE_INDEXER_ACTIVE || process.env.CODE_INDEXER_DISABLE) return;
-      const cwd = (ctx && ctx.cwd) || process.cwd();
-      if (!cwd || !existsSync(join(cwd, ".git")) || existsSync(join(cwd, ".no-code-index"))) return;
-      process.env.CODE_INDEXER_ACTIVE = "1";
-      try { await run("systemctl", ["--user", "start", "--no-block", "index-repo.service"]); } catch {}
-      try { await run(INDEX_REPO, ["register", cwd, "--pid", String(process.pid)]); } catch {}
-      process.once("exit", () => {
-        try { spawnSync(INDEX_REPO, ["unregister", cwd, "--pid", String(process.pid)]); } catch {}
-      });
-    }
-
-    export default function (pi) {
-      pi.on("session_start", (_event, ctx) => ensureRegistered(ctx));
-      pi.on("agent_start", (_event, ctx) => ensureRegistered(ctx));
-    }
-  '';
+  repoRegisterJs = pkgs.replaceVars "${inputs.index-repo}/hooks/omp/repo-register.js" {
+    index_repo_bin = "${pkgs.index-repo}/bin/index-repo";
+  };
 
   lspJson = pkgs.writeText "lsp.json" (
     builtins.toJSON {

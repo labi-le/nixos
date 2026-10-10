@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   # ChromaDB vector database for semantic code search.
   # Used by omp's `chroma` MCP server on client machines.
@@ -7,8 +7,8 @@
   # reachable on the server's public interface. LAN clients reach 192.168.1.2:8000.
   services.chromadb = {
     enable = true;
-    host = "192.168.1.2";
-    port = 8000;
+    host = config.services.index-repo.host;
+    port = config.services.index-repo.port;
     openFirewall = true;
   };
 
