@@ -58,6 +58,7 @@ let
 in
 {
   inherit poolSize;
+  inherit groups;
 
   modelList = lib.concatMap (
     group: lib.imap0 (index: _: deployment group index) (lib.range 1 poolSize)

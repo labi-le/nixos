@@ -6,12 +6,16 @@
 proxied by `llm.labile.cc`. Keys, spend and models live in PostgreSQL, not in
 the container, so they survive restarts, rebuilds and image updates.
 
-jcode consumes the group as its default provider (`pool/opencode-go-pool` in
-`modules/jcode/default.nix`, the compatibility alias of the group now named
-`deepseek-v4.1-flash`) on every host that receives the master key, so
-interactive turns shuffle across the four accounts; hosts outside the secret's
-recipients (fx516) keep the direct `opencode-go` profile. omp does not use this
-gateway; it authenticates against `closerouter` and `tokenharbor` directly.
+jcode consumes the group as its default provider (`llm-labile` with model
+`deepseek-v4.1-flash` in `modules/jcode/providers.nix`) on every host that
+receives the master key, so interactive turns shuffle across the four accounts;
+hosts outside the secret's recipients (fx516) keep the direct `opencode-go`
+profile. That provider's model list is derived from the catalog
+(`import ../litellm/models`), one entry per group — declared aliases are
+compatibility names for other clients and are deliberately not advertised — so
+a new group file appears in jcode's `/model` picker without an edit here. omp
+does not use this gateway; it authenticates against `closerouter` and
+`tokenharbor` directly.
 
 ## Model groups
 
@@ -28,7 +32,11 @@ four account keys:
 - `deepseek-v4.1-flash` — the four-account pool of `openai/deepseek-v4.1-flash`
   deployments. It was called `opencode-go-pool` until 2026-10-10; that name
   survives as a `router_settings.model_group_alias`, so every client, key and
-  log that still says `opencode-go-pool` keeps working. The alias resolves
+  log that still says `opencode-go-pool` keeps working. The alias is the only
+  remaining reason the old name exists, so it is declared as removable in
+  `models/deepseek-v4.1-flash.nix` and goes away once every client asks for
+  `deepseek-v4.1-flash`; jcode already does (its `llm-labile` provider lists
+  the canonical names only). The alias resolves
   before the key-permission check, which appends the alias *target* to the
   candidate names (`_can_object_call_model`) — measured 2026-10-10 with a key
   scoped to `["opencode-go-pool"]`: a request naming `opencode-go-pool` answers

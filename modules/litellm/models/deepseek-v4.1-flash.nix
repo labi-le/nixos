@@ -1,6 +1,8 @@
 {
   name = "deepseek-v4.1-flash";
   upstream = "openai/deepseek-v4.1-flash";
+  # Legacy name from the 2026-10-10 rename; drop it once every client asks for
+  # `deepseek-v4.1-flash` instead.
   alias = "opencode-go-pool";
   metered = true;
   inputCostPerToken = 3.0e-7;
