@@ -15,6 +15,13 @@ gateway; it authenticates against `closerouter` and `tokenharbor` directly.
 
 ## Model groups
 
+Groups are data, not code: `modules/litellm/models/<group>.nix` holds one
+group's upstream id, alias, costs and capabilities, `models/default.nix`
+expands each group into one deployment per account key (and derives
+`model_group_alias` from the groups that declare one), `config.nix` is the rest
+of the generated `config.yaml`, and `default.nix` keeps the NixOS side
+(secrets, containers, units). Adding a model is one new file under `models/`.
+
 Two groups are served, both from `https://opencode.ai/zen/go/v1` with the same
 four account keys:
 
@@ -46,6 +53,24 @@ deployment that shares an account key — which is what keeps the paid pool
 protected now that two groups share the same four keys. The `/v1/usage`
 snapshot keeps its `provider: opencode-go-pool` label: it names the account
 pool, not a model group.
+
+Capabilities live in the group files and are declared from measurements rather
+than from a catalog: `maxInputTokens`, `maxOutputTokens`, `supportsVision`,
+`supportsFunctionCalling` and `reasoningEffortLevels` become the group's
+`model_info`, and litellm republishes them on `GET /model_group/info`
+(`/v1/models` stays OpenAI-shaped and carries ids only) with `max_*_tokens`
+taken as the maximum across the group's deployments. Measured 2026-10-10
+against `zen/go` with a pool key: both models answer a 300k-token prompt
+(300 036 / 300 017 prompt tokens), both describe an image sent as a data URI or
+an https URL, both return `tool_calls` for a tools request, and every declared
+level is accepted — except `none` on `step-5-preview`, which answers `400
+Reasoning is mandatory for this endpoint and cannot be disabled`, so that group
+declares six levels. `none` on `deepseek-v4.1-flash` really does switch
+reasoning off (0 reasoning tokens, against 73–234 for the other six levels), and
+the proxy forwards `reasoning_effort` untouched — `drop_params` does not cover
+it, so a rejected level reaches the client as `litellm.BadRequestError` instead
+of being silently dropped. `max_output_tokens` (384 000 / 65 536) is the one
+number taken from models.dev and not probed here.
 
 ## Why containers instead of `services.litellm`
 
