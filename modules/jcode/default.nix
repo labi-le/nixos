@@ -19,12 +19,6 @@ let
     rev = "8ca22dba9a94f28898bbce59f2537ff4d87c747d";
     hash = "sha256-BWPiXoXV+jePP+wn/Z+Af4iehIL7oei00plaWaTzq8s=";
   };
-  cavemanSrc = pkgs.fetchFromGitHub {
-    owner = "JuliusBrussee";
-    repo = "caveman";
-    rev = "2fd153c67988e980fb0b2455c90832159a6a5a25";
-    hash = "sha256-KFfU8LmNajKLZcOXOFisn4beTcg2YL+rpasr39UgSZE=";
-  };
   agentSkillsSrc = pkgs.fetchFromGitHub {
     owner = "labi-le";
     repo = "agent-skills";
@@ -58,7 +52,6 @@ let
     (skillsFromDir "${superpowersSrc}/skills")
     (skillsFromDir "${agentSkillsSrc}/skills")
     {
-      caveman = "${cavemanSrc}/skills/caveman";
       humanizer = humanizerSkill;
       plantuml-rendering = plantumlSkillSrc;
     }

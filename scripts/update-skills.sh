@@ -9,7 +9,6 @@ skills=(
   "agent-skills|labi-le|agent-skills"
   "desloppify|peteromallet|desloppify"
   "plantuml|asolfre|plantuml-rendering-skill"
-  "caveman|JuliusBrussee|caveman"
 )
 
 prefetch() {

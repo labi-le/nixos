@@ -1,5 +1,3 @@
-Read the caveman skill in ultra mode and answer in that mode for every response.
-
 # Subagent supervision
 
 These rules apply only while subagents are actually running.

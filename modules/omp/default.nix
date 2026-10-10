@@ -40,12 +40,6 @@ let
     rev = "8ca22dba9a94f28898bbce59f2537ff4d87c747d";
     hash = "sha256-BWPiXoXV+jePP+wn/Z+Af4iehIL7oei00plaWaTzq8s=";
   };
-  cavemanSrc = pkgs.fetchFromGitHub {
-    owner = "JuliusBrussee";
-    repo = "caveman";
-    rev = "2fd153c67988e980fb0b2455c90832159a6a5a25";
-    hash = "sha256-KFfU8LmNajKLZcOXOFisn4beTcg2YL+rpasr39UgSZE=";
-  };
   humanizerSrc = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/databasus/databasus/bda7237599756ba76401b29e9761b07206e38bd6/.agents/skills/humanizer/SKILL.md";
     hash = "sha256-fDpFzjSCLTnVs0d08TwQsU2ent9I6EJ9n7/vg/Mt7LA=";
@@ -64,7 +58,6 @@ let
     );
 
   vendoredSkills = skillsFromDir "${superpowersSrc}/skills" // {
-    caveman = "${cavemanSrc}/skills/caveman";
     humanizer = "${humanizerSkill}";
   };
 
