@@ -178,3 +178,38 @@ how upstream selection and connection reuse behave (variable `proxy_pass`
 disables some of nginx's static upstream handling, e.g. keepalive pooling to
 a fixed upstream), which is a behavior change beyond fixing the race — out
 of scope here.
+
+## The LLM gateway vhost: public API, whitelisted dashboard
+
+`llm.labile.cc` is the only vhost that is deliberately split. The API has to
+answer from anywhere — jcode on every host and friends' tools call it over
+mobile and foreign networks, and a virtual key is the gate — while the admin
+dashboard only has to answer to you. `modules/nginx.nix` therefore builds it
+with `llmGateway`: `/` stays public, and four prefixes go behind the same
+`ip_whitelist.conf` every `internal = true` vhost uses — `/ui` (the SPA),
+`/litellm-asset-prefix/` (its static bundle), `/login` (the credential login
+POST the SPA makes) and `/sso/` (the SSO routes). The rest of what the dashboard
+itself calls (`/key/list`, `/model/info`, `/spend/logs`, `/model_group/info`)
+stays on the public `/` location, which is what keeps the split from breaking
+the API from outside the whitelist.
+
+The rejection is a plain 403, not the `@error404` remap the fully internal
+vhosts use: `nginx-scan-404` bans 5x404/60s for 5h at the firewall, so hiding
+the dashboard behind a 404 would let an outside scanner earn a ban that also
+cuts off the public API for its whole address. Hiding the path is worth less
+than keeping the gateway reachable.
+
+Measured 2026-10-10 on the deployed server, source address forced with
+`--interface` and the hostname pinned with `--resolve`:
+
+| source | `/ui/` | `/v1/models` |
+|---|---|---|
+| `192.168.100.1` (tap0, not whitelisted) | `403` | `401` — reaches litellm, no key |
+| `192.168.1.2` LAN (whitelisted) | `200` | `200` with the master key |
+
+Both rows are in `/var/log/nginx/access.log` as `"GET /ui/ HTTP/2.0" 403` and
+`"GET /v1/models HTTP/2.0" 401` from `192.168.100.1`. A first attempt that
+connected to `127.0.0.1` while forcing the source proved nothing — nginx sees
+the loopback address there, which is whitelisted, and answered `200`; the source
+has to be forced against the host's LAN address for the whitelist to be
+exercised at all.
