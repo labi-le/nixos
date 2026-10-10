@@ -24,6 +24,13 @@ let
     else
       "TOKENHARBOR_API_KEY";
 
+  byesuSecret = config.age.secrets.byesu-env or null;
+  byesuKey =
+    if byesuSecret != null then
+      "!${pkgs.gnused}/bin/sed -n 's/^BYESU_API_KEY=//p' ${byesuSecret.path}"
+    else
+      "BYESU_API_KEY";
+
   userCfg = config.users.users.${user.name};
   agentDir = "${userCfg.home}/.omp/agent";
 
@@ -111,6 +118,61 @@ let
               supportsTools = true;
               contextWindow = 1000000;
               maxTokens = 393216;
+            }
+          ];
+        };
+        byesu = {
+          baseUrl = "https://byesu.com/v1";
+          api = "openai-completions";
+          apiKey = byesuKey;
+          models = [
+            {
+              id = "gemini-3.8-flash";
+              name = "Gemini 3.8 Flash";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 65536;
+            }
+            {
+              id = "gemini-3.8-flash-high";
+              name = "Gemini 3.8 Flash High";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 65536;
+            }
+            {
+              id = "gemini-pro-agent";
+              name = "Gemini Pro Agent";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 65536;
+            }
+            {
+              id = "gemini-3.1-pro-low";
+              name = "Gemini 3.1 Pro Low";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 65536;
+            }
+            {
+              id = "gemini-3.1-flash-lite";
+              name = "Gemini 3.1 Flash Lite";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 65536;
+            }
+            {
+              id = "gemini-3.1-flash-image";
+              name = "Gemini 3.1 Flash Image";
+              reasoning = true;
+              supportsTools = true;
+              contextWindow = 1000000;
+              maxTokens = 65536;
             }
           ];
         };

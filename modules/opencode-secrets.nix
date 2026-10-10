@@ -23,5 +23,12 @@ in
       mode = "0400";
     };
 
+    age.secrets.byesu-env = {
+      file = ../secrets/byesu-env.age;
+      owner = "labile";
+      group = "users";
+      mode = "0400";
+    };
+
   };
 }

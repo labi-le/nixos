@@ -26,6 +26,7 @@ in
   "secrets/opencode-go-pool-env.age".publicKeys = [ server ];
   "secrets/litellm-db-env.age".publicKeys = [ server ];
   "secrets/tokenharbor-env.age".publicKeys = all;
+  "secrets/byesu-env.age".publicKeys = all;
   "secrets/cache-push-key.age".publicKeys = all;
 
   "secrets/opencode/gitlab-work.age".publicKeys = [
