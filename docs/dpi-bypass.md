@@ -123,6 +123,28 @@ file one and not warn. Reapply is the same two `sed` lines plus
 `/etc/init.d/zapret restart`; the pre-drift copies are kept in `/tmp` on the
 router until reboot.
 
+## The script that keeps it applied
+
+`scripts/zapret-exclude-ensure.sh` in this repo, installed as
+`/opt/zapret/exclude-ensure.sh` on the router, is an idempotent "ensure" rather
+than an append: it adds the names that desync breaks (`duolingo.com`,
+`duolingo.cn`) and comments out an active `cloudfront.net`, then restarts zapret
+only if it actually changed something — so a quiet cron run costs no bypass
+outage. It exits 1 only when the file is missing, which is how a botched install
+shows up in the log rather than as a silent no-op.
+
+Cron runs it every five minutes, so a LuCI save is repaired within one interval
+without anyone noticing. The path is in `/etc/sysupgrade.conf`. Note that the
+rest of `/opt/zapret` is **not** backed up, so a firmware upgrade still loses
+zapret itself and its shipped lists; only this script survives, and it will then
+re-apply the entries to whatever fresh list appears.
+
+Verified by reproducing the clobber: with `duolingo.cn` deleted and
+`cloudfront.net` reactivated, all three hosts failed TLS; after one run of the
+script they handshaked again, and a second run was silent. The router's own
+`openssl s_client` is not a usable probe for this — measure from a client
+behind the router instead.
+
 ## Still broken, same mechanism
 
 `aws.amazon.com` times out in TLS exactly like the audio CDNs did. It matches
