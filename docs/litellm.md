@@ -85,6 +85,39 @@ response cache is deliberately off — `GET /cache/ping` answers `503 Cache not
 initialized. litellm.cache is None` — because an agent's prompts are unique
 enough that an exact-match cache would only add staleness.
 
+## The client session header
+
+OpenCode Go asks every client for a stable per-conversation
+`x-opencode-session` ("so we can optimize routing and prompt caching"). The
+deployments send a deterministic per-account UUID in `extra_headers`, so the
+header is never missing, but it is the same value for every conversation that
+account serves. `modules/litellm/opencode-session.py` (mounted at
+`/app/opencode_session.py` and registered as the second
+`LITELLM_WORKER_STARTUP_HOOKS` entry) replaces it with the client's own value
+when the client sends one, and leaves the per-account UUID in place when it does
+not.
+
+Two mechanisms were tried and only one works, measured 2026-10-11 on an isolated
+litellm instance of the same image with an echo upstream, the same config shape
+and the same plugin file:
+
+- `general_settings.forward_client_headers_to_llm_api = true`, the documented
+  way to pass client `x-*` headers upstream, changed nothing here: with it on
+  and no plugin, the echo still received the deployment's `extra_headers` value
+  for a request that carried `x-opencode-session`. It would also forward *every*
+  client `x-*` header, not just the session.
+- Setting `data["extra_headers"]` from a `CustomLogger.async_pre_call_hook`
+  does reach the provider and wins over the deployment's `extra_headers` for
+  that request. `data["headers"]`, the key the forwarding path writes, is inert
+  — a first version of the plugin used it and the echo never saw the value.
+
+On the probe, a request carrying `x-opencode-session:
+REAL-CLIENT-SESSION-XYZ` arrived upstream as exactly that, and a request without
+it arrived as `DEPLOYMENT-FALLBACK-UUID`. Live, `GET /v1/usage` now carries a
+`sessions` block counting both branches (`{"client": 1, "fallback": 1}` after
+one request of each kind), which is how to tell whether a given client sends the
+header at all.
+
 ## Why containers instead of `services.litellm`
 
 The nixpkgs package cannot talk to a database at all, in three separate ways:
