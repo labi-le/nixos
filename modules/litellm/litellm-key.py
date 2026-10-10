@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -28,11 +29,15 @@ USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
   create ALIAS [DAYS]      new key for ALIAS, default 365 days, models from
                            LITELLM_MODELS (default opencode-go-pool); the key
                            is printed once and cannot be read back
-  extend TARGET [DURATION] move the expiry to now + DURATION, default 365d
+  extend TARGET [DURATION] move the expiry to now + DURATION, default 365d; a
+                           negative DURATION moves the current expiry back by
+                           that much and never past now
   revoke TARGET            delete the key; this cannot be undone
 
 TARGET is an alias or a full sk-... value; DURATION is a litellm duration such
-as 30d or 12h. env: LITELLM_URL, LITELLM_KEY_FILE, LITELLM_MODELS"""
+as 30d, 12h or 2mo, a bare number of days, or a negative duration to shorten
+the key's life. env: LITELLM_URL, LITELLM_KEY_FILE, LITELLM_MODELS"""
+DURATION_UNITS = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800, "mo": 2592000}
 
 
 def master_key():
@@ -69,16 +74,32 @@ def keys_and_names():
     return keys, names
 
 
-def target_token(target):
-    if target.startswith("sk-"):
-        return hashlib.sha256(target.encode()).hexdigest()
+def parse_duration(value):
+    match = re.fullmatch(r"([+-]?)(\d+)(mo|[smhdw]?)", value)
+    if not match:
+        sys.exit(f"litellm-key: invalid duration {value}; use 30d, 12h or -30d")
+    sign, amount, unit = match.groups()
+    return (-1 if sign == "-" else 1) * int(amount), (unit or "d")
+
+
+def target_key(target):
     keys, _ = keys_and_names()
-    matches = [key["token"] for key in keys if key.get("key_alias") == target]
+    if target.startswith("sk-"):
+        token = hashlib.sha256(target.encode()).hexdigest()
+        for key in keys:
+            if key.get("token") == token:
+                return key
+        return {"token": token}
+    matches = [key for key in keys if key.get("key_alias") == target]
     if not matches:
         sys.exit(f"litellm-key: no key with alias {target}")
     if len(matches) > 1:
         sys.exit(f"litellm-key: {len(matches)} keys share the alias {target}; pass a full sk-... value")
     return matches[0]
+
+
+def target_token(target):
+    return target_key(target)["token"]
 
 
 def remaining(value):
@@ -227,7 +248,19 @@ def cmd_create(alias, days):
 
 
 def cmd_extend(target, duration):
-    answer = call("/key/update", {"key": target_token(target), "duration": duration})
+    amount, unit = parse_duration(duration)
+    key = target_key(target)
+    if amount < 0:
+        expires = key.get("expires")
+        if not expires:
+            sys.exit(f"litellm-key: {target} has no expiry, so there is nothing to reduce")
+        moment = datetime.fromisoformat(expires.replace("Z", "+00:00")) + timedelta(
+            seconds=amount * DURATION_UNITS[unit]
+        )
+        duration = f"{max(int((moment - datetime.now(timezone.utc)).total_seconds()), 0)}s"
+    else:
+        duration = f"{amount}{unit}"
+    answer = call("/key/update", {"key": key["token"], "duration": duration})
     print(f"{answer.get('key_alias')} now expires {answer.get('expires')}")
 
 

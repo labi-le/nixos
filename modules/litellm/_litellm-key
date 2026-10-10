@@ -7,7 +7,7 @@ _litellm-key() {
     'logs:show recent request log rows'
     'totals:aggregate usage per alias'
     'create:create a key'
-    'extend:move a key expiry to now plus a duration'
+    'extend:move a key expiry by a duration (negative shortens it)'
     'revoke:delete a key'
     'help:show the usage text'
   )

@@ -101,6 +101,7 @@ litellm-key totals 7        # spend, tokens, requests per alias, last 7 days
 litellm-key create vanya    # new key, 365 days, models from LITELLM_MODELS
 litellm-key create guest 30 # 30 days instead of a year
 litellm-key extend vanya 30d
+litellm-key extend vanya -30d # 30 days off the current expiry
 litellm-key revoke vanya
 ```
 
@@ -117,6 +118,22 @@ be captured. `extend` and `revoke` accept either the alias or the full `sk-…`
 value, and the proxy stores a key as `sha256(key)`, which is why an alias has
 to be unique for them to work — the tool refuses and asks for the explicit
 `sk-…` when two keys share one.
+
+`extend` sets the expiry to now + DURATION for a positive duration, while a
+negative one moves the *current* expiry back by that much: `extend vanya -30d`
+takes 30 days off a key's remaining life and `extend vanya -400d` expires it
+immediately, because the computed target is clamped at now and sent as a
+non-negative duration. That translation is client-side by necessity — litellm's
+parser is `(\d+)(mo|[smhdw]?)` and answers `400 Invalid duration format` for any
+sign, and `UpdateKeyRequest` has no absolute `expires` field (a request that
+carries one is silently ignored), so the only way to move an expiry backwards is
+to restate the target as a duration from now. A key that never expires has
+nothing to reduce, and the tool says so instead of guessing. This also takes
+`-1` away from litellm, where `duration = "-1"` is a special case meaning "never
+expires" — the opposite of what a minus sign suggests, and how a key silently
+becomes permanent; a negative duration never reaches the proxy. DURATION is a
+litellm duration (`30d`, `12h`, `2mo`), a bare number of days, or a negative
+one; a negative `mo` counts 30 days.
 
 zsh completion ships in the same package as
 `share/zsh/site-functions/_litellm-key`, which the system zsh already has on
