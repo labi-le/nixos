@@ -25,7 +25,7 @@ class SessionForwarder(CustomLogger):
             counters["fallback"] += 1
             return data
         counters["client"] += 1
-        data["headers"] = {SESSION_HEADER: session}
+        data["extra_headers"] = {SESSION_HEADER: session}
         return data
 
 
