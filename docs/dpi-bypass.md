@@ -99,6 +99,30 @@ its verdict, and
 actually asking for. That is how the `.cn` endpoints were found: nothing on the
 PC ever requests them.
 
+## The edits get reverted, and by what
+
+Both fixes above were live and verified, and on 2026-10-08 they were gone:
+`duolingo.cn` deleted, `cloudfront.net` uncommented, file mtime 17:57. The
+failure looked new for a while — the `.cn` hosts then answered with
+`SSLV3_ALERT_HANDSHAKE_FAILURE` instead of the earlier plaintext 400 — but the
+alert was a symptom of the same cause: desync applied again to a host that
+cannot take it. Proving that was cheap: the host rejected **every** SNI,
+including `example.com`, which no ISP filter bothers to block.
+
+What reverts it: `/opt/zapret/ipset/zapret-hosts-user-exclude.txt` is
+hand-maintained. Nothing cron-like writes it, `/etc/config/zapret` only names
+its path, and `/etc/init.d/zapret` never regenerates it — but the **LuCI zapret
+app is installed** at `/www/luci-static/resources/view/zapret`, and pressing
+Save in it rewrites the ipset files from its own copy. Saving there undoes
+every hand edit, and the symptom returns as "Duolingo broke again" with nothing
+in the log explaining why.
+
+So: to change the exclude list, either edit the file and restart zapret, or
+make the same change in LuCI and restart. Never both — LuCI will clobber the
+file one and not warn. Reapply is the same two `sed` lines plus
+`/etc/init.d/zapret restart`; the pre-drift copies are kept in `/tmp` on the
+router until reboot.
+
 ## Still broken, same mechanism
 
 `aws.amazon.com` times out in TLS exactly like the audio CDNs did. It matches
