@@ -72,6 +72,19 @@ it, so a rejected level reaches the client as `litellm.BadRequestError` instead
 of being silently dropped. `max_output_tokens` (384 000 / 65 536) is the one
 number taken from models.dev and not probed here.
 
+Prompt caching is the upstream's, not the proxy's: litellm only forwards the
+request and prices the result from `cache_read_input_token_cost` (6.0e-9 against
+3.0e-7 fresh input). Measured 2026-10-10 through this proxy with a 20 043-token
+prompt: the first call reports `cached_tokens: 0` and costs $0.0060609, the next
+ones report `cached_tokens: 19968` and cost $0.000190308 — 32× less. The cache
+is not per account: six identical calls landed on four different deployments
+(`x-litellm-model-id` in the response headers names the serving one) and every
+one of them hit, so `simple-shuffle` across the four accounts costs nothing in
+cache hits and `deployment_affinity` is not needed for them. The proxy's own
+response cache is deliberately off — `GET /cache/ping` answers `503 Cache not
+initialized. litellm.cache is None` — because an agent's prompts are unique
+enough that an exact-match cache would only add staleness.
+
 ## Why containers instead of `services.litellm`
 
 The nixpkgs package cannot talk to a database at all, in three separate ways:
