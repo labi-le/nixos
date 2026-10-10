@@ -1,4 +1,4 @@
-{ user, pkgs, ... }:
+{ user, pkgs, lib, ... }:
 let
   awgNatApply = pkgs.writeShellScript "awg-nat-apply" ''
     set -euo pipefail
@@ -61,11 +61,12 @@ in
     extraCommands = ''
       # RFC1918
       iptables -A INPUT  -i wg0 -d 10.8.0.1 -p udp --dport 53 -j ACCEPT
+      iptables -A INPUT  -i wg0 -d 10.8.0.1 -p tcp --dport 53 -j ACCEPT
       iptables -A INPUT  -i wg0 -d 10.0.0.0/8     -j DROP
       iptables -A INPUT  -i wg0 -d 172.16.0.0/12  -j DROP
       iptables -A INPUT  -i wg0 -d 192.168.0.0/16 -j DROP
 
-      iptables -A FORWARD -i wg0 -d 10.8.0.1 -p udp --dport 53 -j ACCEPT
+      iptables -A FORWARD -i wg0 -d 198.18.1.0/24 -j ACCEPT
       iptables -A FORWARD -i wg0 -d 10.0.0.0/8     -j DROP
       iptables -A FORWARD -i wg0 -d 172.16.0.0/12  -j DROP
       iptables -A FORWARD -i wg0 -d 192.168.0.0/16 -j DROP
@@ -120,4 +121,14 @@ in
   };
 
   imports = [ ./compose.nix ];
+
+  services.dnsmasq.settings = {
+    interface = lib.mkForce [
+      "lo"
+      "wg0"
+    ];
+    bind-interfaces = lib.mkForce false;
+    bind-dynamic = true;
+    cache-size = lib.mkForce 0;
+  };
 }

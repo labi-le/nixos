@@ -66,7 +66,6 @@ in
 
         interface = [
           "127.0.0.1@${toString localPort}"
-          vpnAddress
           "${lanAddress}@${toString tlsPort}"
           "${vpnAddress}@${toString tlsPort}"
         ];
