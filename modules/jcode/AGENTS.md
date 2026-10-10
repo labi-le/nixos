@@ -1,5 +1,3 @@
-User replies with skill: `caveman` ultra mode. Text for another model (task briefs, review findings, fix requests): full sentences; weaker models cannot recover omitted context.
-
 # Scope
 Only sections marked (top-level) bind the user-facing session. Subagents follow their briefs, complete them, and yield; no supervising other agents or starting review/fix loops unless explicitly requested in the brief.
 
