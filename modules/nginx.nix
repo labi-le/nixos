@@ -224,6 +224,35 @@ in
         // {
           kTLS = true;
         };
+      llmGateway =
+        { addr }:
+        let
+          apiLocation = {
+            proxyPass = addr;
+            extraConfig = ''
+              proxy_read_timeout 300s;
+              proxy_connect_timeout 10s;
+              proxy_send_timeout 60s;
+            '';
+          };
+          uiLocation = {
+            proxyPass = addr;
+            extraConfig = ''
+              include ${ipWhiteList};
+              deny all;
+            '';
+          };
+        in
+        base {
+          "/" = apiLocation;
+          "/ui" = uiLocation;
+          "/litellm-asset-prefix/" = uiLocation;
+          "/login" = uiLocation;
+          "/sso/" = uiLocation;
+        }
+        // {
+          kTLS = true;
+        };
       gachiRadio =
         { rewrite, rewritePlain }:
         {
@@ -289,15 +318,7 @@ in
       "cache.labile.cc" = lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:5000"; }) {
         kTLS = false;
       };
-      "llm.labile.cc" = proxy {
-        addr = "http://127.0.0.1:27015";
-        # internal = true;
-        locationExtraConfig = ''
-          proxy_read_timeout 300s;
-          proxy_connect_timeout 10s;
-          proxy_send_timeout 60s;
-        '';
-      };
+      "llm.labile.cc" = llmGateway { addr = "http://127.0.0.1:27015"; };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };
       "mail.labile.cc" = proxy {
