@@ -2,7 +2,7 @@ defaultThinkingLevel: auto
 providers:
   autoThinkingMaxEffort: max
 modelRoles:
-  default: xiaomi-token-plan-sgp/mimo-v2.6-pro
+  default: opencode-go/step-5-preview-free:xhigh
   smol: opencode-go/deepseek-v4.1-flash:low
   slow: opencode-go/deepseek-v4.1-flash:max
   vision: opencode-go/deepseek-v4.1-flash:low
