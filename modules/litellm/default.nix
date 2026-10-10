@@ -54,11 +54,12 @@ in
       ];
       environment = {
         PYTHONPATH = "/app";
-        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route";
+        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder";
       };
       volumes = [
         "${configYaml}:/app/config.yaml:ro"
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"
+        "${./opencode-session.py}:/app/opencode_session.py:ro"
       ];
       ports = [ "127.0.0.1:27015:4000" ];
       networks = [ "litellm" ];

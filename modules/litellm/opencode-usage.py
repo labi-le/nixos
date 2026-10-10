@@ -115,6 +115,15 @@ def key_usage(key_info):
     }
 
 
+def session_counters():
+    try:
+        from opencode_session import counters
+
+        return dict(counters)
+    except Exception:
+        return {}
+
+
 def key_info_for(token):
     if not token:
         return {}
@@ -163,6 +172,7 @@ def install_usage_route():
             )
         body = dict(_snapshot)
         body["key"] = key_usage(info)
+        body["sessions"] = session_counters()
         return JSONResponse(content=body)
 
     app.add_api_route("/v1/usage", usage, methods=["GET"])
