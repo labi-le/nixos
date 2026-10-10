@@ -22,11 +22,16 @@ four account keys:
   deployments. It was called `opencode-go-pool` until 2026-10-10; that name
   survives as a `router_settings.model_group_alias`, so every client, key and
   log that still says `opencode-go-pool` keeps working. The alias resolves
-  before the key-permission check, which appends the alias target to the
-  candidate names (`_can_object_call_model`), so a key scoped to *either* name
-  can call the group through *either* name — an old key keeps working after a
-  client switches to the new name, and a new key keeps working after a client
-  falls back to the old one.
+  before the key-permission check, which appends the alias *target* to the
+  candidate names (`_can_object_call_model`) — measured 2026-10-10 with a key
+  scoped to `["opencode-go-pool"]`: a request naming `opencode-go-pool` answers
+  `200`, a request naming `deepseek-v4.1-flash` answers `403`. The append is
+  one-way, so a key scoped to the canonical name may call the group through
+  either name, while a key scoped to the alias alone may call it only through
+  the alias. Old clients on the old name therefore keep working untouched
+  (observed: an `opencode/latest` client kept answering `200` through the alias
+  across the switch), and moving one to the new name means adding
+  `deepseek-v4.1-flash` to its key's `models` list.
 - `step-5-preview` — `openai/step-5-preview-free`, the free Go-tier model
   (upstream publishes `step-5-preview-free`; the group name is deliberately
   shorter, and it is what `/v1/models` and the spend log show).
