@@ -25,6 +25,12 @@ let
   piImage = "oh-my-pi/pi:${tag}";
   botImage = "robomp:${tag}";
 
+  robompSource = pkgs.runCommand "robomp-src-${tag}-event-history-500k" { } ''
+    cp -r --no-preserve=mode,ownership ${src}/. $out/
+    ${pkgs.gnused}/bin/sed -i 's/max_event_history=50_000/max_event_history=500_000/' $out/python/robomp/src/worker.py
+    ${pkgs.gnugrep}/bin/grep -q 'max_event_history=500_000' $out/python/robomp/src/worker.py
+  '';
+
   modelsYml = (pkgs.formats.yaml { }).generate "buer-models.yml" {
     providers."llm-labile" = {
       baseUrl = "http://litellm:4000/v1";
@@ -82,12 +88,12 @@ in
       set -euo pipefail
       install -d -m 0755 ${dataDir}
       marker=${dataDir}/image-rev
-      want='${src}|${piImage}|${botImage}'
+      want='${src}|${robompSource}|${piImage}|${botImage}'
       if [ -r "$marker" ] && [ "$(cat "$marker")" = "$want" ]; then
         exit 0
       fi
       docker build --tag ${piImage} --file ${src}/Dockerfile ${src}
-      docker build --tag ${botImage} --file ${src}/Dockerfile.robomp --build-arg PI_BASE=${piImage} ${src}
+      docker build --tag ${botImage} --file ${robompSource}/Dockerfile.robomp --build-arg PI_BASE=${piImage} ${robompSource}
       printf '%s' "$want" > "$marker"
     '';
   };

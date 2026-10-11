@@ -106,6 +106,16 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   queued as `handle_review` with `directive=True`, and the bot amends the
   branch in response — no `@`-mention needed. Review *bodies* without inline
   comments (`pull_request_review`) have no route and are ignored.
+- **Local patch over the pinned tag**: `robompSource` raises the RPC client's
+  retained event window from the upstream 50 000 to 500 000
+  (`max_event_history` in `python/robomp/src/worker.py`). `omp_rpc` keeps every
+  notification of the current turn in memory and aborts the task with "Event
+  history limit was exceeded" once the window rolls past the caller's
+  `start_index`; at `thinking=high` a turn streams on the order of 100
+  events/s, so an eight-minute turn already overruns 50 000. The window holds
+  parsed notification dicts, so the raised ceiling costs on the order of a few
+  hundred megabytes per running task. Only the robomp image builds from the
+  patched checkout; the pi image still builds from the pinned one.
 
 ## What it reacts to
 
