@@ -657,6 +657,20 @@ Traffic authenticated with the master key — everything omp and jcode send — 
 logged under the alias `master`, and a key hash that matches no key in the DB
 shows as `other`; neither is a virtual key.
 
+Prices are sourced per provider and never copied across: the Zen groups take
+their figures from OpenCode's own tables — [Go plans](https://opencode.ai/v2/docs/console/go/),
+the subscription this pool uses, which also carries the per-model monthly limits
+and the `5 h / week / month = 20 % / 50 % / 100 %` rule the `/v1/usage` hook
+mirrors, plus [Console models](https://opencode.ai/v2/docs/console/models/) for
+pay-as-you-go — while the chatgpt groups keep the rates the subscription itself
+reports (see ChatGPT subscription groups above; OpenAI's model cards,
+`developers.openai.com/api/docs/models/<id>`, publish the same figures). The same
+id appears in both OpenCode tables at identical base rates, so the numbers alone
+never say which credential paid — the owning provider does. The chatgpt groups
+model the flat card only: the `> 272K` input tier (2× input and cache, 1.5×
+output for the whole request) and the cache-write rate are not applied, so their
+`spend` is the untiered figure.
+
 ## Pool quota API
 
 `GET /v1/usage` is served by the proxy itself (`modules/litellm/opencode-usage.py`,
