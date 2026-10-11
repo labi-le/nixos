@@ -2,7 +2,7 @@ defaultThinkingLevel: auto
 providers:
   autoThinkingMaxEffort: max
 modelRoles:
-  default: opencode-zen/space-bunny-free:xhigh
+  default: opencode-go/deepseek-v4.1-flash
   smol: opencode-go/deepseek-v4.1-flash:low
   slow: opencode-go/deepseek-v4.1-flash:max
   vision: opencode-go/deepseek-v4.1-flash:low
