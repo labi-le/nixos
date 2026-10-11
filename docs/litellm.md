@@ -675,10 +675,11 @@ is a generated snapshot — its `source` key names the table it came from — an
 `models/default.nix` injects its three rates into every `provider = "opencode-go"`
 group plus the off-peak rates into the windows that group declares, so editing a
 rate in a Zen group file would have no effect. `modules/litellm/sync-prices.py`
-keeps the snapshot honest: the `litellm-price-sync` oneshot (behind the daily
-`litellm-price-sync.timer`, `Persistent = true`, 30-minute jitter) fetches the Go
-plan table as markdown (`Accept: text/markdown`), parses the price rows for the
-groups `models/default.nix` exports as `zenGroupNames`, and then
+keeps the snapshot honest: the `litellm-price-sync` oneshot — started at every
+boot (`wantedBy = multi-user.target`) and behind the daily `litellm-price-sync.timer`
+(`Persistent = true`, 30-minute jitter) — fetches the Go plan table as markdown
+(`Accept: text/markdown`), parses the price rows for the groups
+`models/default.nix` exports as `zenGroupNames`, and then
 
 - writes nothing when every rate already matches — the usual outcome, exit 0;
 - on a change writes the snapshot, commits and pushes it as `labile`
