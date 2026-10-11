@@ -132,7 +132,12 @@ sqlite3 /drive/state/buer/robomp.sqlite 'select * from issues order by updated_a
 - Changing the model, allowlist, bot login or author identity means editing the
   `let` block in `modules/buer/default.nix` and switching.
 - Rotating the PAT or the LiteLLM key means re-encrypting `secrets/buer-env.age`
-  (recipients already declared) and restarting `buer`.
+  (recipients already declared) and switching: the unit carries
+  `restartTriggers` on that file's hash, so the containers are recreated with
+  the new values. A bare `systemctl restart buer` is not available over ssh —
+  polkit demands interactive authentication — and `docker restart` would be
+  wrong here anyway, since a container keeps the environment it was created
+  with.
 - Bumping the pinned agent means changing `tag` and `hash` in the module; the
   marker changes and the next switch rebuilds both images.
 

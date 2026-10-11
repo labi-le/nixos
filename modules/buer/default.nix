@@ -120,6 +120,9 @@ in
       ExecStart = "${compose} up --detach --remove-orphans";
       ExecStop = "${compose} down";
     };
+    restartTriggers = [
+      (builtins.hashString "sha256" (builtins.readFile ../../secrets/buer-env.age))
+    ];
   };
 
   services.nginx.virtualHosts.${host} = {
