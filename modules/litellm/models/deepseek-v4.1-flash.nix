@@ -1,5 +1,6 @@
 {
   name = "deepseek-v4.1-flash";
+  provider = "opencode-go";
   upstream = "openai/deepseek-v4.1-flash";
   metered = true;
   inputCostPerToken = 3.0e-7;

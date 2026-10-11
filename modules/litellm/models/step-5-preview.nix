@@ -1,5 +1,6 @@
 {
   name = "step-5-preview";
+  provider = "opencode-go";
   upstream = "openai/step-5-preview-free";
   metered = false;
   inputCostPerToken = 0.0;

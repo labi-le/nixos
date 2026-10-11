@@ -30,6 +30,7 @@ in
 
   systemd.tmpfiles.rules = [
     "d /var/lib/litellm-db 0700 999 999 -"
+    "d /var/lib/litellm-chatgpt 0700 0 0 -"
   ];
 
   virtualisation.oci-containers.backend = "docker";
@@ -60,7 +61,9 @@ in
         "${configYaml}:/app/config.yaml:ro"
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"
         "${./opencode-session.py}:/app/opencode_session.py:ro"
+        "/var/lib/litellm-chatgpt:/root/.config/litellm/chatgpt"
       ];
+      extraOptions = [ "--dns=192.168.1.1" ];
       ports = [ "127.0.0.1:27015:4000" ];
       networks = [ "litellm" ];
       dependsOn = [ "litellm-db" ];

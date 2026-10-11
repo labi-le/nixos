@@ -7,6 +7,9 @@ let
   groups = [
     (import ./deepseek-v4.1-flash.nix)
     (import ./step-5-preview.nix)
+    (import ./gpt-6-astra.nix)
+    (import ./gpt-6-luna.nix)
+    (import ./gpt-6.1-sol.nix)
   ];
 
   sessionIdOf =
@@ -26,17 +29,20 @@ let
       (builtins.substring 20 12 hex)
     ];
 
-  deployment = group: index: {
+  metadata = group: {
+    max_input_tokens = group.maxInputTokens;
+    max_output_tokens = group.maxOutputTokens;
+    supports_reasoning = group.reasoningEffortLevels != [ ];
+    reasoning_effort_levels = group.reasoningEffortLevels;
+    supports_vision = group.supportsVision;
+    supports_function_calling = group.supportsFunctionCalling;
+    cooldown_time = 0;
+  };
+
+  poolDeployment = group: index: {
     model_name = group.name;
-    model_info = {
+    model_info = metadata group // {
       opencode_usage_metered = group.metered;
-      max_input_tokens = group.maxInputTokens;
-      max_output_tokens = group.maxOutputTokens;
-      supports_reasoning = group.reasoningEffortLevels != [ ];
-      reasoning_effort_levels = group.reasoningEffortLevels;
-      supports_vision = group.supportsVision;
-      supports_function_calling = group.supportsFunctionCalling;
-      cooldown_time = 0;
     }
     // lib.optionalAttrs (group.offPeakPricing != null) {
       off_peak_pricing = group.offPeakPricing;
@@ -57,12 +63,34 @@ let
       cache_read_input_token_cost = group.cacheReadInputTokenCost;
     };
   };
+
+  chatgptDeployment = group: {
+    model_name = group.name;
+    model_info = metadata group // {
+      mode = "responses";
+    };
+    litellm_params = {
+      model = group.upstream;
+      timeout = 900;
+      stream_timeout = 180;
+      max_retries = group.retries;
+      num_retries = group.retries;
+      input_cost_per_token = group.inputCostPerToken;
+      output_cost_per_token = group.outputCostPerToken;
+      cache_read_input_token_cost = group.cacheReadInputTokenCost;
+    };
+  };
+
+  deploymentsOf =
+    group:
+    if group.provider == "opencode-go" then
+      lib.imap0 (index: _: poolDeployment group index) (lib.range 1 poolSize)
+    else
+      [ (chatgptDeployment group) ];
 in
 {
   inherit poolSize;
   inherit groups;
 
-  modelList = lib.concatMap (
-    group: lib.imap0 (index: _: deployment group index) (lib.range 1 poolSize)
-  ) groups;
+  modelList = lib.concatMap deploymentsOf groups;
 }

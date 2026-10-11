@@ -173,6 +173,115 @@ response cache is deliberately off — `GET /cache/ping` answers `503 Cache not
 initialized. litellm.cache is None` — because an agent's prompts are unique
 enough that an exact-match cache would only add staleness.
 
+## ChatGPT subscription groups
+
+Three groups — `gpt-6-astra`, `gpt-6-luna` and `gpt-6.1-sol` — are served from a
+ChatGPT subscription of one account (`d74f3468-…`), not from the four-account
+OpenCode Go pool: each is a single deployment of litellm's own `chatgpt/`
+provider, which speaks to `https://chatgpt.com/backend-api/codex` with the
+Codex-CLI client id and Codex headers. The catalog names the provider per group
+(`provider = "chatgpt"` against `"opencode-go"`), and `models/default.nix`
+expands only the pool groups into `poolSize` deployments: these have one
+deployment each, no `api_base` and no `api_key` — the provider owns both — and
+`model_info.mode = "responses"`, which is the surface the backend really
+implements. `/v1/chat/completions` is bridged to it by litellm, and that bridge
+is what our chat-completions-only clients call.
+
+Auth is a device-code flow litellm runs by itself, lazily, on the first request
+that needs the provider, so a `chatgpt/` model is uncallable until somebody
+signs in:
+
+1. `docker logs -f litellm` shows `Sign in with ChatGPT using device code:
+   1) Visit https://auth.openai.com/codex/device 2) Enter code: XXXX-XXXXX`.
+2. Open that URL, sign in, enter the code.
+3. The request that was waiting completes, and litellm writes `auth.json`
+   (`access_token`, `refresh_token`, `id_token`, `account_id`) to
+   `~/.config/litellm/chatgpt`, mounted from `/var/lib/litellm-chatgpt`
+   (root-only, `tmpfiles` `0700`). It then refreshes the access token with the
+   stored refresh token; only a dead refresh chain asks for a code again, and
+   that again needs a human.
+
+The router health-checks the new deployments as it loads them, so the first
+rebuild that adds these groups asks for a code at startup and **blocks the
+whole proxy** until the code is answered — `/health/readiness` and every other
+route wait with it, and `llm.labile.cc` answers `502` meanwhile. Do the login
+right after that rebuild. Afterwards the token lives in the volume and survives
+`make switch` (measured 2026-10-11: the container was recreated, kept the same
+`auth.json`, and answered without a second sign-in).
+
+Which models the subscription serves is not what litellm's cost map lists, and
+the map is what the first pass over this catalog was built from: it declares 14
+`chatgpt/` models, the newest of them the `gpt-5.6-*` three, so enumerating the
+map finds those and misses everything newer. The authority is the provider's own
+catalog — omp reads the same backend and prints it with
+`omp models openai-codex --json` — and it lists exactly seven ids:
+
+| group | max input | max output | effort levels | price per 1M in/out |
+| --- | --- | --- | --- | --- |
+| `gpt-6-astra` | 922 000 | 128 000 | `low`…`max` | $10 / $50 |
+| `gpt-6-luna` | 872 000 | 128 000 | `low`…`max` | $0.10 / $0.50 |
+| `gpt-6.1-sol` | 922 000 | 128 000 | `low`…`max` | $2 / $10 |
+
+The five the catalog does not carry are deliberate: `gpt-6-sol` (872 000) is the
+6.0 tier `gpt-6.1-sol` already covers, and `gpt-5.6-luna`, `gpt-5.6-sol`,
+`gpt-5.6-terra` and `gpt-5.5` were never exposed. Any id outside those seven is
+refused with `400 The '<model>' model is not supported when using Codex with a
+ChatGPT account` — `gpt-5.3-codex` and `gpt-5.4` that the cost map does know,
+and names that look newer but do not exist such as `gpt-6-terra` and
+`gpt-6.1-luna`.
+
+All three answer non-streamed and streamed `/v1/chat/completions` (measured
+`pong` from each), return `tool_calls` with `finish_reason: tool_calls`, and
+take `low`, `medium`, `high`, `xhigh` and `max`; the backend also tolerated
+`none` and `minimal` on the 5.6 tier, but the provider's catalog declares those
+five, so the groups declare those five. `usage` carries `reasoning_tokens` and
+cached prompt tokens, and the prompt overhead is the Codex system instructions —
+~1.6k tokens for a one-word answer, most of them cacheable.
+
+Pricing comes from the provider's catalog, not from litellm's cost map, which
+has no entries for these models at all; the three fields per group are
+`inputCostPerToken`, `outputCostPerToken` and `cacheReadInputTokenCost`, taken
+from the rates the subscription reports as `fixed` with `cacheWrite` at zero
+(`gpt-6-astra` 1.0e-5 / 5.0e-5 / 1.0e-6, `gpt-6-luna` 1.0e-7 / 5.0e-7 / 1.0e-8,
+`gpt-6.1-sol` 2.0e-6 / 1.0e-5 / 1.0e-7). Before those fields were set every call
+was priced at zero and the spend log recorded `$0`; now the same one-word call
+lands in `LiteLLM_SpendLogs` at `0.003324` on a cold prompt and `0.0006488` on a
+cached one, and the response headers break it down — `x-litellm-response-cost
+-input: 0.000458` (229 fresh tokens at 2e-6), `-cache-read: 0.0001408` (1 408
+cached at 1e-7) and `-output: 5e-05` (5 tokens at 1e-5) — which is the
+arithmetic above exactly. That cost is what consumes a key's budget, and it is
+what makes the subscription's usage visible at all: the flat plan itself bills
+nothing per call.
+
+The provider mirrors every Codex response header back as `llm_provider-*`,
+including the quota windows (`x-codex-primary-used-percent`,
+`x-codex-primary-window-minutes`, `x-codex-turn-state`) and a `set-cookie` that
+is ~900 bytes on its own; nginx's default header buffer is 4k and too small for
+that set, so the vhost's `/` location sets `proxy_buffer_size 16k` with
+`proxy_buffers 8 16k`. Without it every non-streamed call answers `502 Bad
+Gateway` from Angie while litellm's own log says `200 OK` — the proxy never sees
+the reason because the error is raised while reading response headers.
+
+Two traps outside the repo's own state:
+
+- Container DNS. `auth.openai.com` has to resolve through the router
+  (`--dns=192.168.1.1` in the container's `extraOptions`): the host resolves
+  through the local resolver, which answers a `198.18.1.0/24` fake-IP for the
+  `vpn` rule-set (see `docs/dns-resolver.md`) and routes the connection through
+  the router's tunnel, while Docker's generated `8.8.8.8` fallback answers the
+  real Cloudflare address, the request leaves from the household address, and
+  OpenAI refuses it with `403 {"error":{"code":
+  "unsupported_country_region_territory"}}`. Measured from one container:
+  `1.1.1.1` → `104.18.41.241` → `403`, `192.168.1.1` → `198.18.1.210` → `200`.
+  `10.8.0.1` does not answer a container at all.
+- The responses→chat bridge drops what it cannot parse:
+  `litellm.APIConnectionError: ChatgptException - Unknown items in responses API
+  response: []`, roughly one call in three when the backend answers with
+  reasoning but no visible output item (seen at `low` and `medium` on `gpt-5.5`
+  and `gpt-5.6-sol`, absent on retry). `retries = 2` in the three group files
+  exists for it — a retry hits the same single deployment, which is why these
+  groups carry a retry count while the pool groups deliberately carry none.
+
 ## The client session header
 
 OpenCode Go asks every client for a stable per-conversation
@@ -496,6 +605,28 @@ The container gets its secrets as environment variables, so anything running
 inside it can read them; that is why the master key never needs to enter the
 container's own config.
 
+The ChatGPT groups bill the same subscription the agent's own `openai-codex`
+login uses, so their calls compete with it for the plan's Codex windows: the
+provider reports the state on every response
+(`x-codex-primary-used-percent`, `x-codex-primary-window-minutes`), and the
+proxy copies those headers to the client as `llm_provider-x-codex-*`.
+
+Every key may call the three groups. A key created without a `models` list is
+unrestricted and needs nothing; the two scoped client keys carry
+`["deepseek-v4.1-flash", "gpt-6-astra", "gpt-6-luna", "gpt-6.1-sol"]` since
+2026-10-11 (`vanya`, `anyouh`; verified with a throwaway key scoped to one GPT
+group, which answers 200 for it and 403 for `deepseek-v4.1-flash`). Because the
+groups now carry real rates, their calls consume a key's budget — `anyouh` sat at
+$1.88 of $5 — and `gpt-6-astra` is the expensive one at $10/$50 per million
+against `gpt-6-luna`'s $0.10/$0.50, so a runaway key is bounded only by its
+`max_budget`.
+
+`/var/lib/litellm-chatgpt/auth.json` is a live OAuth refresh token for that
+account, root-owned inside a `0700` directory. It is deliberately not in
+agenix: litellm rewrites it whenever it refreshes, so a secret managed by the
+repo would be overwritten in place. Deleting the volume means one more device
+login.
+
 ## Verify
 
 - Containers up: `docker ps --filter name=litellm --format '{{.Names}} {{.Status}}'`
@@ -508,8 +639,16 @@ container's own config.
 - A key actually works:
   `curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $KEY"
   https://llm.labile.cc/v1/models` → `200`; `401` revoked, expired or typo'd;
-  `502` the container is down; `404` would mean the IP whitelist is back on
+- `502` the container is down; `404` would mean the IP whitelist is back on
   the vhost.
+- The ChatGPT groups answer:
+  `curl -s -X POST https://llm.labile.cc/v1/chat/completions -H "Authorization:
+  Bearer $MASTER" -H 'Content-Type: application/json' -d '{"model":"gpt-5.6-sol",
+  "messages":[{"role":"user","content":"say pong"}]}'` → `"content":"pong"` with
+  `llm_provider-x-codex-*` headers on the response. `502` from Angie with
+  litellm logging `200 OK` means the header buffers above are missing; a
+  `chatgpt_exception` about a missing token means the device login has not been
+  done (watch `docker logs -f litellm` while calling it).
 - Keys are in the DB, not in process memory:
   `docker exec litellm-db psql -U litellm -d litellm -c 'select key_alias,
   expires, models, spend from "LiteLLM_VerificationToken";'`

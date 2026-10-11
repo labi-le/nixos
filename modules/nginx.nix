@@ -233,6 +233,9 @@ in
               proxy_read_timeout 300s;
               proxy_connect_timeout 10s;
               proxy_send_timeout 60s;
+              proxy_buffer_size 16k;
+              proxy_buffers 8 16k;
+              proxy_busy_buffers_size 32k;
             '';
           };
           uiLocation = {
