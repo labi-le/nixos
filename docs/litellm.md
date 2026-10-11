@@ -393,6 +393,43 @@ the running container are enough. Changing models, router settings or the
 pool-usage callback does need one: those are rendered by Nix and mounted
 read-only at `/app/config.yaml` and `/app/opencode_go_usage.py`.
 
+### What a client key can see
+
+Measured 2026-10-11 with a throwaway key scoped to four groups: `/v1/models`
+returned exactly those four ids, while `/model/info`, `/v1/model/info` and
+`/v2/model/info` returned every deployment, including `step-5-preview`, which
+that key answers `403 key_model_access_denied`. `/model_group/info`, the route a
+LiteLLM-aware client reads first, is scope-filtered like `/v1/models`. A client
+must therefore discover its roster rather than pin one — a hand-written list is
+how you ship a model the proxy advertises and the key refuses.
+
+The same measurement, from an omp client (`~/.omp/agent/models.yml`):
+
+```yaml
+providers:
+  llm-labile:
+    baseUrl: https://llm.labile.cc/v1
+    api: openai-completions
+    apiKey: sk-… # an env var name, a literal, or !command
+    discovery:
+      type: litellm
+```
+
+`api` is required by the schema for every discovery but `proxy` and acts only as
+a fallback: verified on this proxy, `deepseek-v4.1-flash` leaves as
+`POST /v1/responses`, so reasoning summaries survive. Management routes answer a
+plain client key, so a scoped key still gets prices, limits and vision flags;
+the roster is cached for two hours, and `omp models refresh llm-labile` re-reads
+it after a rescope or a new group. One gap: omp shows no effort ladder for
+`deepseek-v4.1-flash` although `/model_group/info` advertises
+`supported_reasoning_efforts` from `none` to `max`; a client that wants
+`/thinking` levels pins them with `modelOverrides`.
+
+Verify: `omp models llm-labile --json` lists exactly the key's groups with
+`pricingStatus: fixed`, and a group the key lacks is absent from it. A
+`403 key_model_access_denied` on first use means the client pinned its roster
+instead of discovering it.
+
 ## Keys and usage from the command line
 
 `litellm-key` (`modules/litellm/litellm-key.nix`, installed by the litellm
