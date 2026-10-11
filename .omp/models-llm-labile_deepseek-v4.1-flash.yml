@@ -1,0 +1,21 @@
+defaultThinkingLevel: auto
+providers:
+  autoThinkingMaxEffort: max
+modelRoles:
+  default: llm-labile/step-5-preview:high
+  smol: llm-labile/deepseek-v4.1-flash:low
+  slow: llm-labile/deepseek-v4.1-flash:max
+  vision: llm-labile/deepseek-v4.1-flash:low
+  plan: llm-labile/deepseek-v4.1-flash:max
+  commit: llm-labile/deepseek-v4.1-flash:low
+  tiny: llm-labile/deepseek-v4.1-flash:low
+  task: llm-labile/deepseek-v4.1-flash
+  judge: llm-labile/deepseek-v4.1-flash
+task:
+  eager: preferred
+  agentModelOverrides:
+    task: "@task"
+    sonic: "@smol"
+    scout: llm-labile/deepseek-v4.1-flash:low
+    reviewer: llm-labile/deepseek-v4.1-flash:max
+    security-reviewer: llm-labile/deepseek-v4.1-flash:max
