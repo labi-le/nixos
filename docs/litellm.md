@@ -268,9 +268,17 @@ means the next `reset_time_of_day` in `litellm_settings.timezone` — both unset
 here, so midnight UTC; `7d` means the next Monday and `30d` the 1st of the next
 month, at the same time of day. It is a calendar boundary, not 24 hours from
 creation and not a rolling window. The proxy's `reset_budget_job` zeroes the
-key's `spend` and advances the timestamp once the boundary passes: that key
-answered `200`, `429`, then `200` again after 00:00 UTC, with `budget_reset_at`
-moved to the following midnight. The boundary is configurable —
+key's `spend` and advances the timestamp, but only on its own tick —
+`PROXY_BUDGET_RESCHEDULER_MIN_TIME` and `PROXY_BUDGET_RESCHEDULER_MAX_TIME` are
+597 and 605 seconds, so the zeroing lands up to ten minutes *after* the
+boundary and a capped key stays refused across that gap. Measured 2026-10-11 on
+`vanya`: `spend 55.3917` with `budget_reset_at 2026-10-11 00:00:00` at 00:02:02
+UTC, then `spend 0` with `budget_reset_at 2026-10-12 00:00:00` and `updated_at
+00:02:59` — 2 m 59 s late. `spend` is the window counter, `total_spend` the
+lifetime one: that reset left `total_spend` at 55.3917, which is what the
+`total` column in `keys` shows while `spend` reads 0. Spend writes are batched
+as well (`PROXY_BATCH_WRITE_AT`, 10 s), so the row trails the live counter by a
+few seconds. The boundary is configurable —
 `litellm_settings.timezone = "Europe/Moscow"` in `modules/litellm/config.nix`
 puts it at MSK midnight — and that is a config change, so it needs the rebuild
 that key administration otherwise does not.
