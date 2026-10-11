@@ -13,7 +13,6 @@
     routing_strategy = "simple-shuffle";
     enable_weighted_failover = true;
     num_retries = 30;
-    model_group_alias = catalog.modelGroupAlias;
   };
   litellm_settings = {
     telemetry = false;

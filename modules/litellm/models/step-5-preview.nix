@@ -1,7 +1,6 @@
 {
   name = "step-5-preview";
   upstream = "openai/step-5-preview-free";
-  alias = null;
   metered = false;
   inputCostPerToken = 0.0;
   outputCostPerToken = 0.0;

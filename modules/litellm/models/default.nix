@@ -36,6 +36,7 @@ let
       reasoning_effort_levels = group.reasoningEffortLevels;
       supports_vision = group.supportsVision;
       supports_function_calling = group.supportsFunctionCalling;
+      cooldown_time = 0;
     }
     // lib.optionalAttrs (group.offPeakPricing != null) {
       off_peak_pricing = group.offPeakPricing;
@@ -50,6 +51,7 @@ let
       timeout = 900;
       stream_timeout = 180;
       max_retries = 0;
+      num_retries = 0;
       input_cost_per_token = group.inputCostPerToken;
       output_cost_per_token = group.outputCostPerToken;
       cache_read_input_token_cost = group.cacheReadInputTokenCost;
@@ -63,11 +65,4 @@ in
   modelList = lib.concatMap (
     group: lib.imap0 (index: _: deployment group index) (lib.range 1 poolSize)
   ) groups;
-
-  modelGroupAlias = lib.listToAttrs (
-    map (group: {
-      name = group.alias;
-      value = group.name;
-    }) (lib.filter (group: group.alias != null) groups)
-  );
 }
