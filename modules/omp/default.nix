@@ -72,32 +72,9 @@ let
           baseUrl = "https://api.closerouter.dev/v1";
           api = "openai-completions";
           apiKey = closerouterApiKey;
-          models = [
-            {
-              id = "deepseek/deepseek-v4-pro-0813";
-              name = "DeepSeek V4 Pro (CloseRouter)";
-              reasoning = true;
-              supportsTools = true;
-              contextWindow = 1000000;
-              maxTokens = 32768;
-            }
-            {
-              id = "deepseek/deepseek-v4.1-flash";
-              name = "DeepSeek V4.1 Flash (CloseRouter)";
-              reasoning = true;
-              supportsTools = true;
-              contextWindow = 1000000;
-              maxTokens = 32768;
-            }
-            {
-              id = "qwen/qwen3.8-max";
-              name = "Qwen3.8 Max";
-              reasoning = true;
-              supportsTools = true;
-              contextWindow = 1000000;
-              maxTokens = 32768;
-            }
-          ];
+          discovery = {
+            type = "openai-models-list";
+          };
         };
         tokenharbor = {
           baseUrl = "https://tokenharbor.ai/v1";
@@ -118,56 +95,9 @@ let
           baseUrl = "https://byesu.com/v1";
           api = "openai-completions";
           apiKey = byesuKey;
-          models = [
-            {
-              id = "claude-opus-5-5";
-              name = "Claude Opus 5.5";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "claude-sonnet-5-5";
-              name = "Claude Sonnet 5.5";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "claude-haiku-5-5";
-              name = "Claude Haiku 5.5";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "gemini-3.8-flash";
-              name = "Gemini 3.8 Flash";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "gemini-3.8-flash-high";
-              name = "Gemini 3.8 Flash High";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "gemini-pro-agent";
-              name = "Gemini Pro Agent";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "gemini-3.1-pro-low";
-              name = "Gemini 3.1 Pro Low";
-              reasoning = true;
-              supportsTools = true;
-            }
-            {
-              id = "kimi-k3";
-              name = "Kimi K3";
-              reasoning = true;
-              supportsTools = true;
-            }
-          ];
+          discovery = {
+            type = "proxy";
+          };
         };
       };
     }
