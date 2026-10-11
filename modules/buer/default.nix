@@ -25,10 +25,12 @@ let
   piImage = "oh-my-pi/pi:${tag}";
   botImage = "robomp:${tag}";
 
-  robompSource = pkgs.runCommand "robomp-src-${tag}-event-history-500k" { } ''
+  robompSource = pkgs.runCommand "robomp-src-${tag}-500k-local-logs" { } ''
     cp -r --no-preserve=mode,ownership ${src}/. $out/
     ${pkgs.gnused}/bin/sed -i 's/max_event_history=50_000/max_event_history=500_000/' $out/python/robomp/src/worker.py
     ${pkgs.gnugrep}/bin/grep -q 'max_event_history=500_000' $out/python/robomp/src/worker.py
+    ${pkgs.gnused}/bin/sed -i 's/time\.gmtime(record\.created)/time.localtime(record.created)/' $out/python/robomp/src/logging_config.py
+    ${pkgs.gnugrep}/bin/grep -q 'time.localtime(record.created)' $out/python/robomp/src/logging_config.py
   '';
 
   modelsYml = (pkgs.formats.yaml { }).generate "buer-models.yml" {
@@ -55,6 +57,7 @@ let
     ROBOMP_MODEL=${model}
     ROBOMP_THINKING=high
     ROBOMP_MAX_CONCURRENCY=2
+    TZ=${config.time.timeZone}
   '';
 
   compose = "${pkgs.docker-compose}/bin/docker-compose --file ${./docker-compose.yml}";

@@ -106,16 +106,23 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   queued as `handle_review` with `directive=True`, and the bot amends the
   branch in response — no `@`-mention needed. Review *bodies* without inline
   comments (`pull_request_review`) have no route and are ignored.
-- **Local patch over the pinned tag**: `robompSource` raises the RPC client's
-  retained event window from the upstream 50 000 to 500 000
-  (`max_event_history` in `python/robomp/src/worker.py`). `omp_rpc` keeps every
-  notification of the current turn in memory and aborts the task with "Event
-  history limit was exceeded" once the window rolls past the caller's
-  `start_index`; at `thinking=high` a turn streams on the order of 100
-  events/s, so an eight-minute turn already overruns 50 000. The window holds
-  parsed notification dicts, so the raised ceiling costs on the order of a few
-  hundred megabytes per running task. Only the robomp image builds from the
-  patched checkout; the pi image still builds from the pinned one.
+- **Local patches over the pinned tag**: `robompSource` applies two textual
+  substitutions, and only the robomp image builds from it — the pi image keeps
+  building from the pinned checkout. (1) `max_event_history` in
+  `python/robomp/src/worker.py` goes 50 000 → 500 000: `omp_rpc` retains every
+  notification of the current turn and aborts the task with "Event history
+  limit was exceeded" once the window rolls past the caller's `start_index`;
+  at `thinking=high` a turn streams on the order of 100 events/s, so an
+  eight-minute turn already overruns 50 000. The window holds parsed
+  notification dicts, so the raised ceiling costs on the order of a few hundred
+  megabytes per running task. (2) `time.gmtime` → `time.localtime` in
+  `python/robomp/src/logging_config.py` makes the pretty console prefix follow
+  `TZ` rather than pinning UTC; the JSONL file handler still writes UTC with a
+  `Z` suffix, which is what the DB and the dashboard expect.
+- **Time**: both containers take `TZ` from `config.time.timeZone`
+  (`Europe/Moscow`, set in `modules/locale.nix`) and bind-mount the host
+  `/etc/localtime`, so `date`, file mtimes and the offset on bot commits match
+  the host instead of the image's built-in `Etc/UTC`.
 
 ## What it reacts to
 
