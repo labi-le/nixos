@@ -29,7 +29,24 @@ in
     };
   };
 
-  systemd.services = lib.genAttrs acmeServiceNames (_: {
-    serviceConfig.EnvironmentFile = [ config.age.secrets.zerossl.path ];
-  });
+  systemd.services = lib.mkMerge [
+    (lib.genAttrs acmeServiceNames (name: {
+      serviceConfig = {
+        EnvironmentFile = [ config.age.secrets.zerossl.path ];
+      }
+      // lib.optionalAttrs (lib.hasPrefix "acme-order-renew-" name) {
+        Restart = "on-failure";
+      };
+    }))
+    (lib.listToAttrs (
+      map (cert: {
+        name = "acme-${cert}";
+        value.restartTriggers = [
+          (builtins.hashString "sha256" (
+            builtins.toJSON config.systemd.services."acme-order-renew-${cert}".serviceConfig
+          ))
+        ];
+      }) certNames
+    ))
+  ];
 }

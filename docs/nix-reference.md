@@ -292,3 +292,18 @@ Force restart all ACME order-renew units on the server:
 ```bash
 sudo systemctl start $(systemctl list-units --all --plain --no-legend 'acme-order-renew-*.service' | awk '{print $1}')
 ```
+
+Nothing needs this on a schedule any more. The units are oneshot, so a lost
+renewal used to stay failed until the next daily timer run — ZeroSSL answered
+`502` on `newNonce` on 2026-10-11, lego exhausted its six attempts, and the
+script's own `exit 11` (renewal failed inside the last third of the cert's
+lifetime) kept the unit red, and the alert re-firing, for the rest of the day.
+`modules/zerossl.nix` now sets `Restart = "on-failure"` on every order-renew
+unit, which is what upstream nixpkgs does: `RestartSec = 15 * 60` (the
+Failed-Validation-limit arithmetic the module comments about) is already in
+this pin but the matching `Restart` landed upstream later. That module also
+hashes each renewal unit's `serviceConfig` into the `restartTriggers` of its
+`acme-<cert>.service`, so a change to the renewal policy or environment is
+picked up on the next `make switch` rather than only when the unit next runs —
+nixpkgs' own trigger covers the renewal script alone. The command above is now
+only for forcing a retry sooner than 15 minutes.
