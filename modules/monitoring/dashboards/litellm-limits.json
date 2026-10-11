@@ -1077,7 +1077,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Per-model availability the subscription's usage API reports. It only lists the models it meters separately, so a model missing here is still callable.",
+      "description": "What the ChatGPT plan itself reports as callable, one row per model the account has usage for. A model the router deploys but the plan marks `unavailable` is the explanation for per-model failures while the account still answers on other models; a model appearing or vanishing here is the plan catalog changing under the router.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1109,13 +1109,36 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "red"
+              },
+              {
+                "color": "green",
+                "value": 1
               }
             ]
           },
           "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "callable"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 9,
@@ -1154,9 +1177,23 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Time": true
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true
             },
-            "renameByName": {}
+            "renameByName": {
+              "Value": "callable",
+              "model": "model",
+              "plan": "plan",
+              "account": "account"
+            },
+            "indexByName": {
+              "model": 0,
+              "plan": 1,
+              "account": 2,
+              "callable": 3
+            }
           }
         }
       ],
