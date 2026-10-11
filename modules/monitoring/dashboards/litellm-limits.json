@@ -13,7 +13,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "OpenCode Go pool accounts whose every window is still below the provider's limit. Four means the whole subscription is available.",
+      "description": "OpenCode Go pool accounts with no window that takes them out of rotation: neither reported rate-limited by the provider nor at 95 percent of a window, the poller's own bench threshold. Four means the whole subscription is available.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -68,7 +68,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "count(max by (account) (litellm_opencode_go_window_status) == 0) or vector(0)",
+          "expr": "count(count by (account) (litellm_opencode_go_window_status) unless count by (account) (litellm_opencode_go_window_status == 1 or litellm_opencode_go_used_percent >= 95)) or vector(0)",
           "instant": true,
           "range": false,
           "refId": "A"
@@ -82,7 +82,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Account windows the provider reports as rate-limited, one sample per account and window. A benched window is what drops an account out of rotation, so this is the count to watch when the pool starts failing over; it falls back as windows reset — hours for rolling, up to a week for weekly.",
+      "description": "Account windows that take the account out of rotation: the provider reports them as rate-limited, or 95 percent of the window is spent, which is where the poller benches the account's deployments. Rolling windows reset in hours, weekly in up to a week, so this count is what to watch when the pool starts failing over.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -133,7 +133,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "count(litellm_opencode_go_window_status == 1) or vector(0)",
+          "expr": "count(litellm_opencode_go_window_status == 1 or litellm_opencode_go_used_percent >= 95) or vector(0)",
           "instant": true,
           "range": false,
           "refId": "A"
@@ -620,7 +620,7 @@
       "id": 7,
       "type": "bargauge",
       "title": "Pool weekly limit per account",
-      "description": "One battery per pool account; the fill is the share of the weekly window the account has already spent. The weekly window is the one the pool benches an account on, so a full battery is an account out of rotation until its window resets. Rolling and monthly windows stay in the panel on the left.",
+      "description": "One battery per pool account; the fill is the share of the weekly window the account has already spent. Red starts at 95 percent, where the poller benches the account until the window resets; rolling and monthly windows stay in the panel on the left.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -651,7 +651,7 @@
               },
               {
                 "color": "red",
-                "value": 90
+                "value": 95
               }
             ]
           },
