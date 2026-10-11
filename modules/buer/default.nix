@@ -36,7 +36,6 @@ let
 
   composeEnv = pkgs.writeText "buer.env" ''
     BUER_IMAGE=${botImage}
-    BUER_SRC=${src}
     BUER_DATA=${dataDir}
     BUER_MODELS=${modelsYml}
     BUER_AGENTS_MD=${./agent-AGENTS.md}

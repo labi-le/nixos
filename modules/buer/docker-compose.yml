@@ -40,10 +40,9 @@ services:
       ROBOMP_LOG_DIR: /data/logs
       ROBOMP_BIND_HOST: 0.0.0.0
       ROBOMP_BIND_PORT: "8080"
-      PI_ROOT: /work/pi
+      PI_ROOT: /pi
       ROBOMP_LITELLM_KEY: ${ROBOMP_LITELLM_KEY:?}
     volumes:
-      - ${BUER_SRC:?}:/work/pi:ro
       - ${BUER_DATA:?}:/data
       - ${BUER_MODELS:?}:/srv/agent-home-stage/.omp/agent/models.yml:ro
       - ${BUER_AGENTS_MD:?}:/srv/agent-home-stage/.agent/AGENTS.md:ro

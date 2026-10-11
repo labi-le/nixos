@@ -43,8 +43,15 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
 ## Wiring
 
 - **Source pin**: `fetchFromGitHub` on `can1357/oh-my-pi` tag `v18.8.9`,
-  hash `sha256-t3OZP4E0mWFJU0RW3OMcGU2G52p5uasQdVPhITHnZec=`. The tree is mounted
-  read-only at `/work/pi` (`PI_ROOT`) and is also the docker build context.
+  hash `sha256-t3OZP4E0mWFJU0RW3OMcGU2G52p5uasQdVPhITHnZec=`. That tree is the
+  docker build context only. At runtime the `omp` shim runs the **image's own
+  baked copy** (`PI_ROOT=/pi`), not a mounted checkout: `Dockerfile.dockerignore`
+  keeps `**/node_modules` out of the build context, so a tree mounted from the
+  store has no dependencies and the shim dies with
+  `Cannot find module '@oh-my-pi/pi-tui/key-hint-format'`. The `pi-runtime`
+  stage the images are built from (default target of `Dockerfile`) is the same
+  rev plus `bun install --frozen-lockfile`, i.e. `/pi/node_modules` with the
+  workspace links the CLI resolves.
 - **Images**: `buer-images.service` builds `oh-my-pi/pi:v18.8.9` then
   `robomp:v18.8.9`. The unit is marker-guarded (`/drive/state/buer/image-rev`
   holds `path|pi-tag|bot-tag`), so boots and switches are no-ops until the pin
@@ -104,6 +111,9 @@ systemctl status buer-images buer
 journalctl -fu buer
 curl -fsS http://127.0.0.1:6543/healthz
 
+# one-shot prompt against the gateway, exactly as the tasks do it
+docker exec -e HOME=/srv/agent-home buer omp -p --model llm-labile/deepseek-v4.1-flash "say ok"
+
 # rebuild images by hand (same commands the unit runs)
 systemctl start buer-images
 
@@ -116,6 +126,9 @@ sqlite3 /drive/state/buer/robomp.sqlite 'select state,count(*) from events group
 sqlite3 /drive/state/buer/robomp.sqlite 'select * from issues order by updated_at desc limit 5'
 ```
 
+- Run container-side commands **without a login shell**: `docker exec buer omp …`
+  is right, `docker exec buer sh -lc 'omp …'` fails with `bun: not found`
+  because Debian's `/etc/profile` resets `PATH` and drops `/opt/bun/bin`.
 - Changing the model, allowlist, bot login or author identity means editing the
   `let` block in `modules/buer/default.nix` and switching.
 - Rotating the PAT or the LiteLLM key means re-encrypting `secrets/buer-env.age`
