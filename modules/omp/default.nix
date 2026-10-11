@@ -99,6 +99,16 @@ let
             type = "proxy";
           };
         };
+      }
+      // lib.optionalAttrs (litellmSecret != null) {
+        llm-labile = {
+          baseUrl = "https://llm.labile.cc/v1";
+          api = "openai-completions";
+          apiKey = litellmKey "LITELLM_MASTER_KEY";
+          discovery = {
+            type = "litellm";
+          };
+        };
       };
     }
   );

@@ -13,7 +13,11 @@ hosts outside the secret's recipients (fx516) keep the direct `opencode-go`
 profile. That provider's model list is derived from the catalog
 (`import ../litellm/models`), one entry per group, so a new group file appears in
 jcode's `/model` picker without an edit here. omp
-does not use this gateway; it authenticates against `closerouter` and
+reaches the same gateway as provider `llm-labile` (`discovery.type = "litellm"`
+over `https://llm.labile.cc/v1`, declared only on hosts that receive the master
+key), so its roster, limits and prices come from the proxy's own metadata rather
+than from a list here, and an OpenAI-backed group is dispatched over the
+Responses route; it also authenticates against `byesu`, `closerouter` and
 `tokenharbor` directly.
 
 ## Model groups
