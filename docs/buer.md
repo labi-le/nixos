@@ -84,6 +84,17 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `*.labile.cc` already points at this host, so no record is needed. The bind
   port is written both here (`BUER_BIND_PORT`) and in the vhost — the same
   duplication `llm.labile.cc` carries.
+- **Dashboard control surface**: `buer-replay-token` writes
+  `/run/buer/replay-token.env` (`openssl rand -hex 32`, tmpfs, mode 0600) before
+  `buer` starts; the value becomes `ROBOMP_REPLAY_TOKEN`, which gates robomp's
+  `POST /api/trigger` (`triage` / `retry`), `POST /api/cancel`, `/replay` and the
+  issue picker behind the `X-Robomp-Replay-Token` header. The SPA is handed the
+  token inlined in the page it is served, so nobody types it and there is no
+  agenix secret to rotate; it rotates on boot, which only means a long-lived tab
+  needs a reload. `buer` requires the token unit and lists the file last in
+  `EnvironmentFile`, so a missing file fails loudly instead of silently leaving
+  the controls off; a blank `ROBOMP_REPLAY_TOKEN` disables the whole surface
+  (`/api/trigger` then answers `404`).
 - **Secrets reach the containers only through the compose allowlists**:
   `GITHUB_TOKEN` appears in `buer-gh-proxy`'s block alone; the orchestrator
   never sees it. `ROBOMP_GH_PROXY_HMAC_KEY` and `GITHUB_WEBHOOK_SECRET` are in
@@ -121,6 +132,8 @@ curl -fsS http://127.0.0.1:6543/healthz
 # dashboard, whitelisted sources only (LAN or the current MY_IP):
 #   https://buer.labile.cc/ui/            from any allowed client
 #   ssh -L 6543:127.0.0.1:6543 server     then http://127.0.0.1:6543/
+#   Triage tab, per-task cancel and event replay are live: the page carries the
+#   token buer-replay-token generated, so no header needs typing
 
 # one-shot prompt against the gateway, exactly as the tasks do it
 docker exec -e HOME=/srv/agent-home buer omp -p --model llm-labile/deepseek-v4.1-flash "say ok"

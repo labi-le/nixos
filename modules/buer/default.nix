@@ -90,6 +90,21 @@ in
     '';
   };
 
+  systemd.services.buer-replay-token = {
+    description = "Per-boot dashboard token for buer (trigger, cancel, replay)";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "buer.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      RuntimeDirectory = "buer";
+      ExecStart = "${pkgs.writeShellScript "buer-replay-token" ''
+        umask 077
+        printf 'ROBOMP_REPLAY_TOKEN=%s\n' "$(${pkgs.openssl}/bin/openssl rand -hex 32)" > /run/buer/replay-token.env
+      ''}";
+    };
+  };
+
   systemd.services.buer = {
     description = "buer — GitHub triage and pull-request bot (upstream robomp ${tag})";
     after = [
@@ -98,12 +113,14 @@ in
       "docker-network-litellm.service"
       "buer-images.service"
       "network-online.target"
+      "buer-replay-token.service"
     ];
     wants = [ "network-online.target" ];
     requires = [
       "docker.service"
       "docker-network-litellm.service"
       "buer-images.service"
+      "buer-replay-token.service"
     ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
@@ -115,6 +132,7 @@ in
       EnvironmentFile = [
         composeEnv
         config.age.secrets.buer-env.path
+        "/run/buer/replay-token.env"
       ];
       ExecStart = "${compose} up --detach --remove-orphans";
       ExecStop = "${compose} down";
