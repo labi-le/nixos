@@ -25,7 +25,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | Bootloader, kernel parameters | `modules/boot.nix` | |
 | Sudo configuration, NOPASSWD rules | `modules/sudo.nix` | `timestamp_timeout=-1` plus NOPASSWD for exactly two absolute binaries, `nixos-rebuild` and `nix-collect-garbage`, so `make switch` / `make cleanup` never prompt while the login password stays strong; every other command still needs it |
 | Persistent Rust/C/C++ compiler cache daemon | `modules/sccache.nix` |
-| Systemd services and nix-control evaluation memory budget | `modules/systemd.nix` | User slice `nix-control-eval.slice` bounds all nix-control evaluation scopes together: `MemoryHigh=6G`, `MemoryMax=8G`, `MemorySwapMax=0`. |
+| Systemd manager settings (stop timeout, default OOM policy) | `modules/systemd.nix` | `DefaultTimeoutStopSec=10s` plus `DefaultOOMPolicy=continue` for the system manager, and `DefaultOOMPolicy=continue` for the user manager, so a kernel OOM kill never stops the whole session |
 | Journald logging | `modules/journald.nix` | |
 | ZSH configuration | `modules/shell.nix` | |
 | tmux terminal multiplexer (prefix `Ctrl+a`) | `modules/tmux.nix` | |

@@ -179,46 +179,6 @@ where evaluation happens; builds run in nix-daemon, outside it, and would need a
 so the recipe has to run as the logged-in user (`make switch`), not under
 `sudo make`.
 
-## Pre-flight Config Eval
-
-The old implementation launched four full evaluators per call, with no shared
-admission or memory limit. On 2026-10-08, the kernel logged `global_oom` while
-`eval_all` overlapped a switch, killing a Nix process with 2,957,128 KiB anonymous
-RSS. A sequential loop alone would still let concurrent MCP calls multiply
-evaluators.
-
-The server holds an exclusive file lock at
-`$XDG_STATE_HOME/nix-control-mcp/eval-all.lock` for the entire call, including
-retries; `$XDG_STATE_HOME` defaults to `~/.local/state`. This admits one
-`eval_all` call across server threads and processes sharing that state directory.
-Each evaluator runs in a user `systemd-run` scope within
-`nix-control-eval.slice`, declared in `modules/systemd.nix`. Scope and slice use
-`MemoryHigh=6G`, `MemoryMax=8G`, and `MemorySwapMax=0`; the slice keeps the budget
-aggregate even across separate scopes. The separate Nix daemon is not covered.
-These are limits, not reserved RAM; unrelated workloads can still cause global
-memory pressure. See
-[systemd-run](https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html)
-and
-[memory controls](https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html#MemoryHigh=bytes).
-If the user manager or scope fails, the host reports an error; the tool never
-falls back to an unbounded evaluator.
-
-Transient errors such as lock contention or EOF are retried once, with
-`attempts: 2` on the final host row. Retry classification uses the full error,
-not its displayed tail. SIGKILL, OOM, and permanent configuration errors are
-not retried. A failed host does not prevent the remaining hosts from being
-checked.
-
-Focused regression checks use only controlled subprocess results, not Nix:
-
-```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
-  -s .omp/nix-control-mcp/tests -p 'test_*.py' -v
-```
-
-All tests should pass. A peak evaluator count above one, a missing host row,
-or a repeated killed evaluator is a regression.
-
 ## ChromaDB As Persistent Memory
 
 ChromaDB runs at `192.168.1.2:8000` and is connected via MCP. Data persists

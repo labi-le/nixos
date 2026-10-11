@@ -1,21 +1,11 @@
-import fcntl
 import json
-import re
-import signal
 import time
 
-from config import HOSTS, LOCK, MISSING_ATTR_RE, OWNER, REPO, STATE, TRANSIENT_NIX_RE
+from config import LOCK, MISSING_ATTR_RE, OWNER, REPO
 from jobs import await_job, finish_job, read_log, start_job
 from protocol import ToolError
 from shell import first_error, nix_noise, require_host, run, run_split
 from text import clamp, envelope, tail
-
-
-EVAL_ALL_FATAL_RE = re.compile(
-    r"\boom(?:[-_ ]kill)?\b|out of memory|cannot allocate memory|memory exhausted|"
-    r"std::bad_alloc|memory limit|\bSIGKILL\b|\bkilled\b",
-    re.IGNORECASE,
-)
 
 
 def eval_prelude(host):
@@ -112,80 +102,6 @@ def tool_eval(args, request_id, token):
         except ValueError:
             pass
     return envelope(header, clamp(out.rstrip("\n"))), False
-
-
-def tool_eval_all(args, request_id, token):
-    requested = args.get("hosts") or list(HOSTS)
-    if isinstance(requested, str):
-        requested = [requested]
-    unknown = [host for host in requested if host not in HOSTS]
-    if unknown:
-        raise ToolError(
-            f"unknown host(s) {', '.join(unknown)}; expected one of {', '.join(HOSTS)}"
-        )
-    attr = (args.get("attr") or "system.build.toplevel.drvPath").strip().lstrip(".")
-    raw = bool(args.get("raw", True))
-
-    def probe(host):
-        argv = [
-            "systemd-run",
-            "--user",
-            "--scope",
-            "--quiet",
-            "--collect",
-            "--slice=nix-control-eval.slice",
-            "-p",
-            "MemoryHigh=6G",
-            "-p",
-            "MemoryMax=8G",
-            "-p",
-            "MemorySwapMax=0",
-            "--",
-            "nix",
-            "eval",
-            "--impure",
-            f".#nixosConfigurations.{host}.config.{attr}",
-        ]
-        argv += ["--raw"] if raw else ["--json"]
-        try:
-            code, out, err = run_split(argv, timeout=1800)
-        except ToolError as error:
-            code, out, err = None, "", str(error)
-        killed = code in (-signal.SIGKILL, 128 + signal.SIGKILL)
-        fatal = killed or bool(EVAL_ALL_FATAL_RE.search(err))
-        row = {"host": host, "ok": code == 0}
-        if code == 0:
-            row["value"] = out.strip()
-        else:
-            error = tail(nix_noise(err), 12)
-            if killed:
-                error = "nix evaluator was killed (SIGKILL); not retried." + (
-                    f"\n{error}" if error else ""
-                )
-            row["error"] = error
-        retry = not row["ok"] and not fatal and bool(TRANSIENT_NIX_RE.search(err))
-        return row, retry
-
-    STATE.mkdir(parents=True, exist_ok=True)
-    with (STATE / "eval-all.lock").open("a+b") as guard:
-        fcntl.flock(guard, fcntl.LOCK_EX)
-        probes = [probe(host) for host in requested]
-        rows = [row for row, _ in probes]
-        for index, (row, retry) in enumerate(probes):
-            if not retry:
-                continue
-            retried, _ = probe(row["host"])
-            retried["attempts"] = 2
-            rows[index] = retried
-    broken = [row["host"] for row in rows if not row["ok"]]
-    header = {
-        "attr": f"config.{attr}",
-        "checked": len(rows),
-        "broken": broken,
-        "next": "rebuild action=switch" if broken else None,
-        "hosts": rows,
-    }
-    return envelope(header), bool(broken)
 
 
 def lock_revisions(lock):
