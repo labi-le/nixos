@@ -50,10 +50,14 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   holds `path|pi-tag|bot-tag`), so boots and switches are no-ops until the pin
   or the tags change. First build compiles the Rust pi-natives inside the image
   and takes tens of minutes; `TimeoutStartSec=infinity`.
-- **State**: `/drive/state/buer` (ZFS `data/state`) is bind-mounted at `/data` —
-  clone pool, per-issue worktrees, cargo toolchain/target caches, `robomp.sqlite`,
-  JSON logs. Cargo caches matter here: murmur is a Rust repo, so every fix task
-  builds it.
+- **State**: `/drive/state/buer` on the ZFS `data/state` dataset is bind-mounted at
+  `/data` — clone pool, per-issue worktrees, cargo toolchain/target caches,
+  `robomp.sqlite`, JSON logs. Cargo caches matter here: murmur is a Rust repo, so
+  every fix task builds it. The directory is created by `buer-images.service`
+  (`install -d`), **not** by a `systemd.tmpfiles.rules` entry: tmpfiles refuses
+  the path with `Detected unsafe path transition /drive (owned by labile) →
+  /drive/state (owned by root)` and would silently create nothing, so a `d
+  /drive/state/buer …` rule is dead weight here.
 - **Model**: a LiteLLM virtual key (alias `buer-agent`) restricted to
   `deepseek-v4.1-flash`, injected as `ROBOMP_LITELLM_KEY`. The generated
   `models.yml` declares one provider, `llm-labile`, base URL
@@ -76,10 +80,14 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
 1. `int8-ptr` (bot) must be a collaborator with **Write** on every repository in
    `ROBOMP_REPO_ALLOWLIST`; it is not a member of `labi-le`'s private repos and
    gets `404` until invited and the invitation is accepted.
-2. The fine-grained PAT must list those repositories under *Repository access*
-   and carry **Contents: RW, Issues: RW, Pull requests: RW, Metadata: R**
-   (add **Actions: R** only if the release sentinel is ever enabled). A token
-   without the repo selected authenticates fine and still 404s on the repo.
+2. The bot needs a **classic** PAT: a fine-grained token owned by a personal
+   account can only be scoped to repositories that account *owns* — its
+   "Repository access" picker offers only *Public repositories* and *All
+   repositories (… you own)*, so `labi-le/murmur` cannot be selected at all and
+   every API call returns `404 Not Found` even though the account is a write
+   collaborator. Create the token at
+   `https://github.com/settings/tokens/new` with scopes **`repo`** (and
+   **`workflow`** if the bot may touch `.github/workflows`).
 3. Repository webhook: payload URL `https://buer.labile.cc/webhook/github`,
    content type `application/json`, secret = `GITHUB_WEBHOOK_SECRET` from the
    agenix secret, events **Issues, Issue comments, Pull requests, Pull request

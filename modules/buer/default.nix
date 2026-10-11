@@ -59,10 +59,6 @@ in
     mode = "0400";
   };
 
-  systemd.tmpfiles.rules = [
-    "d ${dataDir} 0755 root root -"
-  ];
-
   systemd.services.buer-images = {
     description = "Build the buer container images (upstream robomp ${tag})";
     after = [
@@ -80,10 +76,11 @@ in
       Type = "oneshot";
       RemainAfterExit = true;
       TimeoutStartSec = "infinity";
-      RequiresMountsFor = [ dataDir ];
+      RequiresMountsFor = [ "/drive/state" ];
     };
     script = ''
       set -euo pipefail
+      install -d -m 0755 ${dataDir}
       marker=${dataDir}/image-rev
       want='${src}|${piImage}|${botImage}'
       if [ -r "$marker" ] && [ "$(cat "$marker")" = "$want" ]; then
@@ -116,7 +113,7 @@ in
       RemainAfterExit = true;
       TimeoutStartSec = "infinity";
       WorkingDirectory = dataDir;
-      RequiresMountsFor = [ dataDir ];
+      RequiresMountsFor = [ "/drive/state" ];
       EnvironmentFile = [
         composeEnv
         config.age.secrets.buer-env.path
