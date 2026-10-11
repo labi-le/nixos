@@ -822,9 +822,10 @@ The dashboard is `LiteLLM provider limits` (uid `litellm-limits`,
 `modules/monitoring/dashboards/litellm-limits.json`, provisioned like the other
 system dashboards — into the `litellm` Grafana folder, while the disk dashboards
 live in `storage` and node-exporter stays in `system`): accounts still in
-rotation, benched windows, headroom per account and window, the reset countdown
-per account, the Codex weekly headroom and reset, token expiry, per-model
-availability, source reachability, and the price sync's state.
+rotation, benched windows, headroom per account and window, one battery per
+account filled by the share of its weekly window already spent, the Codex weekly
+headroom and reset, token expiry, per-model availability, per-source
+reachability, and the price sync's state.
 `100 - used_percent` is the headroom everywhere, because both providers report
 what is *spent*. `count(…) or vector(0)` keeps a "nothing benched" panel at 0
 instead of `No data`, since `count()` over an empty vector returns nothing.

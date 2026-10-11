@@ -43,10 +43,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
         "x": 0,
-        "y": 0
+        "y": 0,
+        "w": 4,
+        "h": 5
       },
       "id": 1,
       "options": {
@@ -82,7 +82,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Windows the provider reports as rate-limited; the usage plugin benches those accounts in the router.",
+      "description": "Account windows the provider reports as rate-limited, one sample per account and window. A benched window is what drops an account out of rotation, so this is the count to watch when the pool starts failing over; it falls back as windows reset — hours for rolling, up to a week for weekly.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -108,10 +108,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 5,
-        "y": 0
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 5
       },
       "id": 2,
       "options": {
@@ -177,10 +177,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 10,
-        "y": 0
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 5
       },
       "id": 3,
       "options": {
@@ -216,7 +216,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Left value: last run succeeded. Middle value: age of the last run. Right values: whether each upstream answered this run, so a transient failure that empties the Codex or pool panels is distinguishable from an empty catalog.",
+      "description": "Left value: last run succeeded. Middle value: age of the last run.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -314,59 +314,14 @@
                 }
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byFrameRefID",
-              "options": "C"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "none"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "down",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "up",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red"
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
           }
         ]
       },
       "gridPos": {
-        "h": 5,
+        "x": 12,
+        "y": 0,
         "w": 4,
-        "x": 15,
-        "y": 0
+        "h": 5
       },
       "id": 4,
       "options": {
@@ -401,14 +356,6 @@
           "range": false,
           "refId": "B",
           "legendFormat": "age"
-        },
-        {
-          "editorMode": "code",
-          "expr": "litellm_limits_source_up",
-          "instant": true,
-          "legendFormat": "{{source}}",
-          "range": false,
-          "refId": "C"
         }
       ],
       "title": "Limits exporter",
@@ -419,7 +366,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Left value: 1 when the daily price sync refused to apply the Go table. Right value: age of the last successful sync.",
+      "description": "Left value: 1 when the daily price sync refused to apply the provider table. Right value: age of the last successful sync.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -521,10 +468,10 @@
         ]
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 19,
-        "y": 0
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 5
       },
       "id": 5,
       "options": {
@@ -561,7 +508,7 @@
           "legendFormat": "age"
         }
       ],
-      "title": "Zen price sync",
+      "title": "Price sync",
       "type": "stat"
     },
     {
@@ -670,80 +617,80 @@
       "type": "timeseries"
     },
     {
+      "id": 7,
+      "type": "bargauge",
+      "title": "Pool weekly limit per account",
+      "description": "One battery per pool account; the fill is the share of the weekly window the account has already spent. The weekly window is the one the pool benches an account on, so a full battery is an account out of rotation until its window resets. Rolling and monthly windows stay in the panel on the left.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Time left before each account's window resets, per the provider's own usage API.",
+      "gridPos": {
+        "x": 14,
+        "y": 5,
+        "w": 10,
+        "h": 9
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green"
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
               }
             ]
           },
-          "unit": "s"
+          "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 9,
-        "w": 10,
-        "x": 14,
-        "y": 5
-      },
-      "id": 7,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "displayMode": "lcd",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
       },
       "pluginVersion": "11.6.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
-          "expr": "litellm_opencode_go_reset_at - time()",
-          "format": "table",
+          "expr": "litellm_opencode_go_used_percent{window=\"weekly\"}",
           "instant": true,
-          "legendFormat": "{{account}} {{window}}",
+          "legendFormat": "{{account}}",
           "range": false,
           "refId": "A"
         }
-      ],
-      "title": "Pool window resets",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {}
-          }
-        }
-      ],
-      "type": "table"
+      ]
     },
     {
       "datasource": {
@@ -1214,6 +1161,115 @@
         }
       ],
       "type": "table"
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Sources",
+      "description": "Whether each upstream answered the usage API on the last exporter run. A transient failure that empties the pool or Codex half of this dashboard shows up here instead of looking like an empty catalog.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "down",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "up",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red"
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "litellm_limits_source_up",
+          "instant": true,
+          "legendFormat": "{{source}}",
+          "range": false,
+          "refId": "A"
+        }
+      ]
     }
   ],
   "refresh": "1m",
