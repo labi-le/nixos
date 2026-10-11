@@ -269,7 +269,7 @@ def read_state():
     try:
         with open(STATE_PATH, encoding="utf-8") as handle:
             return json.load(handle)
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError):
         return {"last_success": 0}
 
 
