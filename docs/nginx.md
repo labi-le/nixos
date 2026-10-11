@@ -181,8 +181,9 @@ of scope here.
 
 ## The LLM gateway vhost: public API, whitelisted dashboard
 
-`llm.labile.cc` is the only vhost that is deliberately split. The API has to
-answer from anywhere — jcode on every host and friends' tools call it over
+Two vhosts are deliberately split: `llm.labile.cc` here and `buer.labile.cc` in
+the next section. For the gateway, the API has to answer from anywhere — jcode
+on every host and friends' tools call it over
 mobile and foreign networks, and a virtual key is the gate — while the admin
 dashboard only has to answer to you. `modules/nginx.nix` therefore builds it
 with `llmGateway`: `/` stays public, and four prefixes go behind the same
@@ -213,3 +214,35 @@ connected to `127.0.0.1` while forcing the source proved nothing — nginx sees
 the loopback address there, which is whitelisted, and answered `200`; the source
 has to be forced against the host's LAN address for the whitelist to be
 exercised at all.
+
+## The buer vhost: public webhook, whitelisted dashboard
+
+`buer.labile.cc` splits for a different reason: GitHub delivers webhooks from
+its own networks, so `/webhook/github` must answer from anywhere, while the
+triage dashboard only has to answer to you. `modules/nginx.nix` builds it with
+`buer` out of the same `proxyLocation`/`internalLocation` helpers every other
+vhost uses: `/` is a 404, `/webhook/github` is a public `proxy_pass`, and the
+dashboard lives on `/ui`, `/ui/`, `/static/`, `/api/`, `/events` and `/issues`
+behind `ip_whitelist.conf`.
+
+`/ui/` is the one prefix-stripped location (`proxy_pass
+http://127.0.0.1:6543/`) because the SPA is served from robomp's root and then
+fetches absolute `/static/…` and `/api/…` URLs of its own — mounting `/ui/`
+alone would return the HTML and break every asset and poll. `/ui` without the
+slash answers 302; the 403 rather than the `@error404` remap is the trade
+`sub.labile.cc` already makes, for the same reason: a scanner probing this host
+must not feed `nginx-scan-404` a ban that also covers the public webhook.
+
+Measured 2026-10-12 on the deployed server, from inside the `buer` container —
+its source address is the container's own `172.x`, which the whitelist does not
+cover:
+
+| source | `/ui/` | `/static/assets/index-*.js` | `/api/status` | `/webhook/github` | `/` |
+|---|---|---|---|---|---|
+| container `172.x`, not whitelisted | `403` | `403` | `403` | `405` — reaches robomp, GET is not allowed | `404` |
+| `192.168.1.x` LAN, whitelisted | `200` | `200` | `200` | `405` | `404` |
+
+From the LAN, `/ui` answers `302 → https://buer.labile.cc/ui/`, and the SPA
+loads end to end through nginx: the dashboard renders, `/api/status` and
+`/api/logs` poll normally, and only `/replay` stays off (`ROBOMP_REPLAY_TOKEN`
+is unset, so robomp itself answers `404 replay disabled`).
