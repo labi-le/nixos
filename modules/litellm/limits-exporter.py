@@ -43,9 +43,16 @@ def pool_keys():
 
 
 def fetch_json(url, headers):
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
-        return json.load(response)
+    last = None
+    for _ in range(2):
+        try:
+            request = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+                return json.load(response)
+        except Exception as failure:
+            last = failure
+            time.sleep(2)
+    raise last
 
 
 def epoch(value):
@@ -93,13 +100,15 @@ def escaped(value):
     return str(value).replace("\\", "\\\\").replace('"', '\\"')
 
 
-def zen_lines(now, accounts):
+def zen_lines(now, accounts, failed):
     lines = [
         "# HELP litellm_opencode_go_fetch_ok 1 when this pool account answered the usage API.",
         "# TYPE litellm_opencode_go_fetch_ok gauge",
     ]
     for index in sorted(accounts):
         lines.append(f'litellm_opencode_go_fetch_ok{{account="{index}"}} 1')
+    for index in sorted(failed):
+        lines.append(f'litellm_opencode_go_fetch_ok{{account="{index}"}} 0')
     lines += [
         "# HELP litellm_opencode_go_used_percent Share of the window this pool account has spent.",
         "# TYPE litellm_opencode_go_used_percent gauge",
@@ -126,9 +135,10 @@ def zen_lines(now, accounts):
     ]
     for index in sorted(accounts):
         for window, data in accounts[index].items():
-            lines.append(
-                f'litellm_opencode_go_reset_at{{account="{index}",window="{window}"}} {epoch(data.get("resetsAt"))}'
-            )
+            if data.get("resetsAt"):
+                lines.append(
+                    f'litellm_opencode_go_reset_at{{account="{index}",window="{window}"}} {epoch(data["resetsAt"])}'
+                )
     return lines
 
 
@@ -145,7 +155,10 @@ def codex_lines(account):
         f'litellm_codex_limit_reached{{{labels}}} {1 if rate_limit.get("limit_reached") else 0}',
         "# HELP litellm_codex_token_expires_at When the stored OAuth access token expires, unix seconds.",
         "# TYPE litellm_codex_token_expires_at gauge",
-        f'litellm_codex_token_expires_at{{{labels}}} {account["expires_at"]}',
+    ]
+    if account["expires_at"]:
+        lines.append(f'litellm_codex_token_expires_at{{{labels}}} {account["expires_at"]}')
+    lines += [
         "# HELP litellm_codex_window_present 1 when the plan reports this rate-limit window.",
         "# TYPE litellm_codex_window_present gauge",
         "# HELP litellm_codex_used_percent Share of the window this ChatGPT account has spent.",
@@ -167,9 +180,10 @@ def codex_lines(account):
         lines.append(
             f'litellm_codex_window_seconds{{{series}}} {data.get("limit_window_seconds", 0)}'
         )
-        lines.append(
-            f'litellm_codex_reset_at{{{series}}} {epoch(data.get("reset_at"))}'
-        )
+        if data.get("reset_at"):
+            lines.append(
+                f'litellm_codex_reset_at{{{series}}} {epoch(data["reset_at"])}'
+            )
     lines += [
         "# HELP litellm_codex_model_available 1 when this model is callable on the account's plan.",
         "# TYPE litellm_codex_model_available gauge",
@@ -182,7 +196,7 @@ def codex_lines(account):
     return lines
 
 
-def render(now, zen, codex, errors):
+def render(now, zen, codex, errors, failed):
     lines = [
         "# HELP litellm_limits_exporter_last_run_timestamp_seconds When the limits exporter last ran.",
         "# TYPE litellm_limits_exporter_last_run_timestamp_seconds gauge",
@@ -190,8 +204,12 @@ def render(now, zen, codex, errors):
         "# HELP litellm_limits_exporter_success 1 when every provider answered.",
         "# TYPE litellm_limits_exporter_success gauge",
         f"litellm_limits_exporter_success {1 if not errors else 0}",
+        "# HELP litellm_limits_source_up 1 when this upstream answered the usage API this run.",
+        "# TYPE litellm_limits_source_up gauge",
+        f'litellm_limits_source_up{{source="opencode-go"}} {1 if zen else 0}',
+        f'litellm_limits_source_up{{source="codex"}} {1 if codex is not None else 0}',
     ]
-    lines += zen_lines(now, zen)
+    lines += zen_lines(now, zen, failed)
     if codex is not None:
         lines += codex_lines(codex)
     lines.append("")
@@ -216,6 +234,7 @@ def main():
     now = int(time.time())
     errors = []
     zen = {}
+    failed = set()
     keys = pool_keys()
     if not keys:
         errors.append("opencode-go pool: no LITELLM_OPENCODE_GO_KEY_* keys found")
@@ -223,6 +242,7 @@ def main():
         try:
             zen[index] = zen_account(key)
         except Exception as failure:
+            failed.add(index)
             errors.append(f"opencode-go account {index}: {type(failure).__name__}: {failure}")
     codex = None
     try:
@@ -230,13 +250,21 @@ def main():
     except Exception as failure:
         errors.append(f"codex: {type(failure).__name__}: {failure}")
 
-    text = render(now, zen, codex, errors)
+    text = render(now, zen, codex, errors, failed)
+    published = True
     if args.stdout:
         print(text, end="")
     else:
-        write_metric(text)
+        try:
+            write_metric(text)
+        except OSError as failure:
+            published = False
+            print(f"could not publish the provider limits: {failure}", file=sys.stderr)
+            errors.append(f"metric file: {type(failure).__name__}: {failure}")
     for line in errors:
         print(line, file=sys.stderr)
+    if not published:
+        return 1
     return 1 if errors and not zen and codex is None else 0
 
 
