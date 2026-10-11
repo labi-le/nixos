@@ -86,6 +86,11 @@ let
           discovery = {
             type = "litellm";
           };
+          modelOverrides = {
+            step-5-preview = {
+              api = "openai-completions";
+            };
+          };
         };
       };
     }

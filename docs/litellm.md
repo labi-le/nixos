@@ -357,8 +357,15 @@ show it again, so capture it before the shell prints anything else:
 ```
 curl -sX POST https://llm.labile.cc/key/generate \
   -H "Authorization: Bearer $MASTER" -H 'Content-Type: application/json' \
-  -d '{"key_alias":"friend","duration":"365d","models":["deepseek-v4.1-flash"]}'
+  -d '{"key_alias":"friend","duration":"365d","models":["deepseek-v4.1-flash","step-5-preview","gpt-6-astra","gpt-6-luna","gpt-6.1-sol"]}'
 ```
+
+`models` is the whole scope: a key can call exactly the groups listed, and an
+unlisted group answers `403 key_model_access_denied`. Both live client keys
+(`anyouh`, `vanya`) carry all five names since 2026-10-11, when `step-5-preview`
+was added to them with `POST /key/update` — same shape as above, with the key
+hash from `GET /key/list?return_full_object=true` instead of a plaintext key,
+which is the only identifier left once the key itself has been handed out.
 
 Extend or shorten — `duration` sets the expiry to *now + duration*; it does
 not add to the existing expiry. Measured: a key created with `duration: 1d`
@@ -420,10 +427,35 @@ a fallback: verified on this proxy, `deepseek-v4.1-flash` leaves as
 `POST /v1/responses`, so reasoning summaries survive. Management routes answer a
 plain client key, so a scoped key still gets prices, limits and vision flags;
 the roster is cached for two hours, and `omp models refresh llm-labile` re-reads
-it after a rescope or a new group. One gap: omp shows no effort ladder for
-`deepseek-v4.1-flash` although `/model_group/info` advertises
-`supported_reasoning_efforts` from `none` to `max`; a client that wants
-`/thinking` levels pins them with `modelOverrides`.
+it after a rescope or a new group.
+
+The effort ladder has to come from the gateway, and it now does:
+`modules/litellm/reasoning-params.py` is a startup hook
+(`LITELLM_WORKER_STARTUP_HOOKS`) that appends `reasoning_effort` to
+`supported_openai_params` for every deployment whose
+`model_info.reasoning_effort_levels` is non-empty — on the deployment route and
+on `Router.get_model_group_info` alike. Both are needed: a client gates the
+ladder on `supported_openai_params`, and omp reads that gate from the
+*deployment* metadata (`/model/info`, `/v2/model/info`), while ignoring
+`supported_reasoning_efforts` completely — that field is not in omp's bundle at
+all. Measured 2026-10-11 with the hook in place: `deepseek-v4.1-flash` gets
+`['low','high','max']` and `step-5-preview` `['low','medium','high']`, both empty
+before it. LiteLLM itself never publishes `reasoning_effort` for these two
+groups, because it resolves `openai/deepseek-v4.1-flash` and
+`openai/step-5-preview-free` to a generic OpenAI chat parameter list; the
+`chatgpt/gpt-6-*` groups carry it because LiteLLM knows them as Responses
+models.
+
+One transport caveat, specific to `step-5-preview`: omp's LiteLLM discovery
+sends it over `POST /v1/responses` — its upstream is an `openai/…` id — and Zen
+answers `400 ModelProtocolUnsupported` for that protocol on the free id, so the
+omp provider pins it to chat completions with
+`modelOverrides.step-5-preview.api = "openai-completions"` in
+`modules/omp/default.nix`. Giving the deployment `model_info.mode = "chat"` does
+not change that choice (measured 2026-10-11: omp still sent Responses, so the
+override was reverted), and jcode never hit it: an `openai-compatible` profile
+speaks chat completions only, and `jcode run --provider-profile llm-labile -m
+step-5-preview` answers through the same gateway.
 
 Verify: `omp models llm-labile --json` lists exactly the key's groups with
 `pricingStatus: fixed`, and a group the key lacks is absent from it. A
