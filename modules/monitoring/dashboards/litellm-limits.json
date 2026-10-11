@@ -1037,7 +1037,7 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 14,
+        "w": 24,
         "x": 0,
         "y": 19
       },
@@ -1071,133 +1071,6 @@
       ],
       "title": "Codex window usage",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "What the ChatGPT plan itself reports as callable, one row per model the account has usage for. A model the router deploys but the plan marks `unavailable` is the explanation for per-model failures while the account still answers on other models; a model appearing or vanishing here is the plan catalog changing under the router.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "unavailable",
-                  "index": 0
-                },
-                "1": {
-                  "text": "available",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red"
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "callable"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "left"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 10,
-        "x": 14,
-        "y": 19
-      },
-      "id": 13,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.6.1",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "litellm_codex_model_available",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "{{model}}",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Codex models the plan reports",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "instance": true,
-              "job": true
-            },
-            "renameByName": {
-              "Value": "callable",
-              "model": "model",
-              "plan": "plan",
-              "account": "account"
-            },
-            "indexByName": {
-              "model": 0,
-              "plan": 1,
-              "account": 2,
-              "callable": 3
-            }
-          }
-        }
-      ],
-      "type": "table"
     },
     {
       "id": 14,

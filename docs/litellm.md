@@ -826,7 +826,7 @@ rotation, windows that bench them (provider-reported `rate-limited`, or 95
 percent of a window spent — the poller's own `LIMIT_PERCENT`), headroom per
 account and window, one battery per account filled by the share of its weekly
 window already spent, the Codex weekly headroom and reset, token expiry,
-per-model availability, per-source reachability, and the price sync's state.
+per-source reachability, and the price sync's state.
 `100 - used_percent` is the headroom everywhere, because both providers report
 what is *spent*. `count(…) or vector(0)` keeps a "nothing benched" panel at 0
 instead of `No data`, since `count()` over an empty vector returns nothing.
