@@ -803,11 +803,28 @@ the endpoint both reported 48 percent. The exporter only *reads* `auth.json`:
 the access token lasts ten days and litellm refreshes it on the next request, so
 the token-expiry panel is what shows that refresh has stopped happening.
 
+Three rules keep the series honest, because each upstream fails on its own:
+
+- `litellm_limits_source_up{source}` is 1 when that upstream answered this run,
+  so a transient failure that empties one half of the dashboard (a TLS handshake
+  failure through the tunnel was observed on 2026-10-11) is distinguishable from
+  an empty catalog. A pool account that failed gets `fetch_ok 0` under its index
+  instead of silently disappearing.
+- `litellm_limits_exporter_success` is 0 whenever any source failed, and a run
+  in which nothing at all answered exits non-zero, which fails the unit and
+  reaches the generic failed-unit alert. A run that cannot write the file at all
+  fails the same way, so a full disk or a lost secret cannot silently stop the
+  metrics.
+- A window whose payload carries no reset time gets no `..._reset_at` sample at
+  all, rather than a zero the panels would render as a countdown to 1970.
+
 The dashboard is `LiteLLM provider limits` (uid `litellm-limits`,
 `modules/monitoring/dashboards/litellm-limits.json`, provisioned like the other
-system dashboards): accounts still in rotation, benched windows, headroom per
-account and window, the reset countdown per account, the Codex weekly headroom
-and reset, token expiry, per-model availability, and the price sync's state.
+system dashboards — into the `litellm` Grafana folder, while the disk dashboards
+live in `storage` and node-exporter stays in `system`): accounts still in
+rotation, benched windows, headroom per account and window, the reset countdown
+per account, the Codex weekly headroom and reset, token expiry, per-model
+availability, source reachability, and the price sync's state.
 `100 - used_percent` is the headroom everywhere, because both providers report
 what is *spent*. `count(…) or vector(0)` keeps a "nothing benched" panel at 0
 instead of `No data`, since `count()` over an empty vector returns nothing.
