@@ -303,6 +303,7 @@ def write_metric(state, changes, error):
     lines.append("")
     handle, tmp = tempfile.mkstemp(prefix=".litellm-price-sync.", dir=os.path.dirname(METRIC_PATH))
     with os.fdopen(handle, "w", encoding="utf-8") as out:
+        os.fchmod(out.fileno(), 0o644)
         out.write("\n".join(lines))
     os.replace(tmp, METRIC_PATH)
 
