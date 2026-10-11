@@ -176,8 +176,8 @@
     same_provider_account_failover = true;
     gemini_force_oauth = false;
     stream_idle_timeout_secs = 180;
-    max_retries = 8;
-    retry_backoff_cap_secs = 30;
+    max_retries = 126;
+    retry_backoff_cap_secs = 60;
   };
 
   agents = {
