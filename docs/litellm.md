@@ -468,15 +468,24 @@ Measured against the deployed profiles on 2026-10-11, `jcode model list
 --provider-profile <p> --json` returns the live rosters — 30 ids for `byesu`,
 98 for `closerouter`, 5 for `llm-labile` — so the `[[providers.<p>.models]]`
 blocks in `modules/jcode/providers.nix` are metadata overlays, not rosters.
-Deleting them costs capability rather than staleness: LiteLLM and byesu publish
-bare ids, and the parsed catalog cache (`$JCODE_HOME/cache/<profile>_models.json`)
-records `context_length: null` and `input: []` for them, while jcode's models.dev
-integration is a *pricing* catalog (`models_dev_pricing.json`, "models.dev pricing
-catalog"), not a capability one — so context, modalities and the reasoning flag
-have no other source. `closerouter` is the exception: its payload carries
-`context_length`, `pricing` and `architecture.input_modalities`, which the same
-cache shows parsed, and that is why its catalog also advertises image and video
-ids (`black-forest-labs/*`, `bytedance/seedream-*`, `bytedance/seedance-*`)
+Deleting them costs capability rather than staleness, and the reason is a key
+mismatch rather than missing data: LiteLLM's `/v1/models` answers
+`id/object/created/owned_by` plus `max_input_tokens`/`max_output_tokens`, and
+byesu's answers `supported_endpoint_types` — none of them the `context_length` /
+`max_model_len` / `architecture.input_modalities` keys jcode's catalog parser
+reads, so the parsed cache (`$JCODE_HOME/cache/<profile>_models.json`) records
+`context_length: null` and `input: []` even though the proxy does answer
+`max_input_tokens: 1000000`. jcode asks only `/v1/models`: in the `docker-litellm`
+journal the `/model_group/info`, `/model/info` and `/v2/model/info` requests come
+from omp, never from jcode. jcode's models.dev integration is a *pricing* catalog
+(`models_dev_pricing.json`, "models.dev pricing catalog"), not a capability one —
+so context, modalities and the reasoning flag have no other source, and these
+declarations only become unnecessary once one side learns the other's keys: the
+jcode parser accepting LiteLLM's names, or a gateway-side `/v1/models` shim
+emitting the OpenRouter-style ones. `closerouter` is the exception: its payload
+carries `context_length`, `pricing` and `architecture.input_modalities`, which the
+same cache shows parsed, and that is why its catalog also advertises image and
+video ids (`black-forest-labs/*`, `bytedance/seedream-*`, `bytedance/seedance-*`)
 alongside chat models.
 
 ## Keys and usage from the command line
