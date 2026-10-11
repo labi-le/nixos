@@ -120,6 +120,13 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
 4. `ROBOMP_MAINTAINER_LOGINS=labi-le` is what lets your `@int8-ptr <text>`
    comments act as authoritative directives and keeps follow-up comments
    resuming the same session.
+5. Repository setting **Automatically delete head branches** is on for
+   `labi-le/murmur` (enabled 2026-10-12) — otherwise every merged
+   `farm/<hex>/<slug>` branch outlives its PR. The two deletions are
+   independent and harmless together: robomp queues `cleanup_workspace` on
+   `pull_request.closed` with `merged: true` and removes the worktree plus the
+   local branch, while a later reopen gets a fresh branch, so the remote one
+   disappearing changes nothing for the next run.
 
 ## Operations
 
