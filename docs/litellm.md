@@ -17,8 +17,8 @@ reaches the same gateway as provider `llm-labile` (`discovery.type = "litellm"`
 over `https://llm.labile.cc/v1`, declared only on hosts that receive the master
 key), so its roster, limits and prices come from the proxy's own metadata rather
 than from a list here, and an OpenAI-backed group is dispatched over the
-Responses route; it also authenticates against `byesu`, `closerouter` and
-`tokenharbor` directly.
+Responses route; it also authenticates against `byesu` and `closerouter`
+directly.
 
 ## Model groups
 

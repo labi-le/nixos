@@ -18,11 +18,6 @@ let
       file = "closerouter.env";
     }
     {
-      secret = "tokenharbor-env";
-      variable = "TOKENHARBOR_API_KEY";
-      file = "tokenharbor.env";
-    }
-    {
       secret = "opencode-litellm-master-key";
       variable = "LITELLM_MASTER_KEY";
       file = "pool.env";

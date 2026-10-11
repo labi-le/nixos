@@ -16,13 +16,6 @@ in
       mode = "0400";
     };
 
-    age.secrets.tokenharbor-env = {
-      file = ../secrets/tokenharbor-env.age;
-      owner = "labile";
-      group = "users";
-      mode = "0400";
-    };
-
     age.secrets.byesu-env = {
       file = ../secrets/byesu-env.age;
       owner = "labile";

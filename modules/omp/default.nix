@@ -17,13 +17,6 @@ let
       envName;
   closerouterApiKey = litellmKey "LITELLM_CLOSEROUTER";
 
-  tokenharborSecret = config.age.secrets.tokenharbor-env or null;
-  tokenharborKey =
-    if tokenharborSecret != null then
-      "!${pkgs.gnused}/bin/sed -n 's/^TOKENHARBOR_API_KEY=//p' ${tokenharborSecret.path}"
-    else
-      "TOKENHARBOR_API_KEY";
-
   byesuSecret = config.age.secrets.byesu-env or null;
   byesuKey =
     if byesuSecret != null then
@@ -75,21 +68,6 @@ let
           discovery = {
             type = "openai-models-list";
           };
-        };
-        tokenharbor = {
-          baseUrl = "https://tokenharbor.ai/v1";
-          api = "openai-completions";
-          apiKey = tokenharborKey;
-          models = [
-            {
-              id = "deepseek-v4-flash:free";
-              name = "DeepSeek V4 Flash (Token Harbor, free tier)";
-              reasoning = true;
-              supportsTools = true;
-              contextWindow = 1000000;
-              maxTokens = 393216;
-            }
-          ];
         };
         byesu = {
           baseUrl = "https://byesu.com/v1";

@@ -3,14 +3,12 @@
 let
   poolCatalog = import ../litellm/models { inherit lib; };
 
-  poolModel =
-    group:
-    {
-      id = group.name;
-      reasoning = group.reasoningEffortLevels != [ ];
-      context_window = group.maxInputTokens;
-      input = [ "text" ] ++ lib.optional group.supportsVision "image";
-    };
+  poolModel = group: {
+    id = group.name;
+    reasoning = group.reasoningEffortLevels != [ ];
+    context_window = group.maxInputTokens;
+    input = [ "text" ] ++ lib.optional group.supportsVision "image";
+  };
 
   poolModels = map poolModel poolCatalog.groups;
 
@@ -105,21 +103,6 @@ let
       supports_reasoning_effort = true;
       models = poolModels;
     };
-    tokenharbor = {
-      type = "openai-compatible";
-      base_url = "https://tokenharbor.ai/v1";
-      api_key_env = "TOKENHARBOR_API_KEY";
-      env_file = "tokenharbor.env";
-      default_model = "deepseek-v4-flash:free";
-      model_catalog = true;
-      models = [
-        {
-          id = "deepseek-v4-flash:free";
-          reasoning = true;
-          context_window = 1000000;
-        }
-      ];
-    };
   };
 
   extensionProviders = config.jcode.extensions.providers;
@@ -138,10 +121,13 @@ let
         model = "deepseek-v4.1-flash";
       };
 
-  providerNameCollisions = lib.attrNames (
-    builtins.intersectAttrs baseProviders extensionProviders
-  );
+  providerNameCollisions = lib.attrNames (builtins.intersectAttrs baseProviders extensionProviders);
 in
 {
-  inherit baseProviders extensionProviders defaultRoute providerNameCollisions;
+  inherit
+    baseProviders
+    extensionProviders
+    defaultRoute
+    providerNameCollisions
+    ;
 }
