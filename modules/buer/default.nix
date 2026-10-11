@@ -12,6 +12,7 @@ let
   dataDir = "/drive/state/buer";
   repoAllowlist = "labi-le/murmur";
   maintainerLogins = "labi-le";
+  reviewerBots = "chatgpt-codex-connector";
   model = "llm-labile/deepseek-v4.1-flash";
 
   src = pkgs.fetchFromGitHub {
@@ -44,6 +45,7 @@ let
     ROBOMP_GIT_AUTHOR_EMAIL=${botId}+${botLogin}@users.noreply.github.com
     ROBOMP_REPO_ALLOWLIST=${repoAllowlist}
     ROBOMP_MAINTAINER_LOGINS=${maintainerLogins}
+    ROBOMP_REVIEWER_BOTS=${reviewerBots}
     ROBOMP_MODEL=${model}
     ROBOMP_THINKING=high
     ROBOMP_MAX_CONCURRENCY=2

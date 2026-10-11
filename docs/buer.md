@@ -99,6 +99,13 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `GITHUB_TOKEN` appears in `buer-gh-proxy`'s block alone; the orchestrator
   never sees it. `ROBOMP_GH_PROXY_HMAC_KEY` and `GITHUB_WEBHOOK_SECRET` are in
   both, as upstream requires.
+- **External reviewer**: `ROBOMP_REVIEWER_BOTS=chatgpt-codex-connector`. The
+  router matches the login after stripping `[bot]` (`_reviewer_bot_login`), so
+  the value is the bare app slug. An inline review comment from a listed bot on
+  a **bot-authored** PR arrives as `pull_request_review_comment.created`, is
+  queued as `handle_review` with `directive=True`, and the bot amends the
+  branch in response — no `@`-mention needed. Review *bodies* without inline
+  comments (`pull_request_review`) have no route and are ignored.
 
 ## What it reacts to
 
@@ -111,7 +118,7 @@ event type means a route upstream plus a webhook subscription here.
 | `issues.opened` / `reopened` | `triage_issue`: classify → repro → fix → PR | repo in `ROBOMP_REPO_ALLOWLIST`; rate limits (OWNER/MEMBER/COLLABORATOR bypass) |
 | `issue_comment.created` | resume that issue's session and answer; a maintainer **mention** or a configured reviewer bot turns it into an authoritative directive | `ROBOMP_MAINTAINER_LOGINS`, `ROBOMP_REVIEWER_BOTS` |
 | `pull_request.opened` / `reopened` / `ready_for_review`, author ≠ bot | `review_pr`: `COMMENT` review with inline comments | `ROBOMP_PR_REVIEW_ENABLED` |
-| `pull_request_review_comment.created` on a bot PR | amend that branch and push | PR authored by the bot |
+| `pull_request_review_comment.created` on a bot PR | amend that branch and push; a listed reviewer bot's comment is authoritative without a mention | PR authored by the bot; `ROBOMP_REVIEWER_BOTS` |
 | `pull_request.closed` with `merged` | `cleanup_workspace`: drop worktree, local branch and caches | — |
 | `workflow_run.completed` on the default branch or a `v…` tag whose commit starts with `ROBOMP_RELEASE_COMMIT_PREFIX` | `handle_release_ci`: repair a release whose CI failed, up to `ROBOMP_RELEASE_MAX_ROUNDS` rounds, `release_*` host tools | `ROBOMP_RELEASE_SENTINEL_ENABLED` (**off** here) and a `Workflow runs` hook subscription |
 | question-type issue with no reply | close it | `ROBOMP_QUESTION_AUTOCLOSE_*` |
