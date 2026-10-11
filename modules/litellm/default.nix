@@ -110,6 +110,7 @@ in
   systemd.services.litellm-price-sync = {
     description = "Sync the OpenCode Go price table into the litellm catalog";
     after = [ "docker-litellm.service" ];
+    wantedBy = [ "multi-user.target" ];
     path = [
       pkgs.coreutils
       pkgs.docker
