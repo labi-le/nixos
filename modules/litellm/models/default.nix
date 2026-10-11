@@ -3,14 +3,55 @@
 let
   poolSize = 4;
   apiBase = "https://opencode.ai/zen/go/v1";
+  prices = builtins.fromJSON (builtins.readFile ./prices.json);
 
-  groups = [
+  declaredGroups = [
     (import ./deepseek-v4.1-flash.nix)
     (import ./step-5-preview.nix)
     (import ./gpt-6-astra.nix)
     (import ./gpt-6-luna.nix)
     (import ./gpt-6.1-sol.nix)
   ];
+
+  zenGroupNames = map (group: group.name) (
+    builtins.filter (group: group.provider == "opencode-go") declaredGroups
+  );
+
+  priceOf =
+    group:
+    if prices.models ? ${group.name} then
+      prices.models.${group.name}
+    else
+      throw "modules/litellm/models/prices.json carries no entry for ${group.name}; sync-prices.py owns that file";
+
+  withPrices =
+    group:
+    if group.provider != "opencode-go" then
+      group
+    else
+      let
+        price = priceOf group;
+      in
+      group
+      // {
+        inputCostPerToken = price.input;
+        outputCostPerToken = price.output;
+        cacheReadInputTokenCost = price.cacheRead;
+        offPeakPricing =
+          if price.offPeak == null then
+            null
+          else if group.offPeakPricing == null then
+            throw "${group.name} carries off-peak rates in prices.json but no off-peak windows in its group file"
+          else
+            group.offPeakPricing
+            // {
+              input_cost_per_token = price.offPeak.input;
+              output_cost_per_token = price.offPeak.output;
+              cache_read_input_token_cost = price.offPeak.cacheRead;
+            };
+      };
+
+  groups = map withPrices declaredGroups;
 
   sessionIdOf =
     index:
@@ -91,6 +132,7 @@ in
 {
   inherit poolSize;
   inherit groups;
+  inherit zenGroupNames;
 
   modelList = lib.concatMap deploymentsOf groups;
 }

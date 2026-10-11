@@ -14,6 +14,7 @@
     ./container-state.nix
     ./failures.nix
     ./frp.nix
+    ./litellm.nix
     ./storage.nix
     ./tidal-syncer.nix
   ];

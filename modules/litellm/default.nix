@@ -13,6 +13,10 @@ let
   );
 
   dbEnv = config.age.secrets.litellm-db-env.path;
+
+  zenGroupsJson = pkgs.writeText "litellm-zen-groups.json" (builtins.toJSON catalog.zenGroupNames);
+
+  textfileDir = "/var/lib/prometheus-node-textfile-collector";
 in
 
 {
@@ -31,6 +35,7 @@ in
   systemd.tmpfiles.rules = [
     "d /var/lib/litellm-db 0700 999 999 -"
     "d /var/lib/litellm-chatgpt 0700 0 0 -"
+    "d /var/lib/litellm-price-sync 0700 0 0 -"
   ];
 
   virtualisation.oci-containers.backend = "docker";
@@ -99,6 +104,39 @@ in
     serviceConfig = {
       Restart = lib.mkOverride 90 "always";
       RestartSec = lib.mkOverride 90 "5s";
+    };
+  };
+
+  systemd.services.litellm-price-sync = {
+    description = "Sync the OpenCode Go price table into the litellm catalog";
+    after = [ "docker-litellm.service" ];
+    path = [
+      pkgs.coreutils
+      pkgs.docker
+      pkgs.git
+      pkgs.util-linux
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      MemoryHigh = "8G";
+      MemoryMax = "10G";
+      MemorySwapMax = 0;
+    };
+    script = ''
+      exec ${pkgs.python3}/bin/python3 ${./sync-prices.py} \
+        --repo /home/labile/nix \
+        --groups ${zenGroupsJson} \
+        --as-user labile \
+        --apply --commit --push --rebuild --verify --metric
+    '';
+  };
+
+  systemd.timers.litellm-price-sync = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      RandomizedDelaySec = "30min";
+      Persistent = true;
     };
   };
 }

@@ -3,9 +3,6 @@
   provider = "opencode-go";
   upstream = "openai/deepseek-v4.1-flash";
   metered = true;
-  inputCostPerToken = 3.0e-7;
-  outputCostPerToken = 1.2e-6;
-  cacheReadInputTokenCost = 6.0e-9;
   offPeakPricing = {
     hours_utc = [
       "00:00-01:00"
@@ -21,9 +18,6 @@
         hours_utc = "00:00-00:00";
       }
     ];
-    input_cost_per_token = 1.5e-7;
-    output_cost_per_token = 6.0e-7;
-    cache_read_input_token_cost = 3.0e-9;
   };
   maxInputTokens = 1000000;
   maxOutputTokens = 384000;

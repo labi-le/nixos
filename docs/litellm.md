@@ -615,8 +615,7 @@ be restored, only replaced.
 
 `spend` does not come from litellm's cost map — `openai/deepseek-v4.1-flash`
 has no entry there, which is why every figure read `0.0000` until
-2026-10-04. The deployments carry explicit costs in
-`modules/litellm/models/deepseek-v4.1-flash.nix`, taken from the OpenCode Go
+2026-10-04. The deployments carry explicit costs, taken from the OpenCode Go
 price list ([Go plans](https://opencode.ai/docs/go), read 2026-10-10), which
 bills DeepSeek V4.1 Flash in two tariffs: **peak** — $0.30 per 1M input, $1.20
 output, $0.006 cached read — and **off-peak**, exactly half: $0.15, $0.60,
@@ -670,6 +669,40 @@ never say which credential paid — the owning provider does. The chatgpt groups
 model the flat card only: the `> 272K` input tier (2× input and cache, 1.5×
 output for the whole request) and the cache-write rate are not applied, so their
 `spend` is the untiered figure.
+
+The Zen rates are not written by hand any more. `modules/litellm/models/prices.json`
+is a generated snapshot — its `source` key names the table it came from — and
+`models/default.nix` injects its three rates into every `provider = "opencode-go"`
+group plus the off-peak rates into the windows that group declares, so editing a
+rate in a Zen group file would have no effect. `modules/litellm/sync-prices.py`
+keeps the snapshot honest: the `litellm-price-sync` oneshot (behind the daily
+`litellm-price-sync.timer`, `Persistent = true`, 30-minute jitter) fetches the Go
+plan table as markdown (`Accept: text/markdown`), parses the price rows for the
+groups `models/default.nix` exports as `zenGroupNames`, and then
+
+- writes nothing when every rate already matches — the usual outcome, exit 0;
+- on a change writes the snapshot, commits and pushes it as `labile`
+  (`litellm: sync Zen prices from the OpenCode Go table`, the diffs in the body),
+  runs `nixos-rebuild switch` under the same 8G/10G caps the Makefile puts on a
+  build, then re-reads `GET /model/info` and asserts the proxy serves the new
+  rates; when it does not, it reverts its own commit, pushes, rebuilds and exits
+  non-zero;
+- on anything it refuses — a row that disappeared from the table, a rate moving
+  more than 5×, an off-peak tariff appearing or disappearing (a free model going
+  paid), a group with no label mapping — writes nothing and exits 1.
+
+The exit code is the alarm: a failed run leaves the unit in `failed` state, which
+`modules/monitoring/failures.nix` already pages on, and
+`modules/monitoring/litellm.nix` adds the specific rules — `litellm_price_sync_anomaly > 0`
+(refused or errored), a rate change (routed to `telegram-admin-events`, so no
+RESOLVED message), and three days without a successful run. Those series live in
+the textfile-collector file the script writes next to `docker-container-state.prom`,
+and the last outcome is kept in `/var/lib/litellm-price-sync/state.json`.
+
+Manual use: `python3 modules/litellm/sync-prices.py --repo /home/labile/nix`
+prints the drift against the live table and exits 1 when there is any, writing
+nothing without `--apply`; `--table <file>` reads a saved page instead of the
+network, which is how the refusals above are exercised.
 
 ## Pool quota API
 
