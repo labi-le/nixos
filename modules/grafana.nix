@@ -156,15 +156,39 @@ in
               foldersFromFilesStructure = false;
               path = pkgs.runCommand "grafana-system-dashboards" { nativeBuildInputs = [ pkgs.jq ]; } ''
                 mkdir -p $out
+                jq 'del(.__inputs, .__requires)' \
+                  ${./monitoring/dashboards/node-exporter-full.json} \
+                  > $out/node-exporter-full.json
+              '';
+            };
+          }
+          {
+            name = "storage";
+            type = "file";
+            disableDeletion = true;
+            folder = "storage";
+            options = {
+              foldersFromFilesStructure = false;
+              path = pkgs.runCommand "grafana-storage-dashboards" { nativeBuildInputs = [ pkgs.jq ]; } ''
+                mkdir -p $out
                 sed 's/''${DS_PROMETHEUS}/prometheus/g' \
                   ${./monitoring/dashboards/smartctl-exporter.json} \
                   | jq 'del(.__inputs, .__requires)' > $out/smartctl-exporter.json
                 jq 'del(.__inputs, .__requires)' \
-                  ${./monitoring/dashboards/node-exporter-full.json} \
-                  > $out/node-exporter-full.json
-                jq 'del(.__inputs, .__requires)' \
                   ${./monitoring/dashboards/zfs.json} \
                   > $out/zfs.json
+              '';
+            };
+          }
+          {
+            name = "litellm";
+            type = "file";
+            disableDeletion = true;
+            folder = "litellm";
+            options = {
+              foldersFromFilesStructure = false;
+              path = pkgs.runCommand "grafana-litellm-dashboards" { nativeBuildInputs = [ pkgs.jq ]; } ''
+                mkdir -p $out
                 jq 'del(.__inputs, .__requires)' \
                   ${./monitoring/dashboards/litellm-limits.json} \
                   > $out/litellm-limits.json

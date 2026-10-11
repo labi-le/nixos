@@ -216,7 +216,10 @@ def main():
     now = int(time.time())
     errors = []
     zen = {}
-    for index, key in sorted(pool_keys().items()):
+    keys = pool_keys()
+    if not keys:
+        errors.append("opencode-go pool: no LITELLM_OPENCODE_GO_KEY_* keys found")
+    for index, key in sorted(keys.items()):
         try:
             zen[index] = zen_account(key)
         except Exception as failure:
