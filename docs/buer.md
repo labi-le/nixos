@@ -100,6 +100,23 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   never sees it. `ROBOMP_GH_PROXY_HMAC_KEY` and `GITHUB_WEBHOOK_SECRET` are in
   both, as upstream requires.
 
+## What it reacts to
+
+Every agent run starts from a webhook delivery that `github_events.py` routes;
+there is no polling and no generic "run a prompt on event X" switch, so a new
+event type means a route upstream plus a webhook subscription here.
+
+| Trigger | Task | Gates |
+|---|---|---|
+| `issues.opened` / `reopened` | `triage_issue`: classify → repro → fix → PR | repo in `ROBOMP_REPO_ALLOWLIST`; rate limits (OWNER/MEMBER/COLLABORATOR bypass) |
+| `issue_comment.created` | resume that issue's session and answer; a maintainer **mention** or a configured reviewer bot turns it into an authoritative directive | `ROBOMP_MAINTAINER_LOGINS`, `ROBOMP_REVIEWER_BOTS` |
+| `pull_request.opened` / `reopened` / `ready_for_review`, author ≠ bot | `review_pr`: `COMMENT` review with inline comments | `ROBOMP_PR_REVIEW_ENABLED` |
+| `pull_request_review_comment.created` on a bot PR | amend that branch and push | PR authored by the bot |
+| `pull_request.closed` with `merged` | `cleanup_workspace`: drop worktree, local branch and caches | — |
+| `workflow_run.completed` on the default branch or a `v…` tag whose commit starts with `ROBOMP_RELEASE_COMMIT_PREFIX` | `handle_release_ci`: repair a release whose CI failed, up to `ROBOMP_RELEASE_MAX_ROUNDS` rounds, `release_*` host tools | `ROBOMP_RELEASE_SENTINEL_ENABLED` (**off** here) and a `Workflow runs` hook subscription |
+| question-type issue with no reply | close it | `ROBOMP_QUESTION_AUTOCLOSE_*` |
+| `POST /api/trigger` / `POST /replay` | `triage` / `retry` an issue or a stored event | `ROBOMP_REPLAY_TOKEN`, i.e. the dashboard |
+
 ## GitHub-side prerequisites
 
 1. `int8-ptr` (bot) must be a collaborator with **Write** on every repository in
