@@ -464,6 +464,21 @@ input = ["text", "image"]
 A named profile is not a `-p` value; select it with
 `--provider-profile <name>`, or choose it from `/model` in a session.
 
+Measured against the deployed profiles on 2026-10-11, `jcode model list
+--provider-profile <p> --json` returns the live rosters — 30 ids for `byesu`,
+98 for `closerouter`, 5 for `llm-labile` — so the `[[providers.<p>.models]]`
+blocks in `modules/jcode/providers.nix` are metadata overlays, not rosters.
+Deleting them costs capability rather than staleness: LiteLLM and byesu publish
+bare ids, and the parsed catalog cache (`$JCODE_HOME/cache/<profile>_models.json`)
+records `context_length: null` and `input: []` for them, while jcode's models.dev
+integration is a *pricing* catalog (`models_dev_pricing.json`, "models.dev pricing
+catalog"), not a capability one — so context, modalities and the reasoning flag
+have no other source. `closerouter` is the exception: its payload carries
+`context_length`, `pricing` and `architecture.input_modalities`, which the same
+cache shows parsed, and that is why its catalog also advertises image and video
+ids (`black-forest-labs/*`, `bytedance/seedream-*`, `bytedance/seedance-*`)
+alongside chat models.
+
 ## Keys and usage from the command line
 
 `litellm-key` (`modules/litellm/litellm-key.nix`, installed by the litellm
