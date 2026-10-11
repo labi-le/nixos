@@ -121,7 +121,7 @@ in
       ExecStop = "${compose} down";
     };
     restartTriggers = [
-      (builtins.hashString "sha256" (builtins.readFile ../../secrets/buer-env.age))
+      (builtins.hashFile "sha256" ../../secrets/buer-env.age)
     ];
   };
 
