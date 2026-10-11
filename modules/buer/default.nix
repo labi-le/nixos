@@ -29,8 +29,9 @@ let
     cp -r --no-preserve=mode,ownership ${src}/. $out/
     ${pkgs.gnused}/bin/sed -i 's/max_event_history=50_000/max_event_history=500_000/' $out/python/robomp/src/worker.py
     ${pkgs.gnugrep}/bin/grep -q 'max_event_history=500_000' $out/python/robomp/src/worker.py
-    ${pkgs.gnused}/bin/sed -i 's/time\.gmtime(record\.created)/time.localtime(record.created)/' $out/python/robomp/src/logging_config.py
-    ${pkgs.gnugrep}/bin/grep -q 'time.localtime(record.created)' $out/python/robomp/src/logging_config.py
+    ${pkgs.gnused}/bin/sed -i 's/time\.strftime("%H:%M:%S", time\.gmtime(record\.created))/time.strftime("%H:%M:%S", time.localtime(record.created))/' $out/python/robomp/src/logging_config.py
+    ${pkgs.gnugrep}/bin/grep -q 'time.strftime("%H:%M:%S", time.localtime(record.created))' $out/python/robomp/src/logging_config.py
+    ${pkgs.gnugrep}/bin/grep -q 'time.gmtime(record.created)' $out/python/robomp/src/logging_config.py
   '';
 
   modelsYml = (pkgs.formats.yaml { }).generate "buer-models.yml" {
