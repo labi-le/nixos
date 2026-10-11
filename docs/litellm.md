@@ -430,6 +430,40 @@ Verify: `omp models llm-labile --json` lists exactly the key's groups with
 `403 key_model_access_denied` on first use means the client pinned its roster
 instead of discovering it.
 
+jcode discovers too, through `model_catalog`, which reads the same live
+`GET /v1/models` (`jcode provider add --model-catalog` writes the profile that
+way, `/refresh-model-list` re-reads it inside a session). Measured 2026-10-11 in
+an isolated `JCODE_HOME` with a profile carrying nothing but `base_url`,
+`api_key_env` and `model_catalog`:
+`jcode model list --provider-profile llm-labile-probe` returned all five groups
+as `available`, and `jcode run` on `deepseek-v4.1-flash` answered. Two things the
+catalog does not carry. Ids arrive bare — LiteLLM publishes
+`id/object/created/owned_by` — so reasoning, context and effort still come from
+the declared `models` entries, the same reason `space-bunny-free` is pinned by
+hand in `modules/jcode/space-bunny.nix`. And a bare `openai-compatible` profile
+without `default_model` selects a synthetic `anthropic/claude-sonnet-4`, which
+this proxy rejects with `400 Invalid model name … Call /v1/models`. Minimal
+profile in `~/.jcode/config.toml`:
+
+```toml
+[providers.llm-labile]
+type = "openai-compatible"
+base_url = "https://llm.labile.cc/v1"
+api_key_env = "LITELLM_MASTER_KEY"
+default_model = "deepseek-v4.1-flash"
+model_catalog = true
+supports_reasoning_effort = true
+
+[[providers.llm-labile.models]]
+id = "deepseek-v4.1-flash"
+reasoning = true
+context_window = 1000000
+input = ["text", "image"]
+```
+
+A named profile is not a `-p` value; select it with
+`--provider-profile <name>`, or choose it from `/model` in a session.
+
 ## Keys and usage from the command line
 
 `litellm-key` (`modules/litellm/litellm-key.nix`, installed by the litellm
