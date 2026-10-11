@@ -112,13 +112,15 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `python/robomp/src/worker.py` goes 50 000 → 500 000: `omp_rpc` retains every
   notification of the current turn and aborts the task with "Event history
   limit was exceeded" once the window rolls past the caller's `start_index`;
-  at `thinking=high` a turn streams on the order of 100 events/s, so an
-  eight-minute turn already overruns 50 000. The window holds parsed
-  notification dicts, so the raised ceiling costs on the order of a few hundred
-  megabytes per running task. (2) `time.gmtime` → `time.localtime` in
-  `python/robomp/src/logging_config.py` makes the pretty console prefix follow
-  `TZ` rather than pinning UTC; the JSONL file handler still writes UTC with a
-  `Z` suffix, which is what the DB and the dashboard expect.
+  the observed rate is ≈135 events/s, so the upstream 50 000 was already
+  exhausted six minutes into a turn, while a 40-minute turn can reach roughly
+  330 000 — the raised ceiling keeps about 1.5x headroom. The window holds
+  parsed notification dicts, so the ceiling costs on the order of a few hundred
+  megabytes per running task. (2) `time.localtime` in place of `time.gmtime`
+  in the pretty console formatter of `python/robomp/src/logging_config.py`
+  makes its prefix follow `TZ`; the JSON file handler keeps `time.gmtime`, so
+  the JSONL stays UTC with a `Z` suffix, which is what the DB and the dashboard
+  expect.
 - **Time**: both containers take `TZ` from `config.time.timeZone`
   (`Europe/Moscow`, set in `modules/locale.nix`) and bind-mount the host
   `/etc/localtime`, so `date`, file mtimes and the offset on bot commits match
