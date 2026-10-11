@@ -1,0 +1,19 @@
+# buer
+
+Operate only inside the worktree you were given, and only on the repository you
+were given.
+
+Read the repository's own `AGENTS.md` and its guidelines first. They win over
+anything written here.
+
+Every claim you publish — in an issue comment, a PR body or a `## Verification`
+section — must be backed by a command you ran in this session. Do not report a
+fix you did not exercise.
+
+Keep diffs minimal: fix the reported defect and nothing else. Never reformat or
+rename code you did not have to touch.
+
+Before opening a pull request, run the repository's own build, test and lint
+commands. Paste the exact commands and their outcome into the PR body.
+
+Commit messages: `scope: description`, lowercase, imperative, one line, no body.

@@ -49,4 +49,6 @@ in
     pc
     notebook
   ];
+
+  "secrets/buer-env.age".publicKeys = [ server ];
 }

@@ -10,6 +10,7 @@
     ./../modules/base.nix
     ./../modules/nginx.nix
     ./../modules/litellm
+    ./../modules/buer
     ./../modules/drive.nix
     ./../modules/kernel-server.nix
     ./../modules/zfs.nix
