@@ -72,11 +72,18 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `modules/litellm` creates — not `https://llm.labile.cc`, because a container
   reaching the server's own public address depends on router hairpin NAT.
   `apiKey` is the env-var *name*, resolved by omp inside the agent subprocess.
-- **Ingress**: nginx vhost `buer.labile.cc` (`enableACME`, `forceSSL`) exposes
-  exactly `/webhook/github` → `127.0.0.1:6543`; every other path answers 404.
-  Wildcard DNS for `*.labile.cc` already points at this host, so no record is
-  needed. `robomp`'s own `/`, `/events`, `/issues`, `/releases` and `/replay`
-  stay reachable on the loopback port only.
+- **Ingress** (vhost lives in `modules/nginx.nix`, helper `buer`):
+  `buer.labile.cc` exposes exactly `/webhook/github` → `127.0.0.1:6543`; every
+  other path answers 404. The dashboard is mounted for whitelisted sources
+  only: `/ui/` strips the prefix onto robomp's root, and `/static/`, `/api/`,
+  `/events`, `/issues` mirror the absolute URLs the SPA fetches, all under the
+  same `include /var/lib/nginx/ip_whitelist.conf; deny all;` that every
+  `internal = true` vhost uses. Plain 403, not the `@error404` remap: probes of
+  this host would otherwise feed the `nginx-scan-404` jail (5 per 60 s, 5 h
+  ban). `https://buer.labile.cc/ui` 302s to `/ui/`. Wildcard DNS for
+  `*.labile.cc` already points at this host, so no record is needed. The bind
+  port is written both here (`BUER_BIND_PORT`) and in the vhost — the same
+  duplication `llm.labile.cc` carries.
 - **Secrets reach the containers only through the compose allowlists**:
   `GITHUB_TOKEN` appears in `buer-gh-proxy`'s block alone; the orchestrator
   never sees it. `ROBOMP_GH_PROXY_HMAC_KEY` and `GITHUB_WEBHOOK_SECRET` are in
@@ -110,6 +117,10 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
 systemctl status buer-images buer
 journalctl -fu buer
 curl -fsS http://127.0.0.1:6543/healthz
+
+# dashboard, whitelisted sources only (LAN or the current MY_IP):
+#   https://buer.labile.cc/ui/            from any allowed client
+#   ssh -L 6543:127.0.0.1:6543 server     then http://127.0.0.1:6543/
 
 # one-shot prompt against the gateway, exactly as the tasks do it
 docker exec -e HOME=/srv/agent-home buer omp -p --model llm-labile/deepseek-v4.1-flash "say ok"

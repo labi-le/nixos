@@ -8,6 +8,10 @@
 
 let
   ipWhiteList = "/var/lib/nginx/ip_whitelist.conf";
+  internalOnly = ''
+    include ${ipWhiteList};
+    deny all;
+  '';
   # Sources that are allowed regardless of what DNS says. Shared by the tmpfiles
   # seed and the updater below so the boot-time whitelist and the steady-state
   # one cannot drift apart.
@@ -153,6 +157,22 @@ in
         forceSSL = true;
         enableACME = true;
       };
+      proxyLocation =
+        { addr, extraConfig ? "", websockets ? false }:
+        {
+          proxyPass = addr;
+          extraConfig = extraConfig;
+        }
+        // lib.optionalAttrs websockets {
+          proxyWebsockets = true;
+        };
+      internalLocation =
+        { addr, extraConfig ? "", websockets ? false }:
+        proxyLocation {
+          inherit addr websockets;
+          extraConfig = internalOnly + extraConfig;
+        };
+      tlsVhost = vhost: vhost // { kTLS = true; };
       proxy =
         {
           addr,
@@ -161,42 +181,44 @@ in
           locationExtraConfig ? "",
           ...
         }@args:
-        let
-          ipRestrictionsConfig =
-            if internal then
-              ''
-                include ${ipWhiteList};
-                deny all;
-                error_page 403 @error404;
-              ''
-            else
-              "";
-          locationCfg = {
-            proxyPass = addr;
-            extraConfig = ipRestrictionsConfig + locationExtraConfig;
+        tlsVhost (
+          base {
+            "/" = (if internal then internalLocation else proxyLocation) {
+              inherit addr websockets;
+              extraConfig = (lib.optionalString internal "error_page 403 @error404;\n") + locationExtraConfig;
+            };
           }
-          // lib.optionalAttrs websockets {
-            proxyWebsockets = true;
-          };
-          baseCfg = base {
-            "/" = locationCfg;
-          };
-        in
-        baseCfg
-        // (builtins.removeAttrs args [
-          "addr"
-          "internal"
-          "websockets"
-          "locationExtraConfig"
-        ])
-        // {
-          kTLS = true;
-          extraConfig = lib.optionalString internal ''
-            location @error404 {
-              return 404;
-            }
-          '';
-        };
+          // (builtins.removeAttrs args [
+            "addr"
+            "internal"
+            "websockets"
+            "locationExtraConfig"
+          ])
+          // lib.optionalAttrs internal {
+            extraConfig = ''
+              location @error404 {
+                return 404;
+              }
+            '';
+          }
+        );
+      buer =
+        { addr }:
+        tlsVhost (base (
+          {
+            "/".return = "404";
+            "/ui".return = "302 /ui/";
+            "/webhook/github" = proxyLocation {
+              inherit addr;
+              extraConfig = ''
+                proxy_read_timeout 30s;
+                proxy_send_timeout 30s;
+              '';
+            };
+            "/ui/" = internalLocation { addr = "${addr}/"; };
+          }
+          // lib.genAttrs [ "/static/" "/api/" "/events" "/issues" ] (_: internalLocation { inherit addr; })
+        ));
       # Sub Store: the UI and the whole admin API sit behind the IP whitelist,
       # but subscription links must stay reachable from anywhere -- clients fetch
       # them over mobile networks. Only the backend's /download/ route is public,
@@ -204,31 +226,20 @@ in
       # this repo; a wrong prefix just falls through to the SPA.
       subStore =
         { addr }:
-        base {
-          "/" = {
-            proxyPass = addr;
-            # Plain 403, NOT the @error404 remap the other internal vhosts use:
-            # the nginx-404 jail bans 5x404/60s for 5h at the firewall, and that
-            # ban would also cut off the public /download/ links below. Hiding
-            # the host is pointless here anyway -- its subscription URLs are
-            # handed out publicly.
-            extraConfig = ''
-              include ${ipWhiteList};
-              deny all;
-            '';
-          };
-          "~ ^/[0-9a-f]+/download/" = {
-            proxyPass = addr;
-          };
-        }
-        // {
-          kTLS = true;
-        };
+        tlsVhost (base {
+          # Plain 403, NOT the @error404 remap the other internal vhosts use:
+          # the nginx-404 jail bans 5x404/60s for 5h at the firewall, and that
+          # ban would also cut off the public /download/ links below. Hiding
+          # the host is pointless here anyway -- its subscription URLs are
+          # handed out publicly.
+          "/" = internalLocation { inherit addr; };
+          "~ ^/[0-9a-f]+/download/" = proxyLocation { inherit addr; };
+        });
       llmGateway =
         { addr }:
         let
-          apiLocation = {
-            proxyPass = addr;
+          apiLocation = proxyLocation {
+            inherit addr;
             extraConfig = ''
               proxy_read_timeout 300s;
               proxy_connect_timeout 10s;
@@ -238,24 +249,12 @@ in
               proxy_busy_buffers_size 32k;
             '';
           };
-          uiLocation = {
-            proxyPass = addr;
-            extraConfig = ''
-              include ${ipWhiteList};
-              deny all;
-            '';
-          };
+          uiLocation = internalLocation { inherit addr; };
         in
-        base {
-          "/" = apiLocation;
-          "/ui" = uiLocation;
-          "/litellm-asset-prefix/" = uiLocation;
-          "/login" = uiLocation;
-          "/sso/" = uiLocation;
-        }
-        // {
-          kTLS = true;
-        };
+        tlsVhost (base (
+          { "/" = apiLocation; }
+          // lib.genAttrs [ "/ui" "/litellm-asset-prefix/" "/login" "/sso/" ] (_: uiLocation)
+        ));
       gachiRadio =
         { rewrite, rewritePlain }:
         {
@@ -321,6 +320,7 @@ in
       "cache.labile.cc" = lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:5000"; }) {
         kTLS = false;
       };
+      "buer.labile.cc" = buer { addr = "http://127.0.0.1:6543"; };
       "llm.labile.cc" = llmGateway { addr = "http://127.0.0.1:27015"; };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };

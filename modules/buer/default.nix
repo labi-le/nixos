@@ -8,7 +8,6 @@ let
   tag = "v18.8.9";
   botLogin = "int8-ptr";
   botId = "126324301";
-  host = "buer.labile.cc";
   bindPort = 6543;
   dataDir = "/drive/state/buer";
   repoAllowlist = "labi-le/murmur";
@@ -123,19 +122,5 @@ in
     restartTriggers = [
       (builtins.hashFile "sha256" ../../secrets/buer-env.age)
     ];
-  };
-
-  services.nginx.virtualHosts.${host} = {
-    enableACME = true;
-    forceSSL = true;
-    kTLS = true;
-    locations."/webhook/github" = {
-      proxyPass = "http://127.0.0.1:${toString bindPort}";
-      extraConfig = ''
-        proxy_read_timeout 30s;
-        proxy_send_timeout 30s;
-      '';
-    };
-    locations."/".return = "404";
   };
 }
