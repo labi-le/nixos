@@ -15,8 +15,6 @@ let
   dbEnv = config.age.secrets.litellm-db-env.path;
 
   zenGroupsJson = pkgs.writeText "litellm-zen-groups.json" (builtins.toJSON catalog.zenGroupNames);
-
-  textfileDir = "/var/lib/prometheus-node-textfile-collector";
 in
 
 {
@@ -138,6 +136,26 @@ in
       OnCalendar = "daily";
       RandomizedDelaySec = "30min";
       Persistent = true;
+    };
+  };
+
+  systemd.services.litellm-limits-exporter = {
+    description = "Publish provider-side API limits (OpenCode Go pool, ChatGPT Codex) as Prometheus metrics";
+    after = [ "docker-litellm.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+    };
+    script = ''
+      exec ${pkgs.python3}/bin/python3 ${./limits-exporter.py}
+    '';
+  };
+
+  systemd.timers.litellm-limits-exporter = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*:0/5";
+      RandomizedDelaySec = "30s";
     };
   };
 }

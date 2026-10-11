@@ -765,6 +765,53 @@ print(r.cooldown_cache.get_active_cooldowns(
 and returns a per-day aggregate, including days with no traffic, so counting
 requests from it silently under-reports.
 
+## Provider limits in Prometheus and Grafana
+
+`GET /v1/usage` shows the pool as one aggregate, which hides what each of the
+four accounts has left and says nothing about the ChatGPT subscription.
+`modules/litellm/limits-exporter.py` fills both gaps: it runs as
+`litellm-limits-exporter` (oneshot, `wantedBy = multi-user.target`, every five
+minutes through `litellm-limits-exporter.timer`) as root, reads the pool keys
+from `/run/agenix/opencode-go-pool-env` and the ChatGPT OAuth token from
+`/var/lib/litellm-chatgpt/auth.json`, and writes
+`/var/lib/prometheus-node-textfile-collector/litellm-provider-limits.prom` for
+node_exporter's textfile collector.
+
+Two upstreams, both pull-based, so the series stay fresh without traffic:
+
+- `GET https://opencode.ai/zen/go/v1/usage` once per pool account — the endpoint
+  the in-container poller already uses — labelled by the key's index in the
+  secret: `litellm_opencode_go_used_percent{account,window}`,
+  `litellm_opencode_go_window_status` (1 when the provider reports the window as
+  `rate-limited`, which is what benches the account in the router),
+  `litellm_opencode_go_reset_at` and `litellm_opencode_go_fetch_ok`.
+- `GET https://chatgpt.com/backend-api/wham/usage` — the endpoint the Codex CLI
+  itself polls — with the stored access token and `chatgpt-account-id`:
+  `litellm_codex_used_percent{account,plan,window}`,
+  `litellm_codex_window_present` (0 for a window the plan does not have; this
+  plan reports only `primary` at 604 800 s), `litellm_codex_window_seconds`,
+  `litellm_codex_reset_at`, `litellm_codex_limit_reached`,
+  `litellm_codex_model_available` and `litellm_codex_token_expires_at`. The
+  account label is the first eight characters of the account id; the plan's
+  email is deliberately not exported.
+
+The same numbers arrive as `llm_provider-x-codex-*` response headers on every
+Codex call (`x-codex-primary-used-percent`, `x-codex-primary-reset-at`, …), but
+those exist only while traffic flows, while `wham/usage` answers the same
+question without a request — measured 2026-10-11, the header on a live call and
+the endpoint both reported 48 percent. The exporter only *reads* `auth.json`:
+the access token lasts ten days and litellm refreshes it on the next request, so
+the token-expiry panel is what shows that refresh has stopped happening.
+
+The dashboard is `LiteLLM provider limits` (uid `litellm-limits`,
+`modules/monitoring/dashboards/litellm-limits.json`, provisioned like the other
+system dashboards): accounts still in rotation, benched windows, headroom per
+account and window, the reset countdown per account, the Codex weekly headroom
+and reset, token expiry, per-model availability, and the price sync's state.
+`100 - used_percent` is the headroom everywhere, because both providers report
+what is *spent*. `count(…) or vector(0)` keeps a "nothing benched" panel at 0
+instead of `No data`, since `count()` over an empty vector returns nothing.
+
 ## Gotchas
 
 `LITELLM_SALT_KEY` must never change: it encrypts provider credentials stored
@@ -831,6 +878,12 @@ login.
 - Keys are in the DB, not in process memory:
   `docker exec litellm-db psql -U litellm -d litellm -c 'select key_alias,
   expires, models, spend from "LiteLLM_VerificationToken";'`
+- Provider limits are published:
+  `cat /var/lib/prometheus-node-textfile-collector/litellm-provider-limits.prom`
+  → four pool accounts with three windows each, then the Codex block;
+  `systemctl status litellm-limits-exporter` for the last run and
+  `curl -s 'http://127.0.0.1:3020/api/v1/query?query=litellm_opencode_go_used_percent'`
+  for what Prometheus kept.
 - Trap: `systemctl cat docker-litellm` prints the unit, not the `docker run`
   line — the arguments are in the `ExecStart` script it points at. Use that
   script path, or `docker inspect litellm` for the effective mounts and

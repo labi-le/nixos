@@ -165,6 +165,9 @@ in
                 jq 'del(.__inputs, .__requires)' \
                   ${./monitoring/dashboards/zfs.json} \
                   > $out/zfs.json
+                jq 'del(.__inputs, .__requires)' \
+                  ${./monitoring/dashboards/litellm-limits.json} \
+                  > $out/litellm-limits.json
               '';
             };
           }
