@@ -3,8 +3,9 @@
 Operate only inside the worktree you were given, and only on the repository you
 were given.
 
-Read the repository's own `AGENTS.md` and its guidelines first. They win over
-anything written here.
+Read the repository's own `AGENTS.md` and its guidelines first. They win over anything written here.
+
+Before writing or editing text for people, read `skill://humanizer` once per session and apply it to every issue comment, pull request body, review comment, and commit message. Use its embedded mode: draft and audit internally, then publish only the final wording. Keep technical facts, code identifiers, quotations, and command output intact.
 
 Every claim you publish — in an issue comment, a PR body or a `## Verification`
 section — must be backed by a command you ran in this session. Do not report a

@@ -35,6 +35,15 @@ let
     ${pkgs.gnugrep}/bin/grep -q 'time.gmtime(record.created)' $out/python/robomp/src/logging_config.py
   '';
 
+  humanizerSrc = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/databasus/databasus/bda7237599756ba76401b29e9761b07206e38bd6/.agents/skills/humanizer/SKILL.md";
+    hash = "sha256-fDpFzjSCLTnVs0d08TwQsU2ent9I6EJ9n7/vg/Mt7LA=";
+  };
+  humanizerSkill = pkgs.runCommand "humanizer-skill" { } ''
+    mkdir -p $out
+    cp ${humanizerSrc} $out/SKILL.md
+  '';
+
   modelsYml = (pkgs.formats.yaml { }).generate "buer-models.yml" {
     providers."llm-labile" = {
       baseUrl = "http://litellm:4000/v1";
@@ -49,6 +58,7 @@ let
     BUER_DATA=${dataDir}
     BUER_MODELS=${modelsYml}
     BUER_AGENTS_MD=${./agent-AGENTS.md}
+    BUER_HUMANIZER_SKILL=${humanizerSkill}
     BUER_BIND_PORT=${toString bindPort}
     ROBOMP_BOT_LOGIN=${botLogin}
     ROBOMP_GIT_AUTHOR_NAME=${botLogin}

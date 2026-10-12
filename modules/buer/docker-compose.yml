@@ -48,6 +48,7 @@ services:
       - ${BUER_DATA:?}:/data
       - ${BUER_MODELS:?}:/srv/agent-home-stage/.omp/agent/models.yml:ro
       - ${BUER_AGENTS_MD:?}:/srv/agent-home-stage/.agent/AGENTS.md:ro
+      - ${BUER_HUMANIZER_SKILL:?}:/srv/agent-home-stage/.omp/agent/skills/humanizer:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "127.0.0.1:${BUER_BIND_PORT:-6543}:8080"
