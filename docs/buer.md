@@ -116,6 +116,24 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   review** under *Review code* plus the **Personal preferences** toggle and its
   **Review trigger** — and only there can it be made automatic; check that the
   trigger covers pull requests authored by others.
+- **A failed hook delivery is silent and permanent**: GitHub does not retry,
+  and a lost event leaves no trace past the delivery record — the request
+  reaches neither container. Verified 2026-10-12: the first inline Codex review
+  on PR #163 died at the edge with `500` and `use of closed network connection`,
+  the proxy log had no line for it, `events` had no row, and the bot therefore
+  never saw the finding. Detect with
+  `gh api repos/<owner>/<repo>/hooks/<hook>/deliveries` — anything but `202` is
+  a loss. Recover by re-POSTing a rebuilt event: take the comment body and id
+  from `GET /repos/<owner>/<repo>/pulls/<n>/comments`, wrap it in the
+  `pull_request_review_comment` shape the router reads
+  (`comment.user.login`, `comment.body`, `pull_request.number`,
+  `pull_request.user.login`, `repository.full_name`), HMAC-SHA256 the body with
+  the proxy's `GITHUB_WEBHOOK_SECRET`, and send `X-GitHub-Event`,
+  `X-GitHub-Delivery` (a fresh UUID, or the original GUID when it never
+  arrived) and `X-Hub-Signature-256: sha256=<hmac>` to
+  `https://buer.labile.cc/webhook/github`. The plain
+  `/deliveries/<id>/attempts` redelivery is cleaner when the token has
+  `admin:repo_hook` — neither the user's nor the proxy's token does today.
 - **Local patches over the pinned tag**: `robompSource` applies two textual
   substitutions, and only the robomp image builds from it — the pi image keeps
   building from the pinned checkout. (1) `max_event_history` in
