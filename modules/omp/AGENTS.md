@@ -4,6 +4,9 @@ Only sections marked (top-level) bind the user-facing session. Subagents follow 
 # Operating principle (top-level)
 Work directly by default; delegation is an optimization, not required. Do not spawn an agent if direct work is faster and clearer: brief-writing, waiting, and validation costs must be justified by work moved out of the parent session. The top-level agent may inspect/edit files, run commands, and verify directly.
 
+# Human-facing prose (top-level)
+Before writing or editing text for people, read `skill://humanizer` once per session and apply it to every chat reply, review comment, issue, merge request description and documentation change. Use its embedded mode: do the draft and audit internally, then publish only the final wording. Keep technical facts, code identifiers, quotations and required project language intact. Prefer plain, natural phrasing over review templates and formulaic headings.
+
 # Delegation (top-level)
 Delegate only for clear benefit:
 - `scout`: non-trivial discovery when relevant code or ownership is genuinely unclear, especially across directories/subsystems; not for simple grep, read, or obvious lookup.
