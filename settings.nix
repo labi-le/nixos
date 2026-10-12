@@ -1,11 +1,33 @@
-{ ... }:
-
 {
+  config,
+  lib,
+  user,
+  ...
+}:
+
+let
+  tokenHosts = [
+    "pc"
+    "server"
+    "notebook"
+  ];
+  hasToken = builtins.elem config.networking.hostName tokenHosts;
+in
+{
+  age.secrets.nix-access-tokens = lib.mkIf hasToken {
+    file = ./secrets/nix-access-tokens.age;
+    owner = user.name;
+    group = "users";
+    mode = "0400";
+  };
+
   nix = {
     gc = {
       dates = "monthly";
       automatic = true;
     };
+
+    extraOptions = lib.mkIf hasToken "!include ${config.age.secrets.nix-access-tokens.path}";
 
     settings = {
       download-buffer-size = 2 * 1024 * 1024 * 1024; # 2 GB

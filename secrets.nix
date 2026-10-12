@@ -27,6 +27,7 @@ in
   "secrets/litellm-db-env.age".publicKeys = [ server ];
   "secrets/byesu-env.age".publicKeys = all;
   "secrets/cache-push-key.age".publicKeys = all;
+  "secrets/nix-access-tokens.age".publicKeys = all;
 
   "secrets/opencode/gitlab-work.age".publicKeys = [
     pc

@@ -28,8 +28,11 @@ The container *is* the trust boundary, and Nix cannot reproduce it cheaply:
   reimplementing the pi toolchain (bun, lazy rustup, pi-natives, the omp shim,
   the dashboard bundle) plus robomp's own slot users.
 
-The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
-(`inputs.llm-agents`), so host and container agree on the agent build.
+The pinned rev is `v18.8.9` — the version `pkgs.omp` came from when the pin
+was chosen. The two have since diverged: on 2026-10-12 the lock moved to
+`inputs.llm-agents` `493c34b` (omp 18.10.0) while the images stay on the tag.
+Only the container-internal pair has to agree, and it does: robomp drives the
+image's own baked `/pi` binary, never the host's `omp`.
 
 ## Layout
 
