@@ -150,7 +150,10 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   that role, verified 2026-10-12 — and a replay of a reviewer-bot comment can
   still be dropped by `ROBOMP_RATE_LIMIT_DEFAULT` upstream in the router, which
   the watchdog can only surface as a warning because that skip is the router's
-  decision and not the proxy's.
+  decision and not the proxy's. `buer-images` and `buer` carry the same
+  `RequiresMountsFor` under `[Service]`, where systemd logs it as an unknown key
+  and ignores it; they keep it until a restart is cheap, because moving it
+  restarts the compose stack.
 - **Local patches over the pinned tag**: `robompSource` applies two textual
   substitutions, and only the robomp image builds from it — the pi image keeps
   building from the pinned checkout. (1) `max_event_history` in

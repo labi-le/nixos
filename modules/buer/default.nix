@@ -158,11 +158,11 @@ in
     description = "buer delivery watchdog — replay GitHub hook deliveries the webhook never received";
     after = [ "buer.service" ];
     requires = [ "buer.service" ];
+    unitConfig.RequiresMountsFor = [ "/drive/state" ];
     serviceConfig = {
       Type = "oneshot";
       StateDirectory = "buer-watch";
       StateDirectoryMode = "0700";
-      RequiresMountsFor = [ "/drive/state" ];
       EnvironmentFile = config.age.secrets.buer-env.path;
       Environment = [
         "WATCH_REPOS=${repoAllowlist}"
