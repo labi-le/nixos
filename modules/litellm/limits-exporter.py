@@ -13,12 +13,17 @@ METRIC_PATH = os.environ.get(
     "LITELLM_LIMITS_METRIC_PATH",
     "/var/lib/prometheus-node-textfile-collector/litellm-provider-limits.prom",
 )
+STATE_PATH = os.environ.get(
+    "LITELLM_LIMITS_STATE_PATH",
+    "/var/lib/litellm-limits-exporter/state.json",
+)
 ZEN_USAGE_URL = os.environ.get("OPENCODE_USAGE_URL", "https://opencode.ai/zen/go/v1/usage")
 CODEX_USAGE_URL = os.environ.get("CHATGPT_USAGE_URL", "https://chatgpt.com/backend-api/wham/usage")
 KEY_ENV_PREFIX = "LITELLM_OPENCODE_GO_KEY_"
 ZEN_WINDOWS = ("rolling", "weekly", "monthly")
 CODEX_WINDOWS = ("primary", "secondary")
 TIMEOUT_SECONDS = 15
+EMPTY_RUNS_BEFORE_FAILURE = 3
 ZEN_USER_AGENT = "jcode/0.89.3"
 CODEX_USER_AGENT = "codex_cli_rs/0.1.0"
 
@@ -226,6 +231,21 @@ def write_metric(text):
     os.replace(tmp, METRIC_PATH)
 
 
+def read_state():
+    try:
+        with open(STATE_PATH, encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {}
+
+
+def write_state(state):
+    os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
+    with open(STATE_PATH, "w", encoding="utf-8") as handle:
+        json.dump(state, handle, indent=2)
+        handle.write("\n")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--stdout", action="store_true", help="print the exposition instead of writing it")
@@ -250,6 +270,12 @@ def main():
     except Exception as failure:
         errors.append(f"codex: {type(failure).__name__}: {failure}")
 
+    empty = bool(errors) and not zen and codex is None
+    streak = 0
+    if not args.stdout:
+        previous = read_state().get("empty_runs")
+        streak = (previous if isinstance(previous, int) else 0) + 1 if empty else 0
+
     text = render(now, zen, codex, errors, failed)
     published = True
     if args.stdout:
@@ -261,11 +287,24 @@ def main():
             published = False
             print(f"could not publish the provider limits: {failure}", file=sys.stderr)
             errors.append(f"metric file: {type(failure).__name__}: {failure}")
+        try:
+            write_state({"empty_runs": streak})
+        except OSError as failure:
+            published = False
+            print(f"could not record the run: {failure}", file=sys.stderr)
     for line in errors:
         print(line, file=sys.stderr)
     if not published:
         return 1
-    return 1 if errors and not zen and codex is None else 0
+    if not empty:
+        return 0
+    if streak < EMPTY_RUNS_BEFORE_FAILURE:
+        print(
+            f"nothing answered: run {streak} of {EMPTY_RUNS_BEFORE_FAILURE} before the unit fails",
+            file=sys.stderr,
+        )
+        return 0
+    return 1
 
 
 if __name__ == "__main__":

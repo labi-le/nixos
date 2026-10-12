@@ -810,11 +810,19 @@ Three rules keep the series honest, because each upstream fails on its own:
   failure through the tunnel was observed on 2026-10-11) is distinguishable from
   an empty catalog. A pool account that failed gets `fetch_ok 0` under its index
   instead of silently disappearing.
-- `litellm_limits_exporter_success` is 0 whenever any source failed, and a run
-  in which nothing at all answered exits non-zero, which fails the unit and
-  reaches the generic failed-unit alert. A run that cannot write the file at all
-  fails the same way, so a full disk or a lost secret cannot silently stop the
-  metrics.
+- `litellm_limits_exporter_success` is 0 whenever any source failed. A run in
+  which nothing at all answered does not fail the unit by itself: it increments
+  `empty_runs` in `/var/lib/litellm-limits-exporter/state.json`, and only the
+  third consecutive one exits non-zero and reaches the generic failed-unit
+  alert. Such a run is usually the router's proxy rather than the provider: it
+  pulls `/stable.txt` from the local sub-preprocessor every hour at `:00:09`,
+  the exporter's `:00` run starts between `:00:09` and `:00:34`, and when that
+  reload lands on a dead node every fake-IP destination fails TLS for the rest
+  of the run — 2026-10-12 12:00: all four pool accounts and codex
+  `SSL: UNEXPECTED_EOF_WHILE_READING` for 22 s, the next run green, and the
+  12:02 page was the tail of that noise, the only one in two weeks. A run that
+  cannot write the metric file — or the counter — exits non-zero at once, so a
+  full disk or a lost secret cannot silently stop the metrics.
 - A window whose payload carries no reset time gets no `..._reset_at` sample at
   all, rather than a zero the panels would render as a countdown to 1970.
 
@@ -902,7 +910,9 @@ login.
   → four pool accounts with three windows each, then the Codex block;
   `systemctl status litellm-limits-exporter` for the last run and
   `curl -s 'http://127.0.0.1:3020/api/v1/query?query=litellm_opencode_go_used_percent'`
-  for what Prometheus kept.
+  for what Prometheus kept; `cat
+  /var/lib/litellm-limits-exporter/state.json` for the empty-run count the unit
+  itself fails on.
 - Trap: `systemctl cat docker-litellm` prints the unit, not the `docker run`
   line — the arguments are in the `ExecStart` script it points at. Use that
   script path, or `docker inspect litellm` for the effective mounts and
