@@ -5,7 +5,7 @@
 }:
 
 let
-  tag = "v18.8.9";
+  tag = "v18.10.0";
   botLogin = "int8-ptr";
   botId = "126324301";
   bindPort = 6543;
@@ -20,7 +20,7 @@ let
     owner = "can1357";
     repo = "oh-my-pi";
     tag = tag;
-    hash = "sha256-t3OZP4E0mWFJU0RW3OMcGU2G52p5uasQdVPhITHnZec=";
+    hash = "sha256-2ql/3YrFfEycm7JrC7fshlauNYfuFo/W7gBEEMMc0XA=";
   };
 
   piImage = "oh-my-pi/pi:${tag}";

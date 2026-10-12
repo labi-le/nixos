@@ -28,11 +28,12 @@ The container *is* the trust boundary, and Nix cannot reproduce it cheaply:
   reimplementing the pi toolchain (bun, lazy rustup, pi-natives, the omp shim,
   the dashboard bundle) plus robomp's own slot users.
 
-The pinned rev is `v18.8.9` — the version `pkgs.omp` came from when the pin
-was chosen. The two have since diverged: on 2026-10-12 the lock moved to
-`inputs.llm-agents` `493c34b` (omp 18.10.0) while the images stay on the tag.
-Only the container-internal pair has to agree, and it does: robomp drives the
-image's own baked `/pi` binary, never the host's `omp`.
+The pinned rev is `v18.10.0`, the same tag `inputs.llm-agents` `493c34b` builds,
+so the host package and the container's agent come from one tree. Only the
+container-internal pair has to match, and it does: robomp's `omp_rpc` client and
+the image's baked `/pi` binary both ship from that source, never from the host's
+`omp`. The wire format did change between `v18.8.9` and `v18.10.0`
+(`sdk/*/omp-rpc/*wire*`), so the pin moves together with the lock.
 
 ## Layout
 
@@ -45,8 +46,8 @@ image's own baked `/pi` binary, never the host's `omp`.
 
 ## Wiring
 
-- **Source pin**: `fetchFromGitHub` on `can1357/oh-my-pi` tag `v18.8.9`,
-  hash `sha256-t3OZP4E0mWFJU0RW3OMcGU2G52p5uasQdVPhITHnZec=`. That tree is the
+- **Source pin**: `fetchFromGitHub` on `can1357/oh-my-pi` tag `v18.10.0`,
+  hash `sha256-2ql/3YrFfEycm7JrC7fshlauNYfuFo/W7gBEEMMc0XA=`. That tree is the
   docker build context only. At runtime the `omp` shim runs the **image's own
   baked copy** (`PI_ROOT=/pi`), not a mounted checkout: `Dockerfile.dockerignore`
   keeps `**/node_modules` out of the build context, so a tree mounted from the
@@ -55,11 +56,15 @@ image's own baked `/pi` binary, never the host's `omp`.
   stage the images are built from (default target of `Dockerfile`) is the same
   rev plus `bun install --frozen-lockfile`, i.e. `/pi/node_modules` with the
   workspace links the CLI resolves.
-- **Images**: `buer-images.service` builds `oh-my-pi/pi:v18.8.9` then
-  `robomp:v18.8.9`. The unit is marker-guarded (`/drive/state/buer/image-rev`
+- **Images**: `buer-images.service` builds `oh-my-pi/pi:v18.10.0` then
+  `robomp:v18.10.0`. The unit is marker-guarded (`/drive/state/buer/image-rev`
   holds `path|pi-tag|bot-tag`), so boots and switches are no-ops until the pin
   or the tags change. First build compiles the Rust pi-natives inside the image
-  and takes tens of minutes; `TimeoutStartSec=infinity`.
+  and takes tens of minutes; `TimeoutStartSec=infinity`. The `v18.8.9` →
+  `v18.10.0` bump is `ARG BUN_VERSION=1.4.2` → `1.4.3` in `Dockerfile` and
+  `Dockerfile.robomp`; `docker-compose.yml` and `python/robomp` are untouched
+  between the two tags, and the module's two `sed`/`grep` patches
+  (`max_event_history`, `time.localtime` in `logging_config`) still match.
 - **State**: `/drive/state/buer` on the ZFS `data/state` dataset is bind-mounted at
   `/data` — clone pool, per-issue worktrees, cargo toolchain/target caches,
   `robomp.sqlite`, JSON logs. Cargo caches matter here: murmur is a Rust repo, so
