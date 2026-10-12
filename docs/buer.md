@@ -135,22 +135,25 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `/deliveries/<id>/attempts` redelivery is cleaner when the token has
   `admin:repo_hook` — neither the user's nor the proxy's token does today.
 - **Delivery watchdog**: `buer-watchdog.service` (oneshot, three-minute timer)
-  polls the hook's recent deliveries with `modules/buer/watchdog.py` and, for
-  every entry that did not answer `202`, rebuilds the event from the API object
-  (`issue_comment.created`, `pull_request_review_comment.created`,
-  `pull_request.opened|reopened|ready_for_review|closed`), signs the rebuilt body
-  with `GITHUB_WEBHOOK_SECRET` and posts it to
-  `http://127.0.0.1:6543/webhook/github` — loopback, so a replay never rides the
-  flaky path that lost the original. Replayed ids live in
-  `/var/lib/buer-watch/state.json`, the per-run budget is five replays, the
-  steady-state lookback is 900 s and the first-ever run trims itself to 300 s so
-  an install does not resurrect history. Two caveats are real: the token
-  (`GITHUB_WATCH_TOKEN`, else `GITHUB_TOKEN`) must belong to a repository
-  **admin** — the bot's token answers `404` on the deliveries endpoint without
-  that role, verified 2026-10-12 — and a replay of a reviewer-bot comment can
-  still be dropped by `ROBOMP_RATE_LIMIT_DEFAULT` upstream in the router, which
-  the watchdog can only surface as a warning because that skip is the router's
-  decision and not the proxy's. `buer-images` and `buer` carry the same
+  runs `modules/buer/watchdog.py` over two sources. The one that needs no
+  privileges does the real work: it lists the repository's recent comments
+  through the API and compares each of them with the robot's own `events` table
+  (`payload_json LIKE '%issuecomment-<id>%'`), so a comment with **no row** is a
+  delivery that never arrived and a row skipped with `rate limit` is a directive
+  the router threw away — both are rebuilt from the API object, signed with
+  `GITHUB_WEBHOOK_SECRET` and posted to `http://127.0.0.1:6543/webhook/github`,
+  loopback so a replay never rides the path that lost the original. The
+  admin-only deliveries list stays as a second source for tokens that can read
+  it: the bot cannot, because GitHub refuses to raise a bot account to repository
+  admin (`422 Cannot assign int8-ptr permission of admin`, verified 2026-10-12),
+  so its `404` is an informational line rather than an error. State lives in
+  `/var/lib/buer-watch/state.json` — one key per delivery and one per comment,
+  with a 30-minute `retry_after` after a rate-limit drop — the per-run budget is
+  five replays, the steady-state lookback is 900 s, and the first-ever run trims
+  itself to 300 s so an install does not resurrect history. The delivery cap is
+  `ROBOMP_RATE_LIMIT_DEFAULT=10` in `composeEnv` instead of upstream's 3, after
+  three genuine Codex findings were dropped within one hour on 2026-10-12.
+  `buer-images` and `buer` carry the same
   `RequiresMountsFor` under `[Service]`, where systemd logs it as an unknown key
   and ignores it; they keep it until a restart is cheap, because moving it
   restarts the compose stack.

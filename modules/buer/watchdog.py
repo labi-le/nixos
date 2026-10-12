@@ -66,6 +66,17 @@ def repository_object(token, repo):
     return request_json(f"{API}/repos/{repo}", token)
 
 
+def make_issue_payload(token, repo, comment):
+    issue = request_json(comment["issue_url"], token)
+    return {
+        "action": "created",
+        "issue": issue,
+        "comment": comment,
+        "repository": repository_object(token, repo),
+        "sender": comment.get("user") or {},
+    }
+
+
 def build_issue_comment(token, repo, delivered_at, horizon):
     comments = request_json(
         f"{API}/repos/{repo}/issues/comments?sort=created&direction=desc&per_page={PAGE}",
@@ -74,11 +85,15 @@ def build_issue_comment(token, repo, delivered_at, horizon):
     comment = nearest(comments, "created_at", delivered_at, horizon)
     if comment is None:
         return None
-    issue = request_json(comment["issue_url"], token)
+    return make_issue_payload(token, repo, comment)
+
+
+def make_review_payload(token, repo, comment):
+    pull = request_json(comment["pull_request_url"], token)
     return {
         "action": "created",
-        "issue": issue,
         "comment": comment,
+        "pull_request": pull,
         "repository": repository_object(token, repo),
         "sender": comment.get("user") or {},
     }
@@ -92,14 +107,7 @@ def build_review_comment(token, repo, delivered_at, horizon):
     comment = nearest(comments, "created_at", delivered_at, horizon)
     if comment is None:
         return None
-    pull = request_json(comment["pull_request_url"], token)
-    return {
-        "action": "created",
-        "comment": comment,
-        "pull_request": pull,
-        "repository": repository_object(token, repo),
-        "sender": comment.get("user") or {},
-    }
+    return make_review_payload(token, repo, comment)
 
 
 def build_pull_request(token, repo, action, delivered_at, horizon):
@@ -249,6 +257,45 @@ def failed_deliveries(token, repo, hook_id, horizon_from):
     return candidates
 
 
+def payload_row(db_path, needle):
+    if not db_path:
+        return None
+    try:
+        connection = sqlite3.connect(db_path, timeout=5)
+        row = connection.execute(
+            "select state, coalesce(last_error, '') from events where payload_json like ? order by rowid desc limit 1",
+            ("%" + needle + "%",),
+        ).fetchone()
+        connection.close()
+        return row
+    except sqlite3.Error as exc:
+        return ("db-error", str(exc))
+
+
+def comment_needle(event, comment):
+    marker = "issuecomment-" if event == "issue_comment" else "discussion_r"
+    return marker + str(comment["id"])
+
+
+def activity_comments(token, repo, horizon_from):
+    feeds = (
+        (
+            "issue_comment",
+            f"{API}/repos/{repo}/issues/comments?sort=created&direction=desc&per_page={PAGE}",
+        ),
+        (
+            "pull_request_review_comment",
+            f"{API}/repos/{repo}/pulls/comments?sort=created&direction=desc&per_page={PAGE}",
+        ),
+    )
+    found = []
+    for event, feed in feeds:
+        for comment in request_json(feed, token):
+            if parse_stamp(comment["created_at"]) >= horizon_from:
+                found.append((event, comment))
+    return found
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--lookback", type=int, default=900)
@@ -299,16 +346,13 @@ def main():
         try:
             hooks = hook_ids(token, repo)
         except urllib.error.HTTPError as exc:
-            hint = (
-                " (repository admin role required to read hooks)"
-                if exc.code == 404
-                else ""
-            )
-            errors.append(f"{repo}: hook listing failed with HTTP {exc.code}{hint}")
-            continue
-        if not hooks:
-            errors.append(f"{repo}: no hook posting to /webhook/github")
-            continue
+            if exc.code == 404:
+                print(
+                    f"{repo}: the deliveries list needs a repository admin token; relying on the activity scan"
+                )
+            else:
+                errors.append(f"{repo}: hook listing failed with HTTP {exc.code}")
+            hooks = []
         for hook_id in hooks:
             try:
                 candidates = failed_deliveries(token, repo, hook_id, horizon_from)
@@ -407,6 +451,72 @@ def main():
                         dt.datetime.now(dt.timezone.utc)
                         + dt.timedelta(seconds=arguments.retry_after)
                     ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                replayed_objects.add(identity)
+                replayed += 1
+
+        if db_path:
+            try:
+                comments = activity_comments(token, repo, horizon_from)
+            except urllib.error.HTTPError as exc:
+                errors.append(f"{repo}: activity scan failed with HTTP {exc.code}")
+                comments = []
+            for event, comment in comments:
+                needle = comment_needle(event, comment)
+                entry = seen.get(needle)
+                if entry is not None:
+                    retry_after = entry.get("retry_after")
+                    if not retry_after:
+                        continue
+                    if parse_stamp(retry_after) > dt.datetime.now(dt.timezone.utc):
+                        continue
+                row = payload_row(db_path, needle)
+                if row is not None and row[0] == "db-error":
+                    errors.append(f"{repo}: events table unreadable: {row[1]}")
+                    break
+                if row is not None and not (
+                    row[0] == "skipped" and "rate limit" in row[1]
+                ):
+                    continue
+                reason = (
+                    "never reached the router"
+                    if row is None
+                    else f"the rate limit dropped it ({row[1]})"
+                )
+                if replayed >= arguments.max_replays:
+                    print(f"{repo} {needle}: replay budget exhausted, next run takes it")
+                    break
+                payload = (
+                    make_issue_payload(token, repo, comment)
+                    if event == "issue_comment"
+                    else make_review_payload(token, repo, comment)
+                )
+                summary = object_summary(payload)
+                identity = event + " " + summary
+                if identity in replayed_objects:
+                    continue
+                print(f"{repo} {needle}: {reason}; replaying")
+                if arguments.dry_run:
+                    replayed_objects.add(identity)
+                    continue
+                delivery_uuid, post_status = deliver(endpoint, secret, event, payload)
+                outcome = f"replayed HTTP {post_status} as {delivery_uuid}"
+                new_row = event_state(db_path, delivery_uuid)
+                if new_row is not None:
+                    outcome += f"; router={new_row[0]} {new_row[1]}".rstrip()
+                print(f"{repo} {needle} {summary}: {outcome}")
+                seen[needle] = {"at": iso_now(), "outcome": outcome}
+                if (
+                    new_row is not None
+                    and new_row[0] == "skipped"
+                    and "rate limit" in new_row[1]
+                ):
+                    seen[needle]["retry_after"] = (
+                        dt.datetime.now(dt.timezone.utc)
+                        + dt.timedelta(seconds=arguments.retry_after)
+                    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    print(
+                        f"warning: the rate limit dropped the replay of {repo} {needle}: {new_row[1]}"
+                    )
                 replayed_objects.add(identity)
                 replayed += 1
 

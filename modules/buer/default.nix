@@ -58,6 +58,7 @@ let
     ROBOMP_MODEL=${model}
     ROBOMP_THINKING=high
     ROBOMP_MAX_CONCURRENCY=2
+    ROBOMP_RATE_LIMIT_DEFAULT=10
     TZ=${config.time.timeZone}
   '';
 
