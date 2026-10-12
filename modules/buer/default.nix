@@ -153,4 +153,35 @@ in
       (builtins.hashFile "sha256" ../../secrets/buer-env.age)
     ];
   };
+
+  systemd.services.buer-watchdog = {
+    description = "buer delivery watchdog — replay GitHub hook deliveries the webhook never received";
+    after = [ "buer.service" ];
+    requires = [ "buer.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      StateDirectory = "buer-watch";
+      StateDirectoryMode = "0700";
+      RequiresMountsFor = [ "/drive/state" ];
+      EnvironmentFile = config.age.secrets.buer-env.path;
+      Environment = [
+        "WATCH_REPOS=${repoAllowlist}"
+        "WATCH_ENDPOINT=http://127.0.0.1:${toString bindPort}/webhook/github"
+        "WATCH_DB=${dataDir}/robomp.sqlite"
+        "WATCH_STATE_DIR=/var/lib/buer-watch"
+      ];
+      ExecStart = "${pkgs.python3}/bin/python3 ${./watchdog.py}";
+    };
+  };
+
+  systemd.timers.buer-watchdog = {
+    description = "Poll GitHub hook deliveries for transport losses every three minutes";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "3min";
+      OnUnitActiveSec = "3min";
+      AccuracySec = "30s";
+      Persistent = false;
+    };
+  };
 }

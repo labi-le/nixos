@@ -134,6 +134,23 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `https://buer.labile.cc/webhook/github`. The plain
   `/deliveries/<id>/attempts` redelivery is cleaner when the token has
   `admin:repo_hook` — neither the user's nor the proxy's token does today.
+- **Delivery watchdog**: `buer-watchdog.service` (oneshot, three-minute timer)
+  polls the hook's recent deliveries with `modules/buer/watchdog.py` and, for
+  every entry that did not answer `202`, rebuilds the event from the API object
+  (`issue_comment.created`, `pull_request_review_comment.created`,
+  `pull_request.opened|reopened|ready_for_review|closed`), signs the rebuilt body
+  with `GITHUB_WEBHOOK_SECRET` and posts it to
+  `http://127.0.0.1:6543/webhook/github` — loopback, so a replay never rides the
+  flaky path that lost the original. Replayed ids live in
+  `/var/lib/buer-watch/state.json`, the per-run budget is five replays, the
+  steady-state lookback is 900 s and the first-ever run trims itself to 300 s so
+  an install does not resurrect history. Two caveats are real: the token
+  (`GITHUB_WATCH_TOKEN`, else `GITHUB_TOKEN`) must belong to a repository
+  **admin** — the bot's token answers `404` on the deliveries endpoint without
+  that role, verified 2026-10-12 — and a replay of a reviewer-bot comment can
+  still be dropped by `ROBOMP_RATE_LIMIT_DEFAULT` upstream in the router, which
+  the watchdog can only surface as a warning because that skip is the router's
+  decision and not the proxy's.
 - **Local patches over the pinned tag**: `robompSource` applies two textual
   substitutions, and only the robomp image builds from it — the pi image keeps
   building from the pinned checkout. (1) `max_event_history` in
