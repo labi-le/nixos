@@ -105,7 +105,15 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   a **bot-authored** PR arrives as `pull_request_review_comment.created`, is
   queued as `handle_review` with `directive=True`, and the bot amends the
   branch in response — no `@`-mention needed. Review *bodies* without inline
-  comments (`pull_request_review`) have no route and are ignored.
+  comments (`pull_request_review`) have no route and are ignored. What starts
+  that review is an explicit mention: the bot now posts `@codex review` itself
+  right after `gh_open_pr` (rule in `agent-AGENTS.md`), because Codex's own
+  automatic review is a ChatGPT-side setting —
+  `https://app.chatgpt.com/settings/code-review`, both the per-repository
+  **Automatic review** under *Review code* and the **Personal preferences**
+  toggle with its **Review trigger** — which was off on 2026-10-12 and cannot be
+  set from this repository. The bot's own ping returns through the webhook and is
+  dropped as `bot/self comment`, so it queues nothing.
 - **Local patches over the pinned tag**: `robompSource` applies two textual
   substitutions, and only the robomp image builds from it — the pi image keeps
   building from the pinned checkout. (1) `max_event_history` in

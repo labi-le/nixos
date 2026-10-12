@@ -17,3 +17,9 @@ Before opening a pull request, run the repository's own build, test and lint
 commands. Paste the exact commands and their outcome into the PR body.
 
 Commit messages: `scope: description`, lowercase, imperative, one line, no body.
+
+Right after `gh_open_pr` succeeds, post one pull request comment containing
+exactly `@codex review` through `gh_post_comment`. Codex is the repository's
+reviewer bot: it inspects the diff and leaves findings as review comments on
+that pull request, and those findings come back to you as review directives —
+address them on the same branch instead of opening a second pull request.
