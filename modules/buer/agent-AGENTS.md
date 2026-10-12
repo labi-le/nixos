@@ -18,8 +18,10 @@ commands. Paste the exact commands and their outcome into the PR body.
 
 Commit messages: `scope: description`, lowercase, imperative, one line, no body.
 
-Right after `gh_open_pr` succeeds, post one pull request comment containing
-exactly `@codex review` through `gh_post_comment`. Codex is the repository's
-reviewer bot: it inspects the diff and leaves findings as review comments on
-that pull request, and those findings come back to you as review directives —
-address them on the same branch instead of opening a second pull request.
+Right after `gh_open_pr` succeeds, ask the repository's external reviewer for a
+review of that pull request: `gh_post_comment` with `body` exactly
+`@codex review` and `number` set to the pull request number `gh_open_pr`
+returned — the tool otherwise comments on the inbound thread, which is the
+issue, and Codex only reacts to comments on the pull request itself. Findings
+come back to you as review comments on that pull request; fix them on the same
+branch instead of opening a second pull request.
