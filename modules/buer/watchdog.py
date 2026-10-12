@@ -62,9 +62,8 @@ def nearest(items, stamp_key, target, horizon):
     return best[1] if best else None
 
 
-def repository_object(repo):
-    owner, name = repo.split("/", 1)
-    return {"full_name": repo, "name": name, "owner": {"login": owner, "type": "User"}}
+def repository_object(token, repo):
+    return request_json(f"{API}/repos/{repo}", token)
 
 
 def build_issue_comment(token, repo, delivered_at, horizon):
@@ -80,7 +79,7 @@ def build_issue_comment(token, repo, delivered_at, horizon):
         "action": "created",
         "issue": issue,
         "comment": comment,
-        "repository": repository_object(repo),
+        "repository": repository_object(token, repo),
         "sender": comment.get("user") or {},
     }
 
@@ -98,7 +97,7 @@ def build_review_comment(token, repo, delivered_at, horizon):
         "action": "created",
         "comment": comment,
         "pull_request": pull,
-        "repository": repository_object(repo),
+        "repository": repository_object(token, repo),
         "sender": comment.get("user") or {},
     }
 
@@ -118,7 +117,7 @@ def build_pull_request(token, repo, action, delivered_at, horizon):
     return {
         "action": action,
         "pull_request": pull,
-        "repository": repository_object(repo),
+        "repository": repository_object(token, repo),
         "sender": pull.get("user") or {},
     }
 
