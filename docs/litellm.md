@@ -831,9 +831,11 @@ The dashboard is `LiteLLM provider limits` (uid `litellm-limits`,
 system dashboards — into the `litellm` Grafana folder, while the disk dashboards
 live in `storage` and node-exporter stays in `system`): accounts still in
 rotation, windows that bench them (provider-reported `rate-limited`, or 95
-percent of a window spent — the poller's own `LIMIT_PERCENT`), headroom per
-account and window, one battery per account filled by the share of its weekly
-window already spent, the Codex weekly headroom and reset, token expiry,
+percent of a window spent — the poller's own `LIMIT_PERCENT`), mean weekly and
+monthly headroom stats (the monthly pool is the whole subscription budget, so
+it answers whether a dry week is within budget or the subscription itself is
+running out), headroom per account and window, weekly and monthly batteries
+per account, the Codex weekly headroom and reset, token expiry,
 per-source reachability, and the price sync's state.
 `100 - used_percent` is the headroom everywhere, because both providers report
 what is *spent*. `count(…) or vector(0)` keeps a "nothing benched" panel at 0
