@@ -105,15 +105,17 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   a **bot-authored** PR arrives as `pull_request_review_comment.created`, is
   queued as `handle_review` with `directive=True`, and the bot amends the
   branch in response — no `@`-mention needed. Review *bodies* without inline
-  comments (`pull_request_review`) have no route and are ignored. What starts
-  that review is an explicit mention: the bot now posts `@codex review` itself
-  right after `gh_open_pr` (rule in `agent-AGENTS.md`), because Codex's own
-  automatic review is a ChatGPT-side setting —
-  `https://app.chatgpt.com/settings/code-review`, both the per-repository
-  **Automatic review** under *Review code* and the **Personal preferences**
-  toggle with its **Review trigger** — which was off on 2026-10-12 and cannot be
-  set from this repository. The bot's own ping returns through the webhook and is
-  dropped as `bot/self comment`, so it queues nothing.
+  comments (`pull_request_review`) have no route and are ignored. The mention
+  that starts a review must come from an identity with a Codex account connected
+  to GitHub: the bot's own `@codex review` is answered with "To use Codex here,
+  create a Codex account and connect to github" and runs nothing (verified
+  2026-10-12 on PR #163, reply three seconds after the ping; the rule that made
+  the bot ping from `agent-AGENTS.md` was removed for that reason). Codex's
+  review is also triggered without any mention by its own setting —
+  `https://app.chatgpt.com/settings/code-review`, per-repository **Automatic
+  review** under *Review code* plus the **Personal preferences** toggle and its
+  **Review trigger** — and only there can it be made automatic; check that the
+  trigger covers pull requests authored by others.
 - **Local patches over the pinned tag**: `robompSource` applies two textual
   substitutions, and only the robomp image builds from it — the pi image keeps
   building from the pinned checkout. (1) `max_event_history` in
