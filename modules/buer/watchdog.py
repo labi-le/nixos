@@ -12,7 +12,7 @@ import urllib.request
 import uuid
 
 API = "https://api.github.com"
-PAGE = 50
+PAGE = 100
 ACCEPTED = {200, 201, 202, 204}
 REJECTED = {401, 403, 404, 422}
 REPLAYABLE = {
