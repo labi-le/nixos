@@ -74,7 +74,7 @@
           "refId": "A"
         }
       ],
-      "title": "Accounts in rotation",
+      "title": "In rotation",
       "type": "stat"
     },
     {
@@ -139,7 +139,7 @@
           "refId": "A"
         }
       ],
-      "title": "Windows benched",
+      "title": "Benched",
       "type": "stat"
     },
     {
