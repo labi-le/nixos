@@ -244,5 +244,9 @@ cover:
 
 From the LAN, `/ui` answers `302 → https://buer.labile.cc/ui/`, and the SPA
 loads end to end through nginx: the dashboard renders, `/api/status` and
-`/api/logs` poll normally, and only `/replay` stays off (`ROBOMP_REPLAY_TOKEN`
-is unset, so robomp itself answers `404 replay disabled`).
+`/api/logs` poll normally, and the controls are live — the page carries the
+per-boot token from `buer-replay-token` and drives them through the
+whitelisted `/api/*` routes (`POST /api/trigger`, `POST /api/cancel`). The
+vhost does not route robomp's own `POST /replay`: a request there is answered
+by its `location /` 404 and never reaches robomp, whose `404 replay disabled`
+is visible only on the loopback port.
