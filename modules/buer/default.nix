@@ -152,6 +152,7 @@ in
     };
     restartTriggers = [
       (builtins.hashFile "sha256" ../../secrets/buer-env.age)
+      (builtins.hashFile "sha256" composeEnv)
     ];
   };
 

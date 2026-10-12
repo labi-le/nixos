@@ -156,7 +156,10 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `buer-images` and `buer` carry the same
   `RequiresMountsFor` under `[Service]`, where systemd logs it as an unknown key
   and ignores it; they keep it until a restart is cheap, because moving it
-  restarts the compose stack.
+  restarts the compose stack. `buer.service` also hashes `composeEnv` into
+  `restartTriggers`: an `EnvironmentFile` that is a store path changes its *path*
+  without changing the unit text, so an env edit alone would leave the running
+  container on the old values.
 - **Local patches over the pinned tag**: `robompSource` applies two textual
   substitutions, and only the robomp image builds from it — the pi image keeps
   building from the pinned checkout. (1) `max_event_history` in
