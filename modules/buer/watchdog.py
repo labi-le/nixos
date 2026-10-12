@@ -29,6 +29,12 @@ def iso_now():
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def retry_stamp(seconds):
+    return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=seconds)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+
+
 def request_json(url, token):
     request = urllib.request.Request(
         url,
@@ -146,6 +152,12 @@ def object_summary(payload):
         return "comment=" + str(comment.get("html_url"))
     pull = payload.get("pull_request") or {}
     return "pull=" + str(pull.get("html_url"))
+
+
+def describe(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        return f"HTTP {exc.code}"
+    return f"{type(exc).__name__}: {exc}"
 
 
 def deliver(endpoint, secret, event, payload):
@@ -345,20 +357,20 @@ def main():
     for repo in repos:
         try:
             hooks = hook_ids(token, repo)
-        except urllib.error.HTTPError as exc:
-            if exc.code == 404:
+        except OSError as exc:
+            if isinstance(exc, urllib.error.HTTPError) and exc.code == 404:
                 print(
                     f"{repo}: the deliveries list needs a repository admin token; relying on the activity scan"
                 )
             else:
-                errors.append(f"{repo}: hook listing failed with HTTP {exc.code}")
+                errors.append(f"{repo}: hook listing failed: {describe(exc)}")
             hooks = []
         for hook_id in hooks:
             try:
                 candidates = failed_deliveries(token, repo, hook_id, horizon_from)
-            except urllib.error.HTTPError as exc:
+            except OSError as exc:
                 errors.append(
-                    f"{repo} hook {hook_id}: delivery listing failed with HTTP {exc.code}"
+                    f"{repo} hook {hook_id}: delivery listing failed: {describe(exc)}"
                 )
                 continue
             for when, delivery_id, event, action, status in candidates:
@@ -402,9 +414,9 @@ def main():
                     payload = build_payload(
                         token, repo, event, action, when, arguments.map_horizon
                     )
-                except urllib.error.HTTPError as exc:
+                except OSError as exc:
                     errors.append(
-                        f"{repo} {delivery_id}: reconstruction failed with HTTP {exc.code}"
+                        f"{repo} {delivery_id}: reconstruction failed: {describe(exc)}"
                     )
                     continue
                 if payload is None:
@@ -433,7 +445,26 @@ def main():
                     )
                     replayed_objects.add(identity)
                     continue
-                delivery_uuid, post_status = deliver(endpoint, secret, event, payload)
+                try:
+                    delivery_uuid, post_status = deliver(
+                        endpoint, secret, event, payload
+                    )
+                except OSError as exc:
+                    errors.append(
+                        f"{repo} {delivery_id}: replay post failed: {describe(exc)}"
+                    )
+                    continue
+                if not 200 <= post_status < 300:
+                    errors.append(
+                        f"{repo} {delivery_id}: replay answered HTTP {post_status}"
+                    )
+                    seen[delivery_id] = {
+                        "at": iso_now(),
+                        "outcome": f"replay refused HTTP {post_status}",
+                        "retry_after": retry_stamp(arguments.retry_after),
+                    }
+                    save_state(state_path, state, arguments.keep_days)
+                    continue
                 outcome = f"replayed HTTP {post_status} as {delivery_uuid}"
                 row = event_state(db_path, delivery_uuid)
                 rate_limited = False
@@ -447,18 +478,16 @@ def main():
                 print(f"{repo} {delivery_id} {event}.{action} {summary}: {outcome}")
                 seen[delivery_id] = {"at": iso_now(), "outcome": outcome}
                 if rate_limited:
-                    seen[delivery_id]["retry_after"] = (
-                        dt.datetime.now(dt.timezone.utc)
-                        + dt.timedelta(seconds=arguments.retry_after)
-                    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    seen[delivery_id]["retry_after"] = retry_stamp(arguments.retry_after)
+                save_state(state_path, state, arguments.keep_days)
                 replayed_objects.add(identity)
                 replayed += 1
 
         if db_path:
             try:
                 comments = activity_comments(token, repo, horizon_from)
-            except urllib.error.HTTPError as exc:
-                errors.append(f"{repo}: activity scan failed with HTTP {exc.code}")
+            except OSError as exc:
+                errors.append(f"{repo}: activity scan failed: {describe(exc)}")
                 comments = []
             for event, comment in comments:
                 needle = comment_needle(event, comment)
@@ -498,7 +527,24 @@ def main():
                 if arguments.dry_run:
                     replayed_objects.add(identity)
                     continue
-                delivery_uuid, post_status = deliver(endpoint, secret, event, payload)
+                try:
+                    delivery_uuid, post_status = deliver(
+                        endpoint, secret, event, payload
+                    )
+                except OSError as exc:
+                    errors.append(
+                        f"{repo} {needle}: replay post failed: {describe(exc)}"
+                    )
+                    continue
+                if not 200 <= post_status < 300:
+                    errors.append(f"{repo} {needle}: replay answered HTTP {post_status}")
+                    seen[needle] = {
+                        "at": iso_now(),
+                        "outcome": f"replay refused HTTP {post_status}",
+                        "retry_after": retry_stamp(arguments.retry_after),
+                    }
+                    save_state(state_path, state, arguments.keep_days)
+                    continue
                 outcome = f"replayed HTTP {post_status} as {delivery_uuid}"
                 new_row = event_state(db_path, delivery_uuid)
                 if new_row is not None:
@@ -510,13 +556,11 @@ def main():
                     and new_row[0] == "skipped"
                     and "rate limit" in new_row[1]
                 ):
-                    seen[needle]["retry_after"] = (
-                        dt.datetime.now(dt.timezone.utc)
-                        + dt.timedelta(seconds=arguments.retry_after)
-                    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    seen[needle]["retry_after"] = retry_stamp(arguments.retry_after)
                     print(
                         f"warning: the rate limit dropped the replay of {repo} {needle}: {new_row[1]}"
                     )
+                save_state(state_path, state, arguments.keep_days)
                 replayed_objects.add(identity)
                 replayed += 1
 

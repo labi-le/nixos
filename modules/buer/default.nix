@@ -13,6 +13,7 @@ let
   repoAllowlist = "labi-le/murmur";
   maintainerLogins = "labi-le";
   reviewerBots = "chatgpt-codex-connector";
+  reviewerBotLogin = "${reviewerBots}[bot]";
   model = "llm-labile/deepseek-v4.1-flash";
 
   src = pkgs.fetchFromGitHub {
@@ -55,6 +56,7 @@ let
     ROBOMP_REPO_ALLOWLIST=${repoAllowlist}
     ROBOMP_MAINTAINER_LOGINS=${maintainerLogins}
     ROBOMP_REVIEWER_BOTS=${reviewerBots}
+    ROBOMP_RATE_LIMIT_UNLIMITED=${reviewerBotLogin}
     ROBOMP_MODEL=${model}
     ROBOMP_THINKING=high
     ROBOMP_MAX_CONCURRENCY=2
@@ -172,7 +174,7 @@ in
         "WATCH_DB=${dataDir}/robomp.sqlite"
         "WATCH_STATE_DIR=/var/lib/buer-watch"
       ];
-      ExecStart = "${pkgs.python3}/bin/python3 ${./watchdog.py}";
+      ExecStart = "${pkgs.python3}/bin/python3 ${./watchdog.py} --lookback 3900 --retry-after 900";
     };
   };
 

@@ -35,7 +35,7 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
 
 | Path | Role |
 |---|---|
-| `modules/buer/default.nix` | NixOS module: images build unit, compose unit, nginx vhost, agenix secret, tmpfiles |
+| `modules/buer/default.nix` | NixOS module: images build unit, compose unit, watchdog unit plus timer, agenix secret (the nginx vhost lives in `modules/nginx.nix`) |
 | `modules/buer/docker-compose.yml` | Upstream compose file with the dev-only bits removed (no `build:`, no host `HOME` mounts, no `extra_hosts`), one container-name rename, and per-service environment allowlists kept intact |
 | `modules/buer/agent-AGENTS.md` | Global instruction file staged into the agent's `~/.agent/AGENTS.md` |
 | `secrets/buer-env.age` | `GITHUB_TOKEN`, `ROBOMP_LITELLM_KEY`, `GITHUB_WEBHOOK_SECRET`, `ROBOMP_GH_PROXY_HMAC_KEY` — recipients in `secrets.nix` (server key) |
@@ -115,7 +115,18 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   `https://app.chatgpt.com/settings/code-review`, per-repository **Automatic
   review** under *Review code* plus the **Personal preferences** toggle and its
   **Review trigger** — and only there can it be made automatic; check that the
-  trigger covers pull requests authored by others.
+  trigger covers pull requests authored by others. The router's per-submitter
+  cap also has to be lifted for it: `ROBOMP_RATE_LIMIT_UNLIMITED` carries the
+  login **with** the suffix (`chatgpt-codex-connector[bot]`), because
+  `rate_limit_unlimited` only strips a leading `@` — unlike the reviewer-bot and
+  maintainer allowlists, which do strip `[bot]`. Without that entry a Codex
+  review with four or more inline comments is answered `202 skipped` for every
+  comment past the third in the hour (`login=chatgpt-codex-connector[bot]
+  association=NONE used=3 cap=3`, 34 such drops in six hours before the entry
+  existed), so the finding never becomes a task at all. `ROBOMP_RATE_LIMIT_DEFAULT`
+  is 10 rather than upstream's 3 for the same reason: the cap is per commenter
+  across every repository, so a busy hour on one pull request quietly costs
+  findings on the rest.
 - **A failed hook delivery is silent and permanent**: GitHub does not retry,
   and a lost event leaves no trace past the delivery record — the request
   reaches neither container. Verified 2026-10-12: the first inline Codex review
@@ -149,14 +160,21 @@ The pinned rev is `v18.8.9` — the same version `pkgs.omp` comes from
   so its `404` is an informational line rather than an error. State lives in
   `/var/lib/buer-watch/state.json` — one key per delivery and one per comment,
   with a 30-minute `retry_after` after a rate-limit drop — the per-run budget is
-  five replays, the steady-state lookback is 900 s, and the first-ever run trims
-  itself to 300 s so an install does not resurrect history. The delivery cap is
-  `ROBOMP_RATE_LIMIT_DEFAULT=10` in `composeEnv` instead of upstream's 3, after
-  three genuine Codex findings were dropped within one hour on 2026-10-12.
+  five replays, and the unit runs with `--lookback 3900 --retry-after 900`: a
+  replay the router drops for rate limiting is retried every 15 minutes for up to
+  65 minutes, because the router's window is an hour wide and an entry older than
+  the lookback is never a candidate again. The two numbers only work together,
+  and with the shipped 900 s lookback the retry stamp could never be reached. The
+  lookback is capped by the API: `GET /hooks/<id>/deliveries` answers one page of
+  the newest 100 deliveries, so at the repo's busiest hour a 65-minute-old entry
+  can already have fallen off the page. The activity scan reads the same window,
+  which is why it is the source that matters. The first-ever run trims itself to
+  300 s so an install does not resurrect history.
   `buer-images` and `buer` carry the same
   `RequiresMountsFor` under `[Service]`, where systemd logs it as an unknown key
   and ignores it; they keep it until a restart is cheap, because moving it
-  restarts the compose stack. `buer.service` also hashes `composeEnv` into
+  restarts the compose stack (the dependency is inert either way: `drive-state.mount`
+  is already pulled in by `local-fs.target` before `basic.target`). `buer.service` also hashes `composeEnv` into
   `restartTriggers`: an `EnvironmentFile` that is a store path changes its *path*
   without changing the unit text, so an env edit alone would leave the running
   container on the old values.
