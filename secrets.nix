@@ -45,6 +45,10 @@ in
     pc
     notebook
   ];
+  "secrets/opencode/telegram-mcp.age".publicKeys = [
+    pc
+    notebook
+  ];
 
   "secrets/portainer-mcp.age".publicKeys = [
     pc
