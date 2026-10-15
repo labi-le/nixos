@@ -386,6 +386,50 @@ curl -sX POST https://llm.labile.cc/key/delete \
 # {"deleted_keys":["sk-…"]}
 ```
 
+Rotate — the rotation endpoints exist and are enterprise-only: `/key/regenerate`
+and `/key/{key}/regenerate` are in the 1.103.2 spec, but calling them answers
+`500 Regenerating Virtual Keys is an Enterprise feature` without a
+`LITELLM_LICENSE` (measured 2026-10-15 against this proxy with a throwaway key,
+whose row the failed call left untouched). Rotation is therefore `/key/delete`
+followed by `/key/generate` with the old row's parameters, and the alias can be
+reused as soon as the old row is gone (verified). `key_alias` is unique —
+creating a second key under a live alias answers `400` — so a rotation that must
+not leave a client without a working key stages the new key under a temporary
+alias, verifies it, deletes the old row and renames with `/key/update`
+(`key_alias` is a settable field, and a rename carrying nothing else left
+`expires` exactly where it was; measured 2026-10-15 on `anyouh`). `spend` is
+writable on both
+`/key/generate` and `/key/update` (verified `1.25` → `2.5`, and the DB agrees),
+so a rebuilt key can carry the spend already burned in its budget window. What
+does not survive is `total_spend`, which `/key/list` aggregates from
+`LiteLLM_SpendLogs` under the old `token`, and `expires` only ever moves as
+`now + duration` — no endpoint takes an absolute expiry.
+
+`/key/generate` also accepts an explicit `key` without a license: passing
+`"key":"sk-…"` makes the response echo that exact string and stores its sha256 as
+`token`. That is how a value gets chosen instead of drawn; it cannot bring back
+the old one, which was never readable.
+
+A live client key (`anyouh`, measured 2026-10-15):
+
+```
+litellm-key revoke anyouh
+curl -sX POST https://llm.labile.cc/key/generate \
+  -H "Authorization: Bearer $MASTER" -H 'Content-Type: application/json' \
+  -d '{"key_alias":"anyouh","duration":"365d",
+       "models":["deepseek-v4.1-flash","step-5-preview","gpt-6-astra","gpt-6-luna","gpt-6.1-sol"],
+       "max_budget":5,"budget_duration":"1d"}'
+```
+
+`litellm-key create` is not enough on its own for a key that had a budget — it
+takes `ALIAS [DAYS]` and models from `LITELLM_MODELS`, so the cap has to follow
+as `litellm-key budget anyouh 5 1d`, or come from the curl above.
+
+To preserve an existing deadline instead of renewing, send the remaining time as
+whole seconds — `duration` accepts `<int>s` and lands within a second of the
+target (`20415s` came back `+0.226s` off the old `expires`), while `45.5s`
+answers `500 Unsupported duration unit`.
+
 Inspect: `GET /key/info?key=sk-…` returns `expires`, `models`, `spend`,
 `max_budget`.
 
