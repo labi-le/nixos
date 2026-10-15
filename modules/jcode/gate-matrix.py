@@ -36,6 +36,71 @@ COMMIT_CASES = [
     ("""bash -c 'git commit -m "jcode: ok"'""", 0),
 ]
 
+MR_CASES = [
+    ("git push -u origin KID-4637 -o merge_request.create -o merge_request.title=Short -o 'merge_request.description=Long prose'", 2),
+    ("git push -u origin KID-4637 -o merge_request.create -o merge_request.title=Short -o merge_request.description=", 0),
+    ("git push -o merge_request.create -o merge_request.title=Short", 2),
+    ("git push -o merge_request.create -o merge_request.description=", 2),
+    ("git push -u origin feature/topic", 0),
+    ('git push origin "$BRANCH"', 0),
+    ("git push --push-option merge_request.description=prose", 2),
+    ("git push --push-option=merge_request.description=prose", 2),
+    ("git push -omerge_request.description=prose", 2),
+    ("git push -o=merge_request.description=prose", 2),
+    ("git push -o merge_request.description=prose -o merge_request.description=", 2),
+    ("git push -o 'merge_request.description= '", 2),
+    (f"git push -o merge_request.title={'😀' * 70}", 0),
+    ("git -c push.pushOption=merge_request.description=prose push", 2),
+    ("git -cpush.pushOption=merge_request.description=prose push", 2),
+    ("git -c push.pushOption=merge_request.create -c push.pushOption=merge_request.title=Short -c push.pushOption=merge_request.description= push", 0),
+    ("git config --add push.pushOption merge_request.description=prose", 2),
+    ("git config --add push.pushOption merge_request.description=", 0),
+    (f"git push -o merge_request.title={'😀' * 71}", 2),
+    ('git push -o "merge_request.title=$TITLE"', 2),
+    ("git push -o '$MR_OPTION'", 2),
+    ("gh pr create --title Short --body ''", 0),
+    ("gh pr new -t Short -b ''", 0),
+    ("glab mr create -t Short -d ''", 0),
+    ("glab mr new --title Short --description ''", 0),
+    ("gh pr create --body ''", 2),
+    ("gh pr create --title Short", 2),
+    ("glab mr create --title Short", 2),
+    ("gh pr create --title Short --body prose", 2),
+    ("glab mr create --title Short --description prose", 2),
+    ("gh pr create -t '' -b ''", 2),
+    ("gh pr create -t 'First\nSecond' -b ''", 2),
+    ("gh pr create -t 'First\rSecond' -b ''", 2),
+    ("gh pr create -t $'First\\nSecond' -b ''", 2),
+    ('gh pr create -t "$TITLE" -b ""', 2),
+    ('gh pr create -t "$(cat title.txt)" -b ""', 2),
+    ("gh pr create -t '$TITLE costs $5' -b ''", 0),
+    ("gh pr create --fill -t Short -b ''", 2),
+    ("gh pr create -f -t Short -b ''", 2),
+    ("glab mr create -f -t Short -d ''", 2),
+    ("gh pr create -e -t Short -b ''", 2),
+    ("glab mr create -e -t Short -d ''", 2),
+    ("glab mr create --fill-commit-body -t Short -d ''", 2),
+    ("gh pr create -t Short -b '' --body-file body.txt", 2),
+    ("gh -R team/project pr create -t Short -b prose", 2),
+    ("gh pr create -d -t Short -b ''", 0),
+    ("glab --repo team/project mr update 1 -d prose", 2),
+    ("gh pr create -t 'First\u2028Second' -b ''", 2),
+    ("gh pr create -t Short -b '' --template template.md", 2),
+    ("gh pr create -t Short -b '' --recover id", 2),
+    ("glab mr create -t Short -d '' --attach file", 2),
+    ("glab mr create -t Short -d '' --signoff", 2),
+    ("gh pr edit 1 --add-label reviewed", 0),
+    ("glab mr update 1 --label reviewed", 0),
+    ("gh pr edit 1 --body prose", 2),
+    ("glab mr update 1 --description=prose", 2),
+    ("gh pr edit 1 --body ''", 0),
+    ('gh pr create -t Short -b "" --head "$BRANCH"', 0),
+    ("env GH_HOST=github.com gh pr create -t Short -b prose", 2),
+    ("""bash -lc 'gh pr create -t Short -b prose'""", 2),
+    ("""command env bash -lc 'glab mr create -t Short -d prose'""", 2),
+    ("""ssh host 'git push -o merge_request.description=prose'""", 2),
+]
+
 PUSH_CASES = [
     ("git push", 2),
     ("git push -u origin feature/x", 0),
@@ -127,6 +192,11 @@ def main():
         for command, expected in COMMIT_CASES:
             code, message = gate(COMMIT_GATE, "bash", {"command": command, "cwd": str(repo)})
             failures = check_report(failures, f"exit={code} want={expected}", code == expected, command[:60])
+
+        print("== MR text gate")
+        for command, expected in MR_CASES:
+            code, message = gate(COMMIT_GATE, "bash", {"command": command, "cwd": str(repo)})
+            failures = check_report(failures, f"exit={code} want={expected}", code == expected, command[:80])
 
         print("== upstream gate")
         for command, expected in PUSH_CASES:

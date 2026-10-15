@@ -1,6 +1,6 @@
 ---
-description: Commit subject and body format
-condition: '\bgit\b[^\n]*\bcommit\b'
+description: Commit messages and merge request text
+condition: '\b(?:git\b[^\n]*\b(?:commit|push)\b|gh\b[^\n]*\bpr\b|glab\b[^\n]*\bmr\b)'
 scope: tool
 interruptMode: tool-only
 ---
@@ -21,3 +21,13 @@ effect producing it. A commit with no `-m` at all is refused too: git
 would take the text from a template, a hook or a prepared
 `COMMIT_EDITMSG`, none of which can be read from the command. Never
 restate the diff, list touched files, or append generated trailers.
+
+MR and PR descriptions must be exactly empty. Titles must be nonempty,
+one line and at most 70 Unicode characters. Creation requires a literal
+title and an explicit empty description: `--body ''` for `gh`,
+`--description ''` for `glab`, or `-o merge_request.description=` for
+`git push`, together with `-o 'merge_request.title=short title'`.
+Do not generate this text from commit history, files, templates, editors,
+recovery data or shell expansions. Metadata-only edits remain allowed.
+The command gate checks these CLI paths, not arbitrary HTTP requests or
+push options already inherited from Git configuration.

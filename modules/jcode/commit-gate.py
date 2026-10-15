@@ -73,28 +73,185 @@ def split_shell(text):
     token = ""
     quote = None
     escaped = False
+    started = False
     for ch in text:
         if escaped:
             token += ch
             escaped = False
         elif ch == "\\" and quote != "'":
             escaped = True
+            started = True
         elif quote:
             if ch == quote:
                 quote = None
             else:
+                if ch in ("$", "`") and quote == '"':
+                    token += "\0expand"
                 token += ch
         elif ch in ("'", '"'):
             quote = ch
+            started = True
         elif ch.isspace():
-            if token:
+            if started:
                 words.append(token)
                 token = ""
+                started = False
         else:
+            if ch in ("$", "`"):
+                token += "\0expand"
             token += ch
-    if token:
+            started = True
+    if started:
         words.append(token)
     return words
+
+def check_mr_title(title):
+    if "\0" in title:
+        return "MR title must be literal text"
+    if not title.strip() or any(ch in title for ch in "\n\r\u2028\u2029"):
+        return "MR title must be nonempty and one line"
+    if len(title) > 70:
+        return "MR title exceeds 70 Unicode characters"
+    return None
+
+
+def check_mr_options(options):
+    create = False
+    title = False
+    description = False
+    for option in options:
+        if "\0" in option or option.startswith(("$", "`")):
+            return "MR push option must be literal text"
+        if option == "merge_request.create":
+            create = True
+        elif option.startswith("merge_request.title="):
+            title = True
+            broken = check_mr_title(option[len("merge_request.title="):])
+            if broken:
+                return broken
+        elif option.startswith("merge_request.description="):
+            description = True
+            if option[len("merge_request.description="):] != "":
+                return "MR description must be exactly empty"
+    if create and (not title or not description):
+        return "MR creation requires an explicit literal title and empty description"
+    return None
+
+
+def mr_risk(words):
+    git_at = next((i for i, w in enumerate(words) if w == "git" or w.endswith("/git")), -1)
+    if git_at >= 0:
+        at = git_at + 1
+        globals_ = []
+        while at < len(words) and words[at].startswith("-"):
+            token = words[at]
+            at += 1
+            if token == "-c":
+                if at < len(words):
+                    globals_.append(words[at])
+                    at += 1
+            elif token.startswith("-c") and len(token) > 2:
+                globals_.append(token[2:])
+            elif token in ("-C", "--git-dir", "--work-tree"):
+                at += 1
+        if at >= len(words) or words[at] not in ("push", "config"):
+            return None
+        action = words[at]
+        at += 1
+        options = [value.split("=", 1)[1] for value in globals_ if re.match(r"^push\.pushOption=", value, re.I)]
+        if action == "config":
+            for i in range(at, len(words) - 1):
+                if words[i].lower() == "push.pushoption":
+                    return check_mr_options([words[i + 1]])
+            return None
+        while at < len(words):
+            token = words[at]
+            at += 1
+            if token in ("-o", "--push-option"):
+                if at >= len(words):
+                    return "push option has no readable value"
+                options.append(words[at])
+                at += 1
+            elif token.startswith("--push-option="):
+                options.append(token[len("--push-option="):])
+            elif token.startswith("-o") and len(token) > 2:
+                options.append(token[3:] if token[2] == "=" else token[2:])
+        return check_mr_options(options)
+    cli_at = next((i for i, w in enumerate(words) if re.search(r"(?:^|/)(gh|glab)$", w)), -1)
+    if cli_at < 0:
+        return None
+    cli = words[cli_at].rsplit("/", 1)[-1]
+    group_at = cli_at + 1
+    while group_at < len(words) and words[group_at].startswith("-"):
+        flag = words[group_at]
+        group_at += 1
+        if flag in ("-R", "--repo", "--hostname", "-h"):
+            group_at += 1
+    if words[group_at:group_at + 1] != (["pr"] if cli == "gh" else ["mr"]):
+        return None
+    action = words[group_at + 1] if group_at + 1 < len(words) else ""
+    create = action in ("create", "new")
+    if not create and action != ("edit" if cli == "gh" else "update"):
+        return None
+    title = False
+    description = False
+    at = group_at + 2
+    while at < len(words):
+        token = words[at]
+        at += 1
+        if re.match(r"^--(?:fill(?:-first|-verbose|-commit-body)?|template|editor|recover|attach|signoff|web|body-file|description-file|title-file)(?:=|$)", token) or (
+            re.match(r"^-[A-Za-z]*[fe][A-Za-z]*$", token)
+        ) or (cli == "gh" and re.match(r"^-[FT](?:=|.|$)", token)):
+            return "MR text from a file, template, editor or generated source cannot be checked"
+        kind = None
+        value = None
+        if token in ("--title", "-t") or (
+            cli == "gh" and token in ("--body", "-b")
+        ) or (cli == "glab" and token in ("--description", "-d")):
+            kind = "title" if token in ("--title", "-t") else "description"
+            if at < len(words):
+                value = words[at]
+                at += 1
+        else:
+            long = re.match(r"^--(title|body|description)=(.*)$", token, re.S)
+            short = re.match(r"^-([tbd])=?(.*)$", token, re.S)
+            if long and long.group(1) in ("title", "body" if cli == "gh" else "description"):
+                kind = "title" if long.group(1) == "title" else "description"
+                value = long.group(2)
+            elif short and short.group(1) in ("t", "b" if cli == "gh" else "d"):
+                kind = "title" if short.group(1) == "t" else "description"
+                value = short.group(2)
+        if kind is None:
+            continue
+        if kind == "title":
+            title = True
+        else:
+            description = True
+        if value is None:
+            return "MR text flag has no literal value"
+        broken = check_mr_title(value) if kind == "title" else (
+            None if value == "" else "MR description must be exactly empty"
+        )
+        if broken:
+            return broken
+    if create and (not title or not description):
+        return "MR creation requires an explicit literal title and empty description"
+    return None
+
+
+def check_mr(command, depth=0):
+    for segment in split_commands(command):
+        words = split_shell(segment)
+        broken = mr_risk(words)
+        if broken:
+            fail("commit-gate: " + broken)
+        if depth >= 2 or not words or words[0].rsplit("/", 1)[-1] not in WRAPPERS | {"bash", "sh", "zsh"}:
+            continue
+        for token in words[1:]:
+            if re.search(r"\b(?:git|gh|glab)\b", token):
+                check_mr(token, depth + 1)
+
+
 
 
 def git_commit_command(command):
@@ -251,6 +408,7 @@ def main():
     command = payload.get("command") or ""
     if not isinstance(command, str):
         allow()
+    check_mr(command)
     commit = git_commit_command(command)
     if commit:
         check_commit(command)

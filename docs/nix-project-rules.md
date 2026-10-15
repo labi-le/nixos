@@ -67,3 +67,21 @@ invocation and does not consume these Makefile variables.
   warning is excluded.
 - For performance-sensitive changes, include a quick benchmark check in the
   verification output.
+
+## Agent MR Text Gate
+
+OMP and jcode allow only empty MR/PR descriptions and nonempty, single-line
+titles of at most 70 Unicode characters. Creation requires both values
+explicitly, including an empty description. The gates inspect `git push`
+push options, inline `push.pushOption` settings and `gh`/`glab` creation
+and editing commands. Files, templates, editors and generated text are
+refused; ordinary pushes and metadata-only edits remain allowed.
+
+Verify OMP with `bun test modules/omp/commit-gate.test.ts` and jcode with
+`JCODE_GATE_MATRIX_DIR="$PWD" make gate-matrix`. The matrix creates and
+removes its Git fixtures inside the working tree. Its Git commands do
+not publish anything.
+
+These are command checks, not a sandbox. They do not inspect inherited
+Git configuration or intercept arbitrary HTTP/MCP requests. After a
+switch, start a new OMP process to load the deployed extension.

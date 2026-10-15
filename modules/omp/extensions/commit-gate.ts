@@ -11,6 +11,7 @@ const SUBJECT_CEILING = 70;
 
 // Commands that carry another command inside an argument (`ssh host "…"`).
 const WRAPPERS: Record<string, true> = {
+  command: true,
   ssh: true,
   sudo: true,
   doas: true,
@@ -25,6 +26,7 @@ const WRAPPERS: Record<string, true> = {
 const FOREIGN: Record<string, true> = { ssh: true, docker: true, podman: true };
 const COMMIT_TOKEN = /(?<![\w./-])commit(?![\w./-])/;
 const EVAL_RISK = /(?<![\w./-])(commit|--amend|--force|--hard)(?![\w./-])/;
+const MR_EVAL_RISK = /\b(?:gh|glab)\b.{0,100}\b(?:pr|mr)\b.{0,100}\b(?:create|new|edit|update)\b|\bmerge_request\.(?:create|title|description)\b|\bgit\b.{0,100}\bpush\b.{0,100}(?:-o|--push-option)/s;
 const ADD_SWEEP = /^-[a-zA-Z]*[Au][a-zA-Z]*$/;
 const AMEND = "\u0000amend";
 const EXPAND = "\u0000expand";
@@ -53,6 +55,7 @@ function expansionEnd(src: string, at: number): number {
     const end = src.indexOf("}", at + 2);
     return end < 0 ? src.length : end + 1;
   }
+  if (/[0-9@*#?$!'"]/.test(next)) return at + 2;
   if (!/[A-Za-z_]/.test(next)) return 0;
   let j = at + 1;
   while (j < src.length && /[A-Za-z0-9_]/.test(src[j])) j++;
@@ -280,6 +283,139 @@ function collectInvocations(src: string, depth = 0): Invocation[] {
   return out;
 }
 
+function checkMrTitle(title: string): string | null {
+  if (title.includes(EXPAND) || title.includes("\u0000")) return "the MR title is assembled by the shell; pass literal text";
+  if (!title.trim() || /[\r\n\u2028\u2029]/.test(title)) return "the MR title must be nonempty and one line";
+  if ([...title].length > SUBJECT_CEILING) return "the MR title exceeds 70 Unicode characters";
+  return null;
+}
+
+function checkMrOptions(options: string[], create: boolean): string | null {
+  let title = false;
+  let description = false;
+  for (const option of options) {
+    if (option.includes(EXPAND) || option.includes("\u0000") || option.startsWith("$") || option.startsWith("`")) return "an MR push option is assembled by the shell; pass literal text";
+    if (option === "merge_request.create") {
+      create = true;
+      continue;
+    }
+    if (option.startsWith("merge_request.title=")) {
+      title = true;
+      const broken = checkMrTitle(option.slice("merge_request.title=".length));
+      if (broken) return broken;
+    }
+    if (option.startsWith("merge_request.description=")) {
+      description = true;
+      if (option.slice("merge_request.description=".length) !== "") return "the MR description must be exactly empty";
+    }
+  }
+  if (create && (!title || !description)) return "MR creation requires an explicit literal title and empty description";
+  return null;
+}
+
+function readMrRisk(cmd: Simple): string | null {
+  const gitAt = cmd.findIndex((t) => t === "git" || t.endsWith("/git"));
+  if (gitAt >= 0) {
+    let i = gitAt + 1;
+    const globalOptions: string[] = [];
+    while (i < cmd.length && cmd[i].startsWith("-")) {
+      const token = cmd[i++];
+      if (token === "-c") {
+        if (i < cmd.length) globalOptions.push(cmd[i++]);
+      } else if (token.startsWith("-c") && token.length > 2) {
+        globalOptions.push(token.slice(2));
+      } else if (token === "-C" || token === "--git-dir" || token === "--work-tree") {
+        i++;
+      }
+    }
+    const action = cmd[i++];
+    if (action !== "push" && action !== "config") return null;
+    const options: string[] = [];
+    for (const token of globalOptions) {
+      if (/^push\.pushOption=/i.test(token)) options.push(token.slice(token.indexOf("=") + 1));
+    }
+    if (action === "config") {
+      const rest = cmd.slice(i);
+      const at = rest.findIndex((token) => /^push\.pushOption$/i.test(token));
+      if (at < 0 || rest[at + 1] === undefined) return null;
+      return checkMrOptions([rest[at + 1]], false);
+    }
+    while (i < cmd.length) {
+      const token = cmd[i++];
+      if (token === "-o" || token === "--push-option") {
+        if (cmd[i] === undefined) return "a push option has no readable value";
+        options.push(cmd[i++]);
+      } else if (token.startsWith("--push-option=")) {
+        options.push(token.slice("--push-option=".length));
+      } else if (token.startsWith("-o") && token.length > 2) {
+        options.push(token.slice(token[2] === "=" ? 3 : 2));
+      }
+    }
+    return checkMrOptions(options, false);
+  }
+  const cliAt = cmd.findIndex((t) => /(?:^|\/)(gh|glab)$/.test(t));
+  if (cliAt < 0) return null;
+  const cli = cmd[cliAt].replace(/^.*\//, "");
+  let groupAt = cliAt + 1;
+  while (cmd[groupAt]?.startsWith("-")) {
+    const flag = cmd[groupAt++];
+    if (flag === "-R" || flag === "--repo" || flag === "--hostname" || flag === "-h") groupAt++;
+  }
+  if (cmd[groupAt] !== (cli === "gh" ? "pr" : "mr")) return null;
+  const action = cmd[groupAt + 1];
+  const create = action === "create" || action === "new";
+  if (!create && action !== (cli === "gh" ? "edit" : "update")) return null;
+  let title = false;
+  let description = false;
+  for (let i = groupAt + 2; i < cmd.length; i++) {
+    const token = cmd[i];
+    if (/^--(?:fill(?:-first|-verbose|-commit-body)?|template|editor|recover|attach|signoff|web|body-file|description-file|title-file)(?:=|$)/.test(token) ||
+        /^-[A-Za-z]*[fe][A-Za-z]*$/.test(token) ||
+        (cli === "gh" && /^-[FT](?:=|.|$)/.test(token))) {
+      return "MR text from a file, template, editor or generated source cannot be checked";
+    }
+    let kind: "title" | "description" | null = null;
+    let value: string | undefined;
+    if (token === "--title" || token === "-t" ||
+        (cli === "gh" && (token === "--body" || token === "-b")) ||
+        (cli === "glab" && (token === "--description" || token === "-d"))) {
+      kind = token === "--title" || token === "-t" ? "title" : "description";
+      value = cmd[++i];
+    } else {
+      const long = /^--(title|body|description)=(.*)$/s.exec(token);
+      const short = /^-([tbd])=?(.*)$/s.exec(token);
+      if (long && (long[1] === "title" || long[1] === (cli === "gh" ? "body" : "description"))) {
+        kind = long[1] === "title" ? "title" : "description";
+        value = long[2];
+      } else if (short && (short[1] === "t" || short[1] === (cli === "gh" ? "b" : "d"))) {
+        kind = short[1] === "t" ? "title" : "description";
+        value = short[2];
+      }
+    }
+    if (!kind) continue;
+    if (kind === "title") title = true;
+    else description = true;
+    if (value === undefined) return "MR text flag has no literal value";
+    const broken = kind === "title" ? checkMrTitle(value) : value === "" ? null : "the MR description must be exactly empty";
+    if (broken) return broken;
+  }
+  if (create && (!title || !description)) return "MR creation requires an explicit literal title and empty description";
+  return null;
+}
+
+function collectMrRisks(src: string, depth = 0): string[] {
+  const out: string[] = [];
+  for (const simple of splitCommands(src)) {
+    const risk = readMrRisk(simple);
+    if (risk) out.push(risk);
+    if (depth >= 2 || !WRAPPERS[(simple[0] ?? "").replace(/^.*\//, "")]) continue;
+    for (const token of simple.slice(1)) {
+      if (/\b(?:git|gh|glab)\b/.test(token)) out.push(...collectMrRisks(token, depth + 1));
+    }
+  }
+  return out;
+}
+
 function readDanger(cmd: Simple): string | null {
   const gitAt = cmd.findIndex((t) => t === "git" || t.endsWith("/git"));
   if (gitAt < 0) return null;
@@ -385,10 +521,10 @@ export default function commitGate(pi: ExtensionAPI): void {
         : event.toolName === "eval"
           ? String(event.input.code ?? "")
           : null;
-    if (source === null || !/\bgit\b/.test(source)) return;
+    if (source === null || !/\b(?:git|gh|glab)\b/.test(source)) return;
 
     const risks = collectDangers(source);
-    let broken: string | null = risks.find((r) => r !== AMEND) ?? null;
+    let broken: string | null = collectMrRisks(source)[0] ?? risks.find((r) => r !== AMEND) ?? null;
     if (!broken && risks.includes(AMEND)) {
       const where = String(event.input.cwd ?? "");
       broken = await amendRisk(pi, where ? resolve(ctx.cwd, where) : ctx.cwd);
@@ -418,9 +554,10 @@ export default function commitGate(pi: ExtensionAPI): void {
 
     // An exec that did not parse is refused rather than trusted: a template
     // literal can carry the message in a variable that exists only at runtime.
-    if (!broken && !found.length && event.toolName === "eval" && EVAL_RISK.test(source)) {
+    if (!broken && event.toolName === "eval" &&
+        ((!found.length && EVAL_RISK.test(source)) || MR_EVAL_RISK.test(source))) {
       broken =
-        "a commit or history rewrite driven from `eval` cannot be read as a command line; run it through the bash tool so the command is visible";
+        "a commit, MR mutation or history rewrite driven from `eval` cannot be read as a command line; run it through the bash tool so the command is visible";
     }
     if (!broken) return;
 
