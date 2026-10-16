@@ -22,12 +22,6 @@ in
       mode = "0400";
     };
 
-    age.secrets.opencode-telegram-mcp = {
-      file = ../secrets/opencode/telegram-mcp.age;
-      owner = "labile";
-      group = "users";
-      mode = "0400";
-    };
 
     age.secrets.opencode-grafana-mcp = {
       file = ../secrets/opencode/grafana-mcp.age;

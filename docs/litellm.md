@@ -72,72 +72,25 @@ account keys; a fifth, `opencode-go-pool`, was a rename shim deleted on
   `400 Upstream request failed: Model is unavailable.` (`/models` dropped the
   free id in the same release; the `space-bunny-free` → `space-bunny` rename of
   2026-10-08 was the first of these).
-- `deepseek-v4.1-flash-free`, `space-bunny-free`,
-  `muse-spark-1.2-contributor-free` and `muse-spark-1.3-contributor-free` — the
-  Zen tier's free set, one deployment each, with no account of ours attached
-  (see the gate below). Measured 2026-10-17 through that gate:
-  `deepseek-v4.1-flash-free` takes `reasoning_effort` `none`…`max` (200 000 in /
-  32 000 out), `space-bunny-free` `minimal`…`max` (1 048 576 / 524 288),
-  `muse-spark-1.2-contributor-free` `minimal`…`xhigh` and
-  `muse-spark-1.3-contributor-free` `minimal`…`max` (1 048 576 / 131 072 each).
-  All four call tools (`bash` comes back as a `tool_calls` entry; the muse pair
-  accepts only `tool_choice: "auto"`) and all four read images (a red, a blue and
-  a green square answered `Red`, `Blue`, `Green`).
 
-The Zen tier's free ids are gated by client identity rather than by
-entitlement, and this catalog serves four of them anyway. A plain request gets
-`403 FreeTierError`, `OpenCode's free tier can only be used from within
-OpenCode`; the same body answers `200` once it carries a `User-Agent` whose
-leading token is `opencode/…`, a session header shaped
-`ses_<12 lowercase hex><14 alnum>` whose head's low 12 bits land in
-`0xfc0…0xfff` (the range OpenCode's own descending-id generator produces for
-counters 0–63, so a digest-derived head passes roughly 2 % of the time and looks
-intermittent), `stream: true` and two of OpenCode's core tool names (`bash` +
-`read` are enough). `Authorization: Bearer public` passes the same gate, which
-is why these groups carry `api_key = "public"` and none of our accounts is
-attached to their requests. `muse-spark-1.2-`/`-1.3-` answer only on
-`/responses`.
-
-`modules/litellm/zen-free.py` is the fourth `LITELLM_WORKER_STARTUP_HOOKS`
-entry and holds that fingerprint. It patches `httpx.AsyncClient.__init__` and
-`httpx.Client.__init__` to append a request event hook, because `User-Agent`
-cannot be set from `litellm_params`, from `extra_headers` or from a pre-call
-hook: the OpenAI SDK writes its own value after all of them (measured on this
-image, openai 2.33.0, where `default_headers` and per-request `extra_headers`
-both lose to `OpenAI/Python 2.33.0`), while an httpx event hook runs last and
-rewrites the header in place. Such a hook must be async for the async clients
-(httpx awaits each one; a plain function fails with `object NoneType can't be
-used in 'await' expression`). The hook matches `opencode.ai/zen/v1/` only, so
-the Go tier under `/zen/go/v1/` keeps the per-account session headers it sets
-itself, and it keeps a client's own session when that one already satisfies the
-shape and bit rule, otherwise it mints one per process. A second half, a
-`CustomLogger` pre-call hook, pads `tools` with stubs up to two core names
-(`bash`, `read`; the stubs are never registered in any harness, so a model that
-calls one gets an error and recovers), which is what a plain client that sends
-no tools needs to get past the gate at all.
-
-Two limits belong to the provider and reach clients unchanged: a non-streaming
-request is refused with the same `403`, and a protocol the model does not serve
-is refused with `400 ModelProtocolUnsupported`. The deployment declares
-`mode = "responses"` for the muse pair so discovery picks that protocol, and
-`modules/omp/default.nix` pins `deepseek-v4.1-flash-free` and
-`space-bunny-free` to `openai-completions`, because their upstreams are
-chat-only and omp would otherwise send them as Responses; the muse pair also
-answers `/v1/chat/completions`, which litellm bridges to the Responses call the
-upstream serves. One symptom is deliberate: a manual `GET /health` marks all
-four zen-free deployments unhealthy, because the probe is a non-streaming,
-tool-less chat call that the gate refuses, and the three chatgpt groups report
-unhealthy to the same endpoint for their own reason (`Input must be a list`).
-Routing is unaffected as long as `background_health_checks` stays off; turning
-it on would bench all four of these groups at the first probe.
-
-This is a deliberate bypass of a control the provider enforces, and it is the
-only one in this repo. The public thread for that gate reports one prober's
-account blocked for repeated policy violations and the gate has been revised at
-least three times; these requests carry no account of ours, but they leave from
-the same address as the paid pool, so a block by IP would reach everything.
-Nothing watches these four groups yet: if the gate moves, they fail with `403`
-and only the clients see it.
+Where a free model can come from is decided by this: the Zen tier has free ids
+of its own (`muse-spark-1.2/1.3-contributor-free`,
+`deepseek-v4.1-flash-free`, `space-bunny-free`, `nemotron-3.5-lightning-free` and
+more) and none of them is reachable from here. Measured 2026-10-16: a plain
+request with a pool key gets `403 FreeTierError`, `OpenCode's free tier can only
+be used from within OpenCode`, and the gate reads the client fingerprint, not the
+account. The same key and body answer `200` once the request carries a
+`User-Agent` whose leading token is `opencode/…`, a session header shaped
+`ses_<12 lowercase hex><14 alnum>`, `stream: true` and two of OpenCode's core
+tool names (`bash` + `read` are enough); the session head passes only while its
+low 12 bits land in `0xfc0…0xfff`, the range OpenCode's own descending-id
+generator produces for counters 0–63, so a digest-derived head passes roughly
+2 % of the time and looks intermittent. `muse-spark-1.2-`/`-1.3-` additionally
+answer only on `/responses` (`400 ModelProtocolUnsupported` on chat). Nothing in
+this repo sends that fingerprint: the Go tier's own free rows take a plain
+request, so they are what this catalog serves, and the Zen gate is a
+client-identity bypass whose public thread already reports one account blocked
+for repeated policy violations and three gate revisions.
 
 A model name is a contract with every client that sends it, and the alias
 mechanism hid how hard it is to withdraw: `model_group_alias` resolved *before*
@@ -152,8 +105,7 @@ call. With the alias gone each group name is exclusive: a key scoped to one
 group answers `403` for the other and `400` for a name no group carries.
 
 The two priced groups' deployments carry `model_info.opencode_usage_metered =
-true`, the two free Go rows and the four `zen-free` groups carry `false`, and the
-pool-usage callback benches
+true`, the two free rows carry `false`, and the pool-usage callback benches
 *every* metered deployment that shares an exhausted account key
 (`metered_deployments_by_key` skips only the ones flagged `false`): one rule for
 the accounts, which is what keeps the pool protected now that `deepseek-v4.1-flash`

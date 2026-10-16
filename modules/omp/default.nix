@@ -101,13 +101,7 @@ let
             beam-free = {
               api = "openai-completions";
             };
-            "deepseek-v4.1-flash-free" = {
-              api = "openai-completions";
-            };
             "longcat-2.5-preview-free" = {
-              api = "openai-completions";
-            };
-            space-bunny-free = {
               api = "openai-completions";
             };
             step-5-preview = {
