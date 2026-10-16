@@ -15,6 +15,7 @@
     ./failures.nix
     ./frp.nix
     ./litellm.nix
+    ./openwrt-murmur.nix
     ./storage.nix
     ./tidal-syncer.nix
   ];

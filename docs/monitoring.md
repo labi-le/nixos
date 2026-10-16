@@ -10,6 +10,58 @@ receivers), `storage.nix` (ZFS/SMART, see `docs/zfs-pool.md`),
 container-state textfile exporter service+timer) and `failures.nix` (this
 page).
 
+## OpenWrt and murmur
+
+`modules/monitoring/openwrt-murmur.nix` adds a server-side SSH collector and the
+`OpenWrt / murmur` dashboard at `/d/openwrt-murmur`. The collector runs every
+60 seconds as `labile`, using that user's existing SSH identity and verified
+host key for `root@openwrt`. It does not install a daemon or store history on
+the router. Prometheus retains the samples through the existing server node
+exporter and datasource `prometheus`.
+
+The collector reads process and system counters from `/proc`, then requests
+aggregate connection, proxy-provider and rule-provider state through the
+router's loopback controller. The controller credentials remain in
+`/etc/murmur/controller.curl` on the router. Destination addresses, proxy names,
+subscription URLs and raw errors are not exported. Provider/probe aggregation
+uses two fixed probes, Cloudflare and Claude; untested or stale results are
+unknown rather than healthy.
+
+The service publishes atomically to
+`/var/lib/prometheus-openwrt/openwrt-murmur.prom`. Node exporter reads this
+directory in addition to its existing textfile directory. A failed SSH or
+invalid system snapshot replaces old data with failure/freshness metrics;
+failed API requests omit only the affected API data. Check both
+`openwrt_collector_success` and the age of
+`openwrt_collector_last_success_timestamp_seconds`, because a stopped timer
+cannot update its own health gauge.
+
+Operational checks:
+
+```sh
+systemctl status openwrt-murmur-collector.timer
+journalctl -u openwrt-murmur-collector.service --since today
+curl -s http://127.0.0.1:3021/metrics
+curl -sG http://127.0.0.1:3020/api/v1/query --data-urlencode 'query=openwrt_collector_success'
+python3 modules/monitoring/openwrt-murmur-collector-test.py
+```
+
+Process RSS is split into anonymous, file-backed and shared pages; none is
+labelled heap. Virtual size is not physical RAM consumption. System page cache
+overlaps mapped executable pages, so adding those panels together double-counts
+memory. CPU rates use clock ticks read from the router's auxiliary vector;
+100 percent on the process panel means one busy core. Missing kernel features
+such as PSI or `smaps` do not become zero-valued metrics.
+
+This dashboard starts a history when deployed; it cannot reconstruct the night
+before deployment. It does not measure live allocator bytes, buffer-pool
+occupancy, cache hit rates or all failed connection attempts. Those need
+in-process instrumentation or a dedicated profiling run. Existing controller
+`/memory` streams report RSS, send a zero first frame and do not provide a heap
+profile. The read-only collector does not trigger node health checks or HTTP
+canaries, so its own traffic does not masquerade as user load.
+
+
 ## Telegram message format
 
 All three contact points share one message template (`contact-points.nix`).

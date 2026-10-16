@@ -1,0 +1,263 @@
+{
+  "uid": "openwrt-murmur",
+  "title": "OpenWrt / murmur",
+  "description": "Read-only SSH snapshots every minute. Missing data is not zero. Provider health reflects recorded URL probes, not successful on-dial traffic. Process memory is RSS and kernel accounting, not heap allocation.",
+  "tags": ["openwrt", "murmur"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "graphTooltip": 1,
+  "annotations": {"list": []},
+  "links": [],
+  "templating": {"list": [{
+    "name": "router", "label": "Router", "type": "custom", "query": "openwrt",
+    "current": {"text": "openwrt", "value": "openwrt"},
+    "options": [{"selected": true, "text": "openwrt", "value": "openwrt"}],
+    "multi": false, "includeAll": false, "hide": 0
+  }]},
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "SSH snapshot health",
+      "description": "1 means the latest SSH snapshot parsed successfully; 0 means it failed. Inspect snapshot age separately: a stopped timer cannot update this value.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
+      "targets": [{"refId": "A", "expr": "openwrt_collector_success{router=\"$router\"}", "instant": true, "legendFormat": "Snapshot"}],
+      "fieldConfig": {"defaults": {"min": 0, "max": 1, "noValue": "No data", "mappings": [{"type": "value", "options": {"0": {"text": "FAILED", "color": "red"}, "1": {"text": "OK", "color": "green"}}}]}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "colorMode": "background", "graphMode": "none"}
+    },
+    {
+      "id": 2, "type": "stat", "title": "Last successful snapshot age",
+      "description": "Wall-clock age of the last successful base snapshot. A successful snapshot does not imply API success.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
+      "targets": [{"refId": "A", "expr": "time() - openwrt_collector_last_success_timestamp_seconds{router=\"$router\"}", "instant": true}],
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0, "noValue": "No data", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 120}, {"color": "red", "value": 180}]}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "colorMode": "value", "graphMode": "none"}
+    },
+    {
+      "id": 3, "type": "stat", "title": "Controller API health",
+      "description": "Each endpoint must return HTTP 200 with valid expected data. Failed endpoints omit their data series rather than reuse cached values.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 0, "w": 8, "h": 4},
+      "targets": [{"refId": "A", "expr": "openwrt_murmur_api_success{router=\"$router\"}", "instant": true, "legendFormat": "{{endpoint}}"}],
+      "fieldConfig": {"defaults": {"min": 0, "max": 1, "noValue": "No data", "mappings": [{"type": "value", "options": {"0": {"text": "FAILED", "color": "red"}, "1": {"text": "OK", "color": "green"}}}]}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "colorMode": "value", "graphMode": "none", "textMode": "value_and_name"}
+    },
+    {
+      "id": 4, "type": "stat", "title": "Production murmur process",
+      "description": "Only the process with -f /etc/murmur/config.yaml is selected. An isolated probe is not counted as the production process.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 0, "w": 4, "h": 4},
+      "targets": [{"refId": "A", "expr": "openwrt_murmur_up{router=\"$router\"}", "instant": true}],
+      "fieldConfig": {"defaults": {"noValue": "No data", "mappings": [{"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}]}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "colorMode": "value", "graphMode": "none"}
+    },
+    {
+      "id": 5, "type": "stat", "title": "Collection duration",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 20, "y": 0, "w": 4, "h": 4},
+      "targets": [{"refId": "A", "expr": "openwrt_collector_duration_seconds{router=\"$router\"}", "instant": true}],
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0, "noValue": "No data"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "graphMode": "none"}
+    },
+    {
+      "id": 6, "type": "stat", "title": "Router and process uptime",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 4, "w": 8, "h": 4},
+      "targets": [
+        {"refId": "A", "expr": "openwrt_uptime_seconds{router=\"$router\"}", "instant": true, "legendFormat": "Router"},
+        {"refId": "B", "expr": "time() - openwrt_murmur_start_time_seconds{router=\"$router\"}", "instant": true, "legendFormat": "murmur"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0, "noValue": "No data"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "textMode": "value_and_name", "graphMode": "none"}
+    },
+    {
+      "id": 7, "type": "stat", "title": "Observed restarts in selected range",
+      "description": "Counts observed uptime resets and process start-time changes. Restarts entirely between snapshots are not detectable.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 8, "y": 4, "w": 8, "h": 4},
+      "targets": [
+        {"refId": "A", "expr": "resets(openwrt_uptime_seconds{router=\"$router\"}[$__range])", "instant": true, "legendFormat": "Router uptime resets"},
+        {"refId": "B", "expr": "changes(openwrt_murmur_start_time_seconds{router=\"$router\"}[$__range])", "instant": true, "legendFormat": "murmur start changes"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "min": 0, "noValue": "No data"}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "textMode": "value_and_name", "graphMode": "none"}
+    },
+    {
+      "id": 8, "type": "stat", "title": "Router load and temperature",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 16, "y": 4, "w": 8, "h": 4},
+      "targets": [
+        {"refId": "A", "expr": "openwrt_load1{router=\"$router\"}", "instant": true, "legendFormat": "1-minute load"},
+        {"refId": "B", "expr": "openwrt_temperature_celsius{router=\"$router\"}", "instant": true, "legendFormat": "Temperature"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "noValue": "No data"}, "overrides": [{"matcher": {"id": "byName", "options": "Temperature"}, "properties": [{"id": "unit", "value": "celsius"}]}]},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}, "textMode": "value_and_name", "graphMode": "none"}
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Router memory: available / total",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "openwrt_memory_bytes{router=\"$router\",kind=~\"available|total\"}", "legendFormat": "{{kind}}"}],
+      "fieldConfig": {"defaults": {"unit": "bytes", "min": 0, "noValue": "No data", "custom": {"drawStyle": "line", "fillOpacity": 8, "spanNulls": false, "stacking": {"mode": "none", "group": "A"}}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Router memory accounting (not stacked)",
+      "description": "Available, free, cached, slab and shared memory are overlapping kernel accounting views. They must not be summed or stacked. Reclaimable and unreclaimable are slab components.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "openwrt_memory_bytes{router=\"$router\",kind!=\"total\"}", "legendFormat": "{{kind}}"}],
+      "fieldConfig": {"defaults": {"unit": "bytes", "min": 0, "noValue": "No data", "custom": {"drawStyle": "line", "fillOpacity": 0, "spanNulls": false, "stacking": {"mode": "none", "group": "A"}}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "murmur resident memory components",
+      "description": "RssAnon, RssFile and RssShmem are process RSS accounting, not heap metrics. VmRSS is shown separately as the total.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 15, "w": 12, "h": 7},
+      "targets": [
+        {"refId": "A", "expr": "openwrt_murmur_resident_memory_bytes{router=\"$router\"}", "legendFormat": "RSS total"},
+        {"refId": "B", "expr": "openwrt_murmur_anonymous_memory_bytes{router=\"$router\"}", "legendFormat": "Anonymous RSS"},
+        {"refId": "C", "expr": "openwrt_murmur_file_memory_bytes{router=\"$router\"}", "legendFormat": "File RSS"},
+        {"refId": "D", "expr": "openwrt_murmur_shared_memory_bytes{router=\"$router\"}", "legendFormat": "Shared RSS"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "bytes", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false, "stacking": {"mode": "none", "group": "A"}}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "murmur RSS high-water mark / virtual size",
+      "description": "VmHWM is the lifetime RSS high-water mark. VmSize includes virtual mappings and is not physical memory usage. Neither is a heap measurement.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 15, "w": 12, "h": 7},
+      "targets": [
+        {"refId": "A", "expr": "openwrt_murmur_peak_memory_bytes{router=\"$router\"}", "legendFormat": "RSS high-water mark"},
+        {"refId": "B", "expr": "openwrt_murmur_virtual_memory_bytes{router=\"$router\"}", "legendFormat": "Virtual size"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "bytes", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 13, "type": "timeseries", "title": "CPU usage (one core = 100%)",
+      "description": "Rates of cumulative CPU seconds. One logical core fully occupied equals 100%; router totals and a multithreaded process can exceed 100%. Router busy excludes idle and iowait; guest time is not double-counted.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 22, "w": 12, "h": 7},
+      "targets": [
+        {"refId": "A", "expr": "100 * rate(openwrt_murmur_cpu_seconds_total{router=\"$router\"}[$__rate_interval])", "interval": "1m", "legendFormat": "murmur"},
+        {"refId": "B", "expr": "100 * sum by (router) (rate(openwrt_cpu_seconds_total{router=\"$router\",mode!~\"idle|iowait\"}[$__rate_interval]))", "interval": "1m", "legendFormat": "Router busy"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 14, "type": "timeseries", "title": "murmur threads / file descriptors",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 22, "w": 12, "h": 7},
+      "targets": [
+        {"refId": "A", "expr": "openwrt_murmur_threads{router=\"$router\"}", "legendFormat": "Threads"},
+        {"refId": "B", "expr": "openwrt_murmur_open_fds{router=\"$router\"}", "legendFormat": "Open descriptors"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 15, "type": "timeseries", "title": "Interface traffic rates",
+      "description": "Receive and transmit bytes per second per interface. Interfaces can represent overlapping traffic paths; do not sum them as unique traffic.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 29, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "rate(openwrt_network_bytes_total{router=\"$router\"}[$__rate_interval])", "interval": "1m", "legendFormat": "{{device}} {{direction}}"}],
+      "fieldConfig": {"defaults": {"unit": "Bps", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 16, "type": "timeseries", "title": "Interface errors / drops per second",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 29, "w": 12, "h": 7},
+      "targets": [
+        {"refId": "A", "expr": "rate(openwrt_network_errors_total{router=\"$router\"}[$__rate_interval])", "interval": "1m", "legendFormat": "{{device}} {{direction}} errors"},
+        {"refId": "B", "expr": "rate(openwrt_network_drops_total{router=\"$router\"}[$__rate_interval])", "interval": "1m", "legendFormat": "{{device}} {{direction}} drops"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "ops", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 17, "type": "timeseries", "title": "murmur tracked traffic rates",
+      "description": "Controller uploadTotal and downloadTotal counters. Connection destinations, proxy names and cached controller memory are not exported.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 36, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "rate(openwrt_murmur_traffic_bytes_total{router=\"$router\"}[$__rate_interval])", "interval": "1m", "legendFormat": "{{direction}}"}],
+      "fieldConfig": {"defaults": {"unit": "Bps", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 18, "type": "timeseries", "title": "murmur tracked connections",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 36, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "openwrt_murmur_connections{router=\"$router\"}", "legendFormat": "Connections"}],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 8, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "single"}}
+    },
+    {
+      "id": 19, "type": "timeseries", "title": "Provider health across both fixed probes",
+      "description": "Unhealthy means at least one fixed probe has a fresh alive=false result. Healthy requires alive=true and timestamped history no older than 600 seconds for both probes. Otherwise unknown. This is recorded probe health, not proof of on-dial success; inspect per-probe freshness.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 43, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "openwrt_murmur_provider_proxies{router=\"$router\"}", "legendFormat": "{{provider}} {{state}}"}],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "decimals": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 20, "type": "timeseries", "title": "Per-probe health counts",
+      "description": "Only the fixed claude and cloudflare probes are aggregated. Per-URL alive is used only with valid history at most 600 seconds old. Cold alive=true, missing/nonboolean status, or older history is unknown. Delay alone does not define success. No per-node or URL labels are exported.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 43, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "openwrt_murmur_probe_proxies{router=\"$router\"}", "legendFormat": "{{provider}} {{probe}} {{state}}"}],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "decimals": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 21, "type": "timeseries", "title": "Newest recorded probe age",
+      "description": "Age of the newest valid history result across provider nodes, per fixed probe. This does not guarantee every node was tested recently. No timestamp means no series, not zero age. Older timestamps remain visible even after health becomes unknown at 600 seconds.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 50, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "time() - openwrt_murmur_probe_newest_timestamp_seconds{router=\"$router\"}", "legendFormat": "{{provider}} {{probe}}"}],
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0, "noValue": "No history", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 22, "type": "timeseries", "title": "Rule provider counts",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 50, "w": 12, "h": 7},
+      "targets": [{"refId": "A", "expr": "openwrt_murmur_rules{router=\"$router\"}", "legendFormat": "{{provider}}"}],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "decimals": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 23, "type": "timeseries", "title": "Router sockets / TCP lifecycle",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 0, "y": 57, "w": 12, "h": 7},
+      "targets": [
+        {"refId": "A", "expr": "openwrt_sockets_used{router=\"$router\"}", "legendFormat": "All sockets"},
+        {"refId": "B", "expr": "openwrt_sockets{router=\"$router\"}", "legendFormat": "{{protocol}} {{kind}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 24, "type": "timeseries", "title": "Faults and OOM kill rates",
+      "description": "Per-process page faults and router-wide OOM kills per second. If the kernel does not expose oom_kill, that series is absent rather than zero.",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "gridPos": {"x": 12, "y": 57, "w": 12, "h": 7},
+      "targets": [
+        {"refId": "A", "expr": "rate(openwrt_murmur_page_faults_total{router=\"$router\"}[$__rate_interval])", "interval": "1m", "legendFormat": "murmur {{kind}} faults"},
+        {"refId": "B", "expr": "rate(openwrt_oom_kills_total{router=\"$router\"}[$__rate_interval])", "interval": "1m", "legendFormat": "Router OOM kills"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "ops", "min": 0, "noValue": "No data", "custom": {"fillOpacity": 0, "spanNulls": false}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}}
+    }
+  ]
+}
