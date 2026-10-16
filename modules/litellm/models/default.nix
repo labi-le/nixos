@@ -6,7 +6,9 @@ let
   prices = builtins.fromJSON (builtins.readFile ./prices.json);
 
   declaredGroups = [
+    (import ./beam-free.nix)
     (import ./deepseek-v4.1-flash.nix)
+    (import ./longcat-2.5-preview-free.nix)
     (import ./step-5-preview.nix)
     (import ./gpt-6-astra.nix)
     (import ./gpt-6-luna.nix)

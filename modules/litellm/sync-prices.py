@@ -21,9 +21,15 @@ MAX_JOBS = "1"
 CORES = "2"
 
 LABELS = {
+    "beam-free": {
+        "flat": "Beam Free",
+    },
     "deepseek-v4.1-flash": {
         "peak": "DeepSeek V4.1 Flash (Peak)",
         "offPeak": "DeepSeek V4.1 Flash (Off-Peak)",
+    },
+    "longcat-2.5-preview-free": {
+        "flat": "LongCat 2.5 Preview Free",
     },
     "step-5-preview": {
         "flat": "Step 5 Preview",

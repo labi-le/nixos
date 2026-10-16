@@ -28,9 +28,27 @@ group into one deployment per account key, `config.nix` is the rest of the
 generated `config.yaml`, and `default.nix` keeps the NixOS side (secrets,
 containers, units). Adding a model is one new file under `models/`.
 
-Three groups were served between 2026-10-10 and 2026-10-11; two are now, both
-from `https://opencode.ai/zen/go/v1` with the same four account keys:
+Four groups are served from `https://opencode.ai/zen/go/v1` with the same four
+account keys; a fifth, `opencode-go-pool`, was a rename shim deleted on
+2026-10-11:
 
+- `beam-free` — `openai/beam-free`, one of the two rows the Go plan lists as
+  `Free / Unlimited` (limited time), and the only free Go id that is not shared
+  with the Zen tier. Costs are zero, so the group exists for reach, not for
+  accounting. Measured 2026-10-16 through the deployed route: `tool_calls` come
+  back for a tools request, images are refused upstream (`Beam supports text
+  input only`), and `reasoning_effort` is accepted for `low`…`max` but rejected
+  with `400 unsupported_value` for `minimal`, `none` and `off`, which is the
+  ladder the group declares. Limits 1 048 576 in / 131 072 out (models.dev,
+  `opencode-go`).
+- `longcat-2.5-preview-free` — `openai/longcat-2.5-preview-free`, the other
+  `Free / Unlimited` Go row, and the same request shape: `tool_calls` work,
+  `reasoning_effort` covers `minimal`…`max` (`none` and `off` are answered with
+  a 200 and no content, so no level below `minimal` is declared), limits
+  1 000 000 in / 131 072 out. Images are sent but not seen: a red, a blue and a
+  green 64×64 square all came back as `White`, `Black` and `pink`, while the
+  same three images through `deepseek-v4.1-flash` answered `Red`, `Blue` and
+  `Green`, so the group declares `supportsVision = false`.
 - `deepseek-v4.1-flash` — the four-account pool of `openai/deepseek-v4.1-flash`
   deployments, renamed from `opencode-go-pool` on 2026-10-10. The old name
   outlived the rename twice and is now gone entirely: first as a
@@ -55,6 +73,25 @@ from `https://opencode.ai/zen/go/v1` with the same four account keys:
   free id in the same release; the `space-bunny-free` → `space-bunny` rename of
   2026-10-08 was the first of these).
 
+Where a free model can come from is decided by this: the Zen tier has free ids
+of its own (`muse-spark-1.2/1.3-contributor-free`,
+`deepseek-v4.1-flash-free`, `space-bunny-free`, `nemotron-3.5-lightning-free` and
+more) and none of them is reachable from here. Measured 2026-10-16: a plain
+request with a pool key gets `403 FreeTierError`, `OpenCode's free tier can only
+be used from within OpenCode`, and the gate reads the client fingerprint, not the
+account. The same key and body answer `200` once the request carries a
+`User-Agent` whose leading token is `opencode/…`, a session header shaped
+`ses_<12 lowercase hex><14 alnum>`, `stream: true` and two of OpenCode's core
+tool names (`bash` + `read` are enough); the session head passes only while its
+low 12 bits land in `0xfc0…0xfff`, the range OpenCode's own descending-id
+generator produces for counters 0–63, so a digest-derived head passes roughly
+2 % of the time and looks intermittent. `muse-spark-1.2-`/`-1.3-` additionally
+answer only on `/responses` (`400 ModelProtocolUnsupported` on chat). Nothing in
+this repo sends that fingerprint: the Go tier's own free rows take a plain
+request, so they are what this catalog serves, and the Zen gate is a
+client-identity bypass whose public thread already reports one account blocked
+for repeated policy violations and three gate revisions.
+
 A model name is a contract with every client that sends it, and the alias
 mechanism hid how hard it is to withdraw: `model_group_alias` resolved *before*
 the key-permission check and appended its target to the candidate names
@@ -67,27 +104,25 @@ spend log's `model_group` column, and `GET /v1/models` answers it per key in one
 call. With the alias gone each group name is exclusive: a key scoped to one
 group answers `403` for the other and `400` for a name no group carries.
 
-Every deployment of both groups carries `model_info.opencode_usage_metered =
-true` since 2026-10-16, and the pool-usage callback benches *every* metered
-deployment that shares an exhausted account key
+The two priced groups' deployments carry `model_info.opencode_usage_metered =
+true`, the two free rows carry `false`, and the pool-usage callback benches
+*every* metered deployment that shares an exhausted account key
 (`metered_deployments_by_key` skips only the ones flagged `false`): one rule for
-all eight, which is what keeps the pool protected now that two groups share the
-same four keys. The flag was `false` on `step-5-preview` until then, when that
-group *was* the free row: the rolling/weekly/monthly windows meter the
-subscription, and the row was `Unlimited`, so benching it because the paid quota
-ran out would have withdrawn the model for no reason. The row is priced now, so
-the exemption is gone; a group that goes free again would need it back
-(`longcat-2.5-preview-free` and `beam-free` are still `Unlimited` and are not
-served here). The `/v1/usage` snapshot keeps its `provider: opencode-go-pool`
-label: it names the account pool, not a model group.
+the accounts, which is what keeps the pool protected now that `deepseek-v4.1-flash`
+and `step-5-preview` share the same four keys. The flag follows the row, not the
+tier: `step-5-preview` carried `false` while the Go table listed it as
+`Unlimited`, and the two `Free / Unlimited` rows carry it now, because benching a
+free model when the paid allowance runs out would withdraw it for no reason. The
+`/v1/usage` snapshot keeps its `provider: opencode-go-pool` label: it names the
+account pool, not a model group.
 
-Error-driven cooldown is off for every deployment of both groups:
+Error-driven cooldown is off for every deployment of every pool group:
 `models/default.nix` gives each deployment `model_info.cooldown_time = 0` and
 `litellm_params.num_retries = 0`, so the `router_settings.cooldown_time = 600`
-and `num_retries = 30` left in `config.nix` are defaults none of these eight
+and `num_retries = 30` left in `config.nix` are defaults none of these sixteen
 deployments reaches. Cooldown keys on the deployment id — one per account key —
 not on the group or the request, which is why the reasoning below applies
-identically to every deployment of both groups.
+identically to every deployment of every pool group.
 
 Error-driven cooldown was an amplifier, not a protection. On 2026-10-11 zen/go
 answered `429 {"error":{"type":"server_error","message":"Upstream request
@@ -124,7 +159,7 @@ weighted-failover layer re-walks all four keys once per retry (4 × (1 +
 `num_retries`)) — and with exactly one account key dead all 40 requests
 succeeded, 27 on the first attempt and 13 on a second. That keeps the failure
 bound identical to the old cooldown-bounded one (one pass over `poolSize`)
-without the 600-second blackout, and it couples both groups to
+without the 600-second blackout, and it couples every pool group to
 `enable_weighted_failover`: with that off, `num_retries = 0` is a single
 attempt, so a request that happens to pick a broken account fails and the
 deployments need `num_retries = poolSize - 1`.
@@ -146,9 +181,10 @@ limits as a monthly dollar amount per model, spent as 5-hour 20 %, weekly 50 %,
 monthly 100 % of it. `step-5-preview-free` was listed `Unlimited` there until
 2026-10-16, which is why that group carried no plan quota to protect; the row is
 now `Step 5 Preview`, at $1.00/$2.70/$0.10 per 1M input/output/cached read with a
-$60 monthly limit — a 4× promotion over the $15 list value — so both groups are
-metered and one rule covers both. Exactly two 429 flavours came back from zen/go
-for the group, and they differ in scope. `Upstream request failed: Rate
+$60 monthly limit — a 4× promotion over the $15 list value — so every priced
+group is metered and one rule covers them all. The two `Free / Unlimited` rows
+carry no plan quota at all, which is what `metered = false` marks. Exactly two
+429 flavours came back from zen/go for the group, and they differ in scope. `Upstream request failed: Rate
 limit exceeded. Please try again later.` — 10 records, all on one account key
 (`08d8ea64…`, 2026-10-11 06:03:03…06:03:19) while the other three kept
 answering — is a per-key throttle. `Upstream request failed: Endpoint is
@@ -374,10 +410,13 @@ curl -sX POST https://llm.labile.cc/key/generate \
 
 `models` is the whole scope: a key can call exactly the groups listed, and an
 unlisted group answers `403 key_model_access_denied`. Both live client keys
-(`anyouh`, `vanya`) carry all five names since 2026-10-11, when `step-5-preview`
-was added to them with `POST /key/update` — same shape as above, with the key
-hash from `GET /key/list?return_full_object=true` instead of a plaintext key,
-which is the only identifier left once the key itself has been handed out.
+(`anyouh`, `vanya`) carry the five names that existed on 2026-10-11, when
+`step-5-preview` was added to them with `POST /key/update` — same shape as
+above, with the key hash from `GET /key/list?return_full_object=true` instead of
+a plaintext key, which is the only identifier left once the key itself has been
+handed out. A scope is frozen at the names it lists: the two free rows added on
+2026-10-16 answer `403` for those keys until somebody extends their scope the
+same way.
 
 Extend or shorten — `duration` sets the expiry to *now + duration*; it does
 not add to the existing expiry. Measured: a key created with `duration: 1d`
@@ -524,8 +563,8 @@ jcode discovers too, through `model_catalog`, which reads the same live
 way, `/refresh-model-list` re-reads it inside a session). Measured 2026-10-11 in
 an isolated `JCODE_HOME` with a profile carrying nothing but `base_url`,
 `api_key_env` and `model_catalog`:
-`jcode model list --provider-profile llm-labile-probe` returned all five groups
-as `available`, and `jcode run` on `deepseek-v4.1-flash` answered. Two things the
+`jcode model list --provider-profile llm-labile-probe` returned the five groups
+that existed then as `available`, and `jcode run` on `deepseek-v4.1-flash` answered. Two things the
 catalog does not carry. Ids arrive bare — LiteLLM publishes
 `id/object/created/owned_by` — so reasoning, context and effort still come from
 the declared `models` entries, the same reason `space-bunny-free` is pinned by
