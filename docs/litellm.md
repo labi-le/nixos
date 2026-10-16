@@ -122,7 +122,14 @@ is refused with `400 ModelProtocolUnsupported`. The deployment declares
 `mode = "responses"` for the muse pair so discovery picks that protocol, and
 `modules/omp/default.nix` pins `deepseek-v4.1-flash-free` and
 `space-bunny-free` to `openai-completions`, because their upstreams are
-chat-only and omp would otherwise send them as Responses.
+chat-only and omp would otherwise send them as Responses; the muse pair also
+answers `/v1/chat/completions`, which litellm bridges to the Responses call the
+upstream serves. One symptom is deliberate: a manual `GET /health` marks all
+four zen-free deployments unhealthy, because the probe is a non-streaming,
+tool-less chat call that the gate refuses, and the three chatgpt groups report
+unhealthy to the same endpoint for their own reason (`Input must be a list`).
+Routing is unaffected as long as `background_health_checks` stays off; turning
+it on would bench all four of these groups at the first probe.
 
 This is a deliberate bypass of a control the provider enforces, and it is the
 only one in this repo. The public thread for that gate reports one prober's
