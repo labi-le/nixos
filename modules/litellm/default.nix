@@ -58,13 +58,14 @@ in
       ];
       environment = {
         PYTHONPATH = "/app";
-        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params";
+        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params,zen_free:install_zen_free";
       };
       volumes = [
         "${configYaml}:/app/config.yaml:ro"
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"
         "${./opencode-session.py}:/app/opencode_session.py:ro"
         "${./reasoning-params.py}:/app/reasoning_params.py:ro"
+        "${./zen-free.py}:/app/zen_free.py:ro"
         "/var/lib/litellm-chatgpt:/root/.config/litellm/chatgpt"
       ];
       extraOptions = [ "--dns=192.168.1.1" ];
