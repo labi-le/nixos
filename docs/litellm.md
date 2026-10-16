@@ -45,9 +45,15 @@ from `https://opencode.ai/zen/go/v1` with the same four account keys:
   `400 /chat/completions: Invalid model name passed in model=opencode-go-pool`
   with the master key, and `403 The requested model 'opencode-go-pool' is not
   available for this key` with a key scoped to a group.
-- `step-5-preview` — `openai/step-5-preview-free`, the free Go-tier model
-  (upstream publishes `step-5-preview-free`; the group name is deliberately
-  shorter, and it is what `/v1/models` and the spend log show).
+- `step-5-preview` — the second four-deployment group over the same four
+  account keys. Its upstream is `openai/step-5-preview` since 2026-10-16, when
+  the Go tier withdrew the `step-5-preview-free` id and published a priced
+  `step-5-preview` row in its place (see Pricing). The group name was already
+  that id, so no client had to change, and the deployments that still named
+  `openai/step-5-preview-free` answered every request with
+  `400 Upstream request failed: Model is unavailable.` (`/models` dropped the
+  free id in the same release; the `space-bunny-free` → `space-bunny` rename of
+  2026-10-08 was the first of these).
 
 A model name is a contract with every client that sends it, and the alias
 mechanism hid how hard it is to withdraw: `model_group_alias` resolved *before*
@@ -61,15 +67,19 @@ spend log's `model_group` column, and `GET /v1/models` answers it per key in one
 call. With the alias gone each group name is exclusive: a key scoped to one
 group answers `403` for the other and `400` for a name no group carries.
 
-The free group's deployments carry `model_info.opencode_usage_metered = false`
-and zero costs, and the pool-usage callback skips exactly those deployments:
-the rolling/weekly/monthly windows meter the subscription, not the free model,
-so benching a free deployment because the paid quota ran out would withdraw the
-model for no reason. The callback benches *every* metered deployment that
-shares an account key, which is what keeps the paid pool protected now that two
-groups share the same four keys. The `/v1/usage` snapshot keeps its
-`provider: opencode-go-pool` label: it names the account pool, not a model
-group.
+Every deployment of both groups carries `model_info.opencode_usage_metered =
+true` since 2026-10-16, and the pool-usage callback benches *every* metered
+deployment that shares an exhausted account key
+(`metered_deployments_by_key` skips only the ones flagged `false`): one rule for
+all eight, which is what keeps the pool protected now that two groups share the
+same four keys. The flag was `false` on `step-5-preview` until then, when that
+group *was* the free row: the rolling/weekly/monthly windows meter the
+subscription, and the row was `Unlimited`, so benching it because the paid quota
+ran out would have withdrawn the model for no reason. The row is priced now, so
+the exemption is gone; a group that goes free again would need it back
+(`longcat-2.5-preview-free` and `beam-free` are still `Unlimited` and are not
+served here). The `/v1/usage` snapshot keeps its `provider: opencode-go-pool`
+label: it names the account pool, not a model group.
 
 Error-driven cooldown is off for every deployment of both groups:
 `models/default.nix` gives each deployment `model_info.cooldown_time = 0` and
@@ -77,7 +87,7 @@ Error-driven cooldown is off for every deployment of both groups:
 and `num_retries = 30` left in `config.nix` are defaults none of these eight
 deployments reaches. Cooldown keys on the deployment id — one per account key —
 not on the group or the request, which is why the reasoning below applies
-identically to the free and the paid pool.
+identically to every deployment of both groups.
 
 Error-driven cooldown was an amplifier, not a protection. On 2026-10-11 zen/go
 answered `429 {"error":{"type":"server_error","message":"Upstream request
@@ -133,10 +143,12 @@ resetting `2026-11-02T20:30` for the first key against `2026-10-28T23:15`…`23:
 for the rest — so each key is its own bucket and the pool multiplies the
 allowance by four. `https://opencode.ai/docs/go/` sets the metered models'
 limits as a monthly dollar amount per model, spent as 5-hour 20 %, weekly 50 %,
-monthly 100 % of it, and lists `step-5-preview-free` (like
-`longcat-2.5-preview-free`) as `Unlimited`, which is why the free group has no
-plan quota to protect. Exactly two 429 flavours came back from zen/go for that
-group, and they differ in scope. `Upstream request failed: Rate
+monthly 100 % of it. `step-5-preview-free` was listed `Unlimited` there until
+2026-10-16, which is why that group carried no plan quota to protect; the row is
+now `Step 5 Preview`, at $1.00/$2.70/$0.10 per 1M input/output/cached read with a
+$60 monthly limit — a 4× promotion over the $15 list value — so both groups are
+metered and one rule covers both. Exactly two 429 flavours came back from zen/go
+for the group, and they differ in scope. `Upstream request failed: Rate
 limit exceeded. Please try again later.` — 10 records, all on one account key
 (`08d8ea64…`, 2026-10-11 06:03:03…06:03:19) while the other three kept
 answering — is a per-key throttle. `Upstream request failed: Endpoint is
@@ -486,14 +498,15 @@ all. Measured 2026-10-11 with the hook in place: `deepseek-v4.1-flash` gets
 `['low','high','max']` and `step-5-preview` `['low','medium','high']`, both empty
 before it. LiteLLM itself never publishes `reasoning_effort` for these two
 groups, because it resolves `openai/deepseek-v4.1-flash` and
-`openai/step-5-preview-free` to a generic OpenAI chat parameter list; the
+`openai/step-5-preview` to a generic OpenAI chat parameter list; the
 `chatgpt/gpt-6-*` groups carry it because LiteLLM knows them as Responses
 models.
 
 One transport caveat, specific to `step-5-preview`: omp's LiteLLM discovery
 sends it over `POST /v1/responses` — its upstream is an `openai/…` id — and Zen
-answers `400 ModelProtocolUnsupported` for that protocol on the free id, so the
-omp provider pins it to chat completions with
+answered `400 ModelProtocolUnsupported` for that protocol on `step-5-preview-free`,
+the id the Go tier published when this was measured (2026-10-11), so the omp
+provider pins it to chat completions with
 `modelOverrides.step-5-preview.api = "openai-completions"` in
 `modules/omp/default.nix`. Giving the deployment `model_info.mode = "chat"` does
 not change that choice (measured 2026-10-11: omp still sent Responses, so the
@@ -735,6 +748,25 @@ boot (`wantedBy = multi-user.target`) and behind the daily `litellm-price-sync.t
 - on anything it refuses — a row that disappeared from the table, a rate moving
   more than 5×, an off-peak tariff appearing or disappearing (a free model going
   paid), a group with no label mapping — writes nothing and exits 1.
+
+The refusal that needs a human is the free-model-going-paid shape, and
+2026-10-16 was one: the table renamed `Step 5 Preview Free` to
+`Step 5 Preview` and priced it, and Zen withdrew the `step-5-preview-free` model
+id in the same release, so the run exited 1 with `refusing to apply: the Go table
+no longer has the row 'Step 5 Preview Free'` while `step-5-preview` answered
+`400 … Upstream request failed: Model is unavailable.` to every client. Three
+hand edits repaired it, and the script can make none of them itself: the
+snapshot's three rates, `metered = true` in `models/step-5-preview.nix` — a
+priced row is metered against the account allowance — and the new upstream id in
+the same file. Ordinary rate moves never need a hand: the script applies those.
+
+One trap for those hand edits: the numbers in `prices.json` are the doubles the
+parser computes, not the decimals the table prints, and the diff lines print
+them through `:g`, which hides a one-ulp difference. `$0.10` per 1M is
+`0.1 / 1e6`, one ulp above `1e-07`, so a hand-written `1e-07` in that field reads
+as permanent drift — every later run rewrites the file and commits the ulp. Write
+`repr(float('0.10') / 1e6)`, or take the value from a run that applied the change
+itself.
 
 The exit code is the alarm: a failed run leaves the unit in `failed` state, which
 `modules/monitoring/failures.nix` already pages on, and

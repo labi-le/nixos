@@ -1,8 +1,8 @@
 {
   name = "step-5-preview";
   provider = "opencode-go";
-  upstream = "openai/step-5-preview-free";
-  metered = false;
+  upstream = "openai/step-5-preview";
+  metered = true;
   offPeakPricing = null;
   maxInputTokens = 1000000;
   maxOutputTokens = 65536;

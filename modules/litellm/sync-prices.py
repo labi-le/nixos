@@ -26,7 +26,7 @@ LABELS = {
         "offPeak": "DeepSeek V4.1 Flash (Off-Peak)",
     },
     "step-5-preview": {
-        "flat": "Step 5 Preview Free",
+        "flat": "Step 5 Preview",
     },
 }
 

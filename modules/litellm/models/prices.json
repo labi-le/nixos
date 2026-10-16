@@ -12,9 +12,9 @@
       }
     },
     "step-5-preview": {
-      "input": 0.0,
-      "output": 0.0,
-      "cacheRead": 0.0,
+      "input": 1e-06,
+      "output": 2.7e-06,
+      "cacheRead": 1.0000000000000001e-07,
       "offPeak": null
     }
   }
