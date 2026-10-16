@@ -87,6 +87,12 @@ let
             type = "litellm";
           };
           modelOverrides = {
+            beam-free = {
+              api = "openai-completions";
+            };
+            "longcat-2.5-preview-free" = {
+              api = "openai-completions";
+            };
             step-5-preview = {
               api = "openai-completions";
             };
@@ -213,7 +219,7 @@ let
     defaultThinkingLevel = "auto";
     extendedContext = true;
     memory.backend = "mnemopi";
-    autoResume = true;
+    # autoResume = true;
     modelRoleStorage = "project";
     modelRoles.dictation = "local/whisper-small";
     composer.tokenRate = true;
