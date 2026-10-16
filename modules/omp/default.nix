@@ -9,6 +9,7 @@
 
 let
   litellmSecret = config.age.secrets.opencode-litellm-master-key or null;
+  telegramSecret = config.age.secrets.opencode-telegram-mcp or null;
   litellmKey =
     envName:
     if litellmSecret != null then
@@ -26,6 +27,16 @@ let
 
   userCfg = config.users.users.${user.name};
   agentDir = "${userCfg.home}/.omp/agent";
+  telegramCommand = pkgs.writeShellScript "omp-telegram-mcp" ''
+    set -euo pipefail
+    set -a
+    source /run/agenix/opencode-telegram-mcp
+    set +a
+    export TELEGRAM_SESSION_LOCK=shared
+    exec ${pkgs.uv}/bin/uvx --from \
+      'git+https://github.com/labi-le/omp-kids.git@494660699dce79a19062177574175b496592d1c4#subdirectory=tg-mcp' \
+      telegram-mcp
+  '';
 
   superpowersSrc = pkgs.fetchFromGitHub {
     owner = "obra";
@@ -90,7 +101,13 @@ let
             beam-free = {
               api = "openai-completions";
             };
+            "deepseek-v4.1-flash-free" = {
+              api = "openai-completions";
+            };
             "longcat-2.5-preview-free" = {
+              api = "openai-completions";
+            };
+            space-bunny-free = {
               api = "openai-completions";
             };
             step-5-preview = {
@@ -141,6 +158,26 @@ let
           type = "http";
           url = "https://mcp.context7.com/mcp";
         };
+      }
+      // lib.optionalAttrs (config.networking.hostName != "fx516") {
+        telegram =
+          if telegramSecret != null then
+            {
+              type = "stdio";
+              command = "${telegramCommand}";
+            }
+          else
+            {
+              type = "stdio";
+              command = "${pkgs.openssh}/bin/ssh";
+              args = [
+                "-T"
+                "-o"
+                "BatchMode=yes"
+                "labile@192.168.1.2"
+                "~/.omp/agent/telegram-mcp"
+              ];
+            };
       };
     }
   );
@@ -223,6 +260,10 @@ let
     modelRoleStorage = "project";
     modelRoles.dictation = "local/whisper-small";
     composer.tokenRate = true;
+    tools = {
+      xdev = true;
+      xdevDocs = "catalog";
+    };
     hideThinkingBlock = false;
     compaction = {
       enabled = true;
@@ -289,6 +330,15 @@ in
     package = pkgs.omp;
   };
 
+  age.secrets = lib.optionalAttrs (config.networking.hostName == "server") {
+    opencode-telegram-mcp = {
+      file = ../../secrets/opencode/telegram-mcp.age;
+      owner = user.name;
+      group = userCfg.group;
+      mode = "0400";
+    };
+  };
+
   environment.systemPackages = [
     pkgs.uv
     pkgs.nodejs
@@ -340,6 +390,8 @@ in
     "L+ ${agentDir}/extensions/delegation-gate.ts - - - - ${delegationGate}/delegation-gate.ts"
     "L+ ${agentDir}/extensions/repo-register.js - - - - ${repoRegisterJs}"
   ]
+  ++ lib.optional (telegramSecret != null)
+    "L+ ${agentDir}/telegram-mcp - - - - ${telegramCommand}"
   ++ skillLinks;
 
   system.activationScripts.ompConfig = lib.stringAfter [ "users" ] ''
