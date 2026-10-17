@@ -159,25 +159,11 @@ let
           url = "https://mcp.context7.com/mcp";
         };
       }
-      // lib.optionalAttrs (config.networking.hostName != "fx516") {
-        telegram =
-          if telegramSecret != null then
-            {
-              type = "stdio";
-              command = "${telegramCommand}";
-            }
-          else
-            {
-              type = "stdio";
-              command = "${pkgs.openssh}/bin/ssh";
-              args = [
-                "-T"
-                "-o"
-                "BatchMode=yes"
-                "labile@192.168.1.2"
-                "~/.omp/agent/telegram-mcp"
-              ];
-            };
+      // lib.optionalAttrs (telegramSecret != null) {
+        telegram = {
+          type = "stdio";
+          command = "${telegramCommand}";
+        };
       };
     }
   );
@@ -330,7 +316,7 @@ in
     package = pkgs.omp;
   };
 
-  age.secrets = lib.optionalAttrs (config.networking.hostName == "server") {
+  age.secrets = lib.optionalAttrs (config.networking.hostName != "fx516") {
     opencode-telegram-mcp = {
       file = ../../secrets/opencode/telegram-mcp.age;
       owner = user.name;
