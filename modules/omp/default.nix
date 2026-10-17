@@ -34,7 +34,7 @@ let
     set +a
     export TELEGRAM_SESSION_LOCK=shared
     exec ${pkgs.uv}/bin/uvx --from \
-      'git+https://github.com/labi-le/telegram-mcp.git@cb05e486777bae2e9d446c4b9b31d82f09671c68' \
+      'git+https://github.com/labi-le/telegram-mcp.git@f086f7a8276fa4dcf368fa7eea7d918e5cd5ed72' \
       telegram-mcp
   '';
 
