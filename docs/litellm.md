@@ -143,23 +143,33 @@ account blocked for repeated policy violations and the gate has been revised at
 least three times; these requests carry no account of ours, but they leave from
 the same address as the paid pool, so a block by IP would reach everything.
 
-`modules/litellm/free-probe.py` sends one streamed request per group through the
-gateway every thirty minutes, with no tools of its own so the padding path is
-exercised too, and publishes `litellm_free_probe_ok{model,state}`,
+`modules/litellm/free-probe.py` spends no tokens. Every thirty minutes, behind
+the oneshot plus timer pair, it sends one malformed streaming body per group
+through the gateway - `messages: []` on the chat route, `input: []` on the
+responses route - and reads the error. The upstream checks the model id, then
+the client-identity gate, then the body, so a single rejected request separates
+every failure the probe cares about at zero cost: `410 ModelDeprecated` for a
+withdrawn id, the `403` free-tier gate for a moved fingerprint, `429` for the
+allowance, `400 ModelProtocolUnsupported` for a changed protocol, and a
+`400 invalid_request_error` from the model layer, which is the healthy
+`ok` (the gate accepted the gateway, so the rejection came from beyond it).
+`5xx` is `upstream`, an exception `network`, and anything else `http` - a
+missing deployment answers `400 Invalid model name` locally, which lands there.
+The probe therefore proves routing, key, gate and model id, not generation;
+clients prove generation on every real request, and `--answer` sends a real
+16-token completion on demand. Per-group `litellm_free_probe_ok{model,state}`,
 `litellm_free_probe_latency_seconds`, `litellm_free_probe_last_success_timestamp_seconds`,
 `litellm_free_probe_checked_timestamp_seconds` and
-`litellm_free_probe_run_timestamp_seconds` into
+`litellm_free_probe_run_timestamp_seconds` land in
 `/var/lib/prometheus-node-textfile-collector/litellm-free-probe.prom`; the raw
 upstream body of a failed probe goes to the unit's journal and to
-`/var/lib/litellm-free-probe/state.json`. `state` classifies the failure, so the
-alert already says which part moved: `gate` (the free tier refuses the
-fingerprint again), `deprecated` (the model id is withdrawn), `quota` (`429`),
-`protocol` (the upstream no longer serves the pinned protocol), `upstream`
-(`5xx`), `network` (the gateway or the upstream was unreachable) and `empty` (a
-stream with no event). Two rules in `modules/monitoring/litellm.nix` read it:
-`litellm-free-probe-failed` names the group and the state after six minutes, and
-`litellm-free-probe-stale` fires when the probe itself has not run for two hours.
-Manual use: `python3 modules/litellm/free-probe.py --stdout`.
+`/var/lib/litellm-free-probe/state.json`. Two rules in
+`modules/monitoring/litellm.nix` read it: `litellm-free-probe-failed` names the
+group and the state after six minutes, and `litellm-free-probe-stale` fires when
+the probe itself has not run for two hours. Manual use:
+`python3 modules/litellm/free-probe.py --stdout`, and `--answer` for a real
+completion (which spends tokens and can report `empty` for a stream with no
+event).
 
 A model name is a contract with every client that sends it, and the alias
 mechanism hid how hard it is to withdraw: `model_group_alias` resolved *before*

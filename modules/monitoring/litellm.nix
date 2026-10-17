@@ -146,11 +146,11 @@ in
           })
           (rule {
             uid = "litellm-free-probe-failed";
-            title = "A Zen free group stopped answering";
+            title = "A Zen free group stopped accepting requests";
             expr = "litellm_free_probe_ok == 0";
             for = "6m";
             severity = "critical";
-            summary = "Zen free {{ $labels.model }} stopped answering: {{ $labels.state }}. The gateway did not complete a streamed request for that group.{{ if eq $labels.state \"gate\" }} That is the free tier refusing the fingerprint again, so the client footprint moved, not the network or the account pool.{{ else if eq $labels.state \"deprecated\" }} That is the upstream withdrawing the model id, so the group has to be replaced or removed.{{ else if eq $labels.state \"quota\" }} That is the free allowance or the rate limit being exhausted.{{ else if eq $labels.state \"protocol\" }} That is the upstream no longer serving the protocol the group is pinned to.{{ end }}";
+            summary = "Zen free {{ $labels.model }} stopped accepting requests: {{ $labels.state }}. The zero-token probe no longer reaches the model layer through the gateway.{{ if eq $labels.state \"gate\" }} That is the free tier refusing the fingerprint again, so the client footprint moved, not the network or the account pool.{{ else if eq $labels.state \"deprecated\" }} That is the upstream withdrawing the model id, so the group has to be replaced or removed.{{ else if eq $labels.state \"quota\" }} That is the free allowance or the rate limit being exhausted.{{ else if eq $labels.state \"protocol\" }} That is the upstream no longer serving the protocol the group is pinned to, or accepting a body it used to reject.{{ else if eq $labels.state \"http\" }} That is the gateway answering something else, usually a missing deployment or a changed error shape.{{ end }}";
             command = "journalctl -u litellm-free-probe -n 60 --no-pager\ncat /var/lib/litellm-free-probe/state.json";
           })
           (rule {

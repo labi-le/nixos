@@ -38,15 +38,21 @@ def master_key():
     raise SystemExit(f"no LITELLM_MASTER_KEY in {ENV_PATH}")
 
 
-def request_body(route, model, stream):
-    if route == "responses":
-        return {"model": model, "input": "ping", "max_output_tokens": 16, "stream": stream}
-    return {
-        "model": model,
-        "messages": [{"role": "user", "content": "ping"}],
-        "max_tokens": 16,
-        "stream": stream,
-    }
+PROBE_BODY = {
+    "chat": {"messages": [], "max_tokens": 16},
+    "responses": {"input": [], "max_output_tokens": 16},
+}
+ANSWER_BODY = {
+    "chat": {"messages": [{"role": "user", "content": "ping"}], "max_tokens": 16},
+    "responses": {"input": "ping", "max_output_tokens": 16},
+}
+
+
+def request_body(route, model, answer):
+    body = dict(ANSWER_BODY[route] if answer else PROBE_BODY[route])
+    body["model"] = model
+    body["stream"] = True
+    return body
 
 
 def endpoint(route):
@@ -63,18 +69,23 @@ def classify(status, body):
         return "quota"
     if status == 400 and "modelprotocolunsupported" in text:
         return "protocol"
+    if status == 400 and "invalid_request_error" in text and "received model group" in text:
+        return "ok"
     if 500 <= status <= 599:
         return "upstream"
     return "http"
 
 
-def probe(key, model, route, stream, timeout):
-    data = json.dumps(request_body(route, model, stream)).encode()
+def probe(key, model, route, answer, timeout):
+    data = json.dumps(request_body(route, model, answer)).encode()
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     request = urllib.request.Request(PROXY + endpoint(route), data=data, headers=headers)
     started = time.time()
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
+            if not answer:
+                head = response.readline().decode("utf-8", "replace")
+                return "protocol", time.time() - started, f"the upstream accepted the malformed probe body: {head[:400]}"
             body = response.read().decode("utf-8", "replace")
             latency = time.time() - started
             events = 0
@@ -89,7 +100,7 @@ def probe(key, model, route, stream, timeout):
                 except ValueError:
                     continue
                 events += 1
-            if stream and events == 0:
+            if events == 0:
                 return "empty", latency, f"the stream carried no event: {body[:400]}"
             return "ok", latency, ""
     except urllib.error.HTTPError as failure:
@@ -127,7 +138,7 @@ def write_state(state):
 def exposition(records, run_stamp):
     label = lambda name: "{" + f"model={json.dumps(name)}" + "}"
     lines = [
-        "# HELP litellm_free_probe_ok 1 when a streaming request to the group answered through the gateway.",
+        "# HELP litellm_free_probe_ok 1 when the upstream accepted the gateway for the group: the malformed zero-token probe reached the model layer and was rejected there.",
         "# TYPE litellm_free_probe_ok gauge",
     ]
     for model, record in sorted(records.items()):
@@ -135,7 +146,7 @@ def exposition(records, run_stamp):
         lines.append(f'litellm_free_probe_ok{{model={json.dumps(model)},state={state}}} {1 if record["state"] == "ok" else 0}')
     lines.extend(
         [
-            "# HELP litellm_free_probe_latency_seconds Time from the gateway request to its first full body.",
+            "# HELP litellm_free_probe_latency_seconds Time from the gateway request to the upstream rejection.",
             "# TYPE litellm_free_probe_latency_seconds gauge",
             "# HELP litellm_free_probe_last_success_timestamp_seconds Last run in which the group answered.",
             "# TYPE litellm_free_probe_last_success_timestamp_seconds gauge",
@@ -171,7 +182,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--stdout", action="store_true", help="print the exposition instead of writing it")
     parser.add_argument("--model", action="append", help="probe one group instead of every group")
-    parser.add_argument("--no-stream", action="store_true", help="send a non-streaming request, which the free tier refuses")
+    parser.add_argument("--answer", action="store_true", help="send a real streamed completion instead of the zero-token probe, which spends tokens")
     parser.add_argument("--timeout", type=float, default=TIMEOUT)
     parser.add_argument("--wait", type=float, default=300, help="how long to wait for the gateway to become ready")
     args = parser.parse_args()
@@ -185,7 +196,7 @@ def main():
     for model in models:
         route = TARGETS.get(model, "chat")
         if reachable:
-            state, latency, detail = probe(key, model, route, not args.no_stream, args.timeout)
+            state, latency, detail = probe(key, model, route, args.answer, args.timeout)
         else:
             state, latency, detail = "network", 0.0, f"the gateway did not answer /health/readiness within {args.wait:.0f}s"
         keep = previous.get(model) or {}
