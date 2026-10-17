@@ -676,7 +676,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "100 - litellm_opencode_go_used_percent",
+          "expr": "100 - litellm_opencode_go_used_percent{email!=\"\"}",
           "legendFormat": "{{email}} {{window}}",
           "range": true,
           "refId": "A"
