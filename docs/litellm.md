@@ -984,10 +984,16 @@ Two upstreams, both pull-based, so the series stay fresh without traffic:
 
 - `GET https://opencode.ai/zen/go/v1/usage` once per pool account — the endpoint
   the in-container poller already uses — labelled by the key's index in the
-  secret: `litellm_opencode_go_used_percent{account,window}`,
+  secret and by its email: `litellm_opencode_go_used_percent{account,email,window}`,
   `litellm_opencode_go_window_status` (1 when the provider reports the window as
   `rate-limited`, which is what benches the account in the router),
-  `litellm_opencode_go_reset_at` and `litellm_opencode_go_fetch_ok`.
+  `litellm_opencode_go_reset_at` and `litellm_opencode_go_fetch_ok`. The email
+  comes from `LITELLM_OPENCODE_GO_EMAIL_<index>` in the pool secret
+  `secrets/opencode-go-pool-env.age`; the usage API exposes no account identity,
+  so the mapping is explicit and an account without one keeps its index as the
+  label. Add a line per account with
+  `sudo agenix -e secrets/opencode-go-pool-env.age`; the exporter reads the
+  decrypted file on its next five-minute run and the dashboard legends follow.
 - `GET https://chatgpt.com/backend-api/wham/usage` — the endpoint the Codex CLI
   itself polls — with the stored access token and `chatgpt-account-id`:
   `litellm_codex_used_percent{account,plan,window}`,

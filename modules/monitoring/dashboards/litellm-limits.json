@@ -677,7 +677,7 @@
         {
           "editorMode": "code",
           "expr": "100 - litellm_opencode_go_used_percent",
-          "legendFormat": "{{account}} {{window}}",
+          "legendFormat": "{{email}} {{window}}",
           "range": true,
           "refId": "A"
         }
@@ -755,7 +755,7 @@
           "editorMode": "code",
           "expr": "litellm_opencode_go_used_percent{window=~\"weekly|monthly\"}",
           "instant": true,
-          "legendFormat": "{{account}} {{window}}",
+          "legendFormat": "{{email}} {{window}}",
           "range": false,
           "refId": "A"
         }

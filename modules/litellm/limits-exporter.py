@@ -20,6 +20,7 @@ STATE_PATH = os.environ.get(
 ZEN_USAGE_URL = os.environ.get("OPENCODE_USAGE_URL", "https://opencode.ai/zen/go/v1/usage")
 CODEX_USAGE_URL = os.environ.get("CHATGPT_USAGE_URL", "https://chatgpt.com/backend-api/wham/usage")
 KEY_ENV_PREFIX = "LITELLM_OPENCODE_GO_KEY_"
+EMAIL_ENV_PREFIX = "LITELLM_OPENCODE_GO_EMAIL_"
 ZEN_WINDOWS = ("rolling", "weekly", "monthly")
 CODEX_WINDOWS = ("primary", "secondary")
 TIMEOUT_SECONDS = 15
@@ -45,6 +46,22 @@ def pool_keys():
         for name, value in os.environ.items()
         if name.startswith(KEY_ENV_PREFIX) and value
     }
+
+
+def pool_emails():
+    emails = {}
+    try:
+        with open(POOL_ENV_PATH, encoding="utf-8") as handle:
+            for line in handle:
+                name, _, value = line.strip().partition("=")
+                if name.startswith(EMAIL_ENV_PREFIX) and value:
+                    emails[name[len(EMAIL_ENV_PREFIX) :]] = value
+    except OSError:
+        pass
+    for name, value in os.environ.items():
+        if name.startswith(EMAIL_ENV_PREFIX) and value:
+            emails.setdefault(name[len(EMAIL_ENV_PREFIX) :], value)
+    return emails
 
 
 def fetch_json(url, headers):
@@ -105,15 +122,19 @@ def escaped(value):
     return str(value).replace("\\", "\\\\").replace('"', '\\"')
 
 
-def zen_lines(now, accounts, failed):
+def account_label(index, emails):
+    return f'account="{index}",email="{escaped(emails.get(index, index))}"'
+
+
+def zen_lines(now, accounts, failed, emails):
     lines = [
         "# HELP litellm_opencode_go_fetch_ok 1 when this pool account answered the usage API.",
         "# TYPE litellm_opencode_go_fetch_ok gauge",
     ]
     for index in sorted(accounts):
-        lines.append(f'litellm_opencode_go_fetch_ok{{account="{index}"}} 1')
+        lines.append(f'litellm_opencode_go_fetch_ok{{{account_label(index, emails)}}} 1')
     for index in sorted(failed):
-        lines.append(f'litellm_opencode_go_fetch_ok{{account="{index}"}} 0')
+        lines.append(f'litellm_opencode_go_fetch_ok{{{account_label(index, emails)}}} 0')
     lines += [
         "# HELP litellm_opencode_go_used_percent Share of the window this pool account has spent.",
         "# TYPE litellm_opencode_go_used_percent gauge",
@@ -122,7 +143,7 @@ def zen_lines(now, accounts, failed):
         for window, data in accounts[index].items():
             if "percent" in data:
                 lines.append(
-                    f'litellm_opencode_go_used_percent{{account="{index}",window="{window}"}} {data["percent"]}'
+                    f'litellm_opencode_go_used_percent{{{account_label(index, emails)},window="{window}"}} {data["percent"]}'
                 )
     lines += [
         "# HELP litellm_opencode_go_window_status 1 when the provider reports this window as rate-limited.",
@@ -132,7 +153,7 @@ def zen_lines(now, accounts, failed):
         for window, data in accounts[index].items():
             limited = 1 if data.get("status") == "rate-limited" else 0
             lines.append(
-                f'litellm_opencode_go_window_status{{account="{index}",window="{window}"}} {limited}'
+                f'litellm_opencode_go_window_status{{{account_label(index, emails)},window="{window}"}} {limited}'
             )
     lines += [
         "# HELP litellm_opencode_go_reset_at When this pool account's window resets, unix seconds.",
@@ -142,7 +163,7 @@ def zen_lines(now, accounts, failed):
         for window, data in accounts[index].items():
             if data.get("resetsAt"):
                 lines.append(
-                    f'litellm_opencode_go_reset_at{{account="{index}",window="{window}"}} {epoch(data["resetsAt"])}'
+                    f'litellm_opencode_go_reset_at{{{account_label(index, emails)},window="{window}"}} {epoch(data["resetsAt"])}'
                 )
     return lines
 
@@ -201,7 +222,7 @@ def codex_lines(account):
     return lines
 
 
-def render(now, zen, codex, errors, failed):
+def render(now, zen, codex, errors, failed, emails):
     lines = [
         "# HELP litellm_limits_exporter_last_run_timestamp_seconds When the limits exporter last ran.",
         "# TYPE litellm_limits_exporter_last_run_timestamp_seconds gauge",
@@ -214,7 +235,7 @@ def render(now, zen, codex, errors, failed):
         f'litellm_limits_source_up{{source="opencode-go"}} {1 if zen else 0}',
         f'litellm_limits_source_up{{source="codex"}} {1 if codex is not None else 0}',
     ]
-    lines += zen_lines(now, zen, failed)
+    lines += zen_lines(now, zen, failed, emails)
     if codex is not None:
         lines += codex_lines(codex)
     lines.append("")
@@ -256,6 +277,7 @@ def main():
     zen = {}
     failed = set()
     keys = pool_keys()
+    emails = pool_emails()
     if not keys:
         errors.append("opencode-go pool: no LITELLM_OPENCODE_GO_KEY_* keys found")
     for index, key in sorted(keys.items()):
@@ -276,7 +298,7 @@ def main():
         previous = read_state().get("empty_runs")
         streak = (previous if isinstance(previous, int) else 0) + 1 if empty else 0
 
-    text = render(now, zen, codex, errors, failed)
+    text = render(now, zen, codex, errors, failed, emails)
     published = True
     if args.stdout:
         print(text, end="")
