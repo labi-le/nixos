@@ -7,6 +7,9 @@ services:
     hostname: buer
     stop_grace_period: 30s
     restart: unless-stopped
+    depends_on:
+      buer-nix:
+        condition: service_healthy
     environment:
       ROBOMP_GH_PROXY_URL: http://buer-gh-proxy:8081
       ROBOMP_GH_PROXY_HMAC_KEY: ${ROBOMP_GH_PROXY_HMAC_KEY:?}
@@ -46,6 +49,7 @@ services:
       TZ: ${TZ:-Europe/Moscow}
     volumes:
       - ${BUER_DATA:?}:/data
+      - buer_nix:/nix:ro
       - ${BUER_MODELS:?}:/srv/agent-home-stage/.omp/agent/models.yml:ro
       - ${BUER_AGENTS_MD:?}:/srv/agent-home-stage/.agent/AGENTS.md:ro
       - ${BUER_HUMANIZER_SKILL:?}:/srv/agent-home-stage/.omp/agent/skills/humanizer:ro
@@ -57,8 +61,24 @@ services:
       - buer_internal
       - litellm
 
+  buer-nix:
+    image: ${BUER_NIX_IMAGE:?}
+    container_name: buer-nix
+    hostname: buer-nix
+    restart: unless-stopped
+    volumes:
+      - buer_nix:/nix
+    healthcheck:
+      test: ["CMD", "nix", "store", "info", "--store", "daemon"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - default
+
   buer-gh-proxy:
-    image: ${BUER_IMAGE:?}
+    image: ${BUER_PROXY_IMAGE:?}
     container_name: buer-gh-proxy
     hostname: buer-gh-proxy
     restart: unless-stopped
@@ -89,3 +109,7 @@ networks:
     internal: true
   litellm:
     external: true
+
+volumes:
+  buer_nix:
+    name: ${BUER_NIX_VOLUME:?}

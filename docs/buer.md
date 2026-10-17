@@ -1,11 +1,11 @@
 # buer — GitHub triage / fix bot
 
 `buer` is [upstream robomp](https://github.com/can1357/oh-my-pi/tree/main/python/robomp)
-run as-is: two containers on the server, wired to one webhook endpoint. It
-triages every issue opened in the allowlisted repository, labels it, then either
-reproduces and fixes it on a fresh branch with a PR whose body carries
-`## Repro / ## Cause / ## Fix / ## Verification` and `Fixes #N`, answers a
-question, or comments on a proposal. It also reviews pull requests opened by
+with local image and publishing-policy overlays: three containers on the server,
+wired to one webhook endpoint. It triages issues opened in the allowlisted
+repositories, labels them, then either reproduces and fixes them on a fresh branch
+with a PR (empty description; verification evidence goes in an issue comment),
+answers a question, or comments on a proposal. It also reviews pull requests opened by
 someone other than the bot. Follow-up comments from `labi-le` resume the same
 omp session on the same per-issue worktree.
 
@@ -40,8 +40,9 @@ the image's baked `/pi` binary both ship from that source, never from the host's
 | Path | Role |
 |---|---|
 | `modules/buer/default.nix` | NixOS module: images build unit, compose unit, watchdog unit plus timer, agenix secret (the nginx vhost lives in `modules/nginx.nix`) |
-| `modules/buer/docker-compose.yml` | Upstream compose file with the dev-only bits removed (no `build:`, no host `HOME` mounts, no `extra_hosts`), one container-name rename, and per-service environment allowlists kept intact |
+| `modules/buer/docker-compose.yml` | Worker, GitHub proxy and secretless Nix daemon; versioned private store volume and per-service environment allowlists |
 | `modules/buer/agent-AGENTS.md` | Global instruction file staged into the agent's `~/.agent/AGENTS.md` |
+| `modules/buer/empty-pr-body.patch` | Publishing guard and prompts enforcing empty PR descriptions, short single-line titles, and issue-comment verification evidence |
 | `secrets/buer-env.age` | `GITHUB_TOKEN`, `ROBOMP_LITELLM_KEY`, `GITHUB_WEBHOOK_SECRET`, `ROBOMP_GH_PROXY_HMAC_KEY` — recipients in `secrets.nix` (server key) |
 
 ## Wiring
@@ -56,15 +57,15 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   stage the images are built from (default target of `Dockerfile`) is the same
   rev plus `bun install --frozen-lockfile`, i.e. `/pi/node_modules` with the
   workspace links the CLI resolves.
-- **Images**: `buer-images.service` builds `oh-my-pi/pi:v18.10.0` then
-  `robomp:v18.10.0`. The unit is marker-guarded (`/drive/state/buer/image-rev`
-  holds `path|pi-tag|bot-tag`), so boots and switches are no-ops until the pin
-  or the tags change. First build compiles the Rust pi-natives inside the image
-  and takes tens of minutes; `TimeoutStartSec=infinity`. The `v18.8.9` →
-  `v18.10.0` bump is `ARG BUN_VERSION=1.4.2` → `1.4.3` in `Dockerfile` and
-  `Dockerfile.robomp`; `docker-compose.yml` and `python/robomp` are untouched
-  between the two tags, and the module's two `sed`/`grep` patches
-  (`max_event_history`, `time.localtime` in `logging_config`) still match.
+- **Images**: `buer-images.service` builds `oh-my-pi/pi:v18.10.0` and the
+  patched upstream `robomp:v18.10.0-policy-<source-revision>`, then worker
+  `robomp:v18.10.0-nix-<revision>` and daemon
+  `robomp-nix:v18.10.0-<revision>`. The proxy uses the source-versioned policy
+  image; only the worker receives the Nix client/toolchain layer. `<revision>` is the first 12
+  hex digits of the generated context and patched source paths' hash. The marker
+  `/drive/state/buer/image-rev` includes both source paths, the generated
+  context and every image tag. First build compiles pi-natives and realizes
+  the pinned toolchain closure; `TimeoutStartSec=infinity`.
 - **State**: `/drive/state/buer` on the ZFS `data/state` dataset is bind-mounted at
   `/data` — clone pool, per-issue worktrees, cargo toolchain/target caches,
   `robomp.sqlite`, JSON logs. Cargo caches matter here: murmur is a Rust repo, so
@@ -178,17 +179,16 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   can already have fallen off the page. The activity scan reads the same window,
   which is why it is the source that matters. The first-ever run trims itself to
   300 s so an install does not resurrect history.
-  `buer-images` and `buer` carry the same
-  `RequiresMountsFor` under `[Service]`, where systemd logs it as an unknown key
-  and ignores it; they keep it until a restart is cheap, because moving it
-  restarts the compose stack (the dependency is inert either way: `drive-state.mount`
-  is already pulled in by `local-fs.target` before `basic.target`). `buer.service` also hashes `composeEnv` into
+  `buer-images`, `buer` and the watchdog declare `RequiresMountsFor` under
+  `[Unit]`, where systemd applies the `/drive/state` dependency.
+  `buer.service` also hashes `composeEnv` into
   `restartTriggers`: an `EnvironmentFile` that is a store path changes its *path*
   without changing the unit text, so an env edit alone would leave the running
   container on the old values.
-- **Local patches over the pinned tag**: `robompSource` applies two textual
-  substitutions, and only the robomp image builds from it — the pi image keeps
-  building from the pinned checkout. (1) `max_event_history` in
+- **Local patches over the pinned tag**: `robompSource` applies the
+  `empty-pr-body.patch` publishing guard and prompt changes plus two textual
+  substitutions. Only robomp builds from it; pi keeps the pinned checkout.
+  (1) `max_event_history` in
   `python/robomp/src/worker.py` goes 50 000 → 500 000: `omp_rpc` retains every
   notification of the current turn and aborts the task with "Event history
   limit was exceeded" once the window rolls past the caller's `start_index`;
@@ -201,10 +201,72 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   makes its prefix follow `TZ`; the JSON file handler keeps `time.gmtime`, so
   the JSONL stays UTC with a `Z` suffix, which is what the DB and the dashboard
   expect.
-- **Time**: both containers take `TZ` from `config.time.timeZone`
+- **Time**: the worker and proxy containers take `TZ` from `config.time.timeZone`
   (`Europe/Moscow`, set in `modules/locale.nix`) and bind-mount the host
   `/etc/localtime`, so `date`, file mtimes and the offset on bot commits match
   the host instead of the image's built-in `Etc/UTC`.
+
+## sub-preprocessor toolchain and isolation
+
+The allowlist contains exactly `labi-le/murmur,labi-le/sub-preprocessor` and
+also feeds the delivery watchdog. Onboarding does not enable automerge.
+Keep a new repository's GitHub webhook inactive until image build, slot-user
+verification and deployment complete; activate and replay/trigger only afterward.
+
+The generated Dockerfile/context in `modules/buer/default.nix` installs Nix
+and a realized `mkShell` closure containing `go`, `gcc`, `gopls`, `gnumake`,
+`golangci-lint` and `goreleaser`. Its nixpkgs pin is
+`9ae611a455b90cf061d8f332b977e387bda8e1ca`, NAR hash
+`sha256-md8WlXOlfnIeHeOScMTTHFyf2d6iaTwPl2apR5EQ3P4=`, matching the target
+repository's `flake.lock` at onboarding. `NIX_PATH` points at that immutable
+source; no mutable channel or host toolchain supplies `<nixpkgs>`. Updating the
+target lock requires an explicit matching pin update here.
+
+`buer-nix` is a scratch-based image containing the closure, Nix configuration
+and dedicated passwd/group entries, not the orchestrator payload. It owns the
+Docker-managed `buer-nix-<revision>` volume mounted at `/nix`. The worker mounts
+the same volume **read-only**, connects through its Unix daemon socket, and
+waits for `nix store info --store daemon` health. No host `/nix`, Nix daemon,
+Docker socket, credentials, workspace or agent-home mount reaches the daemon.
+The proxy does not mount the store. Versioned volumes prevent an older store
+from hiding a newer image's toolchain; old volumes are deliberately retained
+for rollback and require operator cleanup once rollback is no longer needed.
+
+The daemon trusts only root and permits root plus slot users `omp-1`/`omp-2`
+(UID/GID 2001/2002). Builds run as `nixbld1`/`nixbld2` (UID 30001/30002,
+GID 30000), not as slots or root. `sandbox=false` avoids requiring privileged
+containers or namespace capabilities: the **secretless daemon container is
+the build boundary**, not a Nix per-build sandbox. Build processes can reach
+the network and other files in that container. Signed cache.nixos.org
+substitution remains enabled; slots are not trusted to change daemon policy.
+Nix builds are limited to one job and two cores; project `go test` processes
+remain subject to the worker's existing resource policy.
+
+Upstream `worker._build_extra_env` masks four secret variables; it does not
+remove `PATH`, `NIX_PATH` or `NIX_REMOTE`. The runtime overlay supplies private
+`TMPDIR` and XDG directories. Upstream slot execution uses UID/GID `2000+i`
+and supplementary GID 2000. The image's `nix-shell` wrapper sets `GOPATH` and
+`GOCACHE` under those workspace-private XDG directories, avoiding writes to
+the root-owned `/srv/agent-home`. It delegates to the pinned real `nix-shell`;
+the repository's own `shell.nix`, shell hook and review instructions stay intact.
+
+Run verification in the assigned slot/worktree through `nix-shell`:
+
+```sh
+nix-shell --run 'go build ./...'
+nix-shell --run 'make test'
+nix-shell --run 'make race'
+nix-shell --run 'make fmt'
+nix-shell --run 'make lint'
+nix-shell --run 'make bench'
+```
+
+The target shell sets `CGO_ENABLED=0`; `make race` explicitly overrides it to
+`1` and uses the included C compiler. Never run bare `make`: its default is
+the live service. Preserve the target's numbered agreement and separate
+performance/architecture review requirements; installing a toolchain does
+not replace those gates. No target source or production config is mounted
+from the host by this integration.
 
 ## What it reacts to
 
@@ -293,15 +355,17 @@ sqlite3 /drive/state/buer/robomp.sqlite 'select * from issues order by updated_a
   wrong here anyway, since a container keeps the environment it was created
   with.
 - Bumping the pinned agent means changing `tag` and `hash` in the module; the
-  marker changes and the next switch rebuilds both images.
+  marker changes and the next switch rebuilds the affected images.
 
 ## Known gaps
 
 - The pre-publish gates upstream runs before `gh_open_pr` (`bun run fix`,
   `bun check`, `bun run test`) only fire when the repository defines them.
-  `labi-le/murmur` has no `package.json`, so no gate runs there: the PR's
-  `## Verification` section is the agent's own cargo/make run, not an enforced
-  suite. Verify with the repo's `Makefile` targets rather than trusting the body.
+  Neither `labi-le/murmur` nor `labi-le/sub-preprocessor` defines those Bun
+  scripts. Their issue verification comment records agent-run Rust/Go gates,
+  not an enforced suite; PR descriptions remain empty. Verify with each repo's
+  explicit Makefile targets and required review passes rather than trusting
+  the comment. In sub-preprocessor, run those targets through `nix-shell`.
 - Reviews are submitted as `COMMENT` only (upstream never approves or requests
   changes) and a pull request authored by the bot is never reviewed by the bot —
   that path is dropped in `github_events.route` as `bot-authored PR`.

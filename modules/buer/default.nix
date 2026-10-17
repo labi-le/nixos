@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -10,11 +11,119 @@ let
   botId = "126324301";
   bindPort = 6543;
   dataDir = "/drive/state/buer";
-  repoAllowlist = "labi-le/murmur";
+  repoAllowlist = "labi-le/murmur,labi-le/sub-preprocessor";
   maintainerLogins = "labi-le";
   reviewerBots = "chatgpt-codex-connector";
   reviewerBotLogin = "${reviewerBots}[bot]";
   model = "llm-labile/deepseek-v4.1-flash";
+  maxConcurrency = 2;
+  toolchainNixpkgs = pkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "9ae611a455b90cf061d8f332b977e387bda8e1ca";
+    hash = "sha256-md8WlXOlfnIeHeOScMTTHFyf2d6iaTwPl2apR5EQ3P4=";
+  };
+  toolchainPkgs = import toolchainNixpkgs { system = pkgs.stdenv.hostPlatform.system; };
+  toolchainShell = toolchainPkgs.mkShell {
+    packages = with toolchainPkgs; [
+      go
+      gcc
+      gopls
+      gnumake
+      golangci-lint
+      goreleaser
+    ];
+  };
+  toolchainClosure = pkgs.closureInfo {
+    rootPaths = [
+      toolchainNixpkgs
+      toolchainShell
+      toolchainPkgs.nix
+      toolchainPkgs.bash
+      toolchainPkgs.coreutils
+      toolchainPkgs.cacert
+    ];
+  };
+  nixConfig = pkgs.writeText "buer-nix.conf" ''
+    build-users-group = nixbld
+    sandbox = false
+    allowed-users = root ${lib.concatMapStringsSep " " (n: "omp-${toString n}") (lib.range 1 maxConcurrency)}
+    trusted-users = root
+    max-jobs = 1
+    cores = 2
+    experimental-features = nix-command flakes
+    accept-flake-config = false
+    substituters = https://cache.nixos.org
+    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+  '';
+  daemonPasswd = pkgs.writeText "buer-nix-passwd" (
+    "root:x:0:0::/root:/bin/sh\n"
+    + lib.concatMapStrings (n: "omp-${toString n}:x:${toString (2000 + n)}:${toString (2000 + n)}::/var/empty:/bin/false\n") (lib.range 1 maxConcurrency)
+    + lib.concatMapStrings (n: "nixbld${toString n}:x:${toString (30000 + n)}:30000::/var/empty:/bin/false\n") (lib.range 1 2)
+  );
+  daemonGroup = pkgs.writeText "buer-nix-group" (
+    "root:x:0:\nnixbld:x:30000:nixbld1,nixbld2\n"
+    + lib.concatMapStrings (n: "omp-${toString n}:x:${toString (2000 + n)}:\n") (lib.range 1 maxConcurrency)
+  );
+  nixShellWrapper = pkgs.writeText "buer-nix-shell" ''
+    #!/bin/bash
+    set -euo pipefail
+    if [ "$(id -u)" -ne 0 ]; then
+      : "''${XDG_DATA_HOME:?robomp workspace environment is required}"
+      : "''${XDG_CACHE_HOME:?robomp workspace environment is required}"
+      export GOPATH="$XDG_DATA_HOME/go"
+      export GOCACHE="$XDG_CACHE_HOME/go-build"
+    fi
+    exec ${toolchainPkgs.nix}/bin/nix-shell "$@"
+  '';
+  toolchainDockerfile = pkgs.writeText "Dockerfile.buer-toolchain" ''
+    ARG ROBOMP_BASE
+    FROM ''${ROBOMP_BASE} AS worker
+    COPY store/ /nix/store/
+    COPY registration /tmp/nix-registration
+    COPY nix.conf /etc/nix/nix.conf
+    COPY nix-shell /usr/local/bin/nix-shell
+    COPY daemon-root/ /buer-daemon-root/
+    ENV PATH=/usr/local/bin:${toolchainPkgs.nix}/bin:$PATH \
+        NIX_PATH=nixpkgs=${toolchainNixpkgs} \
+        NIX_REMOTE=daemon \
+        NIX_SSL_CERT_FILE=${toolchainPkgs.cacert}/etc/ssl/certs/ca-bundle.crt
+    RUN mkdir -p /nix/var/nix/daemon-socket /nix/var/nix/gcroots /nix/var/nix/profiles \
+        && NIX_REMOTE=local nix-store --load-db < /tmp/nix-registration \
+        && rm /tmp/nix-registration \
+        && chown 0:30000 /nix/store \
+        && chmod 1775 /nix/store \
+        && chmod 0755 /nix/var/nix/daemon-socket
+    RUN chmod 0755 /usr/local/bin/nix-shell \
+        && chmod 1777 /buer-daemon-root/tmp
+    FROM scratch AS daemon
+    COPY --from=worker /nix /nix
+    COPY nix.conf /etc/nix/nix.conf
+    COPY passwd /etc/passwd
+    COPY group /etc/group
+    COPY --from=worker /buer-daemon-root/ /
+    ENV PATH=${toolchainPkgs.nix}/bin:${toolchainPkgs.coreutils}/bin:${toolchainPkgs.bash}/bin \
+        NIX_SSL_CERT_FILE=${toolchainPkgs.cacert}/etc/ssl/certs/ca-bundle.crt \
+        HOME=/root \
+        TMPDIR=/tmp
+    ENTRYPOINT ["${toolchainPkgs.nix}/bin/nix-daemon"]
+  '';
+  toolchainContext = pkgs.runCommand "buer-toolchain-context" { } ''
+    mkdir -p $out/store $out/daemon-root/bin $out/daemon-root/tmp $out/daemon-root/root $out/daemon-root/var/empty
+    chmod 1777 $out/daemon-root/tmp
+    while IFS= read -r storePath; do
+      cp -a --no-preserve=ownership "$storePath" $out/store/
+    done < ${toolchainClosure}/store-paths
+    cp ${toolchainClosure}/registration $out/registration
+    cp ${nixConfig} $out/nix.conf
+    cp ${daemonPasswd} $out/passwd
+    cp ${daemonGroup} $out/group
+    cp ${nixShellWrapper} $out/nix-shell
+    cp ${toolchainDockerfile} $out/Dockerfile
+    ln -s ${toolchainPkgs.bash}/bin/bash $out/daemon-root/bin/sh
+    ln -s ${toolchainPkgs.coreutils}/bin/false $out/daemon-root/bin/false
+  '';
+  toolchainRevision = builtins.substring 0 12 (builtins.hashString "sha256" "${toolchainContext}|${robompSource}");
 
   src = pkgs.fetchFromGitHub {
     owner = "can1357";
@@ -24,10 +133,13 @@ let
   };
 
   piImage = "oh-my-pi/pi:${tag}";
-  botImage = "robomp:${tag}";
+  upstreamBotImage = "robomp:${tag}-policy-${builtins.substring 0 12 (builtins.hashString "sha256" (toString robompSource))}";
+  botImage = "robomp:${tag}-nix-${toolchainRevision}";
+  daemonImage = "robomp-nix:${tag}-${toolchainRevision}";
 
   robompSource = pkgs.runCommand "robomp-src-${tag}-500k-local-logs" { } ''
     cp -r --no-preserve=mode,ownership ${src}/. $out/
+    ${pkgs.patch}/bin/patch --directory="$out" -p1 < ${./empty-pr-body.patch}
     ${pkgs.gnused}/bin/sed -i 's/max_event_history=50_000/max_event_history=500_000/' $out/python/robomp/src/worker.py
     ${pkgs.gnugrep}/bin/grep -q 'max_event_history=500_000' $out/python/robomp/src/worker.py
     ${pkgs.gnused}/bin/sed -i 's/time\.strftime("%H:%M:%S", time\.gmtime(record\.created))/time.strftime("%H:%M:%S", time.localtime(record.created))/' $out/python/robomp/src/logging_config.py
@@ -55,6 +167,9 @@ let
 
   composeEnv = pkgs.writeText "buer.env" ''
     BUER_IMAGE=${botImage}
+    BUER_PROXY_IMAGE=${upstreamBotImage}
+    BUER_NIX_IMAGE=${daemonImage}
+    BUER_NIX_VOLUME=buer-nix-${toolchainRevision}
     BUER_DATA=${dataDir}
     BUER_MODELS=${modelsYml}
     BUER_AGENTS_MD=${./agent-AGENTS.md}
@@ -69,7 +184,7 @@ let
     ROBOMP_RATE_LIMIT_UNLIMITED=${reviewerBotLogin}
     ROBOMP_MODEL=${model}
     ROBOMP_THINKING=high
-    ROBOMP_MAX_CONCURRENCY=2
+    ROBOMP_MAX_CONCURRENCY=${toString maxConcurrency}
     ROBOMP_RATE_LIMIT_DEFAULT=10
     TZ=${config.time.timeZone}
   '';
@@ -95,22 +210,24 @@ in
       pkgs.docker
       pkgs.coreutils
     ];
+    unitConfig.RequiresMountsFor = [ "/drive/state" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       TimeoutStartSec = "infinity";
-      RequiresMountsFor = [ "/drive/state" ];
     };
     script = ''
       set -euo pipefail
       install -d -m 0755 ${dataDir}
       marker=${dataDir}/image-rev
-      want='${src}|${robompSource}|${piImage}|${botImage}'
+      want='${src}|${robompSource}|${piImage}|${upstreamBotImage}|${toolchainContext}|${botImage}|${daemonImage}'
       if [ -r "$marker" ] && [ "$(cat "$marker")" = "$want" ]; then
         exit 0
       fi
       docker build --tag ${piImage} --file ${src}/Dockerfile ${src}
-      docker build --tag ${botImage} --file ${robompSource}/Dockerfile.robomp --build-arg PI_BASE=${piImage} ${robompSource}
+      docker build --tag ${upstreamBotImage} --file ${robompSource}/Dockerfile.robomp --build-arg PI_BASE=${piImage} ${robompSource}
+      docker build --target worker --tag ${botImage} --build-arg ROBOMP_BASE=${upstreamBotImage} ${toolchainContext}
+      docker build --target daemon --tag ${daemonImage} --build-arg ROBOMP_BASE=${upstreamBotImage} ${toolchainContext}
       printf '%s' "$want" > "$marker"
     '';
   };
@@ -148,12 +265,12 @@ in
       "buer-replay-token.service"
     ];
     wantedBy = [ "multi-user.target" ];
+    unitConfig.RequiresMountsFor = [ "/drive/state" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       TimeoutStartSec = "infinity";
       WorkingDirectory = dataDir;
-      RequiresMountsFor = [ "/drive/state" ];
       EnvironmentFile = [
         composeEnv
         config.age.secrets.buer-env.path

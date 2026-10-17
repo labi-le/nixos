@@ -1,0 +1,140 @@
+--- a/python/robomp/src/host_tools.py
++++ b/python/robomp/src/host_tools.py
+@@ -1281,26 +1281,10 @@
+         _enforce_impl_authorization(bindings, "gh_open_pr", args, action="open PR")
+         title = args.get("title")
+         body = args.get("body")
+-        if not isinstance(title, str) or not title.strip():
+-            _raise_command("gh_open_pr requires a non-empty 'title'.")
+-        if not isinstance(body, str) or not body.strip():
+-            _raise_command("gh_open_pr requires a non-empty 'body'.")
+-        for required in ("## Repro", "## Cause", "## Fix", "## Verification"):
+-            if required not in body:
+-                _raise_command(
+-                    f"PR body missing required section header {required!r}. "
+-                    "Follow the template in the system prompt verbatim."
+-                )
+-        # Auto-close keyword. GitHub closes the linked issue on merge only when
+-        # one of `Fixes / Closes / Resolves #<n>` is present in the PR body.
+-        n = _require_issue(bindings).number
+-        accepted = [f"{kw} #{n}" for kw in ("Fixes", "Closes", "Resolves", "fixes", "closes", "resolves")]
+-        if not any(form in body for form in accepted):
+-            _raise_command(
+-                f"PR body must include `Fixes #{n}` (or `Closes #{n}` / `Resolves #{n}`) so "
+-                "GitHub auto-closes the issue when the PR merges. Put it at the end of the "
+-                "Verification section per the template."
+-            )
++        if not isinstance(title, str) or not title.strip() or len(title) > 70 or "\n" in title or "\r" in title:
++            _raise_command("gh_open_pr requires a non-empty single-line title of at most 70 characters.")
++        if body != "":
++            _raise_command("gh_open_pr requires an explicitly empty body; post verification in the issue comment.")
+         skip = bool(args.get("skip_checks", False))
+         _run_pre_publish_bun_fix(bindings, args, tool_name="gh_open_pr", stage="open PR", skip_checks=skip)
+         _run_pre_publish_bun_check(bindings, args, tool_name="gh_open_pr", stage="open PR", skip_checks=skip)
+--- a/python/robomp/src/prompts/system_append.md
++++ b/python/robomp/src/prompts/system_append.md
+@@ -69,11 +69,11 @@
+ 5. Smallest root-cause diff; add/update regression-catching tests. `documentation`: doc artifact; re-read diff as test.
+ 6. Run affected tests; iterate green.
+ 7. MAY run formatter pre-commit. Safe to skip: `gh_push_branch`/`gh_open_pr` run `bun run fix`, amend formatter diff into HEAD.
+-8. Commit conventional `fix(scope): …` / `docs: …`; body REAL newlines (`-m` flags or `git commit -F <file>`, NEVER quoted `\n` in `-m`, which displays literal backslash-n). End body `Fixes #{{issue.number}}`.
++8. Commit with one imperative `component: description` subject, at most 70 characters. No commit body or trailers.
+ 9. `gh_push_branch`, then `gh_open_pr`. Both run `bun run fix` (amend remaining diff), then `bun check`, before remote; every follow-up push same gate; refuse dirty tree/author mismatch.
+    - `gh_open_pr` additionally runs the repo's full `bun run test` and creates NO PR while it is red. Expect it to take a while; do not re-issue the call because it is slow.
+    - `bun check` / `bun run test` failure: fix source, commit, retry.
+-   - `skip_checks=true` (bypasses `bun run fix`, `bun check`, AND `bun run test`): ONLY verified pre-existing default-branch breakage—same command/paths on clean default checkout, identical failure. NEVER bypass diff-caused, transient, or unclear failure; NEVER to escape a test your own diff broke. PR `## Verification` MUST name the bypassed gate and reason, e.g. ``bun check` fails on `main` for unrelated reason X; skipped pre-publish gate.`
++   - `skip_checks=true` (bypasses `bun run fix`, `bun check`, AND `bun run test`): ONLY verified pre-existing default-branch breakage—same command/paths on clean default checkout, identical failure. NEVER bypass diff-caused, transient, or unclear failure; NEVER to escape a test your own diff broke. The issue verification comment MUST name the bypassed gate and reason, e.g. ``bun check` fails on `main` for unrelated reason X; skipped pre-publish gate.`
+    - NEVER tamper git internals: edit `.git`/`gitdir:` pointers, chown/chmod worktree, `safe.directory` override, fabricated-commit HEAD. Unresolvable push refusal → `gh_post_comment` maintainer. Reporter-irrelevant environment/orchestrator fault (permissions, corrupt metadata, missing tools) → `abort_task` diagnosis; silent, no reporter comment; NEVER improvise.
+    - Two consecutive same-error `gh_push_branch` rejections: fix, justified `skip_checks=true`, or `gh_post_comment` escalate; NEVER loop.
+ 10. PR opened → one final `gh_post_comment` link.
+@@ -92,24 +92,10 @@
+ ## `primary == "invalid"` or `primary == "duplicate"`
+ ONE brief `gh_post_comment`: `invalid` explain off-topic/not-actionable/spam courteously (genuine spam: label + one-line note); `duplicate` original link, one sentence. Stop.
+ 
+-# PR body (`bug`/`documentation` only)
+-Verbatim section order; no other top-level headings:
+-```
+-## Repro
+-<one paragraph describing the failing scenario, plus the exact command(s) that
+-reproduce it.>
+-
+-## Cause
+-<one paragraph naming the code path that produced the bug. Cite files and
+-symbols, not vibes.>
+-
+-## Fix
+-<bulleted summary of the diff, in the order a reviewer should read it.>
+-
+-## Verification
+-<the test command you ran, its result, and any manual checks. Include
+-`Fixes #{{issue.number}}` at the end.>
+-```
++# Pull request publication
++Use a nonempty, single-line title of at most 70 characters and an explicitly empty body.
++Post the reproduction, cause, fix and exact verification commands/results in the issue comment.
++Do not enable auto-merge or merge pull requests.
+ 
+ # Tone
+ - Terse, technical; evidence first, opinion last.
+@@ -122,7 +108,7 @@
+ - `bug` requires broken contract AND demonstrated impact; design complaints/spec-lawyering: `wontfix`/`enhancement`, NEVER `bug`.
+ - GitHub mutations use host tools only; NEVER shell out.
+ - Prepared branch only; NEVER create branches.
+-- `skip_checks=true`: verified pre-existing breakage only; document in `## Verification`.
++- `skip_checks=true`: verified pre-existing breakage only; document in the issue verification comment.
+ - Two identical consecutive push rejections → fix, justified bypass, or escalate; NEVER loop.
+ - Prompts/tool shapes maintainer-owned: NEVER edit; flag and stop.
+ </critical>
+--- a/python/robomp/src/prompts/kickoff_directive.md
++++ b/python/robomp/src/prompts/kickoff_directive.md
+@@ -25,7 +25,7 @@
+ 1. Classify first. MUST call `classify_issue(primary=..., priority=..., functional=[...], rationale=...)` before any other side effect, even if directive states answer. Labels: org triage.
+ 
+ 2. Execute directive in same session on `{{workspace.branch}}`:
+-   - Code change → commit on `{{workspace.branch}}`; then `gh_push_branch` + `gh_open_pr`. Both run `bun run fix`, then `bun check`, against worktree; `gh_open_pr` also runs the repo's full `bun run test` and refuses while it is red. On failure, fix cause and call again. PR body MUST use verbatim: `## Repro` / `## Cause` / `## Fix` / `## Verification`. Reply: single `gh_post_comment` linking PR.
++   - Code change → commit on `{{workspace.branch}}`; then `gh_push_branch` + `gh_open_pr`. Both run `bun run fix`, then `bun check`, against worktree; `gh_open_pr` also runs the repo's full `bun run test` and refuses while it is red. On failure, fix cause and call again. PR body MUST be empty and title nonempty, single-line, at most 70 characters. Reply: `gh_post_comment` linking the PR and recording reproduction and verification evidence. Never enable auto-merge or merge.
+    - Question / clarification → one `gh_post_comment`. No branch or PR.
+    - Explicit stop / ignore → one acknowledging `gh_post_comment`; halt.
+ 
+--- a/python/robomp/src/prompts/host_tools.toml
++++ b/python/robomp/src/prompts/host_tools.toml
+@@ -61,12 +61,12 @@
+ skip_checks = "Bypass `bun run fix` + `bun check` only for verified pre-existing breakage unrelated to this fix. Clean-tree, identity, subject, SHA, and remote-tag gates always run."
+ 
+ [gh_open_pr]
+-description = "Open a PR from the workspace branch using the four-section body template. Pre-publish gate: `bun run fix` → amend formatter diff into HEAD → `bun check` → `bun run test`. No PR is created unless the full suite passes; on failure, fix and retry. Pre-existing `main` breakage NOT caused by your diff → `skip_checks=true` and document the bypass in the PR's `## Verification` section."
++description = "Open a PR from the workspace branch with an explicitly empty body and a nonempty single-line title of at most 70 characters. Pre-publish gate: `bun run fix` → amend formatter diff into HEAD → `bun check` → `bun run test`. No PR is created unless the full suite passes; on failure, fix and retry. Pre-existing `main` breakage NOT caused by your diff → `skip_checks=true` and document the bypass in the issue verification comment."
+ 
+ [gh_open_pr.parameters]
+-body = "Markdown body. MUST contain the four template sections in order: `## Repro`, `## Cause`, `## Fix`, `## Verification`."
++body = "Must be the empty string. Post reproduction, cause, fix and verification evidence in the issue comment."
+ base = "Optional base branch override (default: repo default)."
+-skip_checks = "Bypass `bun run fix` + `bun check` + `bun run test`. Use ONLY after verifying the failure exists on `main` and is NOT caused by your diff. When set, document in `## Verification` (e.g. ``Skipped pre-publish gate: `bun run test` fails on `main` due to <link>``). Dirty-tree gate still runs."
++skip_checks = "Bypass `bun run fix` + `bun check` + `bun run test`. Use ONLY after verifying the failure exists on `main` and is NOT caused by your diff. When set, document in the issue verification comment (e.g. ``Skipped pre-publish gate: `bun run test` fails on `main` due to <link>``). Dirty-tree gate still runs."
+ 
+ [gh_request_review]
+ description = "Request reviewers and/or add assignees on the open PR."
+@@ -126,7 +126,7 @@
+ [classify_issue.next_steps]
+ bug = "reproduce → diagnose → fix → PR"
+ wontfix = "post one gh_post_comment explaining the design rationale or upstream cause and what evidence would change the assessment; no repro, no PR; the maintainer decides whether to close"
+-documentation = "fix the docs and open a PR using the four-section template"
++documentation = "fix the docs and open a PR with an empty body; post verification in the issue comment"
+ question = "answer in a single gh_post_comment; no PR, no repro"
+ enhancement = "post one thoughtful gh_post_comment on feasibility/scope; no PR"
+ proposal = "post one thoughtful gh_post_comment on feasibility/scope; no PR"
+--- a/python/robomp/src/proxy/server.py
++++ b/python/robomp/src/proxy/server.py
+@@ -678,7 +678,11 @@
+         head = _require_str(data.get("head"), "head")
+         base = _require_str(data.get("base"), "base")
+         title = _require_str(data.get("title"), "title")
+-        body = _require_str(data.get("body"), "body")
++        body = data.get("body")
++        if body != "":
++            raise HTTPException(400, "body must be explicitly empty")
++        if len(title) > 70 or "\n" in title or "\r" in title:
++            raise HTTPException(400, "title must be single-line and at most 70 characters")
+         draft = bool(data.get("draft", False))
+         mcm = bool(data.get("maintainer_can_modify", True))
+         github: GitHubClient = request.app.state.github
