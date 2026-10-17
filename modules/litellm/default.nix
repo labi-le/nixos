@@ -34,6 +34,7 @@ in
     "d /var/lib/litellm-db 0700 999 999 -"
     "d /var/lib/litellm-chatgpt 0700 0 0 -"
     "d /var/lib/litellm-price-sync 0700 0 0 -"
+    "d /var/lib/litellm-free-probe 0700 0 0 -"
   ];
 
   virtualisation.oci-containers.backend = "docker";
@@ -157,6 +158,34 @@ in
     timerConfig = {
       OnCalendar = "*:0/5";
       RandomizedDelaySec = "30s";
+    };
+  };
+
+  systemd.services.litellm-free-probe = {
+    description = "Probe the Zen free groups through the litellm gateway";
+    after = [ "docker-litellm.service" "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      TimeoutStartSec = "900";
+      MemoryHigh = "512M";
+      MemoryMax = "1G";
+      MemorySwapMax = 0;
+    };
+    script = ''
+      exec ${pkgs.python3}/bin/python3 ${./free-probe.py}
+    '';
+  };
+
+  systemd.timers.litellm-free-probe = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*:0/30";
+      RandomizedDelaySec = "60s";
+      Persistent = true;
     };
   };
 }

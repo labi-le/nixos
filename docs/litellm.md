@@ -72,20 +72,26 @@ account keys; a fifth, `opencode-go-pool`, was a rename shim deleted on
   `400 Upstream request failed: Model is unavailable.` (`/models` dropped the
   free id in the same release; the `space-bunny-free` → `space-bunny` rename of
   2026-10-08 was the first of these).
-- `deepseek-v4.1-flash-free`, `space-bunny-free`,
-  `muse-spark-1.2-contributor-free` and `muse-spark-1.3-contributor-free` — the
-  Zen tier's free set, one deployment each, with no account of ours attached
-  (see the gate below). Measured 2026-10-17 through that gate:
-  `deepseek-v4.1-flash-free` takes `reasoning_effort` `none`…`max` (200 000 in /
-  32 000 out), `space-bunny-free` `minimal`…`max` (1 048 576 / 524 288),
-  `muse-spark-1.2-contributor-free` `minimal`…`xhigh` and
-  `muse-spark-1.3-contributor-free` `minimal`…`max` (1 048 576 / 131 072 each).
-  All four call tools (`bash` comes back as a `tool_calls` entry; the muse pair
-  accepts only `tool_choice: "auto"`) and all four read images (a red, a blue and
-  a green square answered `Red`, `Blue`, `Green`).
+- `deepseek-v4.1-flash-free`, `space-bunny-free` and
+  `muse-spark-1.2-contributor-free` — the Zen tier's free set, one deployment
+  each, with no account of ours attached (see the gate below). Measured
+  2026-10-17 through that gate: `deepseek-v4.1-flash-free` takes
+  `reasoning_effort` `none`…`max` (200 000 in / 32 000 out),
+  `space-bunny-free` `minimal`…`max` (1 048 576 / 524 288) and
+  `muse-spark-1.2-contributor-free` `minimal`…`xhigh` (1 048 576 / 131 072).
+  All three call tools (`bash` comes back as a `tool_calls` entry; the muse pair
+  accepts only `tool_choice: "auto"`) and all three read images (a red, a blue
+  and a green square answered `Red`, `Blue`, `Green`).
+
+  `muse-spark-1.3-contributor-free` was the fourth for a few hours and was
+  withdrawn upstream the same day: the id answers `410 ModelDeprecated`, the
+  bare `muse-spark-1.3` in `/zen/v1/models` is the paid model (`401 Missing API
+  key` without credits), and the group was deleted rather than left answering
+  `410` forever. The probe below reports `deprecated` if this happens to any of
+  the remaining three.
 
 The Zen tier's free ids are gated by client identity rather than by
-entitlement, and this catalog serves four of them anyway. A plain request gets
+entitlement, and this catalog serves three of them anyway. A plain request gets
 `403 FreeTierError`, `OpenCode's free tier can only be used from within
 OpenCode`; the same body answers `200` once it carries a `User-Agent` whose
 leading token is `opencode/…`, a session header shaped
@@ -136,8 +142,24 @@ only one in this repo. The public thread for that gate reports one prober's
 account blocked for repeated policy violations and the gate has been revised at
 least three times; these requests carry no account of ours, but they leave from
 the same address as the paid pool, so a block by IP would reach everything.
-Nothing watches these four groups yet: if the gate moves, they fail with `403`
-and only the clients see it.
+
+`modules/litellm/free-probe.py` sends one streamed request per group through the
+gateway every thirty minutes, with no tools of its own so the padding path is
+exercised too, and publishes `litellm_free_probe_ok{model,state}`,
+`litellm_free_probe_latency_seconds`, `litellm_free_probe_last_success_timestamp_seconds`,
+`litellm_free_probe_checked_timestamp_seconds` and
+`litellm_free_probe_run_timestamp_seconds` into
+`/var/lib/prometheus-node-textfile-collector/litellm-free-probe.prom`; the raw
+upstream body of a failed probe goes to the unit's journal and to
+`/var/lib/litellm-free-probe/state.json`. `state` classifies the failure, so the
+alert already says which part moved: `gate` (the free tier refuses the
+fingerprint again), `deprecated` (the model id is withdrawn), `quota` (`429`),
+`protocol` (the upstream no longer serves the pinned protocol), `upstream`
+(`5xx`), `network` (the gateway or the upstream was unreachable) and `empty` (a
+stream with no event). Two rules in `modules/monitoring/litellm.nix` read it:
+`litellm-free-probe-failed` names the group and the state after six minutes, and
+`litellm-free-probe-stale` fires when the probe itself has not run for two hours.
+Manual use: `python3 modules/litellm/free-probe.py --stdout`.
 
 A model name is a contract with every client that sends it, and the alias
 mechanism hid how hard it is to withdraw: `model_group_alias` resolved *before*

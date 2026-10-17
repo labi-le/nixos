@@ -13,7 +13,6 @@ let
     (import ./deepseek-v4.1-flash-free.nix)
     (import ./space-bunny-free.nix)
     (import ./muse-spark-1.2-contributor-free.nix)
-    (import ./muse-spark-1.3-contributor-free.nix)
     (import ./gpt-6-astra.nix)
     (import ./gpt-6-luna.nix)
     (import ./gpt-6.1-sol.nix)

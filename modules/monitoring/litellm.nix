@@ -144,6 +144,24 @@ in
             summary = "Nothing has refreshed the Zen prices for three days; the timer or the service is down.";
             command = "systemctl status litellm-price-sync.timer litellm-price-sync.service";
           })
+          (rule {
+            uid = "litellm-free-probe-failed";
+            title = "A Zen free group stopped answering";
+            expr = "litellm_free_probe_ok == 0";
+            for = "6m";
+            severity = "critical";
+            summary = "Zen free {{ $labels.model }} stopped answering: {{ $labels.state }}. The gateway did not complete a streamed request for that group.{{ if eq $labels.state \"gate\" }} That is the free tier refusing the fingerprint again, so the client footprint moved, not the network or the account pool.{{ else if eq $labels.state \"deprecated\" }} That is the upstream withdrawing the model id, so the group has to be replaced or removed.{{ else if eq $labels.state \"quota\" }} That is the free allowance or the rate limit being exhausted.{{ else if eq $labels.state \"protocol\" }} That is the upstream no longer serving the protocol the group is pinned to.{{ end }}";
+            command = "journalctl -u litellm-free-probe -n 60 --no-pager\ncat /var/lib/litellm-free-probe/state.json";
+          })
+          (rule {
+            uid = "litellm-free-probe-stale";
+            title = "The Zen free probe stopped running";
+            expr = "time() - litellm_free_probe_run_timestamp_seconds > 7200";
+            for = "1h";
+            severity = "critical";
+            summary = "The probe that watches the Zen free groups has not run for two hours, so a broken group would now go unnoticed; the timer or the unit is down.";
+            command = "systemctl status litellm-free-probe.timer litellm-free-probe.service\njournalctl -u litellm-free-probe -n 40 --no-pager";
+          })
         ];
       }
     ];
