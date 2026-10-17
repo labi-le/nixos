@@ -125,12 +125,18 @@ no tools needs to get past the gate at all.
 Two limits belong to the provider and reach clients unchanged: a non-streaming
 request is refused with the same `403`, and a protocol the model does not serve
 is refused with `400 ModelProtocolUnsupported`. The deployment declares
-`mode = "responses"` for the muse pair so discovery picks that protocol, and
+`mode = "responses"` for the muse group so discovery picks that protocol, and
 `modules/omp/default.nix` pins `deepseek-v4.1-flash-free` and
 `space-bunny-free` to `openai-completions`, because their upstreams are
-chat-only and omp would otherwise send them as Responses; the muse pair also
+chat-only and omp would otherwise send them as Responses; the muse group also
 answers `/v1/chat/completions`, which litellm bridges to the Responses call the
-upstream serves. One symptom is deliberate: a manual `GET /health` marks all
+upstream serves. The reverse direction is explicit as well: every chat-only
+`zen-free` deployment carries `use_chat_completions_api = true`, so litellm
+bridges a `/v1/responses` request down to chat completions instead of passing
+it to an upstream that never learned that protocol. Without that flag an
+unpinned client that defaults to the Responses API gets the upstream's
+`400 ModelProtocolUnsupported` and cannot use the group at all, which is what
+happened on 2026-10-17. One symptom is deliberate: a manual `GET /health` marks all
 four zen-free deployments unhealthy, because the probe is a non-streaming,
 tool-less chat call that the gate refuses, and the three chatgpt groups report
 unhealthy to the same endpoint for their own reason (`Input must be a list`).
@@ -144,15 +150,17 @@ least three times; these requests carry no account of ours, but they leave from
 the same address as the paid pool, so a block by IP would reach everything.
 
 `modules/litellm/free-probe.py` spends no tokens. Every thirty minutes, behind
-the oneshot plus timer pair, it sends one malformed streaming body per group
-through the gateway - `messages: []` on the chat route, `input: []` on the
-responses route - and reads the error. The upstream checks the model id, then
+the oneshot plus timer pair, it sends a malformed streaming body per group on
+both routes - `messages: []` to `/v1/chat/completions`, `input: []` to
+`/v1/responses`, six requests per run - and reads the error. The upstream checks the model id, then
 the client-identity gate, then the body, so a single rejected request separates
 every failure the probe cares about at zero cost: `410 ModelDeprecated` for a
 withdrawn id, the `403` free-tier gate for a moved fingerprint, `429` for the
-allowance, `400 ModelProtocolUnsupported` for a changed protocol, and a
-`400 invalid_request_error` from the model layer, which is the healthy
-`ok` (the gate accepted the gateway, so the rejection came from beyond it).
+allowance, `400 ModelProtocolUnsupported` for a route the upstream dropped or
+a bridge that is off, and a `400 invalid_request_error` from the model layer,
+which is the healthy `ok` (the gate accepted the gateway, so the rejection came
+from beyond it). A group is `ok` only when both routes reach that rejection, so
+a protocol move on either one is visible.
 `5xx` is `upstream`, an exception `network`, and anything else `http` - a
 missing deployment answers `400 Invalid model name` locally, which lands there.
 The probe therefore proves routing, key, gate and model id, not generation;

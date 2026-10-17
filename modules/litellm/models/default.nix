@@ -131,6 +131,9 @@ let
       input_cost_per_token = 0.0;
       output_cost_per_token = 0.0;
       cache_read_input_token_cost = 0.0;
+    }
+    // lib.optionalAttrs (!(group.responses or false)) {
+      use_chat_completions_api = true;
     };
   };
 

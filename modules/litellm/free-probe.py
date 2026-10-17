@@ -19,11 +19,13 @@ STATE_PATH = os.environ.get(
     "/var/lib/litellm-free-probe/state.json",
 )
 TIMEOUT = 60
-TARGETS = {
-    "deepseek-v4.1-flash-free": "chat",
-    "space-bunny-free": "chat",
-    "muse-spark-1.2-contributor-free": "responses",
-}
+TARGETS = (
+    "deepseek-v4.1-flash-free",
+    "space-bunny-free",
+    "muse-spark-1.2-contributor-free",
+)
+ROUTES = ("chat", "responses")
+PRIORITY = ("gate", "deprecated", "quota", "protocol", "upstream", "network", "http", "empty")
 
 
 def master_key():
@@ -138,7 +140,7 @@ def write_state(state):
 def exposition(records, run_stamp):
     label = lambda name: "{" + f"model={json.dumps(name)}" + "}"
     lines = [
-        "# HELP litellm_free_probe_ok 1 when the upstream accepted the gateway for the group: the malformed zero-token probe reached the model layer and was rejected there.",
+        "# HELP litellm_free_probe_ok 1 when both routes for the group reached the model layer and were rejected there, so the zero-token probe spent nothing.",
         "# TYPE litellm_free_probe_ok gauge",
     ]
     for model, record in sorted(records.items()):
@@ -194,9 +196,11 @@ def main():
     run_stamp = int(time.time())
     reachable = ready(args.wait)
     for model in models:
-        route = TARGETS.get(model, "chat")
         if reachable:
-            state, latency, detail = probe(key, model, route, args.answer, args.timeout)
+            results = {route: probe(key, model, route, args.answer, args.timeout) for route in ROUTES}
+            state = next((s for s in PRIORITY if any(r[0] == s for r in results.values())), "ok")
+            latency = sum(r[1] for r in results.values())
+            detail = " | ".join(f"{route}: {r[2]}" for route, r in results.items() if r[0] != "ok")
         else:
             state, latency, detail = "network", 0.0, f"the gateway did not answer /health/readiness within {args.wait:.0f}s"
         keep = previous.get(model) or {}
