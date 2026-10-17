@@ -338,6 +338,7 @@ in
     pkgs.yq-go
     pkgs.sqlite
     pkgs.shellcheck
+    pkgs.mcp-nixos
     (pkgs.python3.withPackages (ps: [
       ps.pyyaml
       ps.pillow
