@@ -2,7 +2,7 @@
   "annotations": {
     "list": []
   },
-  "description": "Provider-side API limits: the OpenCode Go account pool (rolling, weekly and monthly windows per account) and the ChatGPT/Codex subscription windows. Both come from the providers' own usage APIs, published by litellm-limits-exporter; client-key budgets are not part of this dashboard.",
+  "description": "Provider-side API limits: the OpenCode Go pool (one row per account with used shares, reset countdowns and fetch health), the worst headroom trend, the ChatGPT/Codex subscription windows and the exporter pipeline. Both providers' usage APIs feed these panels; client-key budgets are not part of this dashboard.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -46,7 +46,7 @@
         "x": 0,
         "y": 0,
         "w": 3,
-        "h": 5
+        "h": 7
       },
       "id": 1,
       "options": {
@@ -82,7 +82,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Account windows that take the account out of rotation: the provider reports them as rate-limited, or 95 percent of the window is spent, which is where the poller benches the account's deployments. Rolling windows reset in hours, weekly in up to a week, so this count is what to watch when the pool starts failing over.",
+      "description": "Windows that take an account out of rotation: the provider reports them as rate-limited, or 95 percent of the window is spent, which is where the poller benches the account's deployments. The pool table names the account and its reset time.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -111,7 +111,7 @@
         "x": 3,
         "y": 0,
         "w": 3,
-        "h": 5
+        "h": 7
       },
       "id": 2,
       "options": {
@@ -139,7 +139,7 @@
           "refId": "A"
         }
       ],
-      "title": "Benched",
+      "title": "Benched windows",
       "type": "stat"
     },
     {
@@ -147,7 +147,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Mean weekly headroom left across the pool: 100 minus the mean share of the weekly window the accounts have spent.",
+      "description": "Headroom left in the tightest account's weekly window: 100 minus the largest share of the weekly window any account has spent.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -180,7 +180,7 @@
         "x": 6,
         "y": 0,
         "w": 4,
-        "h": 5
+        "h": 7
       },
       "id": 3,
       "options": {
@@ -202,13 +202,13 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "100 - avg(litellm_opencode_go_used_percent{window=\"weekly\"})",
+          "expr": "min(100 - litellm_opencode_go_used_percent{window=\"weekly\"})",
           "instant": true,
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Pool weekly headroom",
+      "title": "Worst weekly headroom",
       "type": "stat"
     },
     {
@@ -216,7 +216,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Mean monthly headroom left across the pool: 100 minus the mean share of the monthly window the accounts have spent. The monthly pool is the whole subscription budget, so when this runs out the weekly window does not matter.",
+      "description": "Headroom left in the tightest account's monthly window. The monthly pool is the whole subscription budget, so this is the number that matters when the week looks fine but the month does not.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -249,7 +249,7 @@
         "x": 10,
         "y": 0,
         "w": 4,
-        "h": 5
+        "h": 7
       },
       "id": 15,
       "options": {
@@ -271,13 +271,13 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "100 - avg(litellm_opencode_go_used_percent{window=\"monthly\"})",
+          "expr": "min(100 - litellm_opencode_go_used_percent{window=\"monthly\"})",
           "instant": true,
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Pool monthly headroom",
+      "title": "Worst monthly headroom",
       "type": "stat"
     },
     {
@@ -285,35 +285,46 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Left value: last run succeeded. Middle value: age of the last run.",
+      "description": "One row per check. Status is up when the check is healthy and down when it is not; price sync is inverted from its anomaly gauge. Age is the time since the last run or last success, and is empty for the provider sources.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
-          "links": [],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
-          },
-          "unit": "s"
+          }
         },
         "overrides": [
           {
             "matcher": {
-              "id": "byFrameRefID",
-              "options": "A"
+              "id": "byName",
+              "options": "check"
             },
             "properties": [
               {
-                "id": "unit",
-                "value": "none"
-              },
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
               {
                 "id": "mappings",
                 "value": [
@@ -321,11 +332,13 @@
                     "type": "value",
                     "options": {
                       "0": {
-                        "text": "failed",
+                        "text": "down",
+                        "color": "red",
                         "index": 0
                       },
                       "1": {
-                        "text": "ok",
+                        "text": "up",
+                        "color": "green",
                         "index": 1
                       }
                     }
@@ -333,54 +346,42 @@
                 ]
               },
               {
-                "id": "thresholds",
+                "id": "custom.cellOptions",
                 "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red"
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
+                  "type": "color-text"
                 }
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
               }
             ]
           },
           {
             "matcher": {
-              "id": "byFrameRefID",
-              "options": "B"
+              "id": "byName",
+              "options": "age"
             },
             "properties": [
               {
                 "id": "unit",
-                "value": "s"
+                "value": "dtdurations"
               },
               {
-                "id": "mappings",
-                "value": []
+                "id": "decimals",
+                "value": 0
               },
               {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green"
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 900
-                    },
-                    {
-                      "color": "red",
-                      "value": 1800
-                    }
-                  ]
-                }
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
               }
             ]
           }
@@ -389,81 +390,348 @@
       "gridPos": {
         "x": 14,
         "y": 0,
-        "w": 4,
-        "h": 5
+        "w": 10,
+        "h": 7
       },
       "id": 4,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "textMode": "auto",
-        "wideLayout": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "check"
+          }
+        ]
       },
-      "pluginVersion": "11.6.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
-          "expr": "litellm_limits_exporter_success",
+          "expr": "label_replace(label_replace(litellm_limits_exporter_success, \"check\", \"exporter\", \"__name__\", \".*\"), \"kind\", \"status\", \"__name__\", \".*\") or label_replace(label_replace(time() - litellm_limits_exporter_last_run_timestamp_seconds, \"check\", \"exporter\", \"__name__\", \".*\"), \"kind\", \"age\", \"__name__\", \".*\") or label_replace(label_replace(1 - litellm_price_sync_anomaly, \"check\", \"price sync\", \"__name__\", \".*\"), \"kind\", \"status\", \"__name__\", \".*\") or label_replace(label_replace(time() - litellm_price_sync_last_success_timestamp_seconds, \"check\", \"price sync\", \"__name__\", \".*\"), \"kind\", \"age\", \"__name__\", \".*\") or label_replace(label_replace(litellm_limits_source_up, \"check\", \"source $1\", \"source\", \"(.*)\"), \"kind\", \"status\", \"__name__\", \".*\")\n",
+          "format": "table",
           "instant": true,
           "range": false,
-          "refId": "A",
-          "legendFormat": "run"
-        },
-        {
-          "editorMode": "code",
-          "expr": "time() - litellm_limits_exporter_last_run_timestamp_seconds",
-          "instant": true,
-          "range": false,
-          "refId": "B",
-          "legendFormat": "age"
+          "refId": "A"
         }
       ],
-      "title": "Limits exporter",
-      "type": "stat"
+      "title": "Pipeline health",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^Value.*$",
+            "renamePattern": "Value"
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "kind",
+            "emptyValue": "null",
+            "rowField": "check",
+            "valueField": "Value"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "check\\kind": 0,
+              "check": 0,
+              "status": 1,
+              "age": 2
+            },
+            "renameByName": {
+              "check\\kind": "check"
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Left value: 1 when the daily price sync refused to apply the provider table. Right value: age of the last successful sync.",
+      "description": "One row per pool account. In rotation shows whether all three windows are clear (< 95% used and not rate-limited). Used is the share of each provider window spent; reset is the time left in that window; fetch is the last per-account usage API result.",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
-          "links": [],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
-          },
-          "unit": "s"
+          }
         },
         "overrides": [
           {
             "matcher": {
-              "id": "byFrameRefID",
-              "options": "A"
+              "id": "byName",
+              "options": "email"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "used rolling"
             },
             "properties": [
               {
                 "id": "unit",
-                "value": "none"
+                "value": "percent"
               },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 95
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "used weekly"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 95
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "used monthly"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 95
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "reset rolling"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "reset weekly"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "reset monthly"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fetch"
+            },
+            "properties": [
               {
                 "id": "mappings",
                 "value": [
@@ -471,11 +739,13 @@
                     "type": "value",
                     "options": {
                       "0": {
-                        "text": "clean",
+                        "text": "down",
+                        "color": "red",
                         "index": 0
                       },
                       "1": {
-                        "text": "anomaly",
+                        "text": "up",
+                        "color": "green",
                         "index": 1
                       }
                     }
@@ -483,131 +753,171 @@
                 ]
               },
               {
-                "id": "thresholds",
+                "id": "custom.cellOptions",
                 "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green"
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
+                  "type": "color-text"
                 }
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
               }
             ]
           },
           {
             "matcher": {
-              "id": "byFrameRefID",
-              "options": "B"
+              "id": "byName",
+              "options": "in rotation"
             },
             "properties": [
               {
-                "id": "unit",
-                "value": "s"
-              },
-              {
                 "id": "mappings",
-                "value": []
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "benched",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "yes",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
               },
               {
-                "id": "thresholds",
+                "id": "custom.cellOptions",
                 "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green"
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 108000
-                    },
-                    {
-                      "color": "red",
-                      "value": 172800
-                    }
-                  ]
+                  "type": "color-text"
                 }
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "x": 21,
-        "y": 0,
-        "w": 3,
-        "h": 5
+        "x": 0,
+        "y": 7,
+        "w": 13,
+        "h": 7
       },
-      "id": 5,
+      "id": 6,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "textMode": "auto",
-        "wideLayout": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "email"
+          }
+        ]
       },
-      "pluginVersion": "11.6.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
-          "expr": "litellm_price_sync_anomaly",
+          "expr": "label_replace((max by (account, email) (clamp_max((litellm_opencode_go_window_status{email!=\"\"} == bool 1) + (litellm_opencode_go_used_percent{email!=\"\"} >= bool 95), 1)) == bool 0) * on(account, email) litellm_opencode_go_fetch_ok{email!=\"\"} or on(account, email) (litellm_opencode_go_fetch_ok{email!=\"\"} * 0), \"col\", \"in rotation\", \"__name__\", \".*\") or label_replace(litellm_opencode_go_used_percent{email!=\"\"}, \"col\", \"used $1\", \"window\", \"(.*)\") or label_replace(litellm_opencode_go_reset_at{email!=\"\"} - time(), \"col\", \"reset $1\", \"window\", \"(.*)\") or label_replace(litellm_opencode_go_fetch_ok{email!=\"\"}, \"col\", \"fetch\", \"__name__\", \".*\")",
+          "format": "table",
           "instant": true,
           "range": false,
-          "refId": "A",
-          "legendFormat": "anomaly"
-        },
-        {
-          "editorMode": "code",
-          "expr": "time() - litellm_price_sync_last_success_timestamp_seconds",
-          "instant": true,
-          "range": false,
-          "refId": "B",
-          "legendFormat": "age"
+          "refId": "A"
         }
       ],
-      "title": "Price sync",
-      "type": "stat"
+      "title": "Pool accounts",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^Value.*$",
+            "renamePattern": "Value"
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "col",
+            "emptyValue": "null",
+            "rowField": "email",
+            "valueField": "Value"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "email\\col": 0,
+              "email": 0,
+              "in rotation": 1,
+              "used rolling": 2,
+              "used weekly": 3,
+              "used monthly": 4,
+              "reset rolling": 5,
+              "reset weekly": 6,
+              "reset monthly": 7,
+              "fetch": 8
+            },
+            "renameByName": {
+              "email\\col": "email"
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "100 minus the share of each window that account has spent. The router benches an account at 95 percent (rolling, weekly or monthly) until the window resets.",
+      "description": "Each line is the account's tightest window. The table above splits rolling, weekly and monthly. The router benches an account at 95 percent used, which is 5 percent headroom.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
-            "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -624,14 +934,16 @@
               "mode": "line"
             }
           },
-          "links": [],
           "mappings": [],
+          "max": 100,
           "min": 0,
+          "unit": "percent",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "red"
+                "color": "red",
+                "value": null
               },
               {
                 "color": "yellow",
@@ -642,110 +954,34 @@
                 "value": 20
               }
             ]
-          },
-          "unit": "percent",
-          "max": 100
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 14,
-        "x": 0,
-        "y": 5
+        "x": 13,
+        "y": 7,
+        "w": 11,
+        "h": 7
       },
-      "id": 6,
+      "id": 7,
       "options": {
         "legend": {
           "calcs": [
-            "min",
             "lastNotNull",
-            "max"
+            "min"
           ],
           "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": false
         },
         "tooltip": {
-          "hideZeros": false,
           "mode": "multi",
           "sort": "desc"
         }
       },
-      "pluginVersion": "11.6.1",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "100 - litellm_opencode_go_used_percent{email!=\"\"}",
-          "legendFormat": "{{email}} {{window}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Pool headroom per account and window",
-      "type": "timeseries"
-    },
-    {
-      "id": 7,
-      "type": "bargauge",
-      "title": "Pool weekly and monthly limit per account",
-      "description": "Two batteries per pool account: the fill is the share of the weekly and the monthly window the account has already spent. Red starts at 95 percent, where the poller benches the account until the window resets; the rolling window stays in the panel on the left.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 14,
-        "y": 5,
-        "w": 10,
-        "h": 9
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "yellow",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 95
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "options": {
-        "displayMode": "lcd",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "left",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
-      },
-      "pluginVersion": "11.6.1",
       "targets": [
         {
           "datasource": {
@@ -753,13 +989,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "litellm_opencode_go_used_percent{window=~\"weekly|monthly\"}",
-          "instant": true,
-          "legendFormat": "{{email}} {{window}}",
-          "range": false,
+          "expr": "min by (email) (100 - litellm_opencode_go_used_percent{email=~\".+@.+\"})",
+          "legendFormat": "{{email}}",
+          "range": true,
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Worst pool headroom per account",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -796,10 +1033,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 6,
         "x": 0,
-        "y": 14
+        "y": 14,
+        "w": 6,
+        "h": 4
       },
       "id": 8,
       "options": {
@@ -851,15 +1088,16 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "dtdurations",
+          "decimals": 1
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 6,
         "x": 6,
-        "y": 14
+        "y": 14,
+        "w": 6,
+        "h": 4
       },
       "id": 9,
       "options": {
@@ -919,15 +1157,16 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "dtdurations",
+          "decimals": 1
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 6,
         "x": 12,
-        "y": 14
+        "y": 14,
+        "w": 6,
+        "h": 4
       },
       "id": 10,
       "options": {
@@ -1002,10 +1241,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 6,
         "x": 18,
-        "y": 14
+        "y": 14,
+        "w": 6,
+        "h": 4
       },
       "id": 11,
       "options": {
@@ -1105,10 +1344,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 24,
         "x": 0,
-        "y": 19
+        "y": 18,
+        "w": 24,
+        "h": 7
       },
       "id": 12,
       "options": {
@@ -1119,7 +1358,7 @@
             "max"
           ],
           "displayMode": "table",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -1140,115 +1379,6 @@
       ],
       "title": "Codex window usage",
       "type": "timeseries"
-    },
-    {
-      "id": 14,
-      "type": "stat",
-      "title": "Sources",
-      "description": "Whether each upstream answered the usage API on the last exporter run. A transient failure that empties the pool or Codex half of this dashboard shows up here instead of looking like an empty catalog.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "x": 18,
-        "y": 0,
-        "w": 3,
-        "h": 5
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byFrameRefID",
-              "options": "A"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "none"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "down",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "up",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red"
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "litellm_limits_source_up",
-          "instant": true,
-          "legendFormat": "{{source}}",
-          "range": false,
-          "refId": "A"
-        }
-      ]
     }
   ],
   "refresh": "1m",
