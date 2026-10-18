@@ -6,7 +6,7 @@
 }:
 
 {
-  age.secrets = lib.optionalAttrs (config.networking.hostName != "fx516") {
+  age.secrets = lib.optionalAttrs (config.networking.hostName == "server") {
     opencode-telegram-mcp = {
       file = ../../secrets/mcp/telegram-mcp.age;
       owner = user.name;
