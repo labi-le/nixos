@@ -6,13 +6,7 @@ let
   prices = builtins.fromJSON (builtins.readFile ./prices.json);
 
   declaredGroups = [
-    (import ./beam-free.nix)
     (import ./deepseek-v4.1-flash.nix)
-    (import ./longcat-2.5-preview-free.nix)
-    (import ./step-5-preview.nix)
-    (import ./deepseek-v4.1-flash-free.nix)
-    (import ./space-bunny-free.nix)
-    (import ./muse-spark-1.2-contributor-free.nix)
     (import ./gpt-6-astra.nix)
     (import ./gpt-6-luna.nix)
     (import ./gpt-6.1-sol.nix)
@@ -110,33 +104,6 @@ let
     };
   };
 
-  zenFreeDeployment = group: {
-    model_name = group.name;
-    model_info = metadata group
-    // {
-      opencode_usage_metered = false;
-      zen_free_fingerprint = true;
-    }
-    // lib.optionalAttrs (group.responses or false) {
-      mode = "responses";
-    };
-    litellm_params = {
-      model = group.upstream;
-      api_base = "https://opencode.ai/zen/v1";
-      api_key = "public";
-      timeout = 900;
-      stream_timeout = 180;
-      max_retries = 2;
-      num_retries = 2;
-      input_cost_per_token = 0.0;
-      output_cost_per_token = 0.0;
-      cache_read_input_token_cost = 0.0;
-    }
-    // lib.optionalAttrs (!(group.responses or false)) {
-      use_chat_completions_api = true;
-    };
-  };
-
   chatgptDeployment = group: {
     model_name = group.name;
     model_info = metadata group // {
@@ -158,8 +125,6 @@ let
     group:
     if group.provider == "opencode-go" then
       lib.imap0 (index: _: poolDeployment group index) (lib.range 1 poolSize)
-    else if group.provider == "zen-free" then
-      [ (zenFreeDeployment group) ]
     else
       [ (chatgptDeployment group) ];
 in

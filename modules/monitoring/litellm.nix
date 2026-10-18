@@ -144,24 +144,6 @@ in
             summary = "Nothing has refreshed the Zen prices for three days; the timer or the service is down.";
             command = "systemctl status litellm-price-sync.timer litellm-price-sync.service";
           })
-          (rule {
-            uid = "litellm-free-probe-failed";
-            title = "A Zen free group stopped accepting requests";
-            expr = "litellm_free_probe_ok == 0";
-            for = "6m";
-            severity = "critical";
-            summary = "Zen free {{ $labels.model }} stopped accepting requests: {{ $labels.state }}. The zero-token probe no longer reaches the model layer through the gateway.{{ if eq $labels.state \"gate\" }} That is the free tier refusing the fingerprint again, so the client footprint moved, not the network or the account pool.{{ else if eq $labels.state \"deprecated\" }} That is the upstream withdrawing the model id, so the group has to be replaced or removed.{{ else if eq $labels.state \"quota\" }} That is the free allowance or the rate limit being exhausted.{{ else if eq $labels.state \"protocol\" }} That is one route no longer reaching the model: the upstream dropped a protocol, the chat-completions bridge is off, or the model moved to the other route.{{ else if eq $labels.state \"http\" }} That is the gateway answering something else, usually a missing deployment or a changed error shape.{{ end }}";
-            command = "journalctl -u litellm-free-probe -n 60 --no-pager\ncat /var/lib/litellm-free-probe/state.json";
-          })
-          (rule {
-            uid = "litellm-free-probe-stale";
-            title = "The Zen free probe stopped running";
-            expr = "time() - litellm_free_probe_run_timestamp_seconds > 7200";
-            for = "1h";
-            severity = "critical";
-            summary = "The probe that watches the Zen free groups has not run for two hours, so a broken group would now go unnoticed; the timer or the unit is down.";
-            command = "systemctl status litellm-free-probe.timer litellm-free-probe.service\njournalctl -u litellm-free-probe -n 40 --no-pager";
-          })
         ];
       }
     ];

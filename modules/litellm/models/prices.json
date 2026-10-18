@@ -1,12 +1,6 @@
 {
   "source": "https://opencode.ai/v2/docs/console/go/",
   "models": {
-    "beam-free": {
-      "input": 0.0,
-      "output": 0.0,
-      "cacheRead": 0.0,
-      "offPeak": null
-    },
     "deepseek-v4.1-flash": {
       "input": 3e-07,
       "output": 1.2e-06,
@@ -16,18 +10,6 @@
         "output": 6e-07,
         "cacheRead": 3e-09
       }
-    },
-    "longcat-2.5-preview-free": {
-      "input": 0.0,
-      "output": 0.0,
-      "cacheRead": 0.0,
-      "offPeak": null
-    },
-    "step-5-preview": {
-      "input": 1e-06,
-      "output": 2.7e-06,
-      "cacheRead": 1.0000000000000001e-07,
-      "offPeak": null
     }
   }
 }

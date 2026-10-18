@@ -2,7 +2,7 @@ defaultThinkingLevel: auto
 providers:
   autoThinkingMaxEffort: xhigh
 modelRoles:
-  default: llm-labile/deepseek-v4.1-flash-free
+  default: llm-labile/deepseek-v4.1-flash
   plan: openai-codex/gpt-6-astra:high
   slow: openai-codex/gpt-6-astra:high
   task: openai-codex/gpt-6-astra:high

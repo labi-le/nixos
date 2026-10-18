@@ -34,7 +34,6 @@ in
     "d /var/lib/litellm-db 0700 999 999 -"
     "d /var/lib/litellm-chatgpt 0700 0 0 -"
     "d /var/lib/litellm-price-sync 0700 0 0 -"
-    "d /var/lib/litellm-free-probe 0700 0 0 -"
   ];
 
   virtualisation.oci-containers.backend = "docker";
@@ -59,14 +58,13 @@ in
       ];
       environment = {
         PYTHONPATH = "/app";
-        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params,zen_free:install_zen_free";
+        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params";
       };
       volumes = [
         "${configYaml}:/app/config.yaml:ro"
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"
         "${./opencode-session.py}:/app/opencode_session.py:ro"
         "${./reasoning-params.py}:/app/reasoning_params.py:ro"
-        "${./zen-free.py}:/app/zen_free.py:ro"
         "/var/lib/litellm-chatgpt:/root/.config/litellm/chatgpt"
       ];
       extraOptions = [ "--dns=192.168.1.1" ];
@@ -158,34 +156,6 @@ in
     timerConfig = {
       OnCalendar = "*:0/5";
       RandomizedDelaySec = "30s";
-    };
-  };
-
-  systemd.services.litellm-free-probe = {
-    description = "Probe the Zen free groups through the litellm gateway";
-    after = [ "docker-litellm.service" "network-online.target" ];
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      TimeoutStartSec = "900";
-      MemoryHigh = "512M";
-      MemoryMax = "1G";
-      MemorySwapMax = 0;
-    };
-    script = ''
-      exec ${pkgs.python3}/bin/python3 ${./free-probe.py}
-    '';
-  };
-
-  systemd.timers.litellm-free-probe = {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "*:0/30";
-      RandomizedDelaySec = "60s";
-      Persistent = true;
     };
   };
 }

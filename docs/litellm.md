@@ -28,27 +28,15 @@ group into one deployment per account key, `config.nix` is the rest of the
 generated `config.yaml`, and `default.nix` keeps the NixOS side (secrets,
 containers, units). Adding a model is one new file under `models/`.
 
-Four groups are served from `https://opencode.ai/zen/go/v1` with the same four
-account keys; a fifth, `opencode-go-pool`, was a rename shim deleted on
-2026-10-11:
+One pool group is served from `https://opencode.ai/zen/go/v1` over the four
+account keys; a second, `opencode-go-pool`, was a rename shim deleted on
+2026-10-11, and every free row — `beam-free` and `longcat-2.5-preview-free` on
+the Go plan, `deepseek-v4.1-flash-free`, `space-bunny-free` and
+`muse-spark-1.2-contributor-free` on the Zen tier — was removed on 2026-10-18
+together with the client-identity bypass that carried them. `step-5-preview`
+was removed the same day, so no group in this catalog has an upstream that
+gates on the OpenCode client footprint and every remaining group is priced:
 
-- `beam-free` — `openai/beam-free`, one of the two rows the Go plan lists as
-  `Free / Unlimited` (limited time), and the only free Go id that is not shared
-  with the Zen tier. Costs are zero, so the group exists for reach, not for
-  accounting. Measured 2026-10-16 through the deployed route: `tool_calls` come
-  back for a tools request, images are refused upstream (`Beam supports text
-  input only`), and `reasoning_effort` is accepted for `low`…`max` but rejected
-  with `400 unsupported_value` for `minimal`, `none` and `off`, which is the
-  ladder the group declares. Limits 1 048 576 in / 131 072 out (models.dev,
-  `opencode-go`).
-- `longcat-2.5-preview-free` — `openai/longcat-2.5-preview-free`, the other
-  `Free / Unlimited` Go row, and the same request shape: `tool_calls` work,
-  `reasoning_effort` covers `minimal`…`max` (`none` and `off` are answered with
-  a 200 and no content, so no level below `minimal` is declared), limits
-  1 000 000 in / 131 072 out. Images are sent but not seen: a red, a blue and a
-  green 64×64 square all came back as `White`, `Black` and `pink`, while the
-  same three images through `deepseek-v4.1-flash` answered `Red`, `Blue` and
-  `Green`, so the group declares `supportsVision = false`.
 - `deepseek-v4.1-flash` — the four-account pool of `openai/deepseek-v4.1-flash`
   deployments, renamed from `opencode-go-pool` on 2026-10-10. The old name
   outlived the rename twice and is now gone entirely: first as a
@@ -63,121 +51,16 @@ account keys; a fifth, `opencode-go-pool`, was a rename shim deleted on
   `400 /chat/completions: Invalid model name passed in model=opencode-go-pool`
   with the master key, and `403 The requested model 'opencode-go-pool' is not
   available for this key` with a key scoped to a group.
-- `step-5-preview` — the second four-deployment group over the same four
-  account keys. Its upstream is `openai/step-5-preview` since 2026-10-16, when
-  the Go tier withdrew the `step-5-preview-free` id and published a priced
-  `step-5-preview` row in its place (see Pricing). The group name was already
-  that id, so no client had to change, and the deployments that still named
-  `openai/step-5-preview-free` answered every request with
-  `400 Upstream request failed: Model is unavailable.` (`/models` dropped the
-  free id in the same release; the `space-bunny-free` → `space-bunny` rename of
-  2026-10-08 was the first of these).
-- `deepseek-v4.1-flash-free`, `space-bunny-free` and
-  `muse-spark-1.2-contributor-free` — the Zen tier's free set, one deployment
-  each, with no account of ours attached (see the gate below). Measured
-  2026-10-17 through that gate: `deepseek-v4.1-flash-free` takes
-  `reasoning_effort` `none`…`max` (200 000 in / 32 000 out),
-  `space-bunny-free` `minimal`…`max` (1 048 576 / 524 288) and
-  `muse-spark-1.2-contributor-free` `minimal`…`xhigh` (1 048 576 / 131 072).
-  All three call tools (`bash` comes back as a `tool_calls` entry; the muse pair
-  accepts only `tool_choice: "auto"`) and all three read images (a red, a blue
-  and a green square answered `Red`, `Blue`, `Green`).
 
-  `muse-spark-1.3-contributor-free` was the fourth for a few hours and was
-  withdrawn upstream the same day: the id answers `410 ModelDeprecated`, the
-  bare `muse-spark-1.3` in `/zen/v1/models` is the paid model (`401 Missing API
-  key` without credits), and the group was deleted rather than left answering
-  `410` forever. The probe below reports `deprecated` if this happens to any of
-  the remaining three.
-
-The Zen tier's free ids are gated by client identity rather than by
-entitlement, and this catalog serves three of them anyway. A plain request gets
-`403 FreeTierError`, `OpenCode's free tier can only be used from within
-OpenCode`; the same body answers `200` once it carries a `User-Agent` whose
-leading token is `opencode/…`, a session header shaped
-`ses_<12 lowercase hex><14 alnum>` whose head's low 12 bits land in
-`0xfc0…0xfff` (the range OpenCode's own descending-id generator produces for
-counters 0–63, so a digest-derived head passes roughly 2 % of the time and looks
-intermittent), `stream: true` and two of OpenCode's core tool names (`bash` +
-`read` are enough). `Authorization: Bearer public` passes the same gate, which
-is why these groups carry `api_key = "public"` and none of our accounts is
-attached to their requests. `muse-spark-1.2-`/`-1.3-` answer only on
-`/responses`.
-
-`modules/litellm/zen-free.py` is the fourth `LITELLM_WORKER_STARTUP_HOOKS`
-entry and holds that fingerprint. It patches `httpx.AsyncClient.__init__` and
-`httpx.Client.__init__` to append a request event hook, because `User-Agent`
-cannot be set from `litellm_params`, from `extra_headers` or from a pre-call
-hook: the OpenAI SDK writes its own value after all of them (measured on this
-image, openai 2.33.0, where `default_headers` and per-request `extra_headers`
-both lose to `OpenAI/Python 2.33.0`), while an httpx event hook runs last and
-rewrites the header in place. Such a hook must be async for the async clients
-(httpx awaits each one; a plain function fails with `object NoneType can't be
-used in 'await' expression`). The hook matches `opencode.ai/zen/v1/` only, so
-the Go tier under `/zen/go/v1/` keeps the per-account session headers it sets
-itself, and it keeps a client's own session when that one already satisfies the
-shape and bit rule, otherwise it mints one per process. A second half, a
-`CustomLogger` pre-call hook, pads `tools` with stubs up to two core names
-(`bash`, `read`; the stubs are never registered in any harness, so a model that
-calls one gets an error and recovers), which is what a plain client that sends
-no tools needs to get past the gate at all.
-
-Two limits belong to the provider and reach clients unchanged: a non-streaming
-request is refused with the same `403`, and a protocol the model does not serve
-is refused with `400 ModelProtocolUnsupported`. The deployment declares
-`mode = "responses"` for the muse group so discovery picks that protocol, and
-`modules/omp/default.nix` pins `deepseek-v4.1-flash-free` and
-`space-bunny-free` to `openai-completions`, because their upstreams are
-chat-only and omp would otherwise send them as Responses; the muse group also
-answers `/v1/chat/completions`, which litellm bridges to the Responses call the
-upstream serves. The reverse direction is explicit as well: every chat-only
-`zen-free` deployment carries `use_chat_completions_api = true`, so litellm
-bridges a `/v1/responses` request down to chat completions instead of passing
-it to an upstream that never learned that protocol. Without that flag an
-unpinned client that defaults to the Responses API gets the upstream's
-`400 ModelProtocolUnsupported` and cannot use the group at all, which is what
-happened on 2026-10-17. One symptom is deliberate: a manual `GET /health` marks all
-four zen-free deployments unhealthy, because the probe is a non-streaming,
-tool-less chat call that the gate refuses, and the three chatgpt groups report
-unhealthy to the same endpoint for their own reason (`Input must be a list`).
-Routing is unaffected as long as `background_health_checks` stays off; turning
-it on would bench all four of these groups at the first probe.
-
-This is a deliberate bypass of a control the provider enforces, and it is the
-only one in this repo. The public thread for that gate reports one prober's
-account blocked for repeated policy violations and the gate has been revised at
-least three times; these requests carry no account of ours, but they leave from
-the same address as the paid pool, so a block by IP would reach everything.
-
-`modules/litellm/free-probe.py` spends no tokens. Every thirty minutes, behind
-the oneshot plus timer pair, it sends a malformed streaming body per group on
-both routes - `messages: []` to `/v1/chat/completions`, `input: []` to
-`/v1/responses`, six requests per run - and reads the error. The upstream checks the model id, then
-the client-identity gate, then the body, so a single rejected request separates
-every failure the probe cares about at zero cost: `410 ModelDeprecated` for a
-withdrawn id, the `403` free-tier gate for a moved fingerprint, `429` for the
-allowance, `400 ModelProtocolUnsupported` for a route the upstream dropped or
-a bridge that is off, and a `400 invalid_request_error` from the model layer,
-which is the healthy `ok` (the gate accepted the gateway, so the rejection came
-from beyond it). A group is `ok` only when both routes reach that rejection, so
-a protocol move on either one is visible.
-`5xx` is `upstream`, an exception `network`, and anything else `http` - a
-missing deployment answers `400 Invalid model name` locally, which lands there.
-The probe therefore proves routing, key, gate and model id, not generation;
-clients prove generation on every real request, and `--answer` sends a real
-16-token completion on demand. Per-group `litellm_free_probe_ok{model,state}`,
-`litellm_free_probe_latency_seconds`, `litellm_free_probe_last_success_timestamp_seconds`,
-`litellm_free_probe_checked_timestamp_seconds` and
-`litellm_free_probe_run_timestamp_seconds` land in
-`/var/lib/prometheus-node-textfile-collector/litellm-free-probe.prom`; the raw
-upstream body of a failed probe goes to the unit's journal and to
-`/var/lib/litellm-free-probe/state.json`. Two rules in
-`modules/monitoring/litellm.nix` read it: `litellm-free-probe-failed` names the
-group and the state after six minutes, and `litellm-free-probe-stale` fires when
-the probe itself has not run for two hours. Manual use:
-`python3 modules/litellm/free-probe.py --stdout`, and `--answer` for a real
-completion (which spends tokens and can report `empty` for a stream with no
-event).
+Every remaining deployment takes the Responses route natively: the pool group
+is `openai/deepseek-v4.1-flash`, and the three `chatgpt` groups declare
+`mode = "responses"` and answer both routes, the chat one bridged up by
+litellm. Transport is therefore a property of the gateway's catalog, not of
+each client: omp discovers every `openai/…` group as Responses and needs no
+per-model pin, and `modules/omp/default.nix` carries no model names at all. A
+manual `GET /health` still marks the three `chatgpt` groups unhealthy for their
+own reason (`Input must be a list`); routing is unaffected as long as
+`background_health_checks` stays off.
 
 A model name is a contract with every client that sends it, and the alias
 mechanism hid how hard it is to withdraw: `model_group_alias` resolved *before*
@@ -191,26 +74,22 @@ spend log's `model_group` column, and `GET /v1/models` answers it per key in one
 call. With the alias gone each group name is exclusive: a key scoped to one
 group answers `403` for the other and `400` for a name no group carries.
 
-The two priced groups' deployments carry `model_info.opencode_usage_metered =
-true`, the two free Go rows and the four `zen-free` groups carry `false`, and the
-pool-usage callback benches
+The pool group's deployments carry `model_info.opencode_usage_metered = true`,
+and the pool-usage callback benches
 *every* metered deployment that shares an exhausted account key
 (`metered_deployments_by_key` skips only the ones flagged `false`): one rule for
-the accounts, which is what keeps the pool protected now that `deepseek-v4.1-flash`
-and `step-5-preview` share the same four keys. The flag follows the row, not the
-tier: `step-5-preview` carried `false` while the Go table listed it as
-`Unlimited`, and the two `Free / Unlimited` rows carry it now, because benching a
-free model when the paid allowance runs out would withdraw it for no reason. The
-`/v1/usage` snapshot keeps its `provider: opencode-go-pool` label: it names the
-account pool, not a model group.
+the accounts, which is what keeps the pool protected. Every group is priced, so
+every deployment is metered; the `/v1/usage` snapshot keeps its
+`provider: opencode-go-pool` label because it names the account pool, not a
+model group.
 
-Error-driven cooldown is off for every deployment of every pool group:
+Error-driven cooldown is off for every deployment of the pool group:
 `models/default.nix` gives each deployment `model_info.cooldown_time = 0` and
 `litellm_params.num_retries = 0`, so the `router_settings.cooldown_time = 600`
-and `num_retries = 30` left in `config.nix` are defaults none of these sixteen
+and `num_retries = 30` left in `config.nix` are defaults none of these four
 deployments reaches. Cooldown keys on the deployment id — one per account key —
 not on the group or the request, which is why the reasoning below applies
-identically to every deployment of every pool group.
+identically to every deployment of the pool group.
 
 Error-driven cooldown was an amplifier, not a protection. On 2026-10-11 zen/go
 answered `429 {"error":{"type":"server_error","message":"Upstream request
@@ -266,12 +145,9 @@ resetting `2026-11-02T20:30` for the first key against `2026-10-28T23:15`…`23:
 for the rest — so each key is its own bucket and the pool multiplies the
 allowance by four. `https://opencode.ai/docs/go/` sets the metered models'
 limits as a monthly dollar amount per model, spent as 5-hour 20 %, weekly 50 %,
-monthly 100 % of it. `step-5-preview-free` was listed `Unlimited` there until
-2026-10-16, which is why that group carried no plan quota to protect; the row is
-now `Step 5 Preview`, at $1.00/$2.70/$0.10 per 1M input/output/cached read with a
-$60 monthly limit — a 4× promotion over the $15 list value — so every priced
-group is metered and one rule covers them all. The two `Free / Unlimited` rows
-carry no plan quota at all, which is what `metered = false` marks. Exactly two
+monthly 100 % of it. Every remaining group carries such a plan quota — the free
+rows and `step-5-preview` are gone, and `metered = false` no longer appears in
+the catalog — so one rule covers them all. Exactly two
 429 flavours came back from zen/go for the group, and they differ in scope. `Upstream request failed: Rate
 limit exceeded. Please try again later.` — 10 records, all on one account key
 (`08d8ea64…`, 2026-10-11 06:03:03…06:03:19) while the other three kept
@@ -622,24 +498,11 @@ ladder on `supported_openai_params`, and omp reads that gate from the
 *deployment* metadata (`/model/info`, `/v2/model/info`), while ignoring
 `supported_reasoning_efforts` completely — that field is not in omp's bundle at
 all. Measured 2026-10-11 with the hook in place: `deepseek-v4.1-flash` gets
-`['low','high','max']` and `step-5-preview` `['low','medium','high']`, both empty
-before it. LiteLLM itself never publishes `reasoning_effort` for these two
-groups, because it resolves `openai/deepseek-v4.1-flash` and
-`openai/step-5-preview` to a generic OpenAI chat parameter list; the
+`['low','high','max']`, empty before it. LiteLLM itself never publishes
+`reasoning_effort` for the group, because it resolves
+`openai/deepseek-v4.1-flash` to a generic OpenAI chat parameter list; the
 `chatgpt/gpt-6-*` groups carry it because LiteLLM knows them as Responses
 models.
-
-One transport caveat, specific to `step-5-preview`: omp's LiteLLM discovery
-sends it over `POST /v1/responses` — its upstream is an `openai/…` id — and Zen
-answered `400 ModelProtocolUnsupported` for that protocol on `step-5-preview-free`,
-the id the Go tier published when this was measured (2026-10-11), so the omp
-provider pins it to chat completions with
-`modelOverrides.step-5-preview.api = "openai-completions"` in
-`modules/omp/default.nix`. Giving the deployment `model_info.mode = "chat"` does
-not change that choice (measured 2026-10-11: omp still sent Responses, so the
-override was reverted), and jcode never hit it: an `openai-compatible` profile
-speaks chat completions only, and `jcode run --provider-profile llm-labile -m
-step-5-preview` answers through the same gateway.
 
 Verify: `omp models llm-labile --json` lists exactly the key's groups with
 `pricingStatus: fixed`, and a group the key lacks is absent from it. A

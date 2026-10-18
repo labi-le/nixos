@@ -97,23 +97,6 @@ let
           discovery = {
             type = "litellm";
           };
-          modelOverrides = {
-            beam-free = {
-              api = "openai-completions";
-            };
-            "deepseek-v4.1-flash-free" = {
-              api = "openai-completions";
-            };
-            "longcat-2.5-preview-free" = {
-              api = "openai-completions";
-            };
-            space-bunny-free = {
-              api = "openai-completions";
-            };
-            step-5-preview = {
-              api = "openai-completions";
-            };
-          };
         };
       };
     }
@@ -377,8 +360,7 @@ in
     "L+ ${agentDir}/extensions/delegation-gate.ts - - - - ${delegationGate}/delegation-gate.ts"
     "L+ ${agentDir}/extensions/repo-register.js - - - - ${repoRegisterJs}"
   ]
-  ++ lib.optional (telegramSecret != null)
-    "L+ ${agentDir}/telegram-mcp - - - - ${telegramCommand}"
+  ++ lib.optional (telegramSecret != null) "L+ ${agentDir}/telegram-mcp - - - - ${telegramCommand}"
   ++ skillLinks;
 
   system.activationScripts.ompConfig = lib.stringAfter [ "users" ] ''
