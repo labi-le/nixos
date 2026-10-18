@@ -8,37 +8,37 @@ let
 in
 {
   config = lib.mkIf (builtins.elem config.networking.hostName enabledHosts) {
-    age.secrets.opencode-jira-mcp = {
-      file = ../secrets/mcp/jira-mcp.age;
+    age.secrets."work/jira-mcp" = {
+      file = ../secrets/work/jira-mcp.age;
       owner = "labile";
       group = "users";
       mode = "0400";
     };
 
-    age.secrets.opencode-gitlab-mcp = {
-      file = ../secrets/mcp/gitlab-work.age;
+    age.secrets."work/gitlab-mcp" = {
+      file = ../secrets/work/gitlab-work.age;
       owner = "labile";
       group = "users";
       mode = "0400";
     };
 
 
-    age.secrets.opencode-grafana-mcp = {
-      file = ../secrets/mcp/grafana-mcp.age;
+    age.secrets."work/grafana-mcp" = {
+      file = ../secrets/work/grafana-mcp.age;
       owner = "labile";
       group = "users";
       mode = "0400";
     };
 
-    age.secrets.google-docs-mcp = {
-      file = ../secrets/mcp/google-docs-mcp.age;
+    age.secrets."work/google-docs-mcp" = {
+      file = ../secrets/work/google-docs-mcp.age;
       owner = "labile";
       group = "users";
       mode = "0400";
     };
 
-    age.secrets.portainer-mcp = {
-      file = ../secrets/portainer-mcp.age;
+    age.secrets."work/portainer-mcp" = {
+      file = ../secrets/work/portainer-mcp.age;
       owner = "labile";
       group = "users";
       mode = "0400";

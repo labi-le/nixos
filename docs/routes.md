@@ -78,7 +78,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | NFS mounts | `modules/nfs.nix` | pc, fx516, notebook |
 | Thunar file manager | `modules/thunar.nix` | pc, fx516, notebook |
 | JetBrains IDE wrapper module | `modules/ide/module.nix` | flake common module; enabled by host `ide.*` options on pc/notebook |
-| Work secrets (agent tokens): opencode jira/gitlab/grafana + `portainer-mcp` (Portainer URL + API key) + `google-docs-mcp` (Google OAuth desktop client JSON for the `workspace-mcp` Docs server, read through `GOOGLE_CLIENT_SECRET_PATH=/run/agenix/google-docs-mcp`); all consumed by a project-scoped `.omp/mcp.json`, not by the omp module (`modules/omp/default.nix`) | `modules/work-mount.nix` | pc, notebook |
+| Work secrets (agent tokens): jira/gitlab/grafana + `portainer-mcp` (Portainer URL + API key) + `google-docs-mcp` (Google OAuth desktop client JSON for the `workspace-mcp` Docs server, read through `GOOGLE_CLIENT_SECRET_PATH=/run/agenix/work/google-docs-mcp`); all installed under `/run/agenix/work/` from `secrets/work/` and consumed by a project-scoped `.omp/mcp.json`, not by the omp module (`modules/omp/default.nix`) | `modules/work-mount.nix` | pc, notebook |
 
 ## PC-Specific Modules (`hosts/configuration.nix`)
 
