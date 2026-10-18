@@ -147,5 +147,15 @@ in
         ];
       }
     ];
+    deleteRules = [
+      {
+        orgId = 1;
+        uid = "litellm-free-probe-failed";
+      }
+      {
+        orgId = 1;
+        uid = "litellm-free-probe-stale";
+      }
+    ];
   };
 }

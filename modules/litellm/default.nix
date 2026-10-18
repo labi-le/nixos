@@ -34,6 +34,8 @@ in
     "d /var/lib/litellm-db 0700 999 999 -"
     "d /var/lib/litellm-chatgpt 0700 0 0 -"
     "d /var/lib/litellm-price-sync 0700 0 0 -"
+    "R /var/lib/litellm-free-probe"
+    "r /var/lib/prometheus-node-textfile-collector/litellm-free-probe.prom"
   ];
 
   virtualisation.oci-containers.backend = "docker";
