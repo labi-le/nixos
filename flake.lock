@@ -1383,11 +1383,11 @@
         "nixpkgs": "nixpkgs_15"
       },
       "locked": {
-        "lastModified": 1791666046,
-        "narHash": "sha256-PIVX6V/qcCDp8n87XJNQr+e8JLiUmYzhDb96BYcssYM=",
+        "lastModified": 1792310698,
+        "narHash": "sha256-uTFEnIpMa85IchSUwF1NnAH6nBJfqOTv4WO6QtpJwvE=",
         "ref": "refs/heads/master",
-        "rev": "c6d72dc74f9875c834d625665a99a40e42476dd3",
-        "revCount": 446,
+        "rev": "7ab0fcce6c5b42c4cb50727c359ba30ffbeb4b2e",
+        "revCount": 485,
         "type": "git",
         "url": "ssh://git@github.com/labi-le/sub-preprocessor"
       },
