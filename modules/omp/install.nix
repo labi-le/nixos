@@ -19,8 +19,6 @@
     "L+ ${files.agentDir}/rules/commit-style.md - - - - ${./rules/commit-style.md}"
     "L+ ${files.agentDir}/rules/code-comments.md - - - - ${./rules/code-comments.md}"
     "L+ ${files.agentDir}/rules/project-naming.md - - - - ${./rules/project-naming.md}"
-    "L+ ${files.agentDir}/rules/chroma-first.md - - - - ${./rules/chroma-first.md}"
-    "L+ ${files.agentDir}/rules/chroma-first-shell.md - - - - ${./rules/chroma-first-shell.md}"
     "L+ ${files.agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
     "L+ ${files.agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
     "L+ ${files.agentDir}/extensions/git-upstream-gate.ts - - - - ${./extensions/git-upstream-gate.ts}"
@@ -34,6 +32,7 @@
 
   activationScript = lib.stringAfter [ "users" ] ''
     mkdir -p ${files.agentDir}
+    rm -f ${files.agentDir}/rules/chroma-first.md ${files.agentDir}/rules/chroma-first-shell.md
     install -m 600 -o ${user.name} -g ${files.userCfg.group} ${files.configFile} ${files.agentDir}/config.yml
   '';
 }

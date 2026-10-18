@@ -44,6 +44,21 @@ Before generating any response, evaluate its Uncertainty Score from `0.0` to
 - Use idioms and best practices for the specific language, such as Go or C++.
 - Always output the full file code without cherry-picking.
 
+### Decomposition by responsibility
+
+- Separate independent responsibilities into modules or files when adding
+  functionality. Do not accumulate unrelated settings or logic in one file
+  with the intention of splitting it later.
+- Before extending a file, check whether the new logic belongs to its existing
+  responsibility. If not, create a separate module and connect it through the
+  existing entry point.
+- Entry points should primarily connect components, not implement them.
+- Do not split cohesive logic to meet a line-count target. A module boundary
+  must represent a responsibility that can be changed independently.
+- Preserve behavior, configuration merge order and dependencies when splitting
+  code. If another module level changes semantics, extract value-producing
+  helpers and keep option definitions at their original level.
+
 ## 5. Commit Messages
 
 - Keep commit messages very short: a single line in the form
