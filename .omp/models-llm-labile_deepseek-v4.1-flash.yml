@@ -2,7 +2,7 @@ defaultThinkingLevel: auto
 providers:
   autoThinkingMaxEffort: max
 modelRoles:
-  default: llm-labile/deepseek-v4.1-flash
+  default: llm-labile/deepseek-v4.1-flash:max
   smol: llm-labile/deepseek-v4.1-flash:low
   slow: llm-labile/deepseek-v4.1-flash:max
   vision: llm-labile/deepseek-v4.1-flash:low
