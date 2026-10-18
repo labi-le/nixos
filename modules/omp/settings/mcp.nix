@@ -9,7 +9,7 @@ let
   telegramCommand = pkgs.writeShellScript "omp-telegram-mcp" ''
     set -euo pipefail
     set -a
-    source /run/agenix/opencode-telegram-mcp
+    source /run/agenix/telegram-mcp
     set +a
     export TELEGRAM_SESSION_LOCK=shared
     exec ${pkgs.uv}/bin/uvx --from \

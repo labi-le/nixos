@@ -9,7 +9,7 @@
 let
   userCfg = config.users.users.${user.name};
   agentDir = "${userCfg.home}/.omp/agent";
-  telegramSecret = config.age.secrets.opencode-telegram-mcp or null;
+  telegramSecret = config.age.secrets.telegram-mcp or null;
   modelsYml = import ./providers.nix { inherit config lib pkgs; };
   mcp = import ./mcp.nix {
     inherit
