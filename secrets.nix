@@ -29,23 +29,23 @@ in
   "secrets/cache-push-key.age".publicKeys = all;
   "secrets/nix-access-tokens.age".publicKeys = all;
 
-  "secrets/opencode/gitlab-work.age".publicKeys = [
+  "secrets/mcp/gitlab-work.age".publicKeys = [
     pc
     notebook
   ];
-  "secrets/opencode/grafana-mcp.age".publicKeys = [
+  "secrets/mcp/grafana-mcp.age".publicKeys = [
     pc
     notebook
   ];
-  "secrets/opencode/google-docs-mcp.age".publicKeys = [
+  "secrets/mcp/google-docs-mcp.age".publicKeys = [
     pc
     notebook
   ];
-  "secrets/opencode/jira-mcp.age".publicKeys = [
+  "secrets/mcp/jira-mcp.age".publicKeys = [
     pc
     notebook
   ];
-  "secrets/opencode/telegram-mcp.age".publicKeys = all;
+  "secrets/mcp/telegram-mcp.age".publicKeys = all;
 
   "secrets/portainer-mcp.age".publicKeys = [
     pc
