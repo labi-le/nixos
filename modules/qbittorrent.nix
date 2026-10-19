@@ -23,9 +23,7 @@
           PortRangeMin = 6881;
         };
 
-        # sudo mkdir -p /var/lib/qbittorrent/downloads
-        # sudo chown qbittorrent:qbittorrent /var/lib/qbittorrent/downloads
-        Downloads.SavePath = "/drive/torrents";
+        Downloads.SavePath = "/hdd4tb/torrents";
 
         WebUI = {
           Username = user.name;
@@ -36,6 +34,7 @@
       BitTorrent = {
         MaxConnecsPerTorrent = -1;
         Session = {
+          DefaultSavePath = "/hdd4tb/torrents";
           MaxActiveCheckingTorrents = -1;
           MaxActiveDownloads = -1;
           MaxActiveTorrents = -1;
@@ -52,7 +51,8 @@
   };
 
   systemd.services.qbittorrent.unitConfig = {
-    RequiresMountsFor = "/drive/torrents";
-    AssertPathIsMountPoint = "/drive/torrents";
+    RequiresMountsFor = "/hdd4tb/torrents";
+    AssertPathIsMountPoint = "/hdd4tb";
+    PartOf = [ "hdd4tb.mount" ];
   };
 }

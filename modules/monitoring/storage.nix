@@ -376,7 +376,7 @@
           }
           {
             uid = "storage-torrents-filling";
-            title = "Torrents disk (/torrents) is below 15% free";
+            title = "4 TB disk (/hdd4tb) is below 15% free";
             condition = "C";
             data = [
               {
@@ -393,7 +393,7 @@
                     uid = "prometheus";
                   };
                   editorMode = "code";
-                  expr = ''node_filesystem_avail_bytes{mountpoint="/torrents"} / node_filesystem_size_bytes{mountpoint="/torrents"}'';
+                  expr = ''node_filesystem_avail_bytes{mountpoint="/hdd4tb"} / node_filesystem_size_bytes{mountpoint="/hdd4tb"}'';
                   instant = true;
                   range = false;
                   intervalMs = 1000;
@@ -449,8 +449,8 @@
             execErrState = "KeepLast";
             for = "5m";
             annotations = {
-              summary = "below 15% free — this data has no other copy";
-              command = "df -h /torrents";
+              summary = "below 15% free — torrents and Prometheus data share this disk and have no other copy";
+              command = "df -h /hdd4tb";
             };
             labels = {
               severity = "warning";

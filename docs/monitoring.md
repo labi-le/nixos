@@ -97,6 +97,47 @@ This covers the binary-cache incident where nginx could not buffer NAR
 responses under `/tmp/nginx_proxy` because temporary build directories had
 filled the server's tmpfs. The alert does not delete temporary files.
 
+## Prometheus TSDB on the 4 TB disk
+
+The `data` pool is deliberately small, so the one-year Prometheus TSDB lives on
+the 4 TB ext4 disk that also holds torrents. The disk is mounted at `/hdd4tb`
+(`modules/drive.nix`), the TSDB at `/hdd4tb/prometheus`.
+
+Prometheus keeps its stock state path `/var/lib/prometheus2`: nixpkgs'
+`services.prometheus.stateDir` only names a directory below `/var/lib`, so it
+cannot point at another filesystem. `modules/grafana.nix` therefore declares
+`fileSystems."/var/lib/prometheus2"` as a bind mount of `/hdd4tb/prometheus`,
+orders it after `/hdd4tb`, and gives `prometheus.service`
+`RequiresMountsFor`, `AssertPathIsMountPoint` and `PartOf=hdd4tb.mount`. If the
+4 TB disk is missing or its mount fails, the bind unit fails and Prometheus
+does not start, rather than starting on an empty database under the bind
+mount's hidden root-filesystem directory; if the disk is later unmounted,
+`PartOf` stops Prometheus instead of leaving it writing through that hidden
+directory.
+
+The one-time copy from the root filesystem completed on 2026-10-19. Its
+verification compared 24 immutable TSDB blocks (96 files, 488,298,060 bytes)
+against the new copy, restored any missing blocks first, and passed the live
+API checks: 8 targets up, `headStats.numSeries = 31120`, a fresh
+`node_memory_MemTotal_bytes` sample, and a historical sample at
+2026-10-04T01:00Z. The old copy at
+`/var/lib/prometheus2.premigration` was then deleted and no longer exists. The
+one-shot migration, verification and cleanup units and their helper script
+were removed from the configuration; `/hdd4tb/prometheus/.migrated` remains as
+the record of the completed copy. Rollback to the old root-filesystem copy is
+no longer available.
+
+Retention is one year: `services.prometheus.retentionTime = "365d"` becomes
+`--storage.tsdb.retention.time=365d`, there is no size cap and no remote
+storage. Verify with:
+
+```
+curl -s localhost:3020/api/v1/status/flags | grep -E 'storage.tsdb.(path|retention)'
+curl -s localhost:3020/api/v1/status/tsdb
+df -h /hdd4tb
+findmnt /var/lib/prometheus2
+```
+
 ## Incident, 2026-09-23
 
 Two independent failures on the same day exposed the same blind spot —

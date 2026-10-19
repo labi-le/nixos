@@ -203,6 +203,7 @@ in
   services.prometheus = {
     port = 3020;
     enable = true;
+    retentionTime = "365d";
 
     exporters = {
       node = {
@@ -302,6 +303,22 @@ in
         ];
       }
     ];
+  };
+
+  fileSystems."/var/lib/prometheus2" = {
+    device = "/hdd4tb/prometheus";
+    fsType = "none";
+    options = [
+      "bind"
+      "nofail"
+      "x-systemd.requires-mounts-for=/hdd4tb"
+    ];
+  };
+
+  systemd.services.prometheus.unitConfig = {
+    RequiresMountsFor = [ "/var/lib/prometheus2" ];
+    AssertPathIsMountPoint = "/var/lib/prometheus2";
+    PartOf = [ "hdd4tb.mount" ];
   };
 
   systemd.services.prometheus-smartctl-exporter.serviceConfig.ExecStart = lib.mkForce "${smartctlDeviceScript}";
