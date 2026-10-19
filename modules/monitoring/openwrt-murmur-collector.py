@@ -483,7 +483,7 @@ def collect(target):
     if not re.fullmatch(r"[A-Za-z0-9_.-]+@[A-Za-z0-9_.-]+", target):
         raise ValueError("target")
     result = subprocess.run(
-        ["ssh", "-T", "-o", "IdentityAgent=none", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=5", target, "/bin/ash", "-s"],
+        ["ssh", "-F", "/dev/null", "-T", "-o", "IdentityAgent=none", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=5", target, "/bin/ash", "-s"],
         input=SNAPSHOT_SCRIPT.encode("ascii"), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=30, check=True,
     )
     return parse_frames(result.stdout)

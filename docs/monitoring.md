@@ -36,6 +36,13 @@ failed API requests omit only the affected API data. Check both
 `openwrt_collector_last_success_timestamp_seconds`, because a stopped timer
 cannot update its own health gauge.
 
+The collector uses `ssh -F /dev/null` to avoid interactive SSH configuration
+hooks, including the GPG startup-TTY hook. It still verifies the router against
+the user's known-hosts file and uses the default key files with agent access
+disabled. Targets must resolve without SSH config aliases or proxy commands.
+On 2026-10-19 an exhausted local GPG agent blocked that hook before SSH opened
+a connection, causing collection timeouts while murmur remained running.
+
 Operational checks:
 
 ```sh
