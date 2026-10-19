@@ -74,8 +74,10 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   the path with `Detected unsafe path transition /drive (owned by labile) →
   /drive/state (owned by root)` and would silently create nothing, so a `d
   /drive/state/buer …` rule is dead weight here.
-- **Model**: a LiteLLM virtual key (alias `buer-agent`) restricted to
-  `deepseek-v4.1-flash`, injected as `ROBOMP_LITELLM_KEY`. The generated
+- **Model**: a LiteLLM virtual key (alias `buer-agent`) with no `models`
+  restriction, so discovery sees every proxy group; it is injected as
+  `ROBOMP_LITELLM_KEY`. The bot's own `ROBOMP_MODEL` still pins
+  `llm-labile/deepseek-v4.1-flash`. The generated
   `models.yml` declares one provider, `llm-labile`, base URL
   `http://litellm:4000/v1` over the external docker network `litellm` that
   `modules/litellm` creates — not `https://llm.labile.cc`, because a container

@@ -14,7 +14,7 @@ KEY_FILES = (
     "/run/agenix/opencode-litellm-master-key",
     "/run/agenix/litellm-env",
 )
-MODELS = [name for name in os.environ.get("LITELLM_MODELS", "deepseek-v4.1-flash").split(",") if name]
+MODELS = [name for name in os.environ.get("LITELLM_MODELS", "").split(",") if name]
 USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
                      | create ALIAS [DAYS]
                      | extend TARGET [DURATION]
@@ -27,9 +27,10 @@ USAGE = """usage: litellm-key [keys | logs [-f] [N] | totals [DAYS]]
   totals [DAYS]            spend, tokens and requests per alias over the last
                            DAYS days, default 7; reads the full request log,
                            so a very busy proxy makes this slow
-  create ALIAS [DAYS]      new key for ALIAS, default 365 days, models from
-                           LITELLM_MODELS (default deepseek-v4.1-flash); the key
-                           is printed once and cannot be read back
+  create ALIAS [DAYS]      new key for ALIAS, default 365 days, every proxy
+                           model; set LITELLM_MODELS to a comma-separated list
+                           to restrict it; the key is printed once and cannot
+                           be read back
   extend TARGET [DURATION] move the expiry to now + DURATION, default 365d; a
                            negative DURATION moves the current expiry back by
                            that much and never past now
@@ -252,13 +253,13 @@ def cmd_totals(days):
 
 
 def cmd_create(alias, days):
-    answer = call(
-        "/key/generate",
-        {"key_alias": alias, "duration": f"{days}d", "models": MODELS},
-    )
+    payload = {"key_alias": alias, "duration": f"{days}d"}
+    if MODELS:
+        payload["models"] = MODELS
+    answer = call("/key/generate", payload)
     print(f"alias   {answer.get('key_alias')}")
     print(f"expires {answer.get('expires')}")
-    print(f"models  {','.join(answer.get('models') or MODELS)}")
+    print(f"models  {','.join(answer.get('models') or MODELS) or 'all'}")
     print(f"key     {answer.get('key')}")
     print("the key is shown once; store it now")
 

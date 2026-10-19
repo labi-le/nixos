@@ -431,14 +431,21 @@ A live client key (`anyouh`, measured 2026-10-15):
 litellm-key revoke anyouh
 curl -sX POST https://llm.labile.cc/key/generate \
   -H "Authorization: Bearer $MASTER" -H 'Content-Type: application/json' \
-  -d '{"key_alias":"anyouh","duration":"365d",
-       "models":["deepseek-v4.1-flash","step-5-preview","gpt-6-astra","gpt-6-luna","gpt-6.1-sol"],
-       "max_budget":5,"budget_duration":"1d"}'
+  -d '{"key_alias":"anyouh","duration":"365d","max_budget":5,"budget_duration":"1d"}'
 ```
 
+Omitting `models` gives the key every model group, including groups added later:
+`GET /v1/models` then returns the full roster. An explicit `"*"` is not the same
+thing — auth accepts it and lets calls through, but `/v1/models` expands a
+wildcard only into provider-prefixed patterns, so a key carrying `["*"]`
+answers an empty roster and a discovery-based client sees no models (measured on
+1.103.2 with throwaway keys). To rescope an existing key in place, send
+`models: []` to `/key/update`; `/key/info` then reports `[]` and `/v1/models`
+lists every group. `LITELLM_MODELS` still restricts a new key when set.
+
 `litellm-key create` is not enough on its own for a key that had a budget — it
-takes `ALIAS [DAYS]` and models from `LITELLM_MODELS`, so the cap has to follow
-as `litellm-key budget anyouh 5 1d`, or come from the curl above.
+takes `ALIAS [DAYS]`, so the cap has to follow as `litellm-key budget anyouh 5
+1d`, or come from the curl above.
 
 To preserve an existing deadline instead of renewing, send the remaining time as
 whole seconds — `duration` accepts `<int>s` and lands within a second of the
@@ -579,8 +586,9 @@ litellm-key                 # alias, expiry, spend, budget, models, blocked
 litellm-key logs 50         # last 50 request rows
 litellm-key logs -f         # keep printing new rows, Ctrl-C to stop
 litellm-key totals 7        # spend, tokens, requests per alias, last 7 days
-litellm-key create vanya    # new key, 365 days, models from LITELLM_MODELS
+litellm-key create vanya    # new key, 365 days, all proxy models
 litellm-key create guest 30 # 30 days instead of a year
+LITELLM_MODELS=deepseek-v4.1-flash litellm-key create probe 1 # restricted key
 litellm-key extend vanya 30d
 litellm-key extend vanya -30d # 30 days off the current expiry
 litellm-key budget vanya 5 1d # cap vanya at $5 per day
