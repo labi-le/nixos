@@ -34,11 +34,6 @@
 
   services.btop.enable = true;
 
-  networking.firewall = {
-    allowedTCPPorts = [ 10808 ];
-    allowedUDPPorts = [ 10808 ];
-  };
-
   # The box can hard-hang with no logs at all (a too-deep Curve Optimizer did it
   # for five days in July 2026). The FCH timer reboots it after 60s instead of
   # waiting for the reset button; systemd stops feeding /dev/watchdog on any
