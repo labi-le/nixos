@@ -14,6 +14,13 @@ let
       envName;
   closerouterApiKey = litellmKey "LITELLM_CLOSEROUTER";
 
+  llmLabileSecret = config.age.secrets.llm-labile-env or null;
+  llmLabileKey =
+    if llmLabileSecret != null then
+      "!${pkgs.gnused}/bin/sed -n 's/^LLM_LABILE_API_KEY=//p' ${llmLabileSecret.path}"
+    else
+      "LLM_LABILE_API_KEY";
+
   byesuSecret = config.age.secrets.byesu-env or null;
   byesuKey =
     if byesuSecret != null then
@@ -41,11 +48,11 @@ let
           };
         };
       }
-      // lib.optionalAttrs (litellmSecret != null) {
+      // lib.optionalAttrs (llmLabileSecret != null) {
         llm-labile = {
           baseUrl = "https://llm.labile.cc/v1";
           api = "openai-completions";
-          apiKey = litellmKey "LITELLM_MASTER_KEY";
+          apiKey = llmLabileKey;
           discovery = {
             type = "litellm";
           };

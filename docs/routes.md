@@ -37,7 +37,7 @@ STOP.Do NOT use glob, grep, or any search tool. Read this file. Find your task. 
 | GNOME keyring | `modules/keyring.nix` | |
 | Locale, timezone | `modules/locale.nix` | |
 | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | |
-| LLM gateway and provider API keys for omp/jcode hosts (agenix `opencode-litellm-master-key` for the litellm gateway, consumed by `modules/omp/settings/providers.nix` and `modules/jcode/default.nix`; the gateway's own `opencode-go` account keys are a separate secret, `secrets/opencode-go-pool-env.age`, server-only, declared in `modules/litellm/default.nix`) | `modules/opencode-secrets.nix` | Enabled for pc, server, notebook (hosts listed in the module) |
+| LLM gateway and provider API keys for omp/jcode hosts (agenix `llm-labile-env` holds the scoped LiteLLM key behind omp's `llm-labile` provider in `modules/omp/settings/providers.nix`; agenix `opencode-litellm-master-key` stays the admin key for the gateway, the `closerouter` key and jcode's provider env in `modules/jcode/default.nix`; the gateway's own `opencode-go` account keys are a separate secret, `secrets/opencode-go-pool-env.age`, server-only, declared in `modules/litellm/default.nix`) | `modules/opencode-secrets.nix` | Enabled for pc, server, notebook (hosts listed in the module) |
 | Environment variables | `modules/env.nix` | |
 | Network entry point | `modules/network/default.nix` | Imports DNS, firewall, hosts, proxy sub-modules |
 | Network DNS | `modules/network/dns.nix` | Imported by `modules/network/default.nix` |

@@ -16,6 +16,13 @@ in
       mode = "0400";
     };
 
+    age.secrets.llm-labile-env = {
+      file = ../secrets/llm-labile-env.age;
+      owner = "labile";
+      group = "users";
+      mode = "0400";
+    };
+
     age.secrets.byesu-env = {
       file = ../secrets/byesu-env.age;
       owner = "labile";
