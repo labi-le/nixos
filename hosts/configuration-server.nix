@@ -34,6 +34,7 @@
     ./../modules/unbound.nix
     ./../modules/ifconfig.nix
     ./../modules/btop.nix
+    ./../modules/maki
   ];
 
   services.btop.enable = true;
