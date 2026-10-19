@@ -3,4 +3,5 @@ min_maki_version = "0.6.4"
 [permissions]
 net = true
 env = true
-net_hosts = ["llm.labile.cc"]
+fs_read = true
+net_hosts = ["llm.labile.cc", "api.closerouter.dev", "byesu.com"]
