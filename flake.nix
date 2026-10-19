@@ -41,10 +41,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     llm-agents.url = "github:numtide/llm-agents.nix";
-    maki = {
-      url = "github:tontinton/maki";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
