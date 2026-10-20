@@ -26,6 +26,9 @@ in
     "L+ ${configDir}/lua/closerouter.lua - - - - ${./lua/closerouter.lua}"
     "L+ ${configDir}/lua/llm_labile.lua - - - - ${./lua/llm_labile.lua}"
     "L+ ${configDir}/lua/secret.lua - - - - ${./lua/secret.lua}"
+    "L+ ${configDir}/lua/commit_gate.lua - - - - ${./lua/commit_gate.lua}"
+    "L+ ${configDir}/lua/comment_gate.lua - - - - ${./lua/comment_gate.lua}"
+    "L+ ${configDir}/lua/git_upstream_gate.lua - - - - ${./lua/git_upstream_gate.lua}"
     "L+ ${configDir}/plugin.toml - - - - ${./plugin.toml}"
     "L+ ${configDir}/providers.toml - - - - ${./providers.toml}"
   ]
