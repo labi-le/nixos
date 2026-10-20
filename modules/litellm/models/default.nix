@@ -10,6 +10,7 @@ let
     (import ./gpt-6-astra.nix)
     (import ./gpt-6-luna.nix)
     (import ./gpt-6.1-sol.nix)
+    (import ./mimo-v2.6-pro.nix)
   ];
 
   zenGroupNames = map (group: group.name) (
@@ -81,12 +82,14 @@ let
 
   poolDeployment = group: index: {
     model_name = group.name;
-    model_info = metadata group // {
-      opencode_usage_metered = group.metered;
-    }
-    // lib.optionalAttrs (group.offPeakPricing != null) {
-      off_peak_pricing = group.offPeakPricing;
-    };
+    model_info =
+      metadata group
+      // {
+        opencode_usage_metered = group.metered;
+      }
+      // lib.optionalAttrs (group.offPeakPricing != null) {
+        off_peak_pricing = group.offPeakPricing;
+      };
     litellm_params = {
       model = group.upstream;
       api_base = apiBase;
@@ -104,29 +107,40 @@ let
     };
   };
 
-  chatgptDeployment = group: {
-    model_name = group.name;
-    model_info = metadata group // {
-      mode = "responses";
+  directDeployment =
+    group:
+    let
+      retries = group.retries or 0;
+    in
+    {
+      model_name = group.name;
+      model_info =
+        metadata group
+        // lib.optionalAttrs (group.provider == "chatgpt") {
+          mode = "responses";
+        };
+      litellm_params = {
+        model = group.upstream;
+        timeout = 900;
+        stream_timeout = 180;
+        max_retries = retries;
+        num_retries = retries;
+        input_cost_per_token = group.inputCostPerToken;
+        output_cost_per_token = group.outputCostPerToken;
+        cache_read_input_token_cost = group.cacheReadInputTokenCost;
+      }
+      // lib.optionalAttrs (group ? apiBase) {
+        api_base = group.apiBase;
+        api_key = group.apiKeyEnv;
+      };
     };
-    litellm_params = {
-      model = group.upstream;
-      timeout = 900;
-      stream_timeout = 180;
-      max_retries = group.retries;
-      num_retries = group.retries;
-      input_cost_per_token = group.inputCostPerToken;
-      output_cost_per_token = group.outputCostPerToken;
-      cache_read_input_token_cost = group.cacheReadInputTokenCost;
-    };
-  };
 
   deploymentsOf =
     group:
     if group.provider == "opencode-go" then
       lib.imap0 (index: _: poolDeployment group index) (lib.range 1 poolSize)
     else
-      [ (chatgptDeployment group) ];
+      [ (directDeployment group) ];
 in
 {
   inherit poolSize;

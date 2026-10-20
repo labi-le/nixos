@@ -25,6 +25,7 @@ in
   "secrets/litellm-env.age".publicKeys = all;
   "secrets/llm-labile-env.age".publicKeys = all;
   "secrets/opencode-go-pool-env.age".publicKeys = [ server ];
+  "secrets/xiaomi-mimo-env.age".publicKeys = [ server ];
   "secrets/litellm-db-env.age".publicKeys = [ server ];
   "secrets/byesu-env.age".publicKeys = all;
   "secrets/cache-push-key.age".publicKeys = all;

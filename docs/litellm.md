@@ -57,10 +57,12 @@ is `openai/deepseek-v4.1-flash`, and the three `chatgpt` groups declare
 `mode = "responses"` and answer both routes, the chat one bridged up by
 litellm. Transport is therefore a property of the gateway's catalog, not of
 each client: omp discovers every `openai/…` group as Responses and needs no
-per-model pin, and `modules/omp/default.nix` carries no model names at all. A
-manual `GET /health` still marks the three `chatgpt` groups unhealthy for their
-own reason (`Input must be a list`); routing is unaffected as long as
-`background_health_checks` stays off.
+per-model pin, and `modules/omp/default.nix` carries no model names at all. The
+one exception is `mimo-v2.6-pro`, a single `xiaomi_mimo/` deployment whose
+upstream implements `/v1/chat/completions` only, so that group is chat-native
+and carries no `mode`. A manual `GET /health` still marks the three `chatgpt`
+groups unhealthy for their own reason (`Input must be a list`); routing is
+unaffected as long as `background_health_checks` stays off.
 
 A model name is a contract with every client that sends it, and the alias
 mechanism hid how hard it is to withdraw: `model_group_alias` resolved *before*
@@ -297,6 +299,46 @@ Two traps outside the repo's own state:
   and `gpt-5.6-sol`, absent on retry). `retries = 2` in the three group files
   exists for it — a retry hits the same single deployment, which is why these
   groups carry a retry count while the pool groups deliberately carry none.
+
+## Xiaomi MiMo group
+
+`mimo-v2.6-pro` is one deployment of litellm's own `xiaomi_mimo` provider
+(`modules/litellm/models/mimo-v2.6-pro.nix`), not an OpenAI-compatible client of
+someone else's gateway. The provider's default base is
+`https://api.xiaomimimo.com/v1`; this group overrides it to
+`https://token-plan-sgp.xiaomimimo.com/v1`, the Singapore Token Plan endpoint
+the key was issued against, and authenticates with `XIAOMI_MIMO_API_KEY` from
+`secrets/xiaomi-mimo-env.age` (server-only, mounted as an environment file next
+to the pool keys). The two credentials are unrelated: the MiMo key is a Token
+Plan seat and does not answer for `opencode.ai`.
+
+Measured 2026-10-20 against that endpoint with the plan key:
+
+- `POST /v1/chat/completions` answers non-streamed and streamed, returns
+  `tool_calls` with `finish_reason: tool_calls`, and describes an image sent as
+  a data URI, so the group declares vision and function calling.
+- reasoning arrives in a separate `reasoning_content` field and is counted as
+  `completion_tokens_details.reasoning_tokens`; `reasoning_effort` accepts
+  `none`, `low`, `medium` and `high` (`minimal` and `xhigh` answer `400
+  Param Incorrect … must be one of 'none', 'low', 'medium' or 'high'`), and
+  `none` really switches it off (0 reasoning tokens, no `reasoning_content`).
+  The group declares exactly those four levels.
+- `max_tokens` above 131 072 answers `400 … This model supports at most 131072
+  completion tokens`, and a 300 013-token prompt was accepted, matching the
+  vendor's 1M context.
+- prompt caching is upstream: a repeated 50k prompt reported
+  `cached_tokens: 49920` and a 300k one `cached_tokens: 149888`.
+
+Prices and the two token limits come from litellm's cost map, whose
+`xiaomi_mimo/mimo-v2.6-pro` entry cites the vendor's pay-as-you-go page:
+4.35e-7 input, 8.7e-7 output and 3.6e-9 cached input per token, 1 048 576 input
+and 131 072 output. The deployment carries `cooldown_time = 0` and no retries
+like the pool deployments — one deployment per group means a retry only repeats
+the same upstream call.
+
+A key scoped to the five OpenCode/ChatGPT names answers `403` for
+`mimo-v2.6-pro` until its scope is extended with `POST /key/update`; the master
+key reaches it immediately.
 
 ## The client session header
 
