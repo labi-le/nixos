@@ -1,5 +1,8 @@
 local parse = require("maki.provider_parse")
+local secret = require("secret")
 
+local SECRET_PATH = "/run/agenix/llm-labile-env"
+local SECRET_NAME = "LLM_LABILE_API_KEY"
 local MODELS_PATH = "/model/info"
 local CHAT_MODE = "chat"
 local RESPONSES_MODE = "responses"
@@ -40,8 +43,14 @@ maki.provider.register({
   display_name = "llm.labile.cc",
   codec = "openai",
   base_url = "https://llm.labile.cc/v1",
-  api_key_env = "LLM_LABILE_CC_API_KEY",
   default_model = "deepseek-v4.1-flash",
+  auth = function()
+    local key, err = secret.read(SECRET_PATH, SECRET_NAME)
+    if not key then
+      return nil, err
+    end
+    return { headers = { Authorization = "Bearer " .. key } }
+  end,
   context_window = 200000,
   list_models = function(ctx)
     local body, err = ctx.get_json(MODELS_PATH)

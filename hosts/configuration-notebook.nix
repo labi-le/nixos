@@ -18,6 +18,7 @@
     ./../modules/steam.nix
     ./../modules/work-mount.nix
     ./../modules/btop.nix
+    ./../modules/maki
   ];
 
   services.btop.enable = true;
