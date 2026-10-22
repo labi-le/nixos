@@ -12,8 +12,6 @@ let
     server.main()
   '';
 
-  telegramSecret = config.age.secrets.telegram-mcp or null;
-
   servers = {
     chroma = {
       command = [
@@ -39,15 +37,6 @@ let
     };
     context7 = {
       url = "https://mcp.context7.com/mcp";
-    };
-  }
-  // lib.optionalAttrs (telegramSecret != null) {
-    telegram = {
-      command = [
-        "${pkgs.bash}/bin/bash"
-        "-c"
-        "set -a; . ${telegramSecret.path}; set +a; export TELEGRAM_SESSION_LOCK=shared; exec ${pkgs.uv}/bin/uvx --from git+https://github.com/labi-le/telegram-mcp.git@f086f7a8276fa4dcf368fa7eea7d918e5cd5ed72 telegram-mcp"
-      ];
     };
   };
 in
