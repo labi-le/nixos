@@ -130,11 +130,13 @@ but this is unverified on this firmware (see Measured effect below).
 
 Feature 0x10 encodes TMT1 in bits 31:16 and TMT2 in bits 15:0, each in
 kelvin. `systemd.services.nvme-hctm` runs
-`nvme set-feature -f 0x10 -V 0x01570161` at boot, requesting TMT1 = 343 K =
-70 °C and TMT2 = 353 K = 80 °C to the controller (the host's requested
-throttle points; whether the firmware acts on them is unknown), keeping the
-drive at full speed below 70 °C and comfortably inside the drive's 45–120 °C
-manageable range. Feature 0x10 is controller-scoped, not namespace-scoped:
+`nvme set-feature -f 0x10 -V 0x0175017f` at boot — the drive's own factory
+thresholds, TMT1 = 373 K = 100 °C and TMT2 = 383 K = 110 °C. The 70/80 °C
+host override from `df95574` was dropped on 2026-10-23: the T1/T2 counters
+never moved even at 74 °C (see Measured effect), so it bought nothing
+measurable while risking a cap on sustained writes. The unit stays because
+it makes the factory values explicit and re-applies them after a controller
+reset. Feature 0x10 is controller-scoped, not namespace-scoped:
 the live test confirmed the controller rejects `set-feature -f 0x10` when
 given the namespace block device directly (`NVMe status: Feature Not
 Namespace Specific`), so the service resolves the stable
@@ -147,10 +149,10 @@ support it logs and exits 0 so a future drive swap doesn't fail the boot.
 
 `set-feature` without `-s` (save) only changes the *current* value, which
 the controller forgets on a controller reset or power cycle — it does not
-persist like a saveable/persistent feature would. The APST tuning in the
-section above can itself trigger a controller reset
-(`nvme nvme0: controller is down; will reset`), which would silently revert
-HCTM back to the factory 100/110 °C thresholds. A `SUBSYSTEM=="nvme"`
+persist like a saveable/persistent feature would. A reset, including the one
+the APST tuning above can trigger (`nvme nvme0: controller is down; will
+reset`), therefore lands back on the factory 100/110 °C thresholds, which is
+now the intended state. A `SUBSYSTEM=="nvme"`
 udev rule matches `ACTION=="change"` with `ENV{NVME_EVENT}=="connected"` on
 `KERNEL=="nvme0"` and runs `systemctl --no-block restart nvme-hctm.service`.
 This event is confirmed to fire on every controller reset: the kernel's
@@ -170,13 +172,18 @@ Actual temperature reduction on this host came from:
 
 The 69–72 °C plateau from 23:50 to 00:55 on 2026-09-24 was from two write benchmarks and `fstrim` on 181 GiB + 27 GiB of data, keeping the drive 75–95% busy. Once the workload completed around 01:15, temperature fell to 55–60 °C. Residual activity after 01:20 (3–4 MB/s reads at ~10% busy, probably page-cache refaults under memory pressure) limits how often APST can idle the drive.
 
+On 2026-10-23 the 70/80 °C override was removed in favour of the factory
+100/110 °C values. `smartctl -t long` completed without error, media errors
+stayed at 6, and the drive continued to idle at 62–70 °C with no T1/T2
+transitions before or after the change.
+
 ### Verifying throttles (if re-enabled on a different firmware)
 
 ### Reverting
 
-`systemctl disable --now nvme-hctm.service` and power-cycle the drive (a
-plain reboot is not enough — TMT1/TMT2 revert only on a controller reset or
-power cycle, and disabling the service just stops it from being
-re-applied). Alternatively, run
-`nvme set-feature /dev/nvme0n1 -f 0x10 -V 0x0175017f` once to restore the
-factory 100/110 °C thresholds without waiting for a reset.
+To bring back the 70/80 °C host throttle, change the value in
+`modules/nvme.nix` to `0x01570161` (or run
+`nvme set-feature /dev/nvme0 -f 0x10 -V 0x01570161` once). To stop managing
+HCTM at all, `systemctl disable --now nvme-hctm.service`; the controller
+keeps the current value until a controller reset or power cycle, then falls
+back to the factory 100/110 °C.

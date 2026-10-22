@@ -30,7 +30,7 @@ let
       exit 0
     fi
 
-    "${pkgs.nvme-cli}/bin/nvme" set-feature "$ctrldev" -f 0x10 -V 0x01570161
+    "${pkgs.nvme-cli}/bin/nvme" set-feature "$ctrldev" -f 0x10 -V 0x0175017f
   '';
 in
 {
