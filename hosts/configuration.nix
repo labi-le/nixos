@@ -67,9 +67,9 @@
   system.stateVersion = "24.11";
 
   ide = {
-    goland.enable = true;
+    # goland.enable = true;
     phpstorm = {
-      enable = true;
+      # enable = true;
       extraVmOptions = ''
         -Xmx8192m
         -Xms2048m
@@ -77,7 +77,7 @@
     };
     # rustrover.enable = true;
     # pycharm.enable = true;
-    rider.enable = true;
+    # rider.enable = true;
   };
 
   packages.desktop = true;

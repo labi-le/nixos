@@ -1,6 +1,6 @@
 {
-  services.journald.extraConfig = ''
-    Storage=persistent
-    SystemMaxUse=1G
-  '';
+  services.journald.settings.Journal = {
+    Storage = "persistent";
+    SystemMaxUse = "1G";
+  };
 }

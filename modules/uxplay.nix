@@ -10,12 +10,12 @@
     enable = true;
     nssmdns4 = true; # printing
     openFirewall = true; # ensuring that firewall ports are open as needed
-    publish = {
-      enable = true;
-      addresses = true;
-      workstation = true;
-      userServices = true;
-      domain = true;
+    settings.publish = {
+      disable-publishing = false;
+      disable-user-service-publishing = false;
+      publish-addresses = true;
+      publish-workstation = true;
+      publish-domain = true;
     };
   };
 

@@ -2,6 +2,7 @@
 
 {
   stylix.targets.wofi.enable = false;
+  stylix.targets.rofi.enable = false;
 
   programs.wofi.enable = true;
 
