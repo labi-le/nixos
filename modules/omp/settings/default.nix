@@ -34,6 +34,7 @@ in
     configFile
     ;
   inherit (mcp) mcpJson telegramCommand;
+  mcpServices = mcp.services;
   inherit (client) keybindingsYml lspJson;
   inherit (extensions) delegationGate repoRegisterJs;
 }

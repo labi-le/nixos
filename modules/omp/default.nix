@@ -30,5 +30,6 @@ in
   environment.systemPackages = packages.systemPackages;
 
   systemd.tmpfiles.rules = install.tmpfiles;
+  systemd.user.services = files.mcpServices;
   system.activationScripts.ompConfig = install.activationScript;
 }
