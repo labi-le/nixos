@@ -180,7 +180,11 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   the newest 100 deliveries, so at the repo's busiest hour a 65-minute-old entry
   can already have fallen off the page. The activity scan reads the same window,
   which is why it is the source that matters. The first-ever run trims itself to
-  300 s so an install does not resurrect history.
+  300 s so an install does not resurrect history. Every GitHub read goes through
+  `request_json`, which turns protocol failures such as `IncompleteRead` or a
+  truncated JSON body into `OSError`; the per-repo handlers log one `error:` line
+  and the run still exits 0, so a GitHub hiccup cannot leave the unit failed and
+  fire the "unit failed" alert until the next tick clears it.
   `buer-images`, `buer` and the watchdog declare `RequiresMountsFor` under
   `[Unit]`, where systemd applies the `/drive/state` dependency.
   `buer.service` also hashes `composeEnv` into

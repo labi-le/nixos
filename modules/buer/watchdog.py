@@ -3,6 +3,7 @@ import argparse
 import datetime as dt
 import hashlib
 import hmac
+import http.client
 import json
 import os
 import sqlite3
@@ -45,8 +46,13 @@ def request_json(url, token):
             "User-Agent": "buer-watchdog",
         },
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.loads(response.read())
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read())
+    except urllib.error.HTTPError:
+        raise
+    except (http.client.HTTPException, ValueError) as exc:
+        raise OSError(describe(exc)) from exc
 
 
 def parse_stamp(value):
@@ -514,11 +520,17 @@ def main():
                 if replayed >= arguments.max_replays:
                     print(f"{repo} {needle}: replay budget exhausted, next run takes it")
                     break
-                payload = (
-                    make_issue_payload(token, repo, comment)
-                    if event == "issue_comment"
-                    else make_review_payload(token, repo, comment)
-                )
+                try:
+                    payload = (
+                        make_issue_payload(token, repo, comment)
+                        if event == "issue_comment"
+                        else make_review_payload(token, repo, comment)
+                    )
+                except OSError as exc:
+                    errors.append(
+                        f"{repo} {needle}: reconstruction failed: {describe(exc)}"
+                    )
+                    continue
                 summary = object_summary(payload)
                 identity = event + " " + summary
                 if identity in replayed_objects:
