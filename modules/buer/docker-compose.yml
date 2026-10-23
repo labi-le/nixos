@@ -25,7 +25,7 @@ services:
       ROBOMP_RELEASE_SENTINEL_ENABLED: ${ROBOMP_RELEASE_SENTINEL_ENABLED:-false}
       ROBOMP_MODEL: ${ROBOMP_MODEL:-}
       ROBOMP_THINKING: ${ROBOMP_THINKING:-high}
-      ROBOMP_MAX_CONCURRENCY: ${ROBOMP_MAX_CONCURRENCY:-4}
+      ROBOMP_MAX_CONCURRENCY: ${ROBOMP_MAX_CONCURRENCY:-3}
       ROBOMP_TASK_TIMEOUT_SECONDS: ${ROBOMP_TASK_TIMEOUT_SECONDS:-2400}
       ROBOMP_TASK_TIMEOUT_HARD_GRACE_SECONDS: ${ROBOMP_TASK_TIMEOUT_HARD_GRACE_SECONDS:-60}
       ROBOMP_REQUEST_TIMEOUT_SECONDS: ${ROBOMP_REQUEST_TIMEOUT_SECONDS:-120}
@@ -46,7 +46,7 @@ services:
       ROBOMP_BIND_PORT: "8080"
       PI_ROOT: /pi
       ROBOMP_LITELLM_KEY: ${ROBOMP_LITELLM_KEY:?}
-      TZ: ${TZ:-Europe/Moscow}
+      TZ: ":/etc/localtime"
     volumes:
       - ${BUER_DATA:?}:/data
       - buer_nix:/nix:ro
@@ -95,7 +95,7 @@ services:
       ROBOMP_BOT_LOGIN: ${ROBOMP_BOT_LOGIN:?}
       ROBOMP_GIT_AUTHOR_EMAIL: ${ROBOMP_GIT_AUTHOR_EMAIL:?}
       ROBOMP_REPO_ALLOWLIST: ${ROBOMP_REPO_ALLOWLIST:?}
-      TZ: ${TZ:-Europe/Moscow}
+      TZ: ":/etc/localtime"
     volumes:
       - ${BUER_DATA:?}:/data
       - /etc/localtime:/etc/localtime:ro

@@ -21,9 +21,11 @@
     environment = {
       WG_POST_UP = "true";
       WG_POST_DOWN = "true";
+      TZ = ":/etc/localtime";
     };
     volumes = [
       "amneziawg_etc_wireguard:/etc/wireguard:rw"
+      "/etc/localtime:/etc/localtime:ro"
     ];
     log-driver = "journald";
     extraOptions = [

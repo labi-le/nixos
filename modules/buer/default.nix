@@ -16,7 +16,7 @@ let
   reviewerBots = "chatgpt-codex-connector";
   reviewerBotLogin = "${reviewerBots}[bot]";
   model = "llm-labile/deepseek-v4.1-flash";
-  maxConcurrency = 2;
+  maxConcurrency = 3;
   toolchainNixpkgs = pkgs.fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
@@ -59,10 +59,10 @@ let
   daemonPasswd = pkgs.writeText "buer-nix-passwd" (
     "root:x:0:0::/root:/bin/sh\n"
     + lib.concatMapStrings (n: "omp-${toString n}:x:${toString (2000 + n)}:${toString (2000 + n)}::/var/empty:/bin/false\n") (lib.range 1 maxConcurrency)
-    + lib.concatMapStrings (n: "nixbld${toString n}:x:${toString (30000 + n)}:30000::/var/empty:/bin/false\n") (lib.range 1 2)
+    + lib.concatMapStrings (n: "nixbld${toString n}:x:${toString (30000 + n)}:30000::/var/empty:/bin/false\n") (lib.range 1 maxConcurrency)
   );
   daemonGroup = pkgs.writeText "buer-nix-group" (
-    "root:x:0:\nnixbld:x:30000:nixbld1,nixbld2\n"
+    "root:x:0:\nnixbld:x:30000:${lib.concatMapStringsSep "," (n: "nixbld${toString n}") (lib.range 1 maxConcurrency)}\n"
     + lib.concatMapStrings (n: "omp-${toString n}:x:${toString (2000 + n)}:\n") (lib.range 1 maxConcurrency)
   );
   nixShellWrapper = pkgs.writeText "buer-nix-shell" ''
@@ -186,7 +186,6 @@ let
     ROBOMP_THINKING=high
     ROBOMP_MAX_CONCURRENCY=${toString maxConcurrency}
     ROBOMP_RATE_LIMIT_DEFAULT=10
-    TZ=${config.time.timeZone}
   '';
 
   compose = "${pkgs.docker-compose}/bin/docker-compose --file ${./docker-compose.yml}";

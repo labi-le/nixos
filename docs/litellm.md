@@ -641,6 +641,16 @@ litellm-key revoke vanya
 The stored timestamps are UTC; the `time` column and the `totals` window line
 are converted to the host zone (MSK), so `logs` reads like `date`.
 
+The containers themselves run on the host zone: both `litellm` and `litellm-db`
+set `TZ=:/etc/localtime` and mount the host file read-only, so `date`, log
+prefixes and anything that formats local time print MSK while the database
+keeps UTC. That is the path form rather than `Europe/Moscow` because it needs
+no tzdata in the image. One naive-time call does read the shift: the team-key
+list filters `expires=datetime.now()`, comparing MSK against UTC rows, so keys
+expiring within three hours fall out of that list early. Budget resets are
+unaffected — they are computed from `datetime.now(timezone.utc)` and follow
+`litellm_settings.timezone`, still midnight UTC.
+
 `logs -f` polls `/spend/logs` every 5 seconds
 (`LITELLM_FOLLOW_SECONDS`) and prints only request ids it has not shown yet,
 which means a row appears roughly when litellm flushes it, not when the

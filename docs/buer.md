@@ -207,10 +207,14 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   makes its prefix follow `TZ`; the JSON file handler keeps `time.gmtime`, so
   the JSONL stays UTC with a `Z` suffix, which is what the DB and the dashboard
   expect.
-- **Time**: the worker and proxy containers take `TZ` from `config.time.timeZone`
-  (`Europe/Moscow`, set in `modules/locale.nix`) and bind-mount the host
-  `/etc/localtime`, so `date`, file mtimes and the offset on bot commits match
-  the host instead of the image's built-in `Etc/UTC`.
+- **Time**: the worker and proxy containers set `TZ=:/etc/localtime` and
+  bind-mount the host `/etc/localtime`, so the zone is whatever
+  `time.timeZone` in `modules/locale.nix` renders there (`Europe/Moscow`) —
+  `date`, file mtimes and the offset on bot commits match the host instead of
+  the image's built-in `Etc/UTC`. The path form rather than the zone name keeps
+  working in images without tzdata, and Go reads it too (`TZ=:<abs path>` is
+  honoured by the `initLocal` branch for absolute paths). The robomp images
+  ship their own `/etc/localtime` pointing at `Etc/UTC`; the mount replaces it.
 
 ## sub-preprocessor toolchain and isolation
 
@@ -238,15 +242,16 @@ The proxy does not mount the store. Versioned volumes prevent an older store
 from hiding a newer image's toolchain; old volumes are deliberately retained
 for rollback and require operator cleanup once rollback is no longer needed.
 
-The daemon trusts only root and permits root plus slot users `omp-1`/`omp-2`
-(UID/GID 2001/2002). Builds run as `nixbld1`/`nixbld2` (UID 30001/30002,
-GID 30000), not as slots or root. `sandbox=false` avoids requiring privileged
-containers or namespace capabilities: the **secretless daemon container is
-the build boundary**, not a Nix per-build sandbox. Build processes can reach
-the network and other files in that container. Signed cache.nixos.org
+The daemon trusts only root and permits root plus slot users `omp-1`…`omp-3`
+(UID/GID 2001–2003). Builds run as `nixbld1`…`nixbld3` (UID 30001–30003,
+GID 30000), one build user per slot, so three concurrent tasks that each start
+a Nix build do not queue behind each other. `sandbox=false` avoids requiring
+privileged containers or namespace capabilities: the **secretless daemon
+container is the build boundary**, not a Nix per-build sandbox. Build processes
+can reach the network and other files in that container. Signed cache.nixos.org
 substitution remains enabled; slots are not trusted to change daemon policy.
-Nix builds are limited to one job and two cores; project `go test` processes
-remain subject to the worker's existing resource policy.
+Nix builds are limited to one job and two cores per invocation; project
+`go test` processes remain subject to the worker's existing resource policy.
 
 Upstream `worker._build_extra_env` masks four secret variables; it does not
 remove `PATH`, `NIX_PATH` or `NIX_REMOTE`. The runtime overlay supplies private
@@ -378,5 +383,6 @@ sqlite3 /drive/state/buer/robomp.sqlite 'select * from issues order by updated_a
 - The release sentinel is disabled; enabling it requires the *Workflow runs*
   webhook event, `Actions: Read` on the PAT, and the fact that it may push to the
   default branch and move an existing release tag.
-- `ROBOMP_MAX_CONCURRENCY=2` on this host: each task may compile murmur, and the
-  server is not a fast builder.
+- `ROBOMP_MAX_CONCURRENCY=3` on this host: each task may compile murmur, and
+  the server is not a fast builder, so three slots is the deliberate ceiling
+  rather than a default.
