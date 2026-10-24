@@ -13,7 +13,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "OpenCode Go pool accounts with no window that takes them out of rotation: neither reported rate-limited by the provider nor at 100 percent of a window, the poller's own bench threshold. Four means the whole subscription is available.",
+      "description": "OpenCode Go pool accounts with no window that takes them out of rotation: neither reported rate-limited by the provider nor at 100 percent of a window, the poller's own bench threshold. Five means the whole subscription is available.",
       "fieldConfig": {
         "defaults": {
           "color": {

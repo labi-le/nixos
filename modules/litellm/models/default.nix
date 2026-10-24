@@ -1,7 +1,7 @@
 { lib }:
 
 let
-  poolSize = 4;
+  poolSize = 5;
   apiBase = "https://opencode.ai/zen/go/v1";
   prices = builtins.fromJSON (builtins.readFile ./prices.json);
 

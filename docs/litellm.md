@@ -9,7 +9,7 @@ rebuilds and image updates.
 
 jcode consumes the group as its default provider (`llm-labile` with model
 `deepseek-v4.1-flash` in `modules/jcode/providers.nix`) on every host that
-receives the master key, so interactive turns shuffle across the four accounts;
+receives the master key, so interactive turns shuffle across the five accounts;
 hosts outside the secret's recipients (fx516) keep the direct `opencode-go`
 profile. That provider's model list is derived from the catalog
 (`import ../litellm/models`), one entry per group, so a new group file appears in
@@ -29,7 +29,7 @@ group into one deployment per account key, `config.nix` is the rest of the
 generated `config.yaml`, and `default.nix` keeps the NixOS side (secrets,
 containers, units). Adding a model is one new file under `models/`.
 
-One pool group is served from `https://opencode.ai/zen/go/v1` over the four
+One pool group is served from `https://opencode.ai/zen/go/v1` over the five
 account keys; a second, `opencode-go-pool`, was a rename shim deleted on
 2026-10-11, and every free row — `beam-free` and `longcat-2.5-preview-free` on
 the Go plan, `deepseek-v4.1-flash-free`, `space-bunny-free` and
@@ -38,7 +38,7 @@ together with the client-identity bypass that carried them. `step-5-preview`
 was removed the same day, so no group in this catalog has an upstream that
 gates on the OpenCode client footprint and every remaining group is priced:
 
-- `deepseek-v4.1-flash` — the four-account pool of `openai/deepseek-v4.1-flash`
+- `deepseek-v4.1-flash` — the five-account pool of `openai/deepseek-v4.1-flash`
   deployments, renamed from `opencode-go-pool` on 2026-10-10. The old name
   outlived the rename twice and is now gone entirely: first as a
   `router_settings.model_group_alias`, then — after the alias turned out to be
@@ -89,7 +89,7 @@ model group.
 Error-driven cooldown is off for every deployment of the pool group:
 `models/default.nix` gives each deployment `model_info.cooldown_time = 0` and
 `litellm_params.num_retries = 0`, so the `router_settings.cooldown_time = 600`
-and `num_retries = 30` left in `config.nix` are defaults none of these four
+and `num_retries = 30` left in `config.nix` are defaults none of these five
 deployments reaches. Cooldown keys on the deployment id — one per account key —
 not on the group or the request, which is why the reasoning below applies
 identically to every deployment of the pool group.
@@ -123,9 +123,9 @@ retry amplification the cooldown used to bound then has to come from
 nothing excluded once nothing is ever cooldowned, so left unset a single request
 against a dead upstream makes 31 attempts. At `num_retries = 0` the pool-wide
 walk is left to `enable_weighted_failover` — measured against the deployed
-`config.yaml` with a 429-only echo upstream, an all-dead request makes 4
-attempts, one per account key, against 16 with the retry count at 3, because the
-weighted-failover layer re-walks all four keys once per retry (4 × (1 +
+`config.yaml` with a 429-only echo upstream, an all-dead request makes one
+attempt per account key, against 16 with the retry count at 3, because the
+weighted-failover layer re-walks all five keys once per retry (5 × (1 +
 `num_retries`)) — and with exactly one account key dead all 40 requests
 succeeded, 27 on the first attempt and 13 on a second. That keeps the failure
 bound identical to the old cooldown-bounded one (one pass over `poolSize`)
@@ -157,7 +157,7 @@ group: the four keys report their own percentages and their own reset instants �
 2026-10-11, `rolling` 4/9/12/9 %, `weekly` 51/50/51/50 %, `monthly` 36/73/73/75 %
 resetting `2026-11-02T20:30` for the first key against `2026-10-28T23:15`…`23:51`
 for the rest — so each key is its own bucket and the pool multiplies the
-allowance by four. `https://opencode.ai/docs/go/` sets the metered models'
+allowance by five. `https://opencode.ai/docs/go/` sets the metered models'
 limits as a monthly dollar amount per model, spent as 5-hour 20 %, weekly 50 %,
 monthly 100 % of it. Every remaining group carries such a plan quota — the free
 rows and `step-5-preview` are gone, and `metered = false` no longer appears in
@@ -206,7 +206,7 @@ enough that an exact-match cache would only add staleness.
 ## ChatGPT subscription groups
 
 Three groups — `gpt-6-astra`, `gpt-6-luna` and `gpt-6.1-sol` — are served from a
-ChatGPT subscription of one account (`d74f3468-…`), not from the four-account
+ChatGPT subscription of one account (`d74f3468-…`), not from the five-account
 OpenCode Go pool: each is a single deployment of litellm's own `chatgpt/`
 provider, which speaks to `https://chatgpt.com/backend-api/codex` with the
 Codex-CLI client id and Codex headers. The catalog names the provider per group
@@ -778,7 +778,7 @@ block at twelve timestamps: Mon 01:30, 02:00, 07:00 and 09:59 peak; Mon 00:30,
 05:00, 10:00, 23:59, Fri 23:00, Sat 02:00, Sat 09:00 and Sun 23:00 off-peak.
 
 The number is a billing equivalent, not money the pool actually charges: the
-four accounts are a flat subscription, and Zen reports consumption only as a
+five accounts are a flat subscription, and Zen reports consumption only as a
 percentage of the rolling, weekly and monthly windows
 (`https://opencode.ai/zen/go/v1/usage`).
 
@@ -864,8 +864,8 @@ network, which is how the refusals above are exercised.
 
 `GET /v1/usage` is served by the proxy itself (`modules/litellm/opencode-usage.py`,
 installed through `LITELLM_WORKER_STARTUP_HOOKS`), not by any upstream. It
-reports the four OpenCode Go accounts as one shared pool, because the quota
-belongs to the accounts and every key spends the same four:
+reports the five OpenCode Go accounts as one shared pool, because the quota
+belongs to the accounts and every key spends the same five:
 
 ```json
 {
@@ -923,7 +923,7 @@ requests from it silently under-reports.
 ## Provider limits in Prometheus and Grafana
 
 `GET /v1/usage` shows the pool as one aggregate, which hides what each of the
-four accounts has left and says nothing about the ChatGPT subscription.
+five accounts has left and says nothing about the ChatGPT subscription.
 `modules/litellm/limits-exporter.py` fills both gaps: it runs as
 `litellm-limits-exporter` (oneshot, `wantedBy = multi-user.target`, every five
 minutes through `litellm-limits-exporter.timer`) as root, reads the pool keys
@@ -1016,7 +1016,7 @@ in the database, upstream documents no rotation, and a new value produces
 once, in the same secret as `DATABASE_URL`.
 
 The vhost carries no IP restriction since commit `93392bf`, so a key is the
-only gate. Every key spends the same four `deepseek-v4.1-flash` accounts.
+only gate. Every key spends the same five `deepseek-v4.1-flash` accounts.
 
 The data directory `/var/lib/litellm-db` is `999:999` mode `700`. On the host
 uid 999 is a dynamic user named `nm-iodine` — identical number, unrelated
@@ -1075,7 +1075,7 @@ login.
   expires, models, spend from "LiteLLM_VerificationToken";'`
 - Provider limits are published:
   `cat /var/lib/prometheus-node-textfile-collector/litellm-provider-limits.prom`
-  → four pool accounts with three windows each, then the Codex block;
+  → five pool accounts with three windows each, then the Codex block;
   `systemctl status litellm-limits-exporter` for the last run and
   `curl -s 'http://127.0.0.1:3020/api/v1/query?query=litellm_opencode_go_used_percent'`
   for what Prometheus kept; `cat
