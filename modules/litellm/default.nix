@@ -61,7 +61,7 @@ in
       log-driver = "journald";
     };
     litellm = {
-      image = "ghcr.io/berriai/litellm:main-stable";
+      image = "ghcr.io/berriai/litellm@sha256:f63fb81b831b170ec16851e23c36ac5bf52ef106b271406429524a2ed730bbfd";
       environmentFiles = [
         config.age.secrets.litellm-env.path
         config.age.secrets.opencode-go-pool-env.path

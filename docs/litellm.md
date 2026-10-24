@@ -396,8 +396,17 @@ flip); an nginx-level static token with no database (no expiry, budget or
 revocation).
 
 Measured 2026-10-01: the `main-stable` tag contained LiteLLM 1.103.2, while
-the native nixpkgs package it replaced was 1.89.0. The tag floats; pin the
-image by digest if that becomes a problem.
+the native nixpkgs package it replaced was 1.89.0.
+
+The image is pinned by digest, not by tag. On 2026-10-21 the `main-stable`,
+`main-latest`, `latest` and `v1.107.0` tags briefly resolved to a malicious
+1.107.0 build (`sha256:1bbcb144…`, credential stealer with a `cook.pth`
+startup hook); a digest pin makes retagging irrelevant. The pinned digest is
+the 2026-10-01 build: its installed `litellm/` tree matches the PyPI sdist
+1.103.2 byte for byte apart from the repo-only test configs and the compiled
+`rust_bridge/_native.abi3.so`, so it predates and is unaffected by that
+release. To bump, resolve the new digest (`docker manifest inspect`), check the
+version it reports, then update the `image` line and `make switch`.
 
 ## Key lifecycle
 
