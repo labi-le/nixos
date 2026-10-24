@@ -17,6 +17,7 @@ let
       xdevDocs = "catalog";
     };
     hideThinkingBlock = false;
+    title.icons = "boring";
     compaction = {
       enabled = true;
       methodOrder = [
