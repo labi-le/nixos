@@ -989,7 +989,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "min by (email) (100 - litellm_opencode_go_used_percent{email=~\".+@.+\"})",
+          "expr": "min by (email) (100 - litellm_opencode_go_used_percent{email!=\"\"})",
           "legendFormat": "{{email}}",
           "range": true,
           "refId": "A"
