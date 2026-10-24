@@ -2,9 +2,10 @@
 
 `modules/litellm/default.nix`. Two containers on one docker network:
 `litellm-db` (`postgres:17`) and `litellm`
-(`ghcr.io/berriai/litellm:main-stable`), published as `127.0.0.1:27015` and
-proxied by `llm.labile.cc`. Keys, spend and models live in PostgreSQL, not in
-the container, so they survive restarts, rebuilds and image updates.
+(`ghcr.io/berriai/litellm@sha256:f63fb81b831b170ec16851e23c36ac5bf52ef106b271406429524a2ed730bbfd`),
+published as `127.0.0.1:27015` and proxied by `llm.labile.cc`. Keys, spend and
+models live in PostgreSQL, not in the container, so they survive restarts,
+rebuilds and image updates.
 
 jcode consumes the group as its default provider (`llm-labile` with model
 `deepseek-v4.1-flash` in `modules/jcode/providers.nix`) on every host that
