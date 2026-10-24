@@ -135,11 +135,22 @@ attempt, so a request that happens to pick a broken account fails and the
 deployments need `num_retries = poolSize - 1`.
 
 Quota protection is the poller's, and it survives: `exhausted_window()` benches
-a key whose window is `rate-limited` or at `OPENCODE_USAGE_LIMIT_PERCENT` (95)
-by calling `cooldown_cache.add_deployment_to_cooldown` directly, a path that
-does not consult `model_info.cooldown_time` — verified with `cooldown_time = 0`
-on every deployment, where a bench added by hand kept that account out of 40
-consecutive requests (0 served) while the other three took 14, 15 and 11.
+a key whose window is `rate-limited` or at `OPENCODE_USAGE_LIMIT_PERCENT`
+(100, set in `modules/litellm/default.nix`) by calling
+`cooldown_cache.add_deployment_to_cooldown` directly, a path that does not
+consult `model_info.cooldown_time` — verified with `cooldown_time = 0` on every
+deployment, where a bench added by hand kept that account out of 40 consecutive
+requests (0 served) while the other three took 14, 15 and 11.
+
+The threshold sits at full quota on purpose. A 95 % bench left a reserve that
+looked free but was paid for in real allowance: the percentage is an integer and
+the poller only sees it every 120 s, so 95 % meant ~5 % of a monthly window
+burned unused until the reset, which on this pool is days. What that reserve
+bought was the absence of provider 429s; the router already absorbs them —
+`enable_weighted_failover` walks the other keys and with exactly one account
+exhausted all 40 measured requests still succeeded. The remaining exposure is a
+request that lands on the exhausted key paying one extra attempt, and the
+provider's own `rate-limited` status benches the account on the next poll.
 
 The allowance itself belongs to the account key, not to the proxy and not to the
 group: the four keys report their own percentages and their own reset instants —
@@ -651,15 +662,23 @@ litellm-key revoke vanya
 The stored timestamps are UTC; the `time` column and the `totals` window line
 are converted to the host zone (MSK), so `logs` reads like `date`.
 
-The containers themselves run on the host zone: both `litellm` and `litellm-db`
-set `TZ=:/etc/localtime` and mount the host file read-only, so `date`, log
-prefixes and anything that formats local time print MSK while the database
-keeps UTC. That is the path form rather than `Europe/Moscow` because it needs
-no tzdata in the image. One naive-time call does read the shift: the team-key
-list filters `expires=datetime.now()`, comparing MSK against UTC rows, so keys
-expiring within three hours fall out of that list early. Budget resets are
-unaffected — they are computed from `datetime.now(timezone.utc)` and follow
-`litellm_settings.timezone`, still midnight UTC.
+The proxy and the DB follow the host zone through `TZ=:/etc/localtime-host`,
+with the host file mounted read-only at that path. Mounting it at
+`/etc/localtime` is not equivalent: the postgres and robomp images ship that
+path as a symlink to `/usr/share/zoneinfo/Etc/UTC`, a bind mount follows the
+destination symlink, and the host file then replaces the `Etc/UTC` zone file
+inside the container. Postgres resolves its `timezone` GUC (`Etc/UTC`, written
+by initdb) through that directory, so the hijack put every DB session three
+hours ahead while the columns hold naive UTC — measured `now()` at `+03` against
+`startTime` values that were correct UTC. With the separate path the zone
+database stays intact: `date` and Python's naive `datetime.now()` print MSK,
+while Postgres sessions, its logs and the stored timestamps stay UTC. The path
+form also avoids needing tzdata in the image. One naive-time call does read the
+shift: the team-key list filters `expires=datetime.now()`, comparing MSK against
+UTC rows, so keys expiring within three hours fall out of that list early.
+Budget resets are unaffected — they are computed from
+`datetime.now(timezone.utc)` and follow `litellm_settings.timezone`, still
+midnight UTC.
 
 `logs -f` polls `/spend/logs` every 5 seconds
 (`LITELLM_FOLLOW_SECONDS`) and prints only request ids it has not shown yet,
@@ -972,7 +991,7 @@ The dashboard is `LiteLLM provider limits` (uid `litellm-limits`,
 `modules/monitoring/dashboards/litellm-limits.json`, provisioned like the other
 system dashboards — into the `litellm` Grafana folder, while the disk dashboards
 live in `storage` and node-exporter stays in `system`): accounts still in
-rotation, windows that bench them (provider-reported `rate-limited`, or 95
+rotation, windows that bench them (provider-reported `rate-limited`, or 100
 percent of a window spent — the poller's own `LIMIT_PERCENT`), worst weekly and
 monthly headroom stats (the monthly pool is the whole subscription budget, so
 it answers whether a dry week is within budget or the subscription itself is

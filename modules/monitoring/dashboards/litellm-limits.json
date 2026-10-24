@@ -13,7 +13,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "OpenCode Go pool accounts with no window that takes them out of rotation: neither reported rate-limited by the provider nor at 95 percent of a window, the poller's own bench threshold. Four means the whole subscription is available.",
+      "description": "OpenCode Go pool accounts with no window that takes them out of rotation: neither reported rate-limited by the provider nor at 100 percent of a window, the poller's own bench threshold. Four means the whole subscription is available.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -68,7 +68,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "count(count by (account) (litellm_opencode_go_window_status) unless count by (account) (litellm_opencode_go_window_status == 1 or litellm_opencode_go_used_percent >= 95)) or vector(0)",
+          "expr": "count(count by (account) (litellm_opencode_go_window_status) unless count by (account) (litellm_opencode_go_window_status == 1 or litellm_opencode_go_used_percent >= 100)) or vector(0)",
           "instant": true,
           "range": false,
           "refId": "A"
@@ -82,7 +82,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Windows that take an account out of rotation: the provider reports them as rate-limited, or 95 percent of the window is spent, which is where the poller benches the account's deployments. The pool table names the account and its reset time.",
+      "description": "Windows that take an account out of rotation: the provider reports them as rate-limited, or 100 percent of the window is spent, which is where the poller benches the account's deployments. The pool table names the account and its reset time.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -133,7 +133,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "count(litellm_opencode_go_window_status == 1 or litellm_opencode_go_used_percent >= 95) or vector(0)",
+          "expr": "count(litellm_opencode_go_window_status == 1 or litellm_opencode_go_used_percent >= 100) or vector(0)",
           "instant": true,
           "range": false,
           "refId": "A"
@@ -467,7 +467,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "One row per pool account. In rotation shows whether all three windows are clear (< 95% used and not rate-limited). Used is the share of each provider window spent; reset is the time left in that window; fetch is the last per-account usage API result.",
+      "description": "One row per pool account. In rotation shows whether all three windows are clear (< 100% used and not rate-limited). Used is the share of each provider window spent; reset is the time left in that window; fetch is the last per-account usage API result.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -844,7 +844,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "label_replace((max by (account, email) (clamp_max((litellm_opencode_go_window_status{email!=\"\"} == bool 1) + (litellm_opencode_go_used_percent{email!=\"\"} >= bool 95), 1)) == bool 0) * on(account, email) litellm_opencode_go_fetch_ok{email!=\"\"} or on(account, email) (litellm_opencode_go_fetch_ok{email!=\"\"} * 0), \"col\", \"in rotation\", \"__name__\", \".*\") or label_replace(litellm_opencode_go_used_percent{email!=\"\"}, \"col\", \"used $1\", \"window\", \"(.*)\") or label_replace(litellm_opencode_go_reset_at{email!=\"\"} - time(), \"col\", \"reset $1\", \"window\", \"(.*)\") or label_replace(litellm_opencode_go_fetch_ok{email!=\"\"}, \"col\", \"fetch\", \"__name__\", \".*\")",
+          "expr": "label_replace((max by (account, email) (clamp_max((litellm_opencode_go_window_status{email!=\"\"} == bool 1) + (litellm_opencode_go_used_percent{email!=\"\"} >= bool 100), 1)) == bool 0) * on(account, email) litellm_opencode_go_fetch_ok{email!=\"\"} or on(account, email) (litellm_opencode_go_fetch_ok{email!=\"\"} * 0), \"col\", \"in rotation\", \"__name__\", \".*\") or label_replace(litellm_opencode_go_used_percent{email!=\"\"}, \"col\", \"used $1\", \"window\", \"(.*)\") or label_replace(litellm_opencode_go_reset_at{email!=\"\"} - time(), \"col\", \"reset $1\", \"window\", \"(.*)\") or label_replace(litellm_opencode_go_fetch_ok{email!=\"\"}, \"col\", \"fetch\", \"__name__\", \".*\")",
           "format": "table",
           "instant": true,
           "range": false,
@@ -898,7 +898,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Each line is the account's tightest window. The table above splits rolling, weekly and monthly. The router benches an account at 95 percent used, which is 5 percent headroom.",
+      "description": "Each line is the account's tightest window. The table above splits rolling, weekly and monthly. The router benches an account at 100 percent used, so the whole allowance is available.",
       "fieldConfig": {
         "defaults": {
           "color": {

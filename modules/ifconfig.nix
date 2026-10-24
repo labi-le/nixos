@@ -17,9 +17,9 @@ in
     environment = {
       HOSTNAME = host;
       FORWARD_IP_HEADER = "X-Real-IP";
-      TZ = ":/etc/localtime";
+      TZ = ":/etc/localtime-host";
     };
-    volumes = [ "/etc/localtime:/etc/localtime:ro" ];
+    volumes = [ "/etc/localtime:/etc/localtime-host:ro" ];
   };
 
   systemd.services.docker-ifconfig.serviceConfig = {

@@ -207,14 +207,18 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   makes its prefix follow `TZ`; the JSON file handler keeps `time.gmtime`, so
   the JSONL stays UTC with a `Z` suffix, which is what the DB and the dashboard
   expect.
-- **Time**: the worker and proxy containers set `TZ=:/etc/localtime` and
-  bind-mount the host `/etc/localtime`, so the zone is whatever
+- **Time**: the worker and proxy containers set `TZ=:/etc/localtime-host` and
+  bind-mount the host `/etc/localtime` at that path, so the zone is whatever
   `time.timeZone` in `modules/locale.nix` renders there (`Europe/Moscow`) —
   `date`, file mtimes and the offset on bot commits match the host instead of
-  the image's built-in `Etc/UTC`. The path form rather than the zone name keeps
-  working in images without tzdata, and Go reads it too (`TZ=:<abs path>` is
-  honoured by the `initLocal` branch for absolute paths). The robomp images
-  ship their own `/etc/localtime` pointing at `Etc/UTC`; the mount replaces it.
+  the image's built-in `Etc/UTC`. The destination is deliberately not
+  `/etc/localtime`: the robomp images ship that path as a symlink to
+  `/usr/share/zoneinfo/Etc/UTC`, a bind mount follows the destination symlink,
+  and the host file would replace the container's `Etc/UTC` zone, so anything
+  resolving that name — the postgres image does, for its `timezone` GUC — would
+  silently read Moscow. The path form rather than the zone name keeps working
+  in images without tzdata, and Go reads it too (`TZ=:<abs path>` is honoured
+  by the `initLocal` branch for absolute paths).
 
 ## sub-preprocessor toolchain and isolation
 

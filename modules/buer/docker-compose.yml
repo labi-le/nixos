@@ -46,14 +46,14 @@ services:
       ROBOMP_BIND_PORT: "8080"
       PI_ROOT: /pi
       ROBOMP_LITELLM_KEY: ${ROBOMP_LITELLM_KEY:?}
-      TZ: ":/etc/localtime"
+      TZ: ":/etc/localtime-host"
     volumes:
       - ${BUER_DATA:?}:/data
       - buer_nix:/nix:ro
       - ${BUER_MODELS:?}:/srv/agent-home-stage/.omp/agent/models.yml:ro
       - ${BUER_AGENTS_MD:?}:/srv/agent-home-stage/.agent/AGENTS.md:ro
       - ${BUER_HUMANIZER_SKILL:?}:/srv/agent-home-stage/.omp/agent/skills/humanizer:ro
-      - /etc/localtime:/etc/localtime:ro
+      - /etc/localtime:/etc/localtime-host:ro
     ports:
       - "127.0.0.1:${BUER_BIND_PORT:-6543}:8080"
     networks:
@@ -95,10 +95,10 @@ services:
       ROBOMP_BOT_LOGIN: ${ROBOMP_BOT_LOGIN:?}
       ROBOMP_GIT_AUTHOR_EMAIL: ${ROBOMP_GIT_AUTHOR_EMAIL:?}
       ROBOMP_REPO_ALLOWLIST: ${ROBOMP_REPO_ALLOWLIST:?}
-      TZ: ":/etc/localtime"
+      TZ: ":/etc/localtime-host"
     volumes:
       - ${BUER_DATA:?}:/data
-      - /etc/localtime:/etc/localtime:ro
+      - /etc/localtime:/etc/localtime-host:ro
     networks:
       - default
       - buer_internal

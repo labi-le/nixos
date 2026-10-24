@@ -50,12 +50,12 @@ in
       environment = {
         POSTGRES_USER = "litellm";
         POSTGRES_DB = "litellm";
-        TZ = ":/etc/localtime";
+        TZ = ":/etc/localtime-host";
       };
       environmentFiles = [ dbEnv ];
       volumes = [
         "/var/lib/litellm-db:/var/lib/postgresql/data"
-        "/etc/localtime:/etc/localtime:ro"
+        "/etc/localtime:/etc/localtime-host:ro"
       ];
       networks = [ "litellm" ];
       log-driver = "journald";
@@ -71,10 +71,11 @@ in
       environment = {
         PYTHONPATH = "/app";
         LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params";
-        TZ = ":/etc/localtime";
+        OPENCODE_USAGE_LIMIT_PERCENT = "100";
+        TZ = ":/etc/localtime-host";
       };
       volumes = [
-        "/etc/localtime:/etc/localtime:ro"
+        "/etc/localtime:/etc/localtime-host:ro"
         "${configYaml}:/app/config.yaml:ro"
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"
         "${./opencode-session.py}:/app/opencode_session.py:ro"
