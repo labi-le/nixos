@@ -33,7 +33,7 @@ in
     skillLinks
     configFile
     ;
-  inherit (mcp) mcpJson telegramCommand;
+  inherit (mcp) mcpJson telegramCommand telegramPort;
   mcpServices = mcp.services;
   inherit (client) keybindingsYml lspJson;
   inherit (extensions) delegationGate repoRegisterJs;

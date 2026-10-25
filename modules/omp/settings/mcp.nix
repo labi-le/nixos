@@ -8,6 +8,7 @@
 let
   chromaPort = 8931;
   telegramPort = 8932;
+  telegramRemoteUrl = "http://192.168.1.2:${toString telegramPort}/mcp";
 
   chromaCommand = pkgs.writeShellScript "omp-chroma-mcp" ''
     exec ${pkgs.uv}/bin/uvx --from chroma-mcp \
@@ -42,8 +43,9 @@ let
     set +a
     export TELEGRAM_SESSION_LOCK=shared
     export MCP_TRANSPORT=http
-    export MCP_HOST=127.0.0.1
+    export MCP_HOST=0.0.0.0
     export MCP_PORT=${toString telegramPort}
+    export MCP_ALLOWED_HOSTS="127.0.0.1:${toString telegramPort},localhost:${toString telegramPort},192.168.1.2:${toString telegramPort}"
     exec ${pkgs.uv}/bin/uvx --from \
       'git+https://github.com/labi-le/telegram-mcp.git@f086f7a8276fa4dcf368fa7eea7d918e5cd5ed72' \
       telegram-mcp
@@ -62,11 +64,13 @@ let
           type = "http";
           url = "https://mcp.context7.com/mcp";
         };
-      }
-      // lib.optionalAttrs (telegramSecret != null) {
         telegram = {
           type = "http";
-          url = "http://127.0.0.1:${toString telegramPort}/mcp";
+          url =
+            if telegramSecret != null then
+              "http://127.0.0.1:${toString telegramPort}/mcp"
+            else
+              telegramRemoteUrl;
         };
       };
     }
@@ -104,6 +108,7 @@ in
   inherit
     mcpJson
     telegramCommand
+    telegramPort
     services
     ;
 }
