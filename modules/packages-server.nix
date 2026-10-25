@@ -6,4 +6,5 @@ with pkgs;
   hdparm
   nvme-cli
   getmyip
+  clip-links
 ]
