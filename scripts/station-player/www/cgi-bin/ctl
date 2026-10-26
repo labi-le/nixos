@@ -1,0 +1,4 @@
+#!/system/bin/sh
+
+printf 'Content-Type: text/plain; charset=utf-8\nCache-Control: no-store\n\n'
+exec /data/local/bin/stplay ctl "$QUERY_STRING"

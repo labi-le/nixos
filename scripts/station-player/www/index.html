@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Станция</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #111; color: #eee; font: 15px/1.4 system-ui, sans-serif; }
+  header { position: sticky; top: 0; background: #111; padding: 12px 14px 8px; border-bottom: 1px solid #2a2a2a; }
+  #now { font-weight: 600; min-height: 1.4em; }
+  #pos { color: #888; font-size: 13px; }
+  .bar { display: flex; gap: 8px; margin-top: 10px; }
+  button { flex: 1; padding: 12px 0; font-size: 18px; background: #222; color: #eee; border: 1px solid #333; border-radius: 8px; }
+  button:active { background: #333; }
+  ol { margin: 0; padding: 0 0 40px; list-style: none; }
+  li { padding: 10px 14px; border-bottom: 1px solid #1c1c1c; }
+  li.cur { background: #1d2a1d; }
+  a { color: inherit; text-decoration: none; display: block; }
+</style>
+</head>
+<body>
+<header>
+  <div id="now">…</div>
+  <div id="pos"></div>
+  <div class="bar">
+    <button id="prev">⏮</button>
+    <button id="toggle">⏯</button>
+    <button id="next">⏭</button>
+    <button id="stop">⏹</button>
+  </div>
+</header>
+<ol id="list"></ol>
+<script>
+const ctl = q => fetch('cgi-bin/ctl?' + q, {cache: 'no-store'});
+let count = 0;
+
+async function status() {
+  const r = await ctl('cmd=status');
+  const [mode, idx, total, ...title] = (await r.text()).trim().split(' ');
+  count = +total || 0;
+  document.getElementById('now').textContent = title.join(' ') || '—';
+  document.getElementById('pos').textContent =
+    (mode === 'play' ? 'играет' : mode === 'pause' ? 'пауза' : 'стоп') +
+    (count ? ' · ' + idx + '/' + count : '');
+  document.querySelectorAll('#list li').forEach(li =>
+    li.classList.toggle('cur', +li.dataset.i === +idx));
+}
+
+async function load() {
+  await ctl('cmd=refresh');
+  const r = await ctl('cmd=list');
+  const items = (await r.text()).trim().split('\n');
+  const ol = document.getElementById('list');
+  ol.innerHTML = '';
+  for (const line of items) {
+    const tab = line.indexOf('\t');
+    const i = +line.slice(0, tab), title = line.slice(tab + 1);
+    const li = document.createElement('li');
+    li.dataset.i = i;
+    const a = document.createElement('a');
+    a.href = '#';
+    a.textContent = title || ('Трек ' + i);
+    a.onclick = e => { e.preventDefault(); ctl('cmd=play&idx=' + i); };
+    li.append(a);
+    ol.append(li);
+  }
+  status();
+}
+
+document.getElementById('toggle').onclick = () => ctl('cmd=toggle');
+document.getElementById('next').onclick = () => ctl('cmd=next');
+document.getElementById('prev').onclick = () => ctl('cmd=prev');
+document.getElementById('stop').onclick = () => ctl('cmd=stop');
+load();
+setInterval(status, 3000);
+</script>
+</body>
+</html>
