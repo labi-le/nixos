@@ -1,0 +1,255 @@
+--- a/gdk/wayland/gdkclipboard-wayland.c
++++ b/gdk/wayland/gdkclipboard-wayland.c
+@@ -40,6 +40,11 @@
+   GdkContentFormats *offer_formats;
+ 
+   struct wl_data_source *source;
++
++  /* Pending until the compositor has handled our set_selection */
++  struct wl_callback *selection_sync;
++  /* Cancelled while selection_sync was pending */
++  gboolean source_cancelled;
+ };
+ 
+ struct _GdkWaylandClipboardClass
+@@ -63,10 +68,18 @@
+ }
+ 
+ static void
++gdk_wayland_clipboard_discard_selection_sync (GdkWaylandClipboard *cb)
++{
++  g_clear_pointer (&cb->selection_sync, wl_callback_destroy);
++  cb->source_cancelled = FALSE;
++}
++
++static void
+ gdk_wayland_clipboard_finalize (GObject *object)
+ {
+   GdkWaylandClipboard *cb = GDK_WAYLAND_CLIPBOARD (object);
+ 
++  gdk_wayland_clipboard_discard_selection_sync (cb);
+   gdk_wayland_clipboard_discard_offer (cb);
+   gdk_wayland_clipboard_discard_source (cb);
+   
+@@ -141,7 +154,12 @@
+   if (cb->source == source)
+     {
+       gdk_wayland_clipboard_discard_source (cb);
+-      gdk_wayland_clipboard_claim_remote (cb, NULL, gdk_content_formats_new (NULL, 0));
++
++      /* Decided when the sync is done */
++      if (cb->selection_sync)
++        cb->source_cancelled = TRUE;
++      else
++        gdk_wayland_clipboard_claim_remote (cb, NULL, gdk_content_formats_new (NULL, 0));
+     }
+ }
+ 
+@@ -179,6 +197,37 @@
+   gdk_wayland_clipboard_data_source_action,
+ };
+ 
++static void
++gdk_wayland_clipboard_selection_sync_done (void               *data,
++                                           struct wl_callback *callback,
++                                           uint32_t            callback_data)
++{
++  GdkWaylandClipboard *cb = GDK_WAYLAND_CLIPBOARD (data);
++  gboolean source_cancelled = cb->source_cancelled;
++
++  gdk_wayland_clipboard_discard_selection_sync (cb);
++
++  if (cb->source)
++    {
++      GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD,
++                         "%p: selection confirmed", cb);
++      gdk_wayland_clipboard_discard_offer (cb);
++    }
++  else if (source_cancelled)
++    {
++      GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD,
++                         "%p: selection not taken, using the last remote offer", cb);
++      if (cb->offer)
++        gdk_clipboard_claim_remote (GDK_CLIPBOARD (cb), cb->offer_formats);
++      else
++        gdk_wayland_clipboard_claim_remote (cb, NULL, gdk_content_formats_new (NULL, 0));
++    }
++}
++
++static const struct wl_callback_listener selection_sync_listener = {
++  gdk_wayland_clipboard_selection_sync_done,
++};
++
+ static gboolean
+ gdk_wayland_clipboard_claim (GdkClipboard       *clipboard,
+                              GdkContentFormats  *formats,
+@@ -208,6 +257,10 @@
+ 
+       device = gdk_seat_get_pointer (gdk_display_get_default_seat (GDK_DISPLAY (wayland_display)));
+       gdk_wayland_device_set_selection (device, cb->source);
++
++      gdk_wayland_clipboard_discard_selection_sync (cb);
++      cb->selection_sync = wl_display_sync (wayland_display->wl_display);
++      wl_callback_add_listener (cb->selection_sync, &selection_sync_listener, cb);
+     }
+ 
+   return GDK_CLIPBOARD_CLASS (gdk_wayland_clipboard_parent_class)->claim (clipboard, formats, local, content);
+@@ -320,14 +373,28 @@
+ {
+   g_return_if_fail (GDK_IS_WAYLAND_CLIPBOARD (cb));
+ 
++  if (cb->source && cb->selection_sync)
++    {
++      GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD,
++                         "%p: Keeping clipboard offer until our selection is confirmed", cb);
++      gdk_wayland_clipboard_discard_offer (cb);
++      cb->offer_formats = formats;
++      cb->offer = offer;
++      return;
++    }
++
+   if (cb->source)
+     {
+       GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD,
+                          "%p: Ignoring clipboard offer for self", cb);
+       gdk_content_formats_unref (formats);
++      g_clear_pointer (&offer, wl_data_offer_destroy);
+       return;
+     }
+ 
++  /* Newer than what the pending sync would fall back to */
++  cb->source_cancelled = FALSE;
++
+   gdk_wayland_clipboard_discard_offer (cb);
+ 
+   if (GDK_DISPLAY_DEBUG_CHECK (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD))
+--- a/gdk/wayland/gdkprimary-wayland.c
++++ b/gdk/wayland/gdkprimary-wayland.c
+@@ -20,6 +20,7 @@
+ #include "gdkprimary-wayland.h"
+ 
+ #include "gdkdisplay-wayland.h"
++#include "gdkdevice-wayland-private.h"
+ #include "gdkclipboardprivate.h"
+ #include "gdkcontentformats.h"
+ #include <glib/gi18n-lib.h>
+@@ -44,6 +45,11 @@
+   GdkContentFormats *offer_formats;
+ 
+   struct zwp_primary_selection_source_v1 *source;
++
++  /* Pending until the compositor has handled our set_selection */
++  struct wl_callback *selection_sync;
++  /* Cancelled while selection_sync was pending */
++  gboolean source_cancelled;
+ };
+ 
+ struct _GdkWaylandPrimaryClass
+@@ -79,10 +85,18 @@
+ }
+ 
+ static void
++gdk_wayland_primary_discard_selection_sync (GdkWaylandPrimary *cb)
++{
++  g_clear_pointer (&cb->selection_sync, wl_callback_destroy);
++  cb->source_cancelled = FALSE;
++}
++
++static void
+ gdk_wayland_primary_finalize (GObject *object)
+ {
+   GdkWaylandPrimary *cb = GDK_WAYLAND_PRIMARY (object);
+ 
++  gdk_wayland_primary_discard_selection_sync (cb);
+   gdk_wayland_primary_discard_pending (cb);
+   gdk_wayland_primary_discard_offer (cb);
+   gdk_wayland_primary_discard_source (cb);
+@@ -97,6 +111,15 @@
+ {
+   g_return_if_fail (GDK_IS_WAYLAND_PRIMARY (cb));
+ 
++  if (cb->source && cb->selection_sync)
++    {
++      GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD, "%p: Keeping primary offer until our selection is confirmed", cb);
++      gdk_wayland_primary_discard_offer (cb);
++      cb->offer_formats = formats;
++      cb->offer = offer;
++      return;
++    }
++
+   if (cb->source)
+     {
+       GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD, "%p: Ignoring primary offer for self", cb);
+@@ -105,6 +128,9 @@
+       return;
+     }
+ 
++  /* Newer than what the pending sync would fall back to */
++  cb->source_cancelled = FALSE;
++
+   gdk_wayland_primary_discard_offer (cb);
+ 
+   if (GDK_DISPLAY_DEBUG_CHECK (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD))
+@@ -257,7 +283,12 @@
+   if (cb->source == source)
+     {
+       gdk_wayland_primary_discard_source (cb);
+-      gdk_wayland_primary_claim_remote (cb, NULL, gdk_content_formats_new (NULL, 0));
++
++      /* Decided when the sync is done */
++      if (cb->selection_sync)
++        cb->source_cancelled = TRUE;
++      else
++        gdk_wayland_primary_claim_remote (cb, NULL, gdk_content_formats_new (NULL, 0));
+     }
+ }
+ 
+@@ -266,6 +297,37 @@
+   gdk_wayland_primary_data_source_cancelled,
+ };
+ 
++static void
++gdk_wayland_primary_selection_sync_done (void               *data,
++                                         struct wl_callback *callback,
++                                         uint32_t            callback_data)
++{
++  GdkWaylandPrimary *cb = GDK_WAYLAND_PRIMARY (data);
++  gboolean source_cancelled = cb->source_cancelled;
++
++  gdk_wayland_primary_discard_selection_sync (cb);
++
++  if (cb->source)
++    {
++      GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD,
++                         "%p: primary selection confirmed", cb);
++      gdk_wayland_primary_discard_offer (cb);
++    }
++  else if (source_cancelled)
++    {
++      GDK_DISPLAY_DEBUG (gdk_clipboard_get_display (GDK_CLIPBOARD (cb)), CLIPBOARD,
++                         "%p: primary selection not taken, using the last remote offer", cb);
++      if (cb->offer)
++        gdk_clipboard_claim_remote (GDK_CLIPBOARD (cb), cb->offer_formats);
++      else
++        gdk_wayland_primary_claim_remote (cb, NULL, gdk_content_formats_new (NULL, 0));
++    }
++}
++
++static const struct wl_callback_listener selection_sync_listener = {
++  gdk_wayland_primary_selection_sync_done,
++};
++
+ static gboolean
+ gdk_wayland_primary_claim (GdkClipboard       *clipboard,
+                            GdkContentFormats  *formats,
+@@ -306,6 +368,10 @@
+       zwp_primary_selection_device_v1_set_selection (cb->primary_data_device,
+                                                      cb->source,
+                                                      serial);
++
++      gdk_wayland_primary_discard_selection_sync (cb);
++      cb->selection_sync = wl_display_sync (wdisplay->wl_display);
++      wl_callback_add_listener (cb->selection_sync, &selection_sync_listener, cb);
+     }
+ 
+   return GDK_CLIPBOARD_CLASS (gdk_wayland_primary_parent_class)->claim (clipboard, formats, local, content);

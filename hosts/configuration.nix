@@ -62,6 +62,7 @@
   # curve with `invalid type: string "40", expected i32`.
   environment.etc."lact/config.yaml".source = ./lact-pc.yaml;
   systemd.services.lactd.restartTriggers = [ ./lact-pc.yaml ];
+  systemd.services.lactd.preStart = "${pkgs.coreutils}/bin/rm -f /run/lactd.sock";
 
   programs.dconf.enable = true;
   system.stateVersion = "24.11";
