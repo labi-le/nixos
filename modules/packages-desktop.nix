@@ -19,6 +19,7 @@ with pkgs;
     ];
   })
   vivaldi
+  yam
 
   pcsx2
   qbittorrent
