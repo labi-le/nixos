@@ -4,9 +4,10 @@ DIR=/data/local/stplay
 QS=/system/vendor/quasar
 BB=/system/bin/busybox-smp
 BASE=http://192.168.1.2/music
+COVERS=http://192.168.1.2/covers
 PLAYLIST=$BASE/Playlists/Favorite%20Tracks.m3u8
 URLS=$DIR/urls
-TITLES=$DIR/titles
+META=$DIR/meta
 MODE=$DIR/mode
 IDX=$DIR/idx
 GEN=$DIR/gen
@@ -42,15 +43,37 @@ refresh() {
     /^#EXTINF/ { t = $0; sub(/^[^,]*,/, "", t); next }
     /^#/ { next }
     /^[[:space:]]*$/ { next }
-    { u = $0; sub(/^\.\.\//, "", u); print base enc(u) "\t" t }
+    {
+      u = $0; sub(/^\.\.\//, "", u)
+      n = split(u, p, "/")
+      artist = (n >= 3) ? p[1] : ""
+      album = (n >= 3) ? p[2] : ((n == 2) ? p[1] : "")
+      print base enc(u) "\t" artist "\t" album "\t" t
+    }
   ' "$DIR/pl.tmp" > "$DIR/items" || return 1
   $BB cut -f1 "$DIR/items" > "$DIR/urls.new"
-  $BB cut -f2- "$DIR/items" > "$DIR/titles.new"
-  chmod 666 "$DIR/urls.new" "$DIR/titles.new"
+  $BB cut -f2- "$DIR/items" > "$DIR/meta.new"
+  chmod 666 "$DIR/urls.new" "$DIR/meta.new"
   writef "$COUNT" "$($BB wc -l < "$DIR/urls.new" | $BB tr -d ' ')"
   mv "$DIR/urls.new" "$URLS"
-  mv "$DIR/titles.new" "$TITLES"
+  mv "$DIR/meta.new" "$META"
   rm -f "$DIR/pl.tmp" "$DIR/items"
+}
+
+meta_line() {
+  readf "$META" | $BB sed -n "${1}p"
+}
+
+progress() {
+  last=$(tail -n 60 "$LOG" 2>/dev/null | $BB grep -o 'Progress: [0-9]*ms / [0-9]*ms' | tail -n 1)
+  pos=0
+  dur=0
+  if [ -n "$last" ]; then
+    pos=${last#Progress: }
+    pos=${pos%%ms*}
+    dur=${last##* }
+    dur=${dur%%ms*}
+  fi
 }
 
 super() {
@@ -152,9 +175,24 @@ status() {
   [ -n "$m" ] || m=stop
   t=""
   if [ "$i" -ge 1 ] 2>/dev/null; then
-    t=$(readf "$TITLES" | $BB sed -n "${i}p")
+    t=$(meta_line "$i" | $BB cut -f3)
   fi
   printf '%s %s %s %s\n' "$m" "$i" "$c" "$t"
+}
+
+now() {
+  i=$(readf "$IDX")
+  c=$(readf "$COUNT")
+  m=$(readf "$MODE")
+  [ -n "$i" ] || i=0
+  [ -n "$c" ] || c=0
+  [ -n "$m" ] || m=stop
+  line=""
+  if [ "$i" -ge 1 ] 2>/dev/null; then
+    line=$(meta_line "$i")
+  fi
+  progress
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$m" "$i" "$c" "$pos" "$dur" "$line"
 }
 
 httpd_up() {
@@ -171,7 +209,9 @@ ctl() {
   idx=${idx%%&*}
   case "$cmd" in
     status) status ;;
-    list) $BB awk '{ print NR "\t" $0 }' "$TITLES" ;;
+    now) now ;;
+    list) $BB awk 'BEGIN { FS = "\t" } { print NR "\t" $1 "\t" $2 "\t" $3 }' "$META" ;;
+    covers) $BB wget -q -O - "$COVERS/index.tsv" ;;
     play) start_index "${idx:-1}" ;;
     next) shift_index 1 ;;
     prev) shift_index -1 ;;
@@ -216,6 +256,7 @@ case "$1" in
   pause) ctl cmd=pause ;;
   resume) ctl cmd=resume ;;
   status) status ;;
+  now) now ;;
   ctl) ctl "$2" ;;
   httpd) httpd_up ;;
   daemon)
