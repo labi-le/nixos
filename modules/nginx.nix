@@ -396,6 +396,15 @@ in
               default_type application/octet-stream;
             '';
           };
+          "/covers/" = {
+            alias = "/var/lib/music-covers/";
+            extraConfig = ''
+              autoindex off;
+              allow 192.168.1.0/24;
+              deny all;
+              expires 7d;
+            '';
+          };
         };
       };
     };
