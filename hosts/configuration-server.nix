@@ -19,7 +19,6 @@
     inputs.sub-preprocessor.nixosModules.monitoring
     inputs.tidal-syncer.nixosModules.default
     ./../modules/tidal-syncer.nix
-    ./../modules/music-covers.nix
     ./../modules/music-assistant.nix
     ./../modules/frp.nix
     ./../modules/syncthing/server.nix

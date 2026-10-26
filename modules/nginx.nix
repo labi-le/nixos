@@ -382,30 +382,6 @@ in
           "/" = {
             return = "301 $scheme://labile.cc$request_uri";
           };
-          "/music/" = {
-            alias = "/drive/sync/music/";
-            extraConfig = ''
-              autoindex off;
-              allow 192.168.1.0/24;
-              deny all;
-              types {
-                audio/flac flac;
-                audio/x-mpegurl m3u8;
-                text/plain lrc;
-              }
-              default_type application/octet-stream;
-            '';
-          };
-          "/covers/" = {
-            alias = "/var/lib/music-covers/";
-            extraConfig = ''
-              autoindex off;
-              allow 192.168.1.0/24;
-              deny all;
-              expires 7d;
-              add_header Access-Control-Allow-Origin "*" always;
-            '';
-          };
         };
       };
     };
