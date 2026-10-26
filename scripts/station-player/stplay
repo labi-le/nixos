@@ -76,6 +76,15 @@ progress() {
   fi
 }
 
+lyrics() {
+  i=$1
+  [ "$i" -ge 1 ] 2>/dev/null || return 0
+  url=$($BB sed -n "${i}p" "$URLS")
+  case "$url" in
+    *.flac) $BB wget -q -O - "${url%.flac}.lrc" 2>/dev/null ;;
+  esac
+}
+
 super() {
   writef "$SUPER" "$$"
   while [ "$(readf "$MODE")" = play ]; do
@@ -212,6 +221,7 @@ ctl() {
     now) now ;;
     list) $BB awk 'BEGIN { FS = "\t" } { print NR "\t" $1 "\t" $2 "\t" $3 }' "$META" ;;
     covers) $BB wget -q -O - "$COVERS/index.tsv" ;;
+    lyrics) lyrics "${idx:-0}" ;;
     play) start_index "${idx:-1}" ;;
     next) shift_index 1 ;;
     prev) shift_index -1 ;;

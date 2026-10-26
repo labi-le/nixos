@@ -403,6 +403,7 @@ in
               allow 192.168.1.0/24;
               deny all;
               expires 7d;
+              add_header Access-Control-Allow-Origin "*" always;
             '';
           };
         };

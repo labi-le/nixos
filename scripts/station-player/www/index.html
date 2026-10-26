@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0c">
 <title>Станция</title>
 <style>
   :root {
@@ -10,122 +11,200 @@
     --bg: #0a0a0c;
     --card: #141418;
     --line: #232329;
-    --fg: #f2f2f5;
-    --dim: #9a9aa6;
+    --fg: #f3f3f7;
+    --dim: #9494a1;
     --accent: #7c5cff;
+    --c1: #241a3f;
+    --c2: #101018;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; }
   body {
-    background: var(--bg); color: var(--fg);
+    background: var(--bg); color: var(--fg); overflow-x: hidden;
     font: 15px/1.45 -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  #views { padding: 14px 14px 132px; max-width: 1100px; margin: 0 auto; }
-  .top { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  #glow {
+    position: fixed; inset: 0; pointer-events: none; z-index: -1;
+    background:
+      radial-gradient(70% 55% at 15% -5%, var(--c1), transparent 70%),
+      radial-gradient(60% 50% at 90% 105%, var(--c2), transparent 70%);
+    transition: background 900ms ease;
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    from { transform: scale(1) translate3d(0, 0, 0); }
+    to { transform: scale(1.15) translate3d(-2%, 2%, 0); }
+  }
+  main { padding: 16px 16px 128px; max-width: 1180px; margin: 0 auto; }
+  .view { animation: fadein .35s ease both; }
+  .view[hidden] { display: none; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  h1 { font-size: 24px; margin: 4px 2px 14px; letter-spacing: -.02em; }
+  h1 small { color: var(--dim); font-size: 13px; font-weight: 500; margin-left: 8px; letter-spacing: 0; }
   input[type=search] {
-    flex: 1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
-    background: var(--card); color: var(--fg); font-size: 15px; outline: none;
+    width: 100%; padding: 13px 15px; border-radius: 14px; border: 1px solid var(--line);
+    background: rgba(20, 20, 24, .8); color: var(--fg); font-size: 15px; outline: none;
+    margin-bottom: 16px; transition: border-color .2s;
   }
-  input[type=search]:focus { border-color: #3a3a44; }
-  .grid {
-    display: grid; gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  input[type=search]:focus { border-color: #3d3d49; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); }
+  .album {
+    background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer;
+    animation: rise .5s cubic-bezier(.2, .7, .3, 1) both; animation-delay: calc(var(--i) * 16ms);
   }
-  .album { background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+  .album .art { transition: transform .35s cubic-bezier(.2, .7, .3, 1), box-shadow .35s; }
+  .album:hover .art { transform: translateY(-4px) scale(1.02); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .9); }
   .cover {
-    width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px;
-    background: linear-gradient(140deg, #1d1d26, #121216);
-    display: block;
+    width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px;
+    background: linear-gradient(140deg, #1d1d26, #121216); display: block;
   }
-  .cover.ph {
-    display: flex; align-items: center; justify-content: center;
-    color: #4c4c5a; font-size: 34px; font-weight: 700;
-  }
-  .album .t { margin-top: 7px; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .album .a { color: var(--dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .head { display: flex; gap: 14px; align-items: flex-end; margin-bottom: 16px; }
-  .head .cover { width: 120px; flex: 0 0 120px; border-radius: 14px; }
-  .head h1 { font-size: 21px; margin: 0 0 4px; line-height: 1.2; }
+  .cover.ph { display: flex; align-items: center; justify-content: center; color: #4c4c5a; font-size: 34px; font-weight: 700; }
+  .album .t { margin-top: 8px; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .album .a { color: var(--dim); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .head { display: flex; gap: 16px; align-items: flex-end; margin: 6px 0 18px; }
+  .head .art { width: 132px; flex: 0 0 132px; }
+  .head h2 { font-size: 22px; margin: 0 0 5px; line-height: 1.2; }
   .head .sub { color: var(--dim); font-size: 13px; }
   .back {
-    background: var(--card); color: var(--fg); border: 1px solid var(--line);
-    border-radius: 10px; padding: 9px 13px; font-size: 14px; cursor: pointer;
+    background: rgba(20, 20, 24, .85); color: var(--fg); border: 1px solid var(--line);
+    border-radius: 12px; padding: 10px 14px; font-size: 14px; cursor: pointer; margin-bottom: 14px;
   }
   ol { list-style: none; margin: 0; padding: 0; }
   ol li { border-bottom: 1px solid var(--line); }
   ol button {
-    width: 100%; display: flex; gap: 12px; align-items: baseline; text-align: left;
-    background: none; border: 0; color: inherit; padding: 12px 4px; font-size: 15px; cursor: pointer;
+    width: 100%; display: flex; gap: 14px; align-items: baseline; text-align: left;
+    background: none; border: 0; color: inherit; padding: 13px 4px; font-size: 15px; cursor: pointer;
   }
   ol button .n { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 26px; font-size: 13px; }
   ol button.on .t { color: var(--accent); font-weight: 600; }
+  #mini {
+    position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 20; display: none; align-items: center; gap: 12px; padding: 8px 12px 8px 8px;
+    background: rgba(22, 22, 27, .86); backdrop-filter: blur(22px) saturate(1.4);
+    border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 22px 50px -24px #000;
+    max-width: 560px; margin: 0 auto; cursor: pointer;
+    animation: fadein .3s ease both;
+  }
+  #mini.on { display: flex; }
+  #mini .art .cover { width: 46px; height: 46px; border-radius: 12px; font-size: 20px; }
+  #mini .meta { flex: 1; min-width: 0; }
+  #mini .t { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #mini .a { color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .eq { display: flex; gap: 2px; align-items: flex-end; height: 16px; width: 18px; }
+  .eq i { flex: 1; background: var(--accent); border-radius: 1px; animation: bounce .9s ease-in-out infinite; }
+  .eq i:nth-child(2) { animation-delay: .18s; }
+  .eq i:nth-child(3) { animation-delay: .36s; }
+  .eq.paused i { animation-play-state: paused; height: 4px; }
+  @keyframes bounce { 0%, 100% { height: 4px; } 50% { height: 16px; } }
   #np {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-    background: rgba(14, 14, 17, .93); backdrop-filter: blur(18px);
-    border-top: 1px solid var(--line); padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column;
+    transform: translateY(100%); transition: transform .42s cubic-bezier(.2, .8, .25, 1);
+    background: rgba(8, 8, 10, .72); backdrop-filter: blur(34px) saturate(1.3);
+    padding: 12px 20px calc(18px + env(safe-area-inset-bottom));
   }
-  #np .inner { max-width: 1100px; margin: 0 auto; }
-  #np .row { display: flex; gap: 12px; align-items: center; }
-  #npArt .cover { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 10px; font-size: 22px; }
-  #np .meta { flex: 1; min-width: 0; }
-  #np .t { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #np .a { color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #np .line { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
-  #bar { flex: 1; height: 3px; background: #26262d; border-radius: 2px; overflow: hidden; }
-  #bar div { height: 100%; width: 0; background: var(--accent); transition: width .5s linear; }
-  #npTime { color: var(--dim); font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 600; min-width: 84px; text-align: right; }
-  .keys { display: flex; gap: 6px; }
+  #np.open { transform: none; }
+  #np .np-shell { width: 100%; max-width: 470px; margin: 0 auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  #np .handle { display: flex; justify-content: center; padding: 2px 0 10px; cursor: grab; }
+  #np .handle span { width: 42px; height: 5px; border-radius: 3px; background: #3a3a44; }
+  #npArt { display: flex; justify-content: center; margin-bottom: 18px; }
+  #npArt .cover {
+    width: min(76vw, 320px); height: min(76vw, 320px); border-radius: 20px;
+    box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .95); font-size: 76px;
+    transition: transform .5s cubic-bezier(.2, .8, .25, 1), opacity .35s;
+  }
+  #npArt.swap .cover { transform: scale(.94); opacity: .35; }
+  #np .meta { text-align: center; margin-bottom: 6px; }
+  #np .t { font-size: 19px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #np .a { color: var(--dim); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #lyrics { flex: 1; min-height: 80px; overflow: hidden; position: relative; margin: 14px 0 6px; mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent); }
+  #lyricLines { transition: transform .5s cubic-bezier(.2, .8, .25, 1); will-change: transform; }
+  #lyricLines p {
+    margin: 0; padding: 7px 4px; font-size: 16px; font-weight: 600; color: #6f6f7d;
+    transition: color .3s, transform .3s; transform-origin: center;
+  }
+  #lyricLines p.on {
+    color: transparent;
+    background-image: linear-gradient(90deg, #fff var(--p, 0%), #6f6f7d var(--p, 0%));
+    -webkit-background-clip: text; background-clip: text;
+    transform: scale(1.04);
+  }
+  #lyricLines .none { color: var(--dim); font-weight: 500; font-size: 14px; text-align: center; padding: 24px 0; }
+  .prog { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; }
+  #bar { flex: 1; height: 4px; background: #2a2a33; border-radius: 3px; overflow: hidden; }
+  #fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), #b3a1ff); transition: width .9s linear; }
+  #times { color: var(--dim); font-size: 11.5px; font-variant-numeric: tabular-nums; font-weight: 600; min-width: 88px; text-align: right; }
+  .keys { display: flex; justify-content: center; gap: 16px; align-items: center; }
   .keys button {
-    width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line);
-    background: var(--card); color: var(--fg); font-size: 16px; line-height: 1; cursor: pointer;
+    width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line);
+    background: rgba(28, 28, 34, .8); color: var(--fg); font-size: 19px; line-height: 1; cursor: pointer;
+    transition: transform .15s, background .2s;
   }
-  .keys button:active { background: #202028; }
-  .keys #play { background: var(--accent); border-color: var(--accent); }
+  .keys button:active { transform: scale(.92); background: #2a2a33; }
+  .keys #play { width: 64px; height: 64px; font-size: 24px; background: var(--accent); border-color: var(--accent); box-shadow: 0 12px 30px -12px var(--accent); }
   .empty { color: var(--dim); padding: 30px 0; text-align: center; }
+  @media (min-width: 780px) {
+    #np { inset: auto; left: 50%; top: 50%; transform: translate(-50%, -46%) scale(.96); opacity: 0; width: 470px; height: 86vh; border-radius: 26px; border: 1px solid var(--line); pointer-events: none; }
+    #np.open { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
+  }
 </style>
 </head>
 <body>
-<div id="views">
-  <section id="albumsView">
-    <div class="top"><input id="q" type="search" placeholder="Поиск по трекам и альбомам"></div>
+<div id="glow"></div>
+<main>
+  <section id="home" class="view">
+    <h1>Станция</h1>
+    <input id="q" type="search" placeholder="Поиск по трекам и альбомам">
     <div id="albums" class="grid"></div>
   </section>
-  <section id="albumView" hidden>
-    <div class="top"><button class="back" id="back">← Все альбомы</button></div>
+  <section id="album" class="view" hidden>
+    <button class="back" id="back">← Все альбомы</button>
     <div class="head" id="albumHead"></div>
     <ol id="tracks"></ol>
   </section>
+</main>
+
+<div id="mini">
+  <div class="art" id="miniArt"></div>
+  <div class="meta">
+    <div class="t" id="miniTitle">—</div>
+    <div class="a" id="miniArtist"></div>
+  </div>
+  <div class="eq" id="eq"><i></i><i></i><i></i></div>
 </div>
 
-<div id="np">
-  <div class="inner">
-    <div class="row">
-      <div id="npArt"></div>
-      <div class="meta">
-        <div class="t" id="npTitle">—</div>
-        <div class="a" id="npArtist"></div>
-      </div>
-      <div class="keys">
-        <button id="prev" title="Назад">⏮</button>
-        <button id="play" title="Пауза">⏵</button>
-        <button id="next" title="Дальше">⏭</button>
-        <button id="stop" title="Стоп">⏹</button>
-      </div>
+<section id="np">
+  <div class="np-shell">
+    <div class="handle" id="handle"><span></span></div>
+    <div id="npArt"></div>
+    <div class="meta">
+      <div class="t" id="npTitle">—</div>
+      <div class="a" id="npArtist"></div>
     </div>
-    <div class="line">
+    <div id="lyrics"><div id="lyricLines"></div></div>
+    <div class="prog">
       <div id="bar"><div id="fill"></div></div>
-      <div id="npTime"></div>
+      <div id="times"></div>
+    </div>
+    <div class="keys">
+      <button id="prev" title="Назад">⏮</button>
+      <button id="play" title="Пауза">⏵</button>
+      <button id="next" title="Дальше">⏭</button>
+      <button id="stop" title="Стоп">⏹</button>
     </div>
   </div>
-</div>
+</section>
 
 <script>
 const api = q => fetch('cgi-bin/ctl?' + q, { cache: 'no-store' }).then(r => r.text());
 const COVERS = 'http://192.168.1.2/covers/';
-const state = { albums: new Map(), cover: new Map(), tracks: [], cur: -1, raw: [] };
-
 const el = id => document.getElementById(id);
+const state = {
+  albums: new Map(), cover: new Map(), raw: [], cur: -1, lyrics: new Map(),
+  lines: [], active: -1, lyrIdx: -1, artKey: '', npOpen: false
+};
+
 const coverUrl = (artist, album) => {
   const h = state.cover.get(artist + '\u0000' + album);
   return h ? COVERS + h + '.jpg' : null;
@@ -142,6 +221,7 @@ function art(artist, album, cls, lazy) {
     const img = document.createElement('img');
     img.className = cls;
     img.alt = '';
+    img.crossOrigin = 'anonymous';
     if (lazy) img.loading = 'lazy';
     img.src = url;
     return img;
@@ -152,13 +232,33 @@ function art(artist, album, cls, lazy) {
   return d;
 }
 
+function paintGlow(url) {
+  if (!url) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 24;
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0, 24, 24);
+    const d = g.getImageData(0, 0, 24, 24).data;
+    let r = 0, gg = 0, b = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      r += d[i]; gg += d[i + 1]; b += d[i + 2]; n++;
+    }
+    r = Math.round(r / n); gg = Math.round(gg / n); b = Math.round(b / n);
+    const mix = (v, k) => Math.round(v * k);
+    document.documentElement.style.setProperty('--c1', `rgb(${mix(r, .55)}, ${mix(gg, .55)}, ${mix(b, .55)})`);
+    document.documentElement.style.setProperty('--c2', `rgb(${mix(b, .35)}, ${mix(r, .3)}, ${mix(gg, .3)})`);
+  };
+  img.src = url;
+}
+
 function buildAlbums() {
   state.albums = new Map();
-  state.tracks = [];
   for (const line of state.raw) {
     const [idx, artist, album, ...rest] = line.split('\t');
     const rec = { idx: +idx, artist, album, title: rest.join('\t') };
-    state.tracks.push(rec);
     const key = artist + '\u0000' + album;
     if (!state.albums.has(key)) state.albums.set(key, { artist, album, tracks: [] });
     state.albums.get(key).tracks.push(rec);
@@ -167,46 +267,57 @@ function buildAlbums() {
 
 function renderAlbums(filter) {
   const box = el('albums');
-  box.innerHTML = '';
   const f = (filter || '').trim().toLowerCase();
   const items = [...state.albums.values()].filter(a =>
     !f || a.album.toLowerCase().includes(f) || a.artist.toLowerCase().includes(f) ||
     a.tracks.some(t => t.title.toLowerCase().includes(f)));
+  box.replaceChildren();
   if (!items.length) {
     box.innerHTML = '<div class="empty">Ничего не нашлось</div>';
     return;
   }
-  for (const a of items) {
+  items.forEach((a, i) => {
     const b = document.createElement('button');
     b.className = 'album';
+    b.style.setProperty('--i', i);
+    const wrap = document.createElement('div');
+    wrap.className = 'art';
+    wrap.append(art(a.artist, a.album, 'cover', true));
     const t = document.createElement('div');
     t.className = 't';
     t.textContent = a.album || 'Без альбома';
     const s = document.createElement('div');
     s.className = 'a';
     s.textContent = a.artist;
-    b.append(art(a.artist, a.album, 'cover', true), t, s);
+    b.append(wrap, t, s);
     b.onclick = () => openAlbum(a);
     box.append(b);
-  }
+  });
 }
 
 function openAlbum(a) {
-  el('albumsView').hidden = true;
-  el('albumView').hidden = false;
+  el('home').hidden = true;
+  const view = el('album');
+  view.hidden = false;
+  view.classList.remove('view');
+  void view.offsetWidth;
+  view.classList.add('view');
   const head = el('albumHead');
-  head.innerHTML = '';
+  head.replaceChildren();
   const info = document.createElement('div');
-  const h = document.createElement('h1');
+  const h = document.createElement('h2');
   h.textContent = a.album || 'Без альбома';
   const sub = document.createElement('div');
   sub.className = 'sub';
   sub.textContent = a.artist + ' · ' + a.tracks.length + ' трек(ов)';
   info.append(h, sub);
-  head.append(art(a.artist, a.album, 'cover', false), info);
+  const wrap = document.createElement('div');
+  wrap.className = 'art';
+  wrap.append(art(a.artist, a.album, 'cover', false));
+  head.append(wrap, info);
 
   const ol = el('tracks');
-  ol.innerHTML = '';
+  ol.replaceChildren();
   a.tracks.forEach((t, i) => {
     const li = document.createElement('li');
     const b = document.createElement('button');
@@ -214,7 +325,7 @@ function openAlbum(a) {
     b.innerHTML = '<span class="n"></span><span class="t"></span>';
     b.querySelector('.n').textContent = i + 1;
     b.querySelector('.t').textContent = t.title;
-    b.onclick = () => api('cmd=play&idx=' + t.idx);
+    b.onclick = () => { api('cmd=play&idx=' + t.idx); openNP(); };
     li.append(b);
     ol.append(li);
   });
@@ -226,24 +337,113 @@ function markCurrent(idx) {
     b.classList.toggle('on', +b.dataset.idx === idx));
 }
 
-let lastArt = '';
+async function loadLyrics(idx) {
+  if (state.lyrics.has(idx)) return state.lyrics.get(idx);
+  let raw = '';
+  try { raw = await api('cmd=lyrics&idx=' + idx); } catch (e) { raw = ''; }
+  const lines = [];
+  for (const line of raw.split('\n')) {
+    const m = line.match(/^\[(\d+):(\d+(?:\.\d+)?)\](.*)$/);
+    if (m) {
+      const t = (+m[1]) * 60000 + Math.round(parseFloat(m[2]) * 1000);
+      lines.push({ t, s: m[3].trim() });
+    }
+  }
+  state.lyrics.set(idx, lines);
+  return lines;
+}
+
+function renderLyrics(lines) {
+  const box = el('lyricLines');
+  box.replaceChildren();
+  state.lines = lines;
+  state.active = -1;
+  if (!lines.length) {
+    box.innerHTML = '<p class="none">текста нет</p>';
+    box.style.transform = 'none';
+    return;
+  }
+  lines.forEach(l => {
+    const p = document.createElement('p');
+    p.textContent = l.s || '·';
+    box.append(p);
+  });
+  box.style.transform = 'none';
+}
+
+function syncLyrics(pos) {
+  if (!state.lines.length) return;
+  let i = -1;
+  for (let k = 0; k < state.lines.length; k++) {
+    if (state.lines[k].t <= pos) i = k;
+    else break;
+  }
+  if (i !== state.active) {
+    state.active = i;
+    const box = el('lyricLines');
+    [...box.children].forEach((p, n) => p.classList.toggle('on', n === i));
+    const node = box.children[i];
+    if (node) {
+      const shift = node.offsetTop - el('lyrics').clientHeight / 2 + node.offsetHeight / 2;
+      box.style.transform = `translateY(${-Math.max(0, shift)}px)`;
+    }
+  }
+  const node = el('lyricLines').children[i];
+  if (node) {
+    const from = state.lines[i].t;
+    const to = state.lines[i + 1] ? state.lines[i + 1].t : from + 4000;
+    const p = Math.max(0, Math.min(1, (pos - from) / (to - from)));
+    node.style.setProperty('--p', (p * 100).toFixed(1) + '%');
+  }
+}
+
+function openNP() {
+  state.npOpen = true;
+  el('np').classList.add('open');
+}
+function closeNP() {
+  state.npOpen = false;
+  el('np').classList.remove('open');
+}
+
+let lastIdx = -1;
 async function poll() {
   const line = (await api('cmd=now')).trim();
-  const [mode, idx, count, pos, dur, artist, album, ...rest] = line.split('\t');
+  const [mode, idxS, count, posS, durS, artist, album, ...rest] = line.split('\t');
+  const idx = +idxS, pos = +posS, dur = +durS;
   const title = rest.join('\t');
-  state.cur = +idx;
+  state.cur = idx;
+
+  el('miniTitle').textContent = title || '—';
+  el('miniArtist').textContent = [artist, album].filter(Boolean).join(' · ');
+
+  el('mini').classList.toggle('on', idx > 0);
+  el('eq').classList.toggle('paused', mode !== 'play');
   el('npTitle').textContent = title || '—';
-  el('npArtist').textContent = [artist, album].filter(Boolean).join(' · ') ||
-    (mode === 'stop' ? 'остановлено' : '');
-  el('play').textContent = mode === 'pause' ? '⏵' : mode === 'play' ? '⏸' : '⏵';
-  el('npTime').textContent = dur > 0 ? mmss(pos) + ' / ' + mmss(dur) : '';
+  el('npArtist').textContent = [artist, album].filter(Boolean).join(' · ');
+  el('play').textContent = mode === 'pause' ? '⏵' : '⏸';
+  el('times').textContent = dur > 0 ? mmss(pos) + ' / ' + mmss(dur) : '';
   el('fill').style.width = dur > 0 ? Math.min(100, pos / dur * 100) + '%' : '0%';
+
   const key = artist + '\u0000' + album;
-  if (key !== lastArt) {
-    lastArt = key;
-    el('npArt').replaceChildren(art(artist, album, 'cover', false));
+  if (key !== state.artKey) {
+    state.artKey = key;
+    const node = art(artist, album, 'cover', false);
+    el('npArt').classList.add('swap');
+    setTimeout(() => {
+      el('npArt').replaceChildren(node);
+      el('npArt').classList.remove('swap');
+    }, 160);
+    el('miniArt').replaceChildren(art(artist, album, 'cover', false));
+    paintGlow(coverUrl(artist, album));
   }
-  markCurrent(state.cur);
+  if (idx !== lastIdx) {
+    lastIdx = idx;
+    const lines = idx > 0 ? await loadLyrics(idx) : [];
+    renderLyrics(lines);
+  }
+  syncLyrics(pos);
+  markCurrent(idx);
 }
 
 async function boot() {
@@ -258,13 +458,31 @@ async function boot() {
   renderAlbums('');
   el('q').oninput = e => renderAlbums(e.target.value);
   el('back').onclick = () => {
-    el('albumView').hidden = true;
-    el('albumsView').hidden = false;
+    el('album').hidden = true;
+    el('home').hidden = false;
   };
-  el('play').onclick = () => api('cmd=toggle');
-  el('next').onclick = () => api('cmd=next');
-  el('prev').onclick = () => api('cmd=prev');
-  el('stop').onclick = () => api('cmd=stop');
+  el('play').onclick = e => { e.stopPropagation(); api('cmd=toggle'); };
+  el('next').onclick = e => { e.stopPropagation(); api('cmd=next'); };
+  el('prev').onclick = e => { e.stopPropagation(); api('cmd=prev'); };
+  el('stop').onclick = e => { e.stopPropagation(); api('cmd=stop'); };
+  el('mini').onclick = openNP;
+  el('handle').onclick = closeNP;
+
+  let sy = null;
+  el('np').addEventListener('touchstart', e => { sy = e.touches[0].clientY; }, { passive: true });
+  el('np').addEventListener('touchend', e => {
+    if (sy !== null && e.changedTouches[0].clientY - sy > 90) closeNP();
+    sy = null;
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') { e.preventDefault(); api('cmd=toggle'); }
+    if (e.code === 'ArrowRight') api('cmd=next');
+    if (e.code === 'ArrowLeft') api('cmd=prev');
+    if (e.code === 'Escape') closeNP();
+  });
+
   poll();
   setInterval(poll, 1000);
 }
