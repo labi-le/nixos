@@ -20,6 +20,7 @@
     inputs.tidal-syncer.nixosModules.default
     ./../modules/tidal-syncer.nix
     ./../modules/music-covers.nix
+    ./../modules/music-assistant.nix
     ./../modules/frp.nix
     ./../modules/syncthing/server.nix
     ./../modules/nvidia/gt210.nix
