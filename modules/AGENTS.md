@@ -1,6 +1,6 @@
 # modules/ — Shared NixOS System Modules
 
-Routing (file ↔ concern) → `../docs/routes.md`. Conventions + verification gate → `../docs/nix-project-rules.md`.
+Routing (file ↔ concern) → `../docs/routes.toml` (index: `docs/routes.md`). Conventions + verification gate → `../docs/nix-project-rules.md`.
 Below = only what those don't cover.
 
 ## Module idiom

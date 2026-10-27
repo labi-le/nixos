@@ -15,4 +15,4 @@ Read reference files before work:
 - ALWAYS read `docs/agent-operating-rules.md` for general behavior, diagnostics, coding standards.
 - For Nix project work, read `docs/nix-project-rules.md` for workflow, tooling, architecture, verification gates.
 - Read `docs/nix-reference.md` only when task-specific project details needed, such as structure, package recipes, secrets, monitors, hosts, or common commands.
-- For Nix module routing, read `docs/routes.md`.
+- For Nix module routing, use the `nix-control` route tool or read `docs/routes.md`; the editable registry is `docs/routes.toml`.

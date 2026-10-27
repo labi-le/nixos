@@ -2,11 +2,22 @@
 
 ## Module Routing
 
-- Use the `nix-routing` skill. It determines the target file via
-  `docs/routes.md` in one action, forbids `glob`/`grep` module discovery, and
-  keeps the routing table updated.
-- `docs/routes.md` is only for file navigation. For external NixOS/Home Manager
-  package or option documentation, use MCP tools such as `nixos_nix`.
+- Use the `nix-routing` skill. `docs/routes.toml` is the routing registry the
+  `nix-control` `route`/`route_file`/`routes_audit` tools read; `docs/routes.md`
+  is its generated index and is never edited by hand.
+- Regenerate the index after editing the registry:
+  `python3 .omp/nix-control-mcp/routes.py --index`. `routes_audit` reports a
+  stale index, dead paths, duplicate owners, missing note anchors and unrouted
+  `.nix` files.
+- Keep one fact in one place: current values live in the modules, incident
+  history and measurements in the per-service documents under `docs/`, and
+  longer routing knowledge in `docs/routes-notes.md` referenced by a route's
+  `doc` field.
+- Routing is navigation, not proof. `confident` only says the registry matched
+  well; read the module before editing, and verify a route that leans on note
+  text.
+- For external NixOS/Home Manager package or option documentation, use MCP
+  tools such as `nixos_nix`.
 
 ## Required Tooling
 

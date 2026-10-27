@@ -223,8 +223,9 @@ TOOLS = [
         "title": "Route a config task to a file",
         "description": (
             "Resolve a natural-language config task to the exact file(s) to edit, from "
-            "docs/routes.md. Use this INSTEAD of glob/grep when locating a NixOS or Home Manager "
-            "module. Returns ranked rows with section, host scope, notes and path existence."
+            "docs/routes.toml. Use this INSTEAD of glob/grep when locating a NixOS or Home Manager "
+            "module. Returns ranked routes with host scope, matched evidence, a one-line note "
+            "and path existence."
         ),
         "inputSchema": {
             "type": "object",
@@ -241,7 +242,7 @@ TOOLS = [
     {
         "name": "route_file",
         "title": "Reverse route lookup",
-        "description": "What a file owns according to docs/routes.md: matching concerns, sections and host scope. Use before editing a file, or to check whether a new module still needs a row.",
+        "description": "What a file owns according to docs/routes.toml: matching routes, groups, host scope and notes. Use before editing a file, or to check whether a new module still needs an entry.",
         "inputSchema": {
             "type": "object",
             "properties": {"path": {"type": "string", "description": "repo-relative path, e.g. modules/grafana.nix"}},
@@ -252,13 +253,14 @@ TOOLS = [
     },
     {
         "name": "routes_audit",
-        "title": "Routing table audit",
-        "description": "Section map of docs/routes.md, plus rows of one section, dead path references and .nix files that have no row.",
+        "title": "Routing registry audit",
+        "description": "Group counts of docs/routes.toml, plus routes of one group, dead paths, duplicate path owners, missing notes anchors and .nix files that have no route.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "section": {"type": "string", "description": "dump the rows of one section (prefix match on the heading)"},
-                "validate": {"type": "boolean", "description": "report dead and unrouted paths (default true)"},
+                "group": {"type": "string", "description": "dump the routes of one group (prefix match)"},
+                "section": {"type": "string", "description": "alias of group, kept for older callers"},
+                "validate": {"type": "boolean", "description": "report dead, duplicate and unrouted paths (default true)"},
             },
         },
         "annotations": {"readOnlyHint": True, "openWorldHint": False},

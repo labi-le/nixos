@@ -3,7 +3,9 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+REGISTRY = REPO / "docs" / "routes.toml"
 ROUTES = REPO / "docs" / "routes.md"
+ROUTES_NOTES = REPO / "docs" / "routes-notes.md"
 OMP_RULES = REPO / "home-manager" / "modules" / "omp"
 LOCK = REPO / "flake.lock"
 SECRETS_RULES = REPO / "secrets.nix"
@@ -35,7 +37,7 @@ STOP_WORDS = frozenset(
     "change edit configure enable disable make host hosts file files module modules".split()
 )
 PATH_CELL_RE = re.compile(r"`([^`]+)`")
-PATH_SHAPE_RE = re.compile(r"^[\w./@<>*+-]+\.(nix|ya?ml|age|json|jar|lock|patch|py|md)$")
+PATH_SHAPE_RE = re.compile(r"^[\w./@<>*+~-]+\.(nix|ya?ml|toml|js|age|json|jar|lock|patch|py|md)$")
 DELIMITER_RE = re.compile(r"^\|[\s\-:|]+\|$")
 DIRTY_WARNING_RE = re.compile(r"Git tree '.*' is dirty")
 DRV_FAIL_RE = re.compile(r"builder for '(/nix/store/\S+\.drv)' failed|error: build of '(\S+)' failed")

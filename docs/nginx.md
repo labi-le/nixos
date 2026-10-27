@@ -132,7 +132,7 @@ The actual failure on 2026-09-21 was not a slow first recursive lookup: it
 was that dnsmasq's start job was deleted as collateral damage of the
 `local-fs.target` / `var-lib-private-chromadb.mount` / `drive.mount` /
 `network.target` ordering cycle (see the `modules/drive.nix` row in
-`docs/routes.md`). unbound started at 15:04:07; `nginx-pre-start` then
+`docs/routes.toml`). unbound started at 15:04:07; `nginx-pre-start` then
 failed at :10, :20, :30 and :41 and hit `start-limit-hit` at 15:04:51 — but
 dnsmasq itself did not start until 15:16:39, so the host had no listener at
 all on `127.0.0.1:53` for the first twelve minutes of the boot. No retry

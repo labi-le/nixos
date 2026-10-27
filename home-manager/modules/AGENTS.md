@@ -1,6 +1,6 @@
 # home-manager/modules/ — User-level (Home Manager) config
 
-Routing + "add an HM module" → `../../docs/routes.md`. This is user config, NOT system config.
+Routing + "add an HM module" → `../../docs/routes.toml` (index: `docs/routes.md`). This is user config, NOT system config.
 
 ## Scope rule (the key distinction from `../../modules/`)
 

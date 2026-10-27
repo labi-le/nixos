@@ -32,6 +32,12 @@ fmt:
 gate-matrix:
 	@python3 modules/jcode/gate-matrix.py
 
+routes-check:
+	@python3 .omp/nix-control-mcp/routes_test.py
+
+routes-index:
+	@python3 .omp/nix-control-mcp/routes.py --index
+
 upgrade:
 	nix flake update && $(SCOPE) sudo nixos-rebuild switch --flake ./#$(HOSTNAME) --impure $(BUILD_FLAGS)
 
@@ -44,7 +50,7 @@ cleanup: boot
 optimise:
 	nix-store --optimise
 
-.PHONY: dump gate-matrix
+.PHONY: dump gate-matrix routes-check routes-index
 dump:
 	@{ \
 		echo "=== START PROJECT CODE DUMP ==="; \
