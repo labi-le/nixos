@@ -323,6 +323,11 @@ in
       "buer.labile.cc" = buer { addr = "http://127.0.0.1:6543"; };
       "llm.labile.cc" = llmGateway { addr = "http://127.0.0.1:27015"; };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
+      "ma.labile.cc" = proxy {
+        addr = "http://127.0.0.1:8095";
+        internal = true;
+        websockets = true;
+      };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };
       "mail.labile.cc" = proxy {
         addr = "http://127.0.0.1:7001";

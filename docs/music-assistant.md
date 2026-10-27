@@ -1,7 +1,8 @@
 # Music Assistant на Станции 1
 
-Готовый серверный плеер вместо самописной морды: UI на `http://192.168.1.2:8095`,
-звук уходит на станцию через Snapcast-клиент на Android.
+Готовый серверный плеер вместо самописной морды: UI на `https://ma.labile.cc`
+(или напрямую `http://192.168.1.2:8095`), звук уходит на станцию через
+Snapcast-клиент на Android.
 
 ## Состав
 
@@ -10,6 +11,7 @@
 | сервер | контейнер `ghcr.io/music-assistant/server` (`modules/music-assistant.nix`), host-network, состояние в `/var/lib/music-assistant` |
 | библиотека | `/drive/sync/music` смонтирована в контейнер read-only как `/media`, в MA добавлена как Filesystem-провайдер |
 | порты | 8095 UI, 8097 стрим, 1704/1705 Snapcast, 4953-5153 клиенты |
+| vhost | `ma.labile.cc` → `127.0.0.1:8095`, internal (IP-whitelist), websockets, `modules/nginx.nix` |
 | клиент на станции | `de.badaix.snapcast` (Snapdroid), APK с GitHub releases, host `192.168.1.2`, порты 1704/1705 |
 
 MA сам поднимает встроенный Snapserver; отдельный snapcast-сервер не нужен.
@@ -117,6 +119,46 @@ existent user», затем «invalid shell». Поэтому в `/system` до�
 Отсюда следствие: пароль у root не работает в принципе (`x` в поле пароля), вход только по ключу.
 Вход: `ssh root@192.168.1.148`. Telnet на 2323 (busybox из пропатченного ramdisk)
 остаётся запасным путём, если SSH перестанет подниматься.
+
+После сброса станции (пункт «Сбросить», настройка через AliceBridge) `/data` пустой:
+passwd-хелпер AliceBridge подставляет свой (`/system/bin/alicebridge-login`), а вход по
+паролю снова работает — `root:1`. Ключ и dropbear при этом стираются, поэтому первым делом
+ставится пароль, а уже им — всё остальное.
+
+## Восстановление после сброса
+
+Сброс чистит только `/data`; `/system` остаётся, в том числе `resolv.conf`. Порядок:
+
+1. Snapdroid APK на станцию: `pm install -r` (файлу нужны права `644`, иначе
+   `INSTALL_FAILED_INVALID_APK` из-за того, что установщик читает его другим uid).
+2. Настройки Snapdroid лежат в `de.badaix.snapcast_preferences.xml` (default prefs):
+   `host=192.168.1.2`, `streamPort=1704`, `controlPort=1705`, `autoStart=true`.
+   UUID клиента — отдельный файл `PREF_UNIQUE_ID.xml` с ключом `PREF_UNIQUE_ID`.
+   Без него клиент получит новый UUID и MA заведёт нового плеера с пустой очередью.
+3. Скрипты из бэкапа: `ampmax.sh`, `knob.sh`, `netlock.sh`, `station-watch.sh`,
+   шимы в `/data/opt/bin`.
+4. Автозапуск: `onboot.sh` при OTA перезаписывается, строка
+   `setsid sh /data/local/etc/station-watch.sh >/dev/null 2>&1 &` дописывается заново
+   (раздел `/system` перемонтируется в rw).
+
+Бэкап конфига: `/tmp/nix/station-config-2026-10-26.tgz`.
+
+## Пароль MA
+
+В `/data/auth.db` хранится только `pbkdf2_hmac("sha256", password, f"{user_id}:{server_id}", 100000)`.
+Пароль не восстанавливается. Сброс — остановить контейнер и переписать
+`user_auth_providers.provider_user_id` для `provider_type='builtin'`:
+
+```sh
+docker stop music-assistant
+docker run --rm -v /var/lib/music-assistant:/d python:3.12-alpine python3 /r.py НОВЫЙ_ПАРОЛЬ /d/auth.db
+docker run -d --name=music-assistant --network=host -v /var/lib/music-assistant:/data \
+  -v /drive/sync/music:/media:ro ghcr.io/music-assistant/server:2.10.8
+```
+
+`systemctl start docker-music-assistant` требует polkit-авторизации, поэтому контейнер
+поднимается прямым `docker run`. Логин к API: `auth/login` с `username`, `password`,
+`provider_id=builtin`; поле `credentials` не принимается.
 
 ## OTA, телеметрия и логи
 
