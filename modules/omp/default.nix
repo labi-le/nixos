@@ -18,7 +18,7 @@ let
       ;
   };
   packages = import ./packages.nix { inherit pkgs; };
-  install = import ./install.nix { inherit files lib user; };
+  install = import ./install.nix { inherit files lib pkgs user; };
 in
 {
   imports = [

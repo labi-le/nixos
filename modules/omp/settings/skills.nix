@@ -36,4 +36,7 @@ let
     name: dir: "L+ ${agentDir}/skills/${name} - - - - ${dir}"
   ) vendoredSkills;
 in
-skillLinks
+{
+  links = skillLinks;
+  names = builtins.attrNames vendoredSkills;
+}

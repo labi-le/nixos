@@ -20,7 +20,7 @@ let
       ;
   };
   client = import ./client.nix { inherit lib pkgs; };
-  skillLinks = import ./skills.nix { inherit lib pkgs agentDir; };
+  skills = import ./skills.nix { inherit lib pkgs agentDir; };
   extensions = import ./extensions.nix { inherit inputs pkgs; };
   configFile = import ./config.nix { inherit pkgs; };
 in
@@ -30,9 +30,10 @@ in
     userCfg
     telegramSecret
     modelsYml
-    skillLinks
     configFile
     ;
+  skillLinks = skills.links;
+  skillNames = skills.names;
   inherit (mcp) mcpJson telegramCommand telegramPort;
   mcpServices = mcp.services;
   inherit (client) keybindingsYml lspJson;

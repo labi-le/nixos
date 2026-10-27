@@ -13,6 +13,7 @@
     pkgs.git
     pkgs.gh
     pkgs.file
+    pkgs.ripgrep
     pkgs.tinyxxd
     pkgs.bc
     pkgs.binutils-unwrapped
