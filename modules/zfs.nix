@@ -1,9 +1,20 @@
-{ lib, config, ... }:
+{ lib, config, pkgs, ... }:
 
 with lib;
 
 let
   cfg = config.zfs;
+
+  mirrorReadBias = pkgs.writeShellScript "zfs-mirror-read-bias" ''
+    set -euo pipefail
+
+    params=/sys/module/zfs/parameters
+
+    ${pkgs.kmod}/bin/modprobe zfs
+
+    printf '%s\n' ${toString cfg.hddReadPenalty} > "$params/zfs_vdev_mirror_rotating_inc"
+    printf '%s\n' ${toString cfg.hddReadPenalty} > "$params/zfs_vdev_mirror_rotating_seek_inc"
+  '';
 in
 {
   options.zfs = {
@@ -31,6 +42,12 @@ in
       default = true;
       description = "Enable periodic TRIM on all ZFS pools.";
     };
+
+    hddReadPenalty = mkOption {
+      type = types.ints.unsigned;
+      default = 0;
+      description = "Extra load units added to every rotating member of a mirror when ZFS picks which member serves a read. ZFS compares queue length plus this penalty and reads from the member with the lowest value, so a value above the SSD's queue depth (32 for SATA NCQ) keeps reads off a slow spinning mirror half, leaving it to absorb writes only. Zero keeps upstream behavior: the stock rotating_inc is 0, which makes sequential reads tie and split roughly evenly between the halves. See docs/zfs-pool.md.";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -41,5 +58,20 @@ in
     services.zfs.autoScrub.randomizedDelaySec = "0";
     services.zfs.trim.enable = cfg.trim;
     boot.zfs.forceImportRoot = false;
+
+    boot.extraModprobeConfig = mkIf (cfg.hddReadPenalty > 0) ''
+      options zfs zfs_vdev_mirror_rotating_inc=${toString cfg.hddReadPenalty} zfs_vdev_mirror_rotating_seek_inc=${toString cfg.hddReadPenalty}
+    '';
+
+    systemd.services.zfs-mirror-read-bias = mkIf (cfg.hddReadPenalty > 0) {
+      description = "Bias ZFS mirror reads toward non-rotating members";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "zfs-mount.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${mirrorReadBias}";
+      };
+    };
   };
 }

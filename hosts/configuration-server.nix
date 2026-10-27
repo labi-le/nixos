@@ -48,6 +48,7 @@
     enable = true;
     hostId = "204cf2f5";
     autoScrub = true;
+    hddReadPenalty = 100;
   };
 
   swapDevices = lib.mkForce [ ];
