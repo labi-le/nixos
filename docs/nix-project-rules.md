@@ -7,8 +7,8 @@
   is its generated index and is never edited by hand.
 - Regenerate the index after editing the registry:
   `python3 .omp/nix-control-mcp/routes.py --index`. `routes_audit` reports a
-  stale index, dead paths, duplicate owners, missing note anchors and unrouted
-  `.nix` files.
+  stale index, dead paths, duplicate owners, missing note anchors, unrouted
+  `.nix` files, and host-scope drift against each host's real import closure.
 - Keep one fact in one place: current values live in the modules, incident
   history and measurements in the per-service documents under `docs/`, and
   longer routing knowledge in `docs/routes-notes.md` referenced by a route's

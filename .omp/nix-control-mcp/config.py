@@ -37,7 +37,7 @@ STOP_WORDS = frozenset(
     "change edit configure enable disable make host hosts file files module modules".split()
 )
 PATH_CELL_RE = re.compile(r"`([^`]+)`")
-PATH_SHAPE_RE = re.compile(r"^[\w./@<>*+~-]+\.(nix|ya?ml|toml|js|age|json|jar|lock|patch|py|md)$")
+PATH_SHAPE_RE = re.compile(r"^[\w./@<>*+~-]+\.(nix|ya?ml|toml|js|ts|sh|age|json|jar|lock|patch|py|md)$")
 DELIMITER_RE = re.compile(r"^\|[\s\-:|]+\|$")
 DIRTY_WARNING_RE = re.compile(r"Git tree '.*' is dirty")
 DRV_FAIL_RE = re.compile(r"builder for '(/nix/store/\S+\.drv)' failed|error: build of '(\S+)' failed")

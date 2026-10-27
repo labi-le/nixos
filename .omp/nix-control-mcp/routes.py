@@ -107,7 +107,26 @@ def route_paths(entry):
     return paths
 
 
-def build_row(number, group, entry):
+def note_sections():
+    sections = {}
+    if not ROUTES_NOTES.exists():
+        return sections
+    anchor = None
+    body = []
+    for line in ROUTES_NOTES.read_text().splitlines():
+        if line.startswith("## "):
+            if anchor:
+                sections[anchor] = "\n".join(body).strip()
+            anchor = line[3:].strip()
+            body = []
+        elif anchor:
+            body.append(line)
+    if anchor:
+        sections[anchor] = "\n".join(body).strip()
+    return sections
+
+
+def build_row(number, group, entry, sections):
     task = " ".join(str(entry.get("task") or "").split())
     if not task:
         return None
@@ -119,6 +138,8 @@ def build_row(number, group, entry):
     note = str(entry.get("note") or "")
     doc = str(entry.get("doc") or "")
     steps = [str(step) for step in entry.get("steps") or []]
+    anchor = doc.partition("#")[2] if doc.startswith("docs/routes-notes.md#") else ""
+    knowledge = sections.get(anchor, "") if anchor else ""
     return {
         "number": number,
         "group": group,
@@ -131,23 +152,25 @@ def build_row(number, group, entry):
         "task_tokens": tokenize(task),
         "alias_tokens": tokenize(" ".join(aliases)),
         "group_tokens": tokenize(group),
-        "note_tokens": tokenize(note + " " + " ".join(steps)),
+        "note_tokens": tokenize(note + " " + " ".join(steps) + " " + knowledge),
         "path_tokens": tokenize(" ".join(item["path"] for item in paths)),
-        "doc_tokens": tokenize(doc),
+        "doc_tokens": tokenize(anchor.replace("-", " ")),
     }
 
 
 def parse_registry():
     mtime = REGISTRY.stat().st_mtime
-    if CACHE["mtime"] == mtime:
+    notes_mtime = ROUTES_NOTES.stat().st_mtime if ROUTES_NOTES.exists() else None
+    if CACHE["mtime"] == (mtime, notes_mtime):
         return CACHE
     data = tomllib.loads(REGISTRY.read_text())
+    sections = note_sections()
     rows = []
     for number, entry in enumerate(data.get("route") or [], start=1):
-        row = build_row(number, str(entry.get("group") or "Ungrouped"), entry)
+        row = build_row(number, str(entry.get("group") or "Ungrouped"), entry, sections)
         if row is not None:
             rows.append(row)
-    CACHE.update({"mtime": mtime, "rows": rows, "idf": build_idf(rows)})
+    CACHE.update({"mtime": (mtime, notes_mtime), "rows": rows, "idf": build_idf(rows)})
     return CACHE
 
 
@@ -301,8 +324,9 @@ def tool_route(args, request_id, token):
         match["evidence"] = evidence(row, query_tokens, query.lower())
         matches.append(match)
     confident = False
+    settled = []
     if matches and matches[0]["score"] >= 1.0:
-        settled = [reason for reason in matches[0]["evidence"] if not reason.split(":")[0] in ("note", "doc")]
+        settled = [reason for reason in matches[0]["evidence"] if reason.split(":")[0] not in ("note", "doc")]
         confident = bool(settled)
     header = {
         "query": query,
@@ -310,11 +334,10 @@ def tool_route(args, request_id, token):
         "confident": confident,
         "matches": matches,
     }
-    untrusted = any(
-        reason.split(":")[0] in ("note", "doc") for reason in (matches[0]["evidence"] if matches else [])
-    )
-    if untrusted and confident:
-        header["caveat"] = "the top match leans on note text; confirm the path before editing"
+    if matches and not settled:
+        header["caveat"] = (
+            "only note or doc text matched, so the path is a guess; confirm it before editing"
+        )
     if not confident:
         header["fallback"] = (
             "no confident route: verify with route_file or a targeted search before editing, "
@@ -407,6 +430,62 @@ def coverage_patterns(routed):
     return patterns
 
 
+def host_closures():
+    closures = {}
+    for host in HOSTS:
+        config = REPO / "hosts" / ("configuration.nix" if host == "pc" else f"configuration-{host}.nix")
+        seen = set()
+        queue = [config.resolve()] if config.exists() else []
+        while queue:
+            current = queue.pop()
+            if current in seen:
+                continue
+            seen.add(current)
+            try:
+                text = current.read_text()
+            except (OSError, UnicodeDecodeError):
+                continue
+            for token in re.findall(r"[\"'](\.{1,2}/[\w./-]+)[\"']", text):
+                target = (current.parent / token).resolve()
+                if target.is_dir():
+                    for name in ("default.nix", "flake.nix"):
+                        if (target / name).exists():
+                            queue.append((target / name).resolve())
+                            break
+                elif target.suffix == ".nix" and target.exists():
+                    queue.append(target)
+        closures[host] = {str(path.relative_to(REPO)) for path in seen if REPO in path.parents}
+    return closures
+
+
+def host_drift(rows):
+    closures = host_closures()
+    drifted = []
+    for row in rows:
+        if row["steps"]:
+            continue
+        actual = set()
+        for entry in row["paths"]:
+            path = entry["path"]
+            if path.startswith(("~", "/")) or "*" in path or "<" in path:
+                continue
+            candidate = REPO / path
+            for host, files in closures.items():
+                if path in files:
+                    actual.add(host)
+                elif not candidate.suffix and f"{path}/default.nix" in files:
+                    actual.add(host)
+        if actual and actual != set(row["hosts"]):
+            drifted.append(
+                {
+                    "task": row["task"],
+                    "declared": row["hosts"],
+                    "imported_by": [host for host in HOSTS if host in actual],
+                }
+            )
+    return drifted
+
+
 def tool_routes_audit(args, request_id, token):
     cache = parse_registry()
     group = args.get("group") or args.get("section")
@@ -465,6 +544,7 @@ def tool_routes_audit(args, request_id, token):
         header["duplicate_paths"] = duplicates
         header["missing_docs"] = docs
         header["unrouted_nix_files"] = unrouted
+        header["host_scope_drift"] = host_drift(cache["rows"])
         header["index_stale"] = not ROUTES.exists() or ROUTES.read_text() != render_index()
     return envelope(fit_response(header, "rows")), False
 

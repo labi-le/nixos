@@ -35,10 +35,12 @@ generated index, never edited by hand.
   route's `doc` field.
 - **Current values, incident history, measurements** → the owning module or the
   per-service document under `docs/`, never a second copy in the registry.
-- **Host scope** → list it explicitly. The audit compares entries with the
-  `hosts/configuration*.nix` imports a route mentions.
+- **Host scope** → list it explicitly. The audit derives each host's real import
+  closure from `hosts/configuration*.nix` and reports `host_scope_drift` when the
+  declared hosts differ.
 - **After editing** → `routes_audit` reports dead paths, duplicate owners, groups,
-  missing note anchors, unrouted `.nix` files and whether the index is stale.
+  missing note anchors, unrouted `.nix` files, host scope drift and whether the
+  index is stale.
 
 ## Groups
 

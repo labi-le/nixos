@@ -33,6 +33,9 @@ class Registry(unittest.TestCase):
             if row["doc"].startswith("docs/routes-notes.md#"):
                 self.assertIn(row["doc"], known, row["task"])
 
+    def test_host_scope_matches_imports(self):
+        self.assertEqual(routes.host_drift(routes.parse_registry()["rows"]), [])
+
 
 class Tokenizing(unittest.TestCase):
     def test_cyrillic_query_maps_to_english_term(self):
@@ -61,10 +64,26 @@ class RoutingQueries(unittest.TestCase):
         self.assertFalse(data["confident"])
         self.assertEqual(data["matches"], [])
 
+    def test_knowledge_moved_to_notes_is_still_found(self):
+        data = self.best("sqlite_busy")
+        self.assertEqual(data["matches"][0]["paths"][0]["path"], "modules/grafana.nix")
+        self.assertFalse(data["confident"])
+        self.assertIn("caveat", data)
+
+    def test_strong_task_match_has_no_caveat(self):
+        data = self.best("terminal")
+        self.assertTrue(data["confident"])
+        self.assertNotIn("caveat", data)
+
     def test_reverse_lookup_finds_terminal(self):
         text, _ = routes.tool_route_file({"path": "modules/terminal.nix"}, "test", "test")
         data = json.loads(text)
         self.assertTrue(data["routed"])
+
+    def test_reverse_lookup_finds_gate_scripts(self):
+        for path in ("modules/omp/extensions/grep-gate.ts", "modules/omp/skills-prune.sh"):
+            text, _ = routes.tool_route_file({"path": path}, "test", "test")
+            self.assertTrue(json.loads(text)["routed"], path)
 
     def test_route_and_audit_payloads_stay_valid_json(self):
         text, _ = routes.tool_route({"query": "model", "limit": 25}, "test", "test")

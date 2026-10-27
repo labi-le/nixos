@@ -1,6 +1,7 @@
 # Navigation registry for the nix-control route tool.
 # Long knowledge lives in docs/routes-notes.md and is linked from doc.
 # Regenerate the human index with: python3 .omp/nix-control-mcp/routes.py --index
+
 [[route]]
 group = "System Modules"
 task = "Bootloader, kernel parameters"
@@ -22,8 +23,8 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "Systemd manager settings (stop timeout, default OOM policy)"
-note = "`DefaultTimeoutStopSec=10s` plus `DefaultOOMPolicy=continue` for the system manager, and `DefaultOOMPolicy=continue` for the user manager, so a kernel OOM kill never stops the whole session"
+task = "Systemd manager settings"
+note = "(stop timeout, default OOM policy); `DefaultTimeoutStopSec=10s` plus `DefaultOOMPolicy=continue` for the system manager, and `DefaultOOMPolicy=continue` for the user manager, so a kernel OOM kill never stops the whole session"
 paths = ["modules/systemd.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -41,7 +42,8 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "tmux terminal multiplexer (prefix `Ctrl+a`)"
+task = "tmux terminal multiplexer"
+note = "(prefix `Ctrl+a`)"
 paths = ["modules/tmux.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -54,8 +56,8 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "Display monitors (declarations)"
-note = "Values set in per-host config"
+task = "Display monitors"
+note = "(declarations); Values set in per-host config"
 paths = ["modules/monitors.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -98,7 +100,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "LLM gateway and provider API keys for omp/jcode hosts (agenix `llm-labile-env` holds the scoped LiteLLM key behind omp's `llm-labile` provider in"
+task = "LLM gateway and provider API keys for omp/jcode hosts"
 doc = "docs/routes-notes.md#opencode-secrets"
 paths = ["modules/opencode-secrets.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -146,14 +148,15 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "System packages (all hosts)"
+task = "System packages"
+note = "(all hosts)"
 paths = ["modules/packages.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "btop user config (full default + show swap, all hosts)"
-note = "Deploys `~/.config/btop/btop.conf` via `systemd.tmpfiles` store symlink; imported + enabled per-host"
+task = "btop user config"
+note = "(full default + show swap, all hosts); Deploys `~/.config/btop/btop.conf` via `systemd.tmpfiles` store symlink; imported + enabled per-host"
 paths = ["modules/btop.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -183,8 +186,8 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "nix-ld dynamic loader (FHS shim)"
-note = "Libraries for prebuilt Python wheels / ML runtimes"
+task = "nix-ld dynamic loader"
+note = "(FHS shim); Libraries for prebuilt Python wheels / ML runtimes"
 paths = ["modules/nix-ld.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -238,8 +241,8 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "Flake registry `dev` (global dev shell access)"
-note = "Added to `commonModules` in `flake.nix`"
+task = "Flake registry `dev`"
+note = "(global dev shell access); Added to `commonModules` in `flake.nix`"
 paths = ["modules/shell/registry.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -248,13 +251,6 @@ group = "System Modules"
 task = "Oh My Pi (omp) coding agent"
 doc = "docs/routes-notes.md#omp"
 paths = ["modules/omp/default.nix"]
-hosts = ["pc", "fx516", "notebook", "server"]
-
-[[route]]
-group = "System Modules"
-task = "OMP shell grep gate and declarative skill cleanup (all OMP hosts)"
-note = "Shell grep/egrep/fgrep calls are refused with an instruction to use rg; the native grep tool stays available. Runtime packages include ripgrep. Activation prunes undeclared non-hidden entries in the main OMP skills directory using names derived from the same attrset as its links. See `docs/nix-project-rules.md` for scope and verification."
-paths = ["modules/omp/install.nix", "modules/omp/packages.nix", "modules/omp/settings/skills.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
@@ -273,28 +269,28 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "Local FreeDeepseekAPI profile for jcode (DeepSeek-V4.1-Flash web proxy: provider `deepseek-web`, four composer-switch model ids, image input"
+task = "Local FreeDeepseekAPI profile for jcode"
 doc = "docs/routes-notes.md#deepseek-web"
 paths = ["modules/jcode/deepseek-web.nix", "modules/jcode/deepseek-session.py"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "OpenCode Go `space-bunny-free` capability override for jcode (provider `opencode-go-bunny`: 1M context, text+image input, reasoning effort `high` by default)"
+task = "OpenCode Go `space-bunny-free` capability override for jcode"
 doc = "docs/routes-notes.md#space-bunny"
 paths = ["modules/jcode/space-bunny.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "Maki coding agent (pc, server, notebook)"
+task = "Maki coding agent"
 doc = "docs/routes-notes.md#maki"
 paths = ["modules/maki/default.nix"]
-hosts = ["pc", "fx516", "notebook", "server"]
+hosts = ["pc", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "Yazi file manager (all hosts, single implementation; the Home Manager module is gone)"
+task = "Yazi file manager"
 doc = "docs/routes-notes.md#yazi"
 paths = ["modules/yazi.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -302,34 +298,31 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Desktop-Only Modules"
 task = "Desktop packages"
-note = "pc, fx516, notebook"
 paths = ["modules/packages-desktop.nix"]
 hosts = ["pc", "fx516", "notebook"]
 
 [[route]]
 group = "Desktop-Only Modules"
 task = "Sound / audio"
-note = "pc, fx516, notebook"
 paths = ["modules/sound.nix"]
 hosts = ["pc", "fx516", "notebook"]
 
 [[route]]
 group = "Desktop-Only Modules"
 task = "Wayland"
-note = "pc, fx516, notebook"
 paths = ["modules/wayland.nix"]
 hosts = ["pc", "fx516", "notebook"]
 
 [[route]]
 group = "Desktop-Only Modules"
-task = "Niri scrollable-tiling compositor, trial alongside sway: `programs.niri.enable` only (package, `niri.desktop` session for ly, niri's own systemd user units"
-note = "gnome/gtk portal config for `XDG_CURRENT_DESKTOP=niri`). Session desktop file is the packaged one because the NixOS session wrapper's systemd-aware list already hardcodes `niri` (`nixos/modules/services/x11/display-managers/default.nix`), unlike sway which needs `X-NIXOS-SYSTEMD-AWARE`. Per-host KDL config lives in `home-manager/modules/niri.nix`; pc"
+task = "Niri scrollable-tiling compositor, trial alongside sway:"
+doc = "docs/routes-notes.md#niri"
 paths = ["modules/niri.nix"]
 hosts = ["pc"]
 
 [[route]]
 group = "Desktop-Only Modules"
-task = "Greeter (ly + sway wayland-session entry). `DesktopNames=sway;X-NIXOS-SYSTEMD-AWARE` is load-bearing: without the second name the NixOS session wrapper starts"
+task = "Greeter (ly + sway wayland-session entry). `DesktopNames=sway;X-NIXOS-SYSTEMD-AWARE` is load-bearing:"
 doc = "docs/routes-notes.md#greeter"
 paths = ["modules/greeter.nix"]
 hosts = ["pc", "fx516", "notebook"]
@@ -337,28 +330,25 @@ hosts = ["pc", "fx516", "notebook"]
 [[route]]
 group = "Desktop-Only Modules"
 task = "NFS mounts (`/home/drive` from `server:/drive`; `/hdd4tb/torrents` from `server:/hdd4tb/torrents`)"
-note = "pc, fx516, notebook"
 paths = ["modules/nfs.nix"]
 hosts = ["pc", "fx516", "notebook"]
 
 [[route]]
 group = "Desktop-Only Modules"
 task = "Thunar file manager"
-note = "pc, fx516, notebook"
 paths = ["modules/thunar.nix"]
 hosts = ["pc", "fx516", "notebook"]
 
 [[route]]
 group = "Desktop-Only Modules"
 task = "JetBrains IDE wrapper module"
-note = "flake common module; enabled by host `ide.*` options on pc/notebook"
 paths = ["modules/ide/module.nix"]
 hosts = ["pc", "notebook"]
 
 [[route]]
 group = "Desktop-Only Modules"
-task = "Work secrets (agent tokens): jira/gitlab/grafana + `portainer-mcp` (Portainer URL + API key) + `google-docs-mcp`"
-note = "(Google OAuth desktop client JSON for the `workspace-mcp` Docs server, read through `GOOGLE_CLIENT_SECRET_PATH=/run/agenix/work/google-docs-mcp`); all installed under `/run/agenix/work/` from `secrets/work/` and consumed by a project-scoped `.omp/mcp.json`, not by the omp module (`modules/omp/default.nix`); pc, notebook"
+task = "Work secrets (agent tokens):"
+note = "jira/gitlab/grafana + `portainer-mcp` (Portainer URL + API key) + `google-docs-mcp` (Google OAuth desktop client JSON for the `workspace-mcp` Docs server, read through `GOOGLE_CLIENT_SECRET_PATH=/run/agenix/work/google-docs-mcp`); all installed under `/run/agenix/work/` from `secrets/work/` and consumed by a project-scoped `.omp/mcp.json`, not by the omp module (`modules/omp/default.nix`)"
 paths = ["modules/work-mount.nix"]
 hosts = ["pc", "notebook"]
 
@@ -400,7 +390,8 @@ hosts = ["pc"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "Virtual machines / libvirt (disabled)"
+task = "Virtual machines / libvirt"
+note = "(disabled)"
 paths = ["modules/vm.nix"]
 hosts = ["pc"]
 
@@ -412,20 +403,22 @@ hosts = ["pc"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "Swap: zram hot tier only (`server`; NVMe overflow tier removed temporarily), `vm` sysctls (imported by `hosts/configuration.nix` and `hosts/configuration-server.nix`)"
+task = "Swap: zram hot tier only"
+doc = "docs/routes-notes.md#swap"
 paths = ["modules/swap.nix"]
 hosts = ["pc", "server"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "Early OOM killing: `earlyoom` prefers killing expendable build tools (compilers/linkers) over the tmux/omp session before kernel OOM-thrash triggers `DefaultOOMPolicy=stop`"
-note = "`systemd.oomd` disabled to avoid fighting it (imported by `hosts/configuration.nix` and `hosts/configuration-server.nix`, same hosts as `modules/swap.nix`)"
+task = "Early OOM killing:"
+doc = "docs/routes-notes.md#oom"
 paths = ["modules/oom.nix"]
 hosts = ["pc", "server"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "`/tmp` and the nix build directory in RAM (imported by `hosts/configuration.nix` and `hosts/configuration-server.nix`)"
+task = "`/tmp` and the nix build directory in RAM"
+doc = "docs/routes-notes.md#tmpfs"
 paths = ["modules/tmpfs.nix"]
 hosts = ["pc", "server"]
 
@@ -468,6 +461,7 @@ hosts = ["pc"]
 [[route]]
 group = "PC-Specific Modules"
 task = "K3s"
+note = "`systemd.services.k3s.wantedBy` is forced to `[ ]` (`modules/k3s.nix:16`), so k3s and its tooling are installed but the service never starts at boot or on `make switch`; start it with `systemctl start k3s`. Its `trustedInterfaces` for `cni0`/`flannel.1` are inert wherever the firewall is disabled, which includes pc"
 paths = ["modules/k3s.nix"]
 hosts = ["pc"]
 
@@ -487,17 +481,18 @@ hosts = ["pc"]
 group = "PC-Specific Modules"
 task = "Syncthing common module"
 paths = ["modules/syncthing/default.nix"]
-hosts = ["pc", "server"]
+hosts = ["pc", "notebook", "server"]
 
 [[route]]
 group = "PC-Specific Modules"
 task = "Syncthing device IDs"
 paths = ["modules/syncthing/devices.nix"]
-hosts = ["pc", "server"]
+hosts = ["pc", "notebook", "server"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "Monitor values (pc)"
+task = "Monitor values"
+note = "(pc)"
 paths = ["hosts/configuration.nix"]
 hosts = ["pc"]
 
@@ -510,24 +505,28 @@ hosts = ["pc"]
 [[route]]
 group = "PC-Specific Modules"
 task = "GPU profile (LACT: undervolt, fan curve, power profile)"
+note = "Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink"
 paths = ["hosts/lact-pc.yaml"]
 hosts = ["pc"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "RGB lighting (OpenRGB): device profiles + blanking"
+task = "RGB lighting (OpenRGB):"
+doc = "docs/routes-notes.md#openrgb-profile"
 paths = ["pkgs/openrgb-profile.nix"]
 hosts = ["pc"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "Keyboard backlight (Keychron Q6 Max)"
+task = "Keyboard backlight"
+doc = "docs/routes-notes.md#keychron-backlight"
 paths = ["pkgs/keychron-backlight.nix"]
 hosts = ["pc"]
 
 [[route]]
 group = "PC-Specific Modules"
-task = "Hardware watchdog (sp5100_tco)"
+task = "Hardware watchdog"
+note = "(sp5100_tco); armed by `systemd.settings.Manager.RuntimeWatchdogSec`; self-reboot 60s after a hang"
 paths = ["hosts/configuration.nix"]
 hosts = ["pc"]
 
@@ -569,7 +568,8 @@ hosts = ["fx516", "notebook"]
 
 [[route]]
 group = "FX516-Specific Modules"
-task = "Monitor values (fx516)"
+task = "Monitor values"
+note = "(fx516)"
 paths = ["hosts/configuration-fx516.nix"]
 hosts = ["fx516"]
 
@@ -599,19 +599,27 @@ hosts = ["notebook"]
 
 [[route]]
 group = "Notebook-Specific Modules"
+task = "ADB"
+paths = ["modules/adb.nix"]
+hosts = ["pc", "notebook"]
+
+[[route]]
+group = "Notebook-Specific Modules"
 task = "Syncthing (notebook)"
 paths = ["modules/syncthing/notebook.nix"]
 hosts = ["notebook"]
 
 [[route]]
 group = "Notebook-Specific Modules"
-task = "IDE host options (notebook)"
+task = "IDE host options"
+note = "(notebook)"
 paths = ["hosts/configuration-notebook.nix"]
 hosts = ["notebook"]
 
 [[route]]
 group = "Notebook-Specific Modules"
-task = "Monitor values (notebook)"
+task = "Monitor values"
+note = "(notebook)"
 paths = ["hosts/configuration-notebook.nix"]
 hosts = ["notebook"]
 
@@ -631,95 +639,110 @@ hosts = ["server"]
 group = "Server-Specific Modules"
 task = "Server packages"
 paths = ["modules/packages-server.nix"]
-hosts = ["server"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Nginx; aborted HTTP/2 downloads, KTLS; fail2ban nginx jails (`nginx-botsearch`, `nginx-bad-request`, `nginx-scan-404`, `nginx-secret-probe`) and their filters"
+task = "Nginx; aborted HTTP/2 downloads, KTLS; fail2ban nginx jails"
+doc = "docs/routes-notes.md#nginx"
 paths = ["modules/nginx.nix", "docs/nginx.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Binary cache (harmonia)"
+task = "Binary cache"
+note = "(harmonia)"
 paths = ["modules/harmonia.nix", "docs/nginx.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "ZeroSSL ACME for nginx"
+doc = "docs/routes-notes.md#zerossl"
 paths = ["modules/zerossl.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "LiteLLM"
+doc = "docs/routes-notes.md#litellm"
 paths = ["modules/litellm/default.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Drive mounts (`/drive` ZFS pool `data`, mirror of a 2 TB SATA SSD + a 2 TB SMR HDD; `/hdd4tb` 4 TB SATA HDD hosting `/hdd4tb/torrents` and the Prometheus TSDB)"
+task = "Drive mounts"
+doc = "docs/routes-notes.md#drive"
 paths = ["modules/drive.nix", "docs/zfs-pool.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "Kernel (mainline, ZFS-compatible)"
+doc = "docs/routes-notes.md#kernel-server"
 paths = ["modules/kernel-server.nix"]
-hosts = ["server", "pc"]
+hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "ZFS support (kernel module, hostId; scrub and trim timers on for hosts with a pool; mirror read bias toward flash)"
+doc = "docs/routes-notes.md#zfs"
 paths = ["modules/zfs.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "Grafana"
+doc = "docs/routes-notes.md#grafana"
 paths = ["modules/grafana.nix", "docs/monitoring.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Prometheus, Loki, Alloy (ships nginx/angie + docker container + fail2ban logs to Loki)"
+task = "Prometheus, Loki, Alloy"
+doc = "docs/routes-notes.md#grafana-2"
 paths = ["modules/grafana.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Prometheus TSDB storage (bind `/var/lib/prometheus2` from `/hdd4tb/prometheus`, completed one-shot migration, one-year retention)"
+task = "Prometheus TSDB storage"
+doc = "docs/routes-notes.md#grafana-3"
 paths = ["modules/grafana.nix", "modules/drive.nix", "docs/monitoring.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "SMARTctl exporter by-id device autodiscovery (`ExecStart` override, dashboard `group_left` join)"
+task = "SMARTctl exporter by-id device autodiscovery"
+doc = "docs/routes-notes.md#grafana-4"
 paths = ["modules/grafana.nix", "docs/smartctl-exporter.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Grafana monitoring aggregator (imports shared contact points + per-service alert files)"
+task = "Grafana monitoring aggregator"
+note = "(imports shared contact points + per-service alert files)"
 paths = ["modules/monitoring/default.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "node_exporter systemd restart counts, textfile collector directory, process exporter (per-process memory)"
+task = "node_exporter systemd restart counts, textfile collector directory, process exporter"
+doc = "docs/routes-notes.md#grafana-5"
 paths = ["modules/grafana.nix", "docs/monitoring.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Docker container-state textfile exporter (systemd oneshot + 30s timer, writes `docker_container_*` metrics)"
+task = "Docker container-state textfile exporter"
+doc = "docs/routes-notes.md#container-state"
 paths = ["modules/monitoring/container-state.nix", "docs/monitoring.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "OpenWrt and murmur SSH metrics collector, minute timer and Grafana dashboard"
+note = "Server-side collection into a separate node_exporter textfile directory; no router TSDB or agent. Uses the labile user's existing verified SSH identity."
 paths = ["modules/monitoring/openwrt-murmur.nix", "modules/monitoring/openwrt-murmur-collector.py", "modules/monitoring/dashboards/openwrt-murmur.json", "docs/monitoring.md"]
 hosts = ["server"]
 
@@ -732,13 +755,15 @@ hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Grafana notification channels (two Telegram contact points + agenix secret)"
+task = "Grafana notification channels"
+doc = "docs/routes-notes.md#contact-points"
 paths = ["modules/monitoring/contact-points.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Grafana alert: tidal-syncer TIDAL re-login required (Prometheus metric alert)"
+task = "Grafana alert:"
+note = "tidal-syncer TIDAL re-login required (Prometheus metric alert)"
 paths = ["modules/monitoring/tidal-syncer.nix"]
 hosts = ["server"]
 
@@ -752,37 +777,42 @@ hosts = ["server"]
 [[route]]
 group = "Server-Specific Modules"
 task = "Grafana alerts: OpenCode Go price sync"
-note = "the sync refused to apply the table, a rate changed, or nothing succeeded for three days"
+doc = "docs/routes-notes.md#litellm-2"
 paths = ["modules/monitoring/litellm.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "tidal-syncer daemon (native service: config, agenix secret, Prometheus scrape + Grafana dashboard)"
+task = "tidal-syncer daemon"
+note = "(native service: config, agenix secret, Prometheus scrape + Grafana dashboard)"
 paths = ["modules/tidal-syncer.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Music Assistant server (player UI on 8095, built-in Snapcast server 1704/1705, stream 8097)"
+task = "Music Assistant server"
+doc = "docs/routes-notes.md#music-assistant"
 paths = ["modules/music-assistant.nix", "docs/music-assistant.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "FRP (Fast Reverse Proxy); fail2ban jail `frp-auth` and its filter"
+doc = "docs/routes-notes.md#frp"
 paths = ["modules/frp.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "fail2ban: sshd blindness, filter traps, port scoping, nftables ban backend"
+doc = "docs/routes-notes.md#firewall-2"
 paths = ["modules/network/firewall.nix", "modules/frp.nix", "docs/fail2ban.md"]
-hosts = ["server"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Grafana alert: frp tunnel connection lost (Loki log alert on frp-server journal)"
+task = "Grafana alert:"
+doc = "docs/routes-notes.md#frp-2"
 paths = ["modules/monitoring/frp.nix"]
 hosts = ["server"]
 
@@ -807,12 +837,14 @@ hosts = ["server"]
 [[route]]
 group = "Server-Specific Modules"
 task = "qBittorrent (download path and mount guard)"
+doc = "docs/routes-notes.md#qbittorrent"
 paths = ["modules/qbittorrent.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "AmneziaWG"
+note = "Host NAT for the tunnel (hairpin DNAT to `192.168.1.2`, masquerade out `enp37s0`) in dedicated `table ip awg`; binds host `dnsmasq` to `wg0` with zero cache and router upstream so tunnel clients resolve through the router's dnsmasq/mihomo fake-ip path, and allows forward of `198.18.1.0/24` to the tunnel."
 paths = ["modules/awg/default.nix"]
 hosts = ["server"]
 
@@ -824,13 +856,15 @@ hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "GitHub triage / fix bot (upstream robomp in docker compose)"
+task = "GitHub triage / fix bot"
+doc = "docs/routes-notes.md#buer"
 paths = ["modules/buer/default.nix", "modules/buer/docker-compose.yml", "docs/buer.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "Buer Go/Nix toolchain and publication policy"
+note = "`murmur` and `sub-preprocessor` share the existing bot. A container-local Nix daemon owns a private store; worker slots mount it read-only. The upstream publishing patch requires empty PR descriptions and keeps verification evidence in issue comments."
 paths = ["modules/buer/default.nix", "modules/buer/docker-compose.yml", "modules/buer/agent-AGENTS.md", "modules/buer/empty-pr-body.patch", "docs/buer.md"]
 hosts = ["server"]
 
@@ -838,47 +872,54 @@ hosts = ["server"]
 group = "Server-Specific Modules"
 task = "Network (server)"
 paths = ["modules/network/default.nix"]
-hosts = ["server"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Recursive validating DNS resolver (unbound, RFC 8806 local root zone)"
+task = "Recursive validating DNS resolver"
+note = "(unbound, RFC 8806 local root zone); Listens `127.0.0.1@5335` (dnsmasq keeps `127.0.0.1:53` and `10.8.0.1:53`) and DoT on `853`; plain 53 on `10.8.0.1` was moved to dnsmasq so AWG clients hit the router's fake-ip routing. Root zone comes by AXFR addressed by IP. Depends on a router-side exemption: a `dstnat_lan` redirect hijacks outbound port-53 packets."
 paths = ["modules/unbound.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Encrypted DNS: DoT listener, shared apex TLS cert"
+task = "Encrypted DNS:"
+doc = "docs/routes-notes.md#unbound"
 paths = ["modules/unbound.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "DNS query logging and outbound rate limit"
+doc = "docs/routes-notes.md#unbound-2"
 paths = ["modules/unbound.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "Ad and tracker filtering, blocklist refresh"
+doc = "docs/routes-notes.md#unbound-3"
 paths = ["modules/unbound.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
-task = "Router-side DNS hijack, adblock-fast removal (not nix-managed)"
+task = "Router-side DNS hijack, adblock-fast removal"
+doc = "docs/routes-notes.md#dns-clients"
 paths = ["docs/dns-clients.md"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "ifconfig.io container behind `ip.labile.cc`"
+doc = "docs/routes-notes.md#ifconfig"
 paths = ["modules/ifconfig.nix"]
 hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
 task = "ChromaDB vector database service"
+doc = "docs/routes-notes.md#chromadb"
 paths = ["modules/chromadb.nix"]
 hosts = ["server"]
 
@@ -892,119 +933,122 @@ hosts = ["server"]
 group = "Home Manager Modules"
 task = "HM entry point"
 paths = ["home-manager/modules/default.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "Sway window manager"
+doc = "docs/routes-notes.md#sway"
 paths = ["home-manager/modules/sway.nix"]
-hosts = ["pc"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
-task = "Waybar status bar. `sway/workspaces` and `sway/language` only work under sway, so both module choices (and the `disable-scroll` option"
+task = "Waybar status bar. `sway/workspaces` and `sway/language` only work under sway, so both module choices"
 doc = "docs/routes-notes.md#waybar"
 paths = ["home-manager/modules/waybar.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
-task = "Wofi launcher. The stylix rofi target is disabled there too: rofi is not installed anywhere, and stylix's `modules/rofi/hm.nix` still assigns `programs.rofi.font`"
-note = "which home-manager renamed to `programs.rofi.settings.font` — the assignment produced a rename warning on every evaluation until the target was turned off"
+task = "Wofi launcher. The stylix rofi target is disabled there too:"
+note = "rofi is not installed anywhere, and stylix's `modules/rofi/hm.nix` still assigns `programs.rofi.font`, which home-manager renamed to `programs.rofi.settings.font` — the assignment produced a rename warning on every evaluation until the target was turned off"
 paths = ["home-manager/modules/wofi.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "Mako notifications"
 paths = ["home-manager/modules/mako.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
-task = "Niri compositor config (KDL: inputs, monitor layout from `osConfig.monitors`, gaps `2`, thin purple frames via `layout.border`/`layout.focus-ring` width 1 `#7b2cbf`/`#c77dff`"
-doc = "docs/routes-notes.md#niri"
+task = "Niri compositor config"
+doc = "docs/routes-notes.md#niri-2"
 paths = ["home-manager/modules/niri.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "Git user config"
 paths = ["home-manager/modules/git.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "Foot terminal"
 note = "enable gate (`programs.foot.enable` gated on `osConfig.terminal.name == \"foot\"`); colors/opacity/font from the stylix foot target in `modules/stylix.nix`; renders sixel, so omp images work with it too"
 paths = ["home-manager/modules/foot.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "Alacritty terminal"
 note = "fallback (`terminal.name = \"alacritty\"`), package `pkgs.alacritty-graphics` (ayosec fork: sixel + iTerm2); Shift+Enter CSI-u binding; omp images via `PI_FORCE_IMAGE_PROTOCOL=sixel`, auto-set from the terminal table"
 paths = ["home-manager/modules/alacritty.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "Ghostty terminal"
 doc = "docs/routes-notes.md#ghostty"
 paths = ["home-manager/modules/ghostty.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
-task = "Zellij multiplexer (parallel to tmux; direct Ctrl+a/d/x chords)"
+task = "Zellij multiplexer"
+note = "(parallel to tmux; direct Ctrl+a/d/x chords)"
 paths = ["home-manager/modules/zellij.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "SSH user config"
 paths = ["home-manager/modules/ssh.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "MIME type associations"
 paths = ["home-manager/modules/mimeapps.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "mpv media player"
 paths = ["home-manager/modules/mpv.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "EasyEffects audio"
 paths = ["home-manager/modules/easyeffects.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "Thunar (user config)"
 paths = ["home-manager/modules/thunar.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "yt-dlp"
 paths = ["home-manager/modules/yt-dlp.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Home Manager Modules"
 task = "XDG user dirs"
 paths = ["home-manager/modules/xdg.nix"]
-hosts = ["pc", "fx516", "notebook"]
+hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Cross-Cutting Tasks"
 task = "Add package from flake input"
+note = "`flake.nix` (add input); `overlays.nix` (add overlay); `modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix`"
 steps = ["`flake.nix` (add input)", "`overlays.nix` (add overlay)", "`modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix`"]
 paths = ["flake.nix", "overlays.nix", "modules/packages.nix", "packages-desktop.nix", "packages-server.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -1012,6 +1056,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Cross-Cutting Tasks"
 task = "Add local package"
+note = "`pkgs/<name>.nix` (create); `overlays.nix` (add); `modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix`"
 steps = ["`pkgs/<name>.nix` (create)", "`overlays.nix` (add)", "`modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix`"]
 paths = ["pkgs/<name>.nix", "overlays.nix", "modules/packages.nix", "packages-desktop.nix", "packages-server.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -1019,6 +1064,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Cross-Cutting Tasks"
 task = "Push store paths to the binary cache"
+note = "`modules/cache-push.nix` (post-build hook) + `settings.nix` (trusted-users, substituters); `cache-push` helper in `modules/packages.nix` for backfill; automatic after every local build; `cache-push <path>` from any host"
 steps = ["`modules/cache-push.nix` (post-build hook) + `settings.nix` (trusted-users, substituters); `cache-push` helper in `modules/packages.nix` for backfill", "automatic after every local build; `cache-push <path>` from any host"]
 paths = ["modules/cache-push.nix", "settings.nix", "modules/packages.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -1026,6 +1072,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Cross-Cutting Tasks"
 task = "Add AGenix secret"
+note = "`secrets/<name>.age` (encrypt); host config (add `age.secrets.<name>`)"
 steps = ["`secrets/<name>.age` (encrypt)", "host config (add `age.secrets.<name>`)"]
 paths = ["secrets/<name>.age"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -1033,6 +1080,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Cross-Cutting Tasks"
 task = "Add new NixOS module"
+note = "`modules/<name>.nix` (create); `modules/base.nix` or per-host config (add import)"
 steps = ["`modules/<name>.nix` (create)", "`modules/base.nix` or per-host config (add import)"]
 paths = ["modules/<name>.nix", "modules/base.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -1040,23 +1088,17 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Cross-Cutting Tasks"
 task = "Add a Grafana alert for a service"
+note = "`modules/monitoring/<service>.nix` (create, with `services.grafana.provision.alerting.rules`); `modules/monitoring/default.nix` (add import); route to the `telegram-admin` contact point via `notification_settings.receiver`"
 steps = ["`modules/monitoring/<service>.nix` (create, with `services.grafana.provision.alerting.rules`)", "`modules/monitoring/default.nix` (add import)", "route to the `telegram-admin` contact point via `notification_settings.receiver`"]
 paths = ["modules/monitoring/<service>.nix", "modules/monitoring/default.nix"]
-hosts = ["pc", "fx516", "notebook", "server"]
+hosts = ["server"]
 
 [[route]]
 group = "Cross-Cutting Tasks"
 task = "Add new HM module"
+note = "`home-manager/modules/<name>.nix` (create); `home-manager/modules/default.nix` (add import)"
 steps = ["`home-manager/modules/<name>.nix` (create)", "`home-manager/modules/default.nix` (add import)"]
 paths = ["home-manager/modules/<name>.nix", "home-manager/modules/default.nix"]
-hosts = ["pc", "fx516", "notebook", "server"]
-
-[[route]]
-group = "Code indexer wiring"
-task = "Indexer system service and ChromaDB endpoint"
-note = "`modules/omp/index-repo.nix` imports `inputs.index-repo.nixosModules.default` and sets `services.index-repo.{enable,host,package}`; `modules/chromadb.nix` binds the single declared endpoint; `linger` keeps the user unit alive on a headless host"
-doc = "docs/routes-notes.md#index-repo"
-paths = ["modules/omp/index-repo.nix", "modules/chromadb.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
@@ -1081,6 +1123,13 @@ paths = ["~/.jcode/config.toml"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
+group = "Optional / Currently Unimported Modules"
+task = "Virtual machines / libvirt"
+note = "Commented in `hosts/configuration.nix`"
+paths = ["modules/vm.nix"]
+hosts = ["pc"]
+
+[[route]]
 group = "Other Files"
 task = "Flake inputs, outputs, host wiring"
 paths = ["flake.nix"]
@@ -1088,7 +1137,8 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Other Files"
-task = "Per-language dev shells (`nix develop dev#<lang>`); imported by `flake.nix` outputs"
+task = "Per-language dev shells"
+note = "(`nix develop dev#<lang>`); imported by `flake.nix` outputs"
 paths = ["modules/shell/devshells.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -1100,34 +1150,36 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Other Files"
-task = "Common settings (nix settings, allowed packages), imported by every host through `commonModules`. `pc`/`server`/`notebook` also carry the GitHub API credential that keeps"
+task = "Common settings"
 doc = "docs/routes-notes.md#settings"
 paths = ["settings.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Other Files"
-task = "Convenience targets: `switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise`"
+task = "Convenience targets:"
+note = "`switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise`"
 paths = ["Makefile"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Other Files"
-task = "Project-scoped MCP servers for this repo; edited here directly, not generated by the omp module (`modules/omp/default.nix`)"
+task = "Project-scoped MCP servers for this repo; edited here directly, not generated by the omp module"
+note = "(`modules/omp/default.nix`)"
 paths = [".omp/mcp.json"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Other Files"
-task = "Project-scoped MCP servers for maki in this repo (`nix-control`)"
-note = "hand-written, unlike the generated global `~/.config/maki/mcp.toml`, and loaded only after `maki trust add` records the folder"
+task = "Project-scoped MCP servers for maki in this repo"
+note = "(`nix-control`); hand-written, unlike the generated global `~/.config/maki/mcp.toml`, and loaded only after `maki trust add` records the folder"
 paths = [".maki/mcp.toml"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "Other Files"
-task = "The `nix-control` MCP server, split by concern: `config` constants, `protocol` JSON-RPC, `text` formatting, `shell` subprocess, `jobs` detached runs, `pane` sudo tmux pane"
-note = "`system`/`flake`/`routes`/`rules`/`agenix` tools, `registry` schemas, `server` dispatch, `__main__` entry. Project-scoped consumers: `.omp/mcp.json`, `.jcode/mcp.json` and `.maki/mcp.toml`, all launching it as `python3 -B .omp/nix-control-mcp` from the repo root"
+task = "The `nix-control` MCP server, split by concern:"
+note = "`config` constants, `protocol` JSON-RPC, `text` formatting, `shell` subprocess, `jobs` detached runs, `pane` sudo tmux pane, `system`/`flake`/`routes`/`rules`/`agenix` tools, `registry` schemas, `server` dispatch, `__main__` entry. Project-scoped consumers: `.omp/mcp.json`, `.jcode/mcp.json` and `.maki/mcp.toml`, all launching it as `python3 -B .omp/nix-control-mcp` from the repo root"
 paths = [".omp/nix-control-mcp/*.py"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -1135,4 +1187,46 @@ hosts = ["pc", "fx516", "notebook", "server"]
 group = "Other Files"
 task = "Project skills live under `.omp/skills/`, loaded by omp's native skill provider"
 paths = [".omp/skills/nix-routing/SKILL.md"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
+group = "System Modules"
+task = "OMP shell grep gate and declarative skill cleanup (all OMP hosts)"
+note = "Shell grep/egrep/fgrep calls are refused with an instruction to use rg; the native grep tool stays available. Activation prunes undeclared entries in the main OMP skills directory. See `docs/nix-project-rules.md`."
+paths = ["modules/omp/extensions/grep-gate.ts", "modules/omp/install.nix", "modules/omp/packages.nix", "modules/omp/settings/skills.nix", "modules/omp/skills-prune.sh"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
+group = "Code indexer wiring"
+task = "Indexer system service and ChromaDB endpoint"
+doc = "docs/routes-notes.md#index-repo"
+paths = ["modules/omp/index-repo.nix", "modules/chromadb.nix"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
+group = "Other Files"
+task = "Routing registry read by the nix-control route tool"
+note = "One [[route]] per task: group, task, optional aliases, note, steps, exact paths, explicit hosts and an optional doc link into docs/routes-notes.md. Edit this file, then regenerate the index."
+paths = ["docs/routes.toml"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
+group = "Other Files"
+task = "Generated route index for humans and for a failed MCP server"
+note = "Never edited by hand; produced from docs/routes.toml by `python3 .omp/nix-control-mcp/routes.py --index`, which routes_audit also checks for staleness."
+paths = ["docs/routes.md"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
+group = "Other Files"
+task = "Longer route knowledge referenced by `doc` fields"
+note = "One `## <anchor>` section per route that outgrew a one-line note; the registry links the exact anchor."
+paths = ["docs/routes-notes.md"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
+group = "Other Files"
+task = "Routing registry regression checks"
+note = "Plain unittest: registry shape, anchors, Cyrillic tokenizing, terminal/swap queries, bounded valid JSON and index freshness."
+paths = [".omp/nix-control-mcp/routes_test.py"]
 hosts = ["pc", "fx516", "notebook", "server"]
