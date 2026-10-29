@@ -40,7 +40,6 @@ in
         "https://nix-community.cachix.org?priority=20"
         "https://cache.numtide.com?priority=30"
         "https://ayugram-desktop.cachix.org?priority=40"
-        "https://tg-owt.cachix.org?priority=50"
       ];
       trusted-public-keys = [
         "cache.labile.cc-1:/5Xw93E/1oHlF+kMznhcccFnaoLxhoPLd/JJpoN7tC4="
@@ -48,7 +47,6 @@ in
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
         "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
         "ayugram-desktop.cachix.org-1:AZ5EqHrJsAKL5YkZYLPEsb1FdD9QlypUwQ0REcJftgA="
-        "tg-owt.cachix.org-1:lp0BukIhSK3EIyLcDhDZ5zABgT48nmNp6t4SnZ0wr8w="
       ];
       trusted-users = [ "@wheel" ];
       experimental-features = [
