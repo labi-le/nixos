@@ -1064,7 +1064,7 @@
           "refId": "A"
         }
       ],
-      "title": "Codex weekly headroom",
+      "title": "Codex primary-window headroom",
       "type": "stat"
     },
     {
@@ -1133,7 +1133,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "The OAuth access token litellm stores for the subscription. The exporter only reads it; litellm refreshes it on the next request, and the panel is what tells whether that has stopped happening.",
+      "description": "The OAuth access token litellm stores for the subscription. The exporter only reads it; litellm refreshes it on the next request. A token revoked early still counts down here, so a 401 in the proxy log is the signal, not this panel.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1202,7 +1202,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "1 when the subscription reports the limit as reached, which makes all three Codex groups answer 429.",
+      "description": "1 when the subscription reports the limit as reached, which makes every Codex group the plan carries answer 429.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1280,7 +1280,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Share of each rate-limit window the subscription has spent. The provider only reports the windows the plan has; the 5-hour secondary window is absent on this plan.",
+      "description": "Share of each rate-limit window the subscription has spent. The provider only reports the windows the plan has; this account has only the primary window, and the plan decides its length (7 days under prolite, 30 under free).",
       "fieldConfig": {
         "defaults": {
           "color": {

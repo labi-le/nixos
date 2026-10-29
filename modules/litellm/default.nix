@@ -173,4 +173,24 @@ in
       RandomizedDelaySec = "30s";
     };
   };
+
+  systemd.services.litellm-chatgpt-token = {
+    description = "Keep the ChatGPT OAuth token litellm stores usable";
+    after = [ "docker-litellm.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+    };
+    script = ''
+      exec ${pkgs.python3}/bin/python3 ${./chatgpt-token.py}
+    '';
+  };
+
+  systemd.timers.litellm-chatgpt-token = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*:0/15";
+      RandomizedDelaySec = "30s";
+    };
+  };
 }

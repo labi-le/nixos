@@ -231,6 +231,37 @@ signs in:
    stored refresh token; only a dead refresh chain asks for a code again, and
    that again needs a human.
 
+litellm refreshes only once the `expires_at` it stored has passed. A token the
+provider revokes earlier keeps being sent, and every call answers `401 Your
+authentication token has expired. Please try refreshing it.` while
+`expires_at` still lies days ahead. Observed 2026-10-27, when the account's
+prolite plan lapsed at 11:59 UTC. A dead refresh token cannot be repaired that
+way either: litellm falls through to the device-code login, which blocks the
+request until somebody answers the code.
+
+`litellm-chatgpt-token.service` (every 15 minutes, `chatgpt-token.py`) is what
+catches both. It probes `wham/usage` with the stored access token; on `200` it
+publishes `litellm_codex_token_valid 1` and exits. On `401` it refreshes
+against `auth.openai.com/oauth/token` itself, rewrites `auth.json` with the new
+access token, refresh token and `expires_at`, and re-probes. Only `401`
+triggers it: `403` is the region block described below, and a refresh cannot
+fix it. Two guards keep it from fighting litellm over the file: it re-reads
+`auth.json` before deciding to act and again before writing, and backs off if
+litellm changed the access token meanwhile. A refresh the provider rejects
+(`400 invalid_refresh_token…`) leaves the file untouched, publishes
+`litellm_codex_token_valid 0` and exits non-zero, which is the one case a
+person has to do the device login.
+
+Refresh tokens rotate on every exchange but the old ones stay valid, measured
+2026-10-27: a token superseded three exchanges earlier still answered `200`.
+So this service and litellm can both refresh without invalidating each other.
+
+The same repair by hand, for when the unit is stopped or you are impatient:
+drop the access token and the next request rebuilds it (verified on a copy
+under `CHATGPT_TOKEN_DIR`):
+
+    docker exec litellm python3 -c 'import json;p="/root/.config/litellm/chatgpt/auth.json";d=json.load(open(p));d.pop("access_token",None);json.dump(d,open(p,"w"))'
+
 The router health-checks the new deployments as it loads them, so the first
 rebuild that adds these groups asks for a code at startup and **blocks the
 whole proxy** until the code is answered — `/health/readiness` and every other
@@ -244,7 +275,8 @@ the map is what the first pass over this catalog was built from: it declares 14
 `chatgpt/` models, the newest of them the `gpt-5.6-*` three, so enumerating the
 map finds those and misses everything newer. The authority is the provider's own
 catalog — omp reads the same backend and prints it with
-`omp models openai-codex --json` — and it lists exactly seven ids:
+`omp models openai-codex --json` — and under prolite it listed exactly seven
+ids:
 
 | group | max input | max output | effort levels | price per 1M in/out |
 | --- | --- | --- | --- | --- |
@@ -252,17 +284,32 @@ catalog — omp reads the same backend and prints it with
 | `gpt-6-luna` | 872 000 | 128 000 | `low`…`max` | $0.10 / $0.50 |
 | `gpt-6.1-sol` | 922 000 | 128 000 | `low`…`max` | $2 / $10 |
 
+Plan state, measured 2026-10-27: the prolite subscription lapsed at 11:59:34
+UTC and the refreshed token reports plan `free`. Only `gpt-6-luna` still
+answers `200`; `gpt-6-astra` and `gpt-6.1-sol` return the `400 … not supported
+when using Codex with a ChatGPT account` below, the same answer as an id the
+plan does not carry. On that plan `gpt-5.6-luna` and `gpt-5.6-terra` answer
+`200` as well, and the Codex window is 30 days
+(`x-codex-primary-window-minutes: 43200`) instead of the weekly one. The
+catalog follows the plan too: `/backend-api/codex/models` answers
+`{"models":[]}`, so ids have to be probed one by one. `omp models
+openai-codex --json` is empty for a second, unrelated reason: omp's own login
+for this account expired 2026-10-13 and has not been renewed.
+
 The five the catalog does not carry are deliberate: `gpt-6-sol` (872 000) is the
 6.0 tier `gpt-6.1-sol` already covers, and `gpt-5.6-luna`, `gpt-5.6-sol`,
-`gpt-5.6-terra` and `gpt-5.5` were never exposed. Any id outside those seven is
+`gpt-5.6-terra` and `gpt-5.5` were never exposed under the prolite plan
+(measured 2026-10-11; the free plan serves the two 5.6 models again, per the
+plan note above). Any id outside those seven is
 refused with `400 The '<model>' model is not supported when using Codex with a
 ChatGPT account` — `gpt-5.3-codex` and `gpt-5.4` that the cost map does know,
 and names that look newer but do not exist such as `gpt-6-terra` and
 `gpt-6.1-luna`.
 
-All three answer non-streamed and streamed `/v1/chat/completions` (measured
-`pong` from each), return `tool_calls` with `finish_reason: tool_calls`, and
-take `low`, `medium`, `high`, `xhigh` and `max`; the backend also tolerated
+All three answered non-streamed and streamed `/v1/chat/completions` under
+prolite (measured `pong` from each, 2026-10-11), returned `tool_calls` with
+`finish_reason: tool_calls`, and take `low`, `medium`, `high`, `xhigh` and
+`max`; the backend also tolerated
 `none` and `minimal` on the 5.6 tier, but the provider's catalog declares those
 five, so the groups declare those five. `usage` carries `reasoning_tokens` and
 cached prompt tokens, and the prompt overhead is the Codex system instructions —
@@ -949,8 +996,10 @@ Two upstreams, both pull-based, so the series stay fresh without traffic:
 - `GET https://chatgpt.com/backend-api/wham/usage` — the endpoint the Codex CLI
   itself polls — with the stored access token and `chatgpt-account-id`:
   `litellm_codex_used_percent{account,plan,window}`,
-  `litellm_codex_window_present` (0 for a window the plan does not have; this
-  plan reports only `primary` at 604 800 s), `litellm_codex_window_seconds`,
+  `litellm_codex_window_present` (0 for a window the plan does not have; only
+  `primary` exists, and its length follows the plan — 604 800 s under prolite,
+  2 592 000 s under `free`, measured 2026-10-27),
+  `litellm_codex_window_seconds`,
   `litellm_codex_reset_at`, `litellm_codex_limit_reached`,
   `litellm_codex_model_available` and `litellm_codex_token_expires_at`. The
   account label is the first eight characters of the account id; the plan's
@@ -962,7 +1011,10 @@ those exist only while traffic flows, while `wham/usage` answers the same
 question without a request — measured 2026-10-11, the header on a live call and
 the endpoint both reported 48 percent. The exporter only *reads* `auth.json`:
 the access token lasts ten days and litellm refreshes it on the next request, so
-the token-expiry panel is what shows that refresh has stopped happening.
+the token-expiry panel is what shows that refresh has stopped happening. It
+cannot show a revoked token, though: on 2026-10-27 the panel still counted
+down four days while every call failed with `401 … token has expired`, because
+a revocation does not move `expires_at`.
 
 Three rules keep the series honest, because each upstream fails on its own:
 
@@ -997,8 +1049,8 @@ monthly headroom stats (the monthly pool is the whole subscription budget, so
 it answers whether a dry week is within budget or the subscription itself is
 running out), a per-account table with rotation status, used shares for the
 rolling, weekly and monthly windows, reset countdowns and per-account fetch
-health, a trend of each account's tightest window, the Codex weekly headroom
-and reset, token expiry,
+health, a trend of each account's tightest window, the Codex primary-window
+headroom and reset, token expiry,
 and a pipeline health table for the exporter, the price sync and the provider
 sources.
 `100 - used_percent` is the headroom in the stats and the trend, because both
@@ -1064,12 +1116,16 @@ login.
   the vhost.
 - The ChatGPT groups answer:
   `curl -s -X POST https://llm.labile.cc/v1/chat/completions -H "Authorization:
-  Bearer $MASTER" -H 'Content-Type: application/json' -d '{"model":"gpt-5.6-sol",
+  Bearer $MASTER" -H 'Content-Type: application/json' -d '{"model":"gpt-6-luna",
   "messages":[{"role":"user","content":"say pong"}]}'` → `"content":"pong"` with
-  `llm_provider-x-codex-*` headers on the response. `502` from Angie with
-  litellm logging `200 OK` means the header buffers above are missing; a
-  `chatgpt_exception` about a missing token means the device login has not been
-  done (watch `docker logs -f litellm` while calling it).
+  `llm_provider-x-codex-*` headers on the response. Use `gpt-6-luna`: the other
+  two groups need a plan that carries them, and on `free` they answer `400 … not
+  supported when using Codex with a ChatGPT account`, which is also the message
+  for an id the plan never had. `502` from Angie with litellm logging `200 OK`
+  means the header buffers above are missing; a `chatgpt_exception` about a
+  missing token means the device login has not been done (watch
+  `docker logs -f litellm` while calling it). A `401 … token has expired` goes
+  away after the access token is dropped, per the refresh note above.
 - Keys are in the DB, not in process memory:
   `docker exec litellm-db psql -U litellm -d litellm -c 'select key_alias,
   expires, models, spend from "LiteLLM_VerificationToken";'`
@@ -1081,6 +1137,12 @@ login.
   for what Prometheus kept; `cat
   /var/lib/litellm-limits-exporter/state.json` for the empty-run count the unit
   itself fails on.
+- The ChatGPT token is alive: `cat
+  /var/lib/prometheus-node-textfile-collector/litellm-chatgpt-token.prom` →
+  `litellm_codex_token_valid{account="d74f3468"} 1`. A `0` there, or
+  `systemctl status litellm-chatgpt-token` failed, means a device login is
+  needed; `journalctl -u litellm-chatgpt-token -n 20` names the reason, and a
+  `refresh rejected with 400` line is the dead-refresh case.
 - Trap: `systemctl cat docker-litellm` prints the unit, not the `docker run`
   line — the arguments are in the `ExecStart` script it points at. Use that
   script path, or `docker inspect litellm` for the effective mounts and

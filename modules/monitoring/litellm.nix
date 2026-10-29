@@ -144,6 +144,15 @@ in
             summary = "Nothing has refreshed the Zen prices for three days; the timer or the service is down.";
             command = "systemctl status litellm-price-sync.timer litellm-price-sync.service";
           })
+          (rule {
+            uid = "litellm-codex-token-invalid";
+            title = "The ChatGPT token behind the litellm Codex groups is dead";
+            expr = "litellm_codex_token_valid == 0";
+            for = "5m";
+            severity = "critical";
+            summary = "Every Codex group answers 401 and a refresh did not help; the account needs a device login.";
+            command = "journalctl -u litellm-chatgpt-token -n 40\ndocker logs --since 15m litellm | grep -i 'token has expired'";
+          })
         ];
       }
     ];
