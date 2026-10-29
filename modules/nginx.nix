@@ -140,7 +140,7 @@ in
     appendHttpConfig = ''
       log_format full '$remote_addr - $remote_user [$time_local] "$request" '
                       '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
-                      '"$scheme://$host$request_uri"';
+                      '"$scheme://$host$request_uri" $request_length';
 
       access_log /var/log/nginx/access.log full;
       error_log /var/log/nginx/error.log;
