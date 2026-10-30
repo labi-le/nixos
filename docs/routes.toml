@@ -797,6 +797,13 @@ hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
+task = "YouTube → станция (мост `bifrons`: Telegram-бот, резолвер `127.0.0.1:8096`, yt-dlp → очередь Music Assistant)"
+doc = "docs/routes-notes.md#bifrons"
+paths = ["modules/bifrons.nix", "modules/bifrons.py"]
+hosts = ["server"]
+
+[[route]]
+group = "Server-Specific Modules"
 task = "FRP (Fast Reverse Proxy); fail2ban jail `frp-auth` and its filter"
 doc = "docs/routes-notes.md#frp"
 paths = ["modules/frp.nix"]

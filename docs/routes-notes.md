@@ -198,6 +198,12 @@ the sync refused to apply the table, a rate changed, or nothing succeeded for th
 
 (player UI on 8095, built-in Snapcast server 1704/1705, stream 8097); Runs as a pinned docker container with `--network=host`, because MA discovers and streams to players over the LAN and its docs treat port mapping or bridge networking as unsupported. The library is bind-mounted read-only at `/media` and added inside MA as a filesystem provider; the station is a Snapdroid client pointed at `<server>:1780`. State stays in `/var/lib/music-assistant`, so the container is disposable. The UI is reachable as `ma.labile.cc` — an internal vhost in `modules/nginx.nix` (IP whitelist, websockets, since the frontend holds a `/ws` connection).
 
+## bifrons
+
+**YouTube → станция (мост `bifrons`: Telegram-бот, резолвер `127.0.0.1:8096`, yt-dlp → очередь Music Assistant)**
+
+Сервис `bifrons`, скрипт `modules/bifrons.py`, секрет `secrets/bifrons.age`. Бот слушает long polling тем же токеном, что и Grafana-алерты (`grafana-telegram`), и принимает сообщения только из чата `395448554`; `getUpdates` не мешает отправке алертов, но при переводе Grafana на webhook его придётся заменить отдельным ботом. Ссылка кладётся в очередь MA как `builtin`-трек со стабильным URL `http://127.0.0.1:8096/yt/<id>`: резолвер отвечает 302 на свежую `googlevideo`-ссылку (живёт ~6 ч и привязана к IP сервера), поэтому повторное воспроизведение из UI MA не ломается и библиотека не заполняется протухшими ссылками; прямые ссылки кэшируются на 30 минут. Порт наружу не открыт — резолвер на loopback, контейнер MA в host-network достаёт его как `127.0.0.1`. Трек остаётся в библиотеке намеренно (id = URL резолвера, дубликаты не плодятся).
+
 ## frp
 
 **FRP (Fast Reverse Proxy); fail2ban jail `frp-auth` and its filter**

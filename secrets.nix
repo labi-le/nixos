@@ -21,6 +21,7 @@ in
   "secrets/frp.age".publicKeys = [ server ];
   "secrets/zerossl.age".publicKeys = [ server ];
   "secrets/tidal-syncer.age".publicKeys = [ server ];
+  "secrets/bifrons.age".publicKeys = [ server ];
 
   "secrets/litellm-env.age".publicKeys = all;
   "secrets/llm-labile-env.age".publicKeys = all;

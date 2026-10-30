@@ -144,6 +144,7 @@ per-service documents under `docs/`.
 | Server-Specific Modules | Grafana alerts: OpenCode Go price sync | `modules/monitoring/litellm.nix` | server | docs/routes-notes.md#litellm-2 |
 | Server-Specific Modules | tidal-syncer daemon | `modules/tidal-syncer.nix` | server | (native service: config, agenix secret, Prometheus scrape + Grafana dashboard) |
 | Server-Specific Modules | Music Assistant server | `modules/music-assistant.nix`, `docs/music-assistant.md` | server | docs/routes-notes.md#music-assistant |
+| Server-Specific Modules | YouTube → станция (мост `bifrons`: Telegram-бот, резолвер `127.0.0.1:8096`, yt-dlp → очередь Music Assistant) | `modules/bifrons.nix`, `modules/bifrons.py` | server | docs/routes-notes.md#bifrons |
 | Server-Specific Modules | FRP (Fast Reverse Proxy); fail2ban jail `frp-auth` and its filter | `modules/frp.nix` | server | docs/routes-notes.md#frp |
 | Server-Specific Modules | fail2ban: sshd blindness, filter traps, port scoping, nftables ban backend | `modules/network/firewall.nix`, `modules/frp.nix`, `docs/fail2ban.md` | pc, fx516, notebook, server | docs/routes-notes.md#firewall-2 |
 | Server-Specific Modules | Grafana alert: | `modules/monitoring/frp.nix` | server | docs/routes-notes.md#frp-2 |
