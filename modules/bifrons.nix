@@ -36,6 +36,7 @@
       ExecStart = "${pkgs.python3}/bin/python3 ${./bifrons.py}";
       Restart = "always";
       RestartSec = 5;
+      StateDirectory = "bifrons";
       NoNewPrivileges = true;
       ProtectSystem = "strict";
       ProtectHome = true;

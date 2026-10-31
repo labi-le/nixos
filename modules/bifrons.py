@@ -56,6 +56,8 @@ CACHE = {}
 QUEUE = {"id": None}
 QUEUE_PANEL = {}
 TITLES = {}
+TITLES_FILE = "/var/lib/bifrons/titles.json"
+TITLES_LOCK = threading.Lock()
 
 
 class MaError(RuntimeError):
@@ -104,6 +106,27 @@ def run_async(func, *args, **kwargs):
             log(f"{func.__name__} failed: {error}")
 
     threading.Thread(target=runner, daemon=True).start()
+
+
+def load_titles():
+    try:
+        with open(TITLES_FILE, encoding="utf-8") as file:
+            TITLES.update(json.load(file))
+    except FileNotFoundError:
+        pass
+    except Exception as error:
+        log(f"titles load failed: {error}")
+
+
+def remember_title(video_id, title, resolver):
+    with TITLES_LOCK:
+        TITLES[video_id] = title
+        TITLES[resolver] = title
+        try:
+            with open(TITLES_FILE, "w", encoding="utf-8") as file:
+                json.dump(TITLES, file, ensure_ascii=False)
+        except Exception as error:
+            log(f"titles save failed: {error}")
 
 
 def ma(command, **args):
@@ -309,8 +332,7 @@ def play_on_station(media):
 
 def track_media(video_id, title):
     resolver = f"{RESOLVER}/yt/{video_id}"
-    TITLES[video_id] = title
-    TITLES[resolver] = title
+    remember_title(video_id, title, resolver)
     return {
         "media_type": "track",
         "item_id": resolver,
@@ -530,6 +552,7 @@ def main():
         log(f"queue {queue_id()}")
     except Exception as error:
         log(f"queue lookup failed: {error}")
+    load_titles()
     threading.Thread(target=serve_resolver, daemon=True).start()
     poll()
 
