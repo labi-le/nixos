@@ -16,6 +16,14 @@ YOUTUBE_URL = re.compile(
     r"https?://(?:www\.|m\.|music\.)?(?:youtube\.com/(?:watch\?[^\s]*v=|shorts/|live/)|youtu\.be/)"
     r"([A-Za-z0-9_-]{6,20})"
 )
+CHANNEL_URL = re.compile(
+    r"https?://(?:www\.|m\.)?youtube\.com/"
+    r"(?:@[A-Za-z0-9_.-]+|channel/[A-Za-z0-9_-]+|c/[A-Za-z0-9_.-]+|user/[A-Za-z0-9_.-]+)"
+    r"(?:/(?:videos|shorts|streams))?"
+)
+PLAYLIST_URL = re.compile(
+    r"https?://(?:www\.|m\.)?youtube\.com/playlist\?[^\s]*list=[A-Za-z0-9_-]+"
+)
 QUEUE_ACTIONS = {
     "prev": "player_queues/previous",
     "play_pause": "player_queues/play_pause",
@@ -36,7 +44,7 @@ VOLUME_TEXT = {
 KEYBOARD = {
     "keyboard": [
         [{"text": "prev"}, {"text": "next"}, {"text": "stop/play"}],
-        [{"text": "vol -"}, {"text": "vol +"}],
+        [{"text": "vol -"}, {"text": "vol +"}, {"text": "queue"}],
     ],
     "resize_keyboard": True,
     "is_persistent": True,
@@ -44,6 +52,8 @@ KEYBOARD = {
 CACHE_TTL = 1800
 CACHE = {}
 QUEUE = {"id": None}
+CHANNEL_FILL = {"generation": 0}
+QUEUE_PANEL = {}
 
 
 class MaError(RuntimeError):
@@ -161,6 +171,31 @@ def probe(video_id):
     return entry
 
 
+def channel_entries(url):
+    if "/playlist" not in url:
+        base = url.split("?", 1)[0].rstrip("/")
+        if not re.search(r"/(?:videos|shorts|streams)$", base):
+            url = f"{base}/videos"
+    command = [YTDLP, "--flat-playlist", "--no-warnings", "-J", url]
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("yt-dlp не ответил за 120 секунд") from None
+    if completed.returncode != 0:
+        lines = [line for line in completed.stderr.splitlines() if line.strip()]
+        raise RuntimeError(lines[-1].strip() if lines else "yt-dlp failed")
+    info = json.loads(completed.stdout)
+    entries = []
+    for item in info.get("entries") or []:
+        video_id = item.get("id")
+        if not video_id or item.get("live_status") in ("is_live", "is_upcoming"):
+            continue
+        entries.append({"id": video_id, "title": item.get("title") or video_id})
+    if not entries:
+        raise RuntimeError("на канале нет доступных видео")
+    return info.get("title") or url, entries
+
+
 class Resolver(BaseHTTPRequestHandler):
     server_version = "bifrons"
 
@@ -246,14 +281,41 @@ def rewrite(chat_id, message_id, text):
     )
 
 
-def play_on_station(uri):
+def queue_media(uri, option):
     try:
-        ma("player_queues/play_media", queue_id=queue_id(), media=[uri], option="replace")
+        ma("player_queues/play_media", queue_id=queue_id(), media=[uri], option=option)
     except MaError as error:
         if error.status != 404:
             raise
         forget_queue()
-        ma("player_queues/play_media", queue_id=queue_id(), media=[uri], option="replace")
+        ma("player_queues/play_media", queue_id=queue_id(), media=[uri], option=option)
+
+
+def play_on_station(uri):
+    queue_media(uri, "replace")
+
+
+def enqueue(uri):
+    queue_media(uri, "add")
+
+
+def stop_fill():
+    CHANNEL_FILL["generation"] += 1
+
+
+def fill_channel(generation, uris):
+    for uri in uris:
+        if CHANNEL_FILL["generation"] != generation:
+            return
+        try:
+            enqueue(uri)
+        except Exception as error:
+            log(f"enqueue {uri} failed: {error}")
+
+
+def start_fill(uris):
+    generation = CHANNEL_FILL["generation"]
+    threading.Thread(target=fill_channel, args=(generation, uris), daemon=True).start()
 
 
 def add_and_play(video_id):
@@ -262,7 +324,79 @@ def add_and_play(video_id):
     return entry["title"]
 
 
+def handle_channel(chat_id, url):
+    stop_fill()
+    placeholder = say(chat_id, "⏳ Собираю видео…")
+    message_id = placeholder["message_id"]
+    try:
+        title, entries = channel_entries(url)
+        first = entries[0]
+        play_on_station(f"builtin://track/{RESOLVER}/yt/{first['id']}")
+        start_fill(
+            [f"builtin://track/{RESOLVER}/yt/{item['id']}" for item in entries[1:]]
+        )
+        text = f"▶️ {first['title']}\nОчередь: {len(entries)} видео"
+        if title and title != first["title"]:
+            text += f"\n{title}"
+        try:
+            tg("deleteMessage", chat_id=chat_id, message_id=message_id)
+        except Exception as error:
+            log(f"delete placeholder failed: {error}")
+        say(chat_id, text, reply_markup=KEYBOARD)
+    except Exception as error:
+        log(f"channel {url} failed: {error}")
+        rewrite(chat_id, message_id, f"⚠️ {error}")
+
+
+def show_queue(chat_id, message_id=None):
+    try:
+        queue = ma("player_queues/get", queue_id=queue_id()) or {}
+        current = queue.get("current_index")
+        offset = current + 1 if isinstance(current, int) else 0
+        items = ma("player_queues/items", queue_id=queue_id(), limit=10, offset=offset) or []
+        current_name = (queue.get("current_item") or {}).get("name")
+        text = f"Очередь: {queue.get('items', 0)}"
+        if current_name:
+            text += f"\nСейчас: {current_name}"
+        rows = [
+            [
+                {
+                    "text": f"{offset + index + 1}. {item.get('name') or '?'}"[:64],
+                    "callback_data": f"jump:{offset + index}",
+                }
+            ]
+            for index, item in enumerate(items)
+        ]
+        keyboard = {"inline_keyboard": rows}
+        if message_id:
+            try:
+                tg(
+                    "editMessageText",
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text=text,
+                    disable_web_page_preview=True,
+                    reply_markup=keyboard,
+                )
+                return
+            except RuntimeError:
+                pass
+        sent = tg(
+            "sendMessage",
+            chat_id=chat_id,
+            text=text,
+            disable_web_page_preview=True,
+            reply_markup=keyboard,
+        )
+        if isinstance(sent, dict):
+            QUEUE_PANEL[chat_id] = sent.get("message_id")
+    except Exception as error:
+        log(f"queue panel failed: {error}")
+        say(chat_id, f"⚠️ {error}")
+
+
 def handle_play(chat_id, video_id, playlist):
+    stop_fill()
     placeholder = say(chat_id, "⏳ Резолвлю ролик…")
     message_id = placeholder["message_id"]
     try:
@@ -283,6 +417,12 @@ def handle_callback(callback):
         return
     data = callback.get("data") or ""
     try:
+        if data.startswith("jump:"):
+            index = int(data.split(":", 1)[1])
+            ma("player_queues/play_index", queue_id=queue_id(), index=index)
+            tg("answerCallbackQuery", callback_query_id=callback["id"], text="ок")
+            show_queue(chat_id, message.get("message_id"))
+            return
         if data in QUEUE_ACTIONS:
             ma(QUEUE_ACTIONS[data], queue_id=queue_id())
         elif data == "vol_up":
@@ -304,6 +444,9 @@ def handle_message(message):
     text = (message.get("text") or "").strip()
     if not text:
         return
+    if text == "queue":
+        show_queue(chat_id, QUEUE_PANEL.get(chat_id))
+        return
     try:
         if text in QUEUE_TEXT:
             ma(QUEUE_TEXT[text], queue_id=queue_id())
@@ -314,6 +457,10 @@ def handle_message(message):
     except Exception as error:
         log(f"button {text} failed: {error}")
         say(chat_id, f"⚠️ {error}")
+        return
+    channel = CHANNEL_URL.search(text) or PLAYLIST_URL.search(text)
+    if channel:
+        handle_channel(chat_id, channel.group(0))
         return
     match = YOUTUBE_URL.search(text)
     if not match:
