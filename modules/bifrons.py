@@ -16,12 +16,21 @@ YOUTUBE_URL = re.compile(
     r"https?://(?:www\.|m\.|music\.)?(?:youtube\.com/(?:watch\?[^\s]*v=|shorts/|live/)|youtu\.be/)"
     r"([A-Za-z0-9_-]{6,20})"
 )
-HELP = "/stop /pause /resume /next /vol 0-100"
-CONTROLS = {
-    "/stop": "player_queues/stop",
-    "/pause": "player_queues/pause",
-    "/resume": "player_queues/resume",
-    "/next": "player_queues/next",
+KEYBOARD = {
+    "inline_keyboard": [
+        [
+            {"text": "⏸ Пауза", "callback_data": "pause"},
+            {"text": "▶️ Играть", "callback_data": "resume"},
+        ],
+        [
+            {"text": "⏹ Стоп", "callback_data": "stop"},
+            {"text": "⏭ Следующий", "callback_data": "next"},
+        ],
+        [
+            {"text": "🔉 −", "callback_data": "vol_down"},
+            {"text": "🔊 +", "callback_data": "vol_up"},
+        ],
+    ]
 }
 CACHE_TTL = 1800
 CACHE = {}
@@ -212,12 +221,23 @@ def tg(method, **params):
     return payload.get("result")
 
 
-def say(chat_id, text):
-    return tg("sendMessage", chat_id=chat_id, text=text, disable_web_page_preview=True)
+def say(chat_id, text, reply_markup=None):
+    params = {"chat_id": chat_id, "text": text, "disable_web_page_preview": True}
+    if reply_markup:
+        params["reply_markup"] = reply_markup
+    return tg("sendMessage", **params)
 
 
-def rewrite(chat_id, message_id, text):
-    tg("editMessageText", chat_id=chat_id, message_id=message_id, text=text, disable_web_page_preview=True)
+def rewrite(chat_id, message_id, text, reply_markup=None):
+    params = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "text": text,
+        "disable_web_page_preview": True,
+    }
+    if reply_markup:
+        params["reply_markup"] = reply_markup
+    tg("editMessageText", **params)
 
 
 def play_on_station(uri):
@@ -251,30 +271,31 @@ def handle_play(chat_id, video_id, playlist):
         text = f"▶️ {title}\nИграет на станции"
         if playlist:
             text += "\nПлейлист: играю первый ролик."
-        rewrite(chat_id, message_id, text)
+        rewrite(chat_id, message_id, text, reply_markup=KEYBOARD)
     except Exception as error:
         log(f"play {video_id} failed: {error}")
-        rewrite(chat_id, message_id, f"⚠️ {error}")
+        rewrite(chat_id, message_id, f"⚠️ {error}", reply_markup=KEYBOARD)
 
 
-def handle_command(chat_id, text):
-    parts = text.split()
-    name = parts[0].split("@", 1)[0]
+def handle_callback(callback):
+    message = callback.get("message") or {}
+    chat_id = (message.get("chat") or {}).get("id")
+    if chat_id not in CHAT_IDS:
+        return
+    data = callback.get("data") or ""
     try:
-        if name in CONTROLS:
-            ma(CONTROLS[name], queue_id=queue_id())
-            say(chat_id, "ок")
-        elif name == "/vol":
-            if len(parts) != 2 or not parts[1].isdigit() or not 0 <= int(parts[1]) <= 100:
-                say(chat_id, "0…100")
-                return
-            ma("players/cmd/volume_set", player_id=queue_id(), volume_level=int(parts[1]))
-            say(chat_id, "ок")
+        if data in ("stop", "pause", "resume", "next"):
+            ma(f"player_queues/{data}", queue_id=queue_id())
+        elif data == "vol_up":
+            ma("players/cmd/volume_up", player_id=queue_id())
+        elif data == "vol_down":
+            ma("players/cmd/volume_down", player_id=queue_id())
         else:
-            say(chat_id, HELP)
+            raise RuntimeError("неизвестная кнопка")
+        tg("answerCallbackQuery", callback_query_id=callback["id"], text="ок")
     except Exception as error:
-        log(f"command {name} failed: {error}")
-        say(chat_id, f"⚠️ {error}")
+        log(f"callback {data} failed: {error}")
+        tg("answerCallbackQuery", callback_query_id=callback["id"], text=f"⚠️ {error}"[:200])
 
 
 def handle_message(message):
@@ -284,12 +305,9 @@ def handle_message(message):
     text = (message.get("text") or "").strip()
     if not text:
         return
-    if text.startswith("/"):
-        handle_command(chat_id, text)
-        return
     match = YOUTUBE_URL.search(text)
     if not match:
-        say(chat_id, "Пришли ссылку на YouTube.")
+        say(chat_id, "Пришли ссылку на YouTube.", reply_markup=KEYBOARD)
         return
     handle_play(chat_id, match.group(1), "list=" in text)
 
@@ -297,7 +315,7 @@ def handle_message(message):
 def poll():
     offset = None
     while True:
-        params = {"timeout": 30, "allowed_updates": ["message"]}
+        params = {"timeout": 30, "allowed_updates": ["message", "callback_query"]}
         if offset is not None:
             params["offset"] = offset
         try:
@@ -308,6 +326,13 @@ def poll():
             continue
         for update in updates:
             offset = update["update_id"] + 1
+            callback = update.get("callback_query")
+            if callback:
+                try:
+                    handle_callback(callback)
+                except Exception as error:
+                    log(f"callback {update['update_id']} failed: {error}")
+                continue
             message = update.get("message")
             if not message:
                 continue
