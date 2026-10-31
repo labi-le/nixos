@@ -11,9 +11,6 @@
       xdg-desktop-portal-gtk
       gnome-keyring
     ]);
-    config.niri = {
-      default = lib.mkForce "gtk";
-      "org.freedesktop.impl.portal.ScreenCast" = "wlr";
-    };
+    config.niri.default = lib.mkDefault "gnome";
   };
 }
