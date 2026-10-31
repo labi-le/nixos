@@ -24,19 +24,22 @@ QUEUE_ACTIONS = {
     "pause": "player_queues/pause",
     "resume": "player_queues/resume",
 }
+QUEUE_TEXT = {
+    "prev": "player_queues/previous",
+    "next": "player_queues/next",
+    "stop/play": "player_queues/play_pause",
+}
+VOLUME_TEXT = {
+    "vol -": "players/cmd/volume_down",
+    "vol +": "players/cmd/volume_up",
+}
 KEYBOARD = {
-    "inline_keyboard": [
-        [
-            {"text": "⏮️", "callback_data": "prev"},
-            {"text": "⏯️", "callback_data": "play_pause"},
-            {"text": "⏭️", "callback_data": "next"},
-        ],
-        [
-            {"text": "⏹️", "callback_data": "stop"},
-            {"text": "🔉", "callback_data": "vol_down"},
-            {"text": "🔊", "callback_data": "vol_up"},
-        ],
-    ]
+    "keyboard": [
+        [{"text": "prev"}, {"text": "next"}, {"text": "stop/play"}],
+        [{"text": "vol -"}, {"text": "vol +"}],
+    ],
+    "resize_keyboard": True,
+    "is_persistent": True,
 }
 CACHE_TTL = 1800
 CACHE = {}
@@ -234,16 +237,14 @@ def say(chat_id, text, reply_markup=None):
     return tg("sendMessage", **params)
 
 
-def rewrite(chat_id, message_id, text, reply_markup=None):
-    params = {
-        "chat_id": chat_id,
-        "message_id": message_id,
-        "text": text,
-        "disable_web_page_preview": True,
-    }
-    if reply_markup:
-        params["reply_markup"] = reply_markup
-    tg("editMessageText", **params)
+def rewrite(chat_id, message_id, text):
+    tg(
+        "editMessageText",
+        chat_id=chat_id,
+        message_id=message_id,
+        text=text,
+        disable_web_page_preview=True,
+    )
 
 
 def play_on_station(uri):
@@ -270,17 +271,17 @@ def add_and_play(video_id):
 
 
 def handle_play(chat_id, video_id, playlist):
-    placeholder = say(chat_id, "⏳ Резолвлю ролик…")
+    placeholder = say(chat_id, "⏳ Резолвлю ролик…", reply_markup=KEYBOARD)
     message_id = placeholder["message_id"]
     try:
         title = add_and_play(video_id)
         text = f"▶️ {title}\nИграет на станции"
         if playlist:
             text += "\nПлейлист: играю первый ролик."
-        rewrite(chat_id, message_id, text, reply_markup=KEYBOARD)
+        rewrite(chat_id, message_id, text)
     except Exception as error:
         log(f"play {video_id} failed: {error}")
-        rewrite(chat_id, message_id, f"⚠️ {error}", reply_markup=KEYBOARD)
+        rewrite(chat_id, message_id, f"⚠️ {error}")
 
 
 def handle_callback(callback):
@@ -310,6 +311,17 @@ def handle_message(message):
         return
     text = (message.get("text") or "").strip()
     if not text:
+        return
+    try:
+        if text in QUEUE_TEXT:
+            ma(QUEUE_TEXT[text], queue_id=queue_id())
+            return
+        if text in VOLUME_TEXT:
+            ma(VOLUME_TEXT[text], player_id=queue_id())
+            return
+    except Exception as error:
+        log(f"button {text} failed: {error}")
+        say(chat_id, f"⚠️ {error}")
         return
     match = YOUTUBE_URL.search(text)
     if not match:
