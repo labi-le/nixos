@@ -3,24 +3,12 @@
 final: prev: {
   belphegor = inputs.belphegor.packages.${system}.default;
   deal = inputs.deal.packages.${system}.default;
-  # accela = inputs.accela.packages.${system}.default;
   sls-steam = inputs.sls-steam.packages.${system}.sls-steam;
   sls-steam-wrapped = inputs.sls-steam.packages.${system}.wrapped;
   ayugram-desktop = inputs.ayugram-desktop.packages.${system}.default;
 
-  stable = import inputs.nixpkgs-stable {
-    inherit system;
-    config.allowUnfree = true;
-  };
-
-
-  # Screencast on sway 1.11 goes through xdpw's ext-image-copy backend, and the
-  # stream dies with "pipewire: out of buffers": upstream asks PipeWire for a
-  # pool of two buffers, while Chromium's WebRTC capturer keeps one of them
-  # while it encodes. Raising the pool only buys time -- with eight the picture
-  # still froze after about an hour -- so the pool goes to sixteen and upstream
-  # PR #397 comes along, which re-triggers the PipeWire graph on starvation
-  # instead of leaving the stream wedged forever (upstream issues #390/#395).
+  # xdpw asks PipeWire for two buffers while Chromium's capturer holds one, so
+  # the stream wedges; sixteen buffers plus upstream #397 (issues #390/#395).
   xdg-desktop-portal-wlr = prev.xdg-desktop-portal-wlr.overrideAttrs (old: {
     version = "0.8.3-unstable-2026-07-09";
     src = final.fetchFromGitHub {
@@ -33,10 +21,6 @@ final: prev: {
     postPatch = (old.postPatch or "") + ''
       substituteInPlace include/pipewire_screencast.h \
         --replace-fail "#define XDPW_PWR_BUFFERS 2" "#define XDPW_PWR_BUFFERS 16"
-    '';
-    postInstall = (old.postInstall or "") + ''
-      substituteInPlace $out/share/xdg-desktop-portal/portals/wlr.portal \
-        --replace-fail "UseIn=wlroots;sway;Wayfire;river;phosh;Hyprland;" "UseIn=wlroots;sway;Wayfire;river;phosh;Hyprland;niri;"
     '';
   });
 
