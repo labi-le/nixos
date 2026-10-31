@@ -263,7 +263,7 @@ def add_and_play(video_id):
 
 
 def handle_play(chat_id, video_id, playlist):
-    placeholder = say(chat_id, "⏳ Резолвлю ролик…", reply_markup=KEYBOARD)
+    placeholder = say(chat_id, "⏳ Резолвлю ролик…")
     message_id = placeholder["message_id"]
     try:
         title = add_and_play(video_id)
