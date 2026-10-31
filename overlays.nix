@@ -14,12 +14,6 @@ final: prev: {
   };
 
 
-  xdg-desktop-portal = prev.xdg-desktop-portal.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [
-      ./pkgs/xdg-desktop-portal/remove-token-assertion.patch
-    ];
-  });
-
   # Screencast on sway 1.11 goes through xdpw's ext-image-copy backend, and the
   # stream dies with "pipewire: out of buffers": upstream asks PipeWire for a
   # pool of two buffers, while Chromium's WebRTC capturer keeps one of them
