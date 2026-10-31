@@ -35,7 +35,9 @@ QUEUE_ACTIONS = {
 QUEUE_TEXT = {
     "prev": "player_queues/previous",
     "next": "player_queues/next",
-    "stop/play": "player_queues/play_pause",
+}
+PLAYER_TEXT = {
+    "stop/play": "players/cmd/play_pause",
 }
 VOLUME_TEXT = {
     "vol -": "players/cmd/volume_down",
@@ -53,6 +55,7 @@ CACHE_TTL = 1800
 CACHE = {}
 QUEUE = {"id": None}
 QUEUE_PANEL = {}
+TITLES = {}
 
 
 class MaError(RuntimeError):
@@ -91,6 +94,16 @@ RESOLVER = resolver_base(BIND)
 
 def log(message):
     print(message, flush=True)
+
+
+def run_async(func, *args, **kwargs):
+    def runner():
+        try:
+            func(*args, **kwargs)
+        except Exception as error:
+            log(f"{func.__name__} failed: {error}")
+
+    threading.Thread(target=runner, daemon=True).start()
 
 
 def ma(command, **args):
@@ -296,6 +309,8 @@ def play_on_station(media):
 
 def track_media(video_id, title):
     resolver = f"{RESOLVER}/yt/{video_id}"
+    TITLES[video_id] = title
+    TITLES[resolver] = title
     return {
         "media_type": "track",
         "item_id": resolver,
@@ -342,7 +357,15 @@ def handle_channel(chat_id, url):
 
 def item_name(item):
     media = item.get("media_item") or {}
-    return media.get("name") or item.get("name") or "?"
+    item_id = media.get("item_id") or ""
+    video_id = item_id.rsplit("/", 1)[-1] if "/yt/" in item_id else item_id
+    return (
+        TITLES.get(item_id)
+        or TITLES.get(video_id)
+        or media.get("name")
+        or item.get("name")
+        or "?"
+    )
 
 
 def show_queue(chat_id, message_id=None):
@@ -392,6 +415,11 @@ def show_queue(chat_id, message_id=None):
         say(chat_id, f"⚠️ {error}")
 
 
+def jump_queue(chat_id, message_id, index):
+    ma("player_queues/play_index", queue_id=queue_id(), index=index)
+    show_queue(chat_id, message_id)
+
+
 def handle_play(chat_id, video_id, playlist):
     placeholder = say(chat_id, "⏳ Резолвлю ролик…")
     message_id = placeholder["message_id"]
@@ -416,8 +444,7 @@ def handle_callback(callback):
         if data.startswith("jump:"):
             index = int(data.split(":", 1)[1])
             tg("answerCallbackQuery", callback_query_id=callback["id"], text="ок")
-            ma("player_queues/play_index", queue_id=queue_id(), index=index)
-            show_queue(chat_id, message.get("message_id"))
+            run_async(jump_queue, chat_id, message.get("message_id"), index)
             return
         if data in QUEUE_ACTIONS:
             ma(QUEUE_ACTIONS[data], queue_id=queue_id())
@@ -445,10 +472,13 @@ def handle_message(message):
         return
     try:
         if text in QUEUE_TEXT:
-            ma(QUEUE_TEXT[text], queue_id=queue_id())
+            run_async(ma, QUEUE_TEXT[text], queue_id=queue_id())
+            return
+        if text in PLAYER_TEXT:
+            run_async(ma, PLAYER_TEXT[text], player_id=queue_id())
             return
         if text in VOLUME_TEXT:
-            ma(VOLUME_TEXT[text], player_id=queue_id())
+            run_async(ma, VOLUME_TEXT[text], player_id=queue_id())
             return
     except Exception as error:
         log(f"button {text} failed: {error}")
@@ -456,13 +486,13 @@ def handle_message(message):
         return
     channel = CHANNEL_URL.search(text) or PLAYLIST_URL.search(text)
     if channel:
-        handle_channel(chat_id, channel.group(0))
+        run_async(handle_channel, chat_id, channel.group(0))
         return
     match = YOUTUBE_URL.search(text)
     if not match:
         say(chat_id, "Пришли ссылку на YouTube.", reply_markup=KEYBOARD)
         return
-    handle_play(chat_id, match.group(1), "list=" in text)
+    run_async(handle_play, chat_id, match.group(1), "list=" in text)
 
 
 def poll():
