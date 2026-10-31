@@ -52,7 +52,6 @@ KEYBOARD = {
 CACHE_TTL = 1800
 CACHE = {}
 QUEUE = {"id": None}
-CHANNEL_FILL = {"generation": 0}
 QUEUE_PANEL = {}
 
 
@@ -281,60 +280,53 @@ def rewrite(chat_id, message_id, text):
     )
 
 
-def queue_media(uri, option):
+def queue_media(media, option):
     try:
-        ma("player_queues/play_media", queue_id=queue_id(), media=[uri], option=option)
+        ma("player_queues/play_media", queue_id=queue_id(), media=media, option=option)
     except MaError as error:
         if error.status != 404:
             raise
         forget_queue()
-        ma("player_queues/play_media", queue_id=queue_id(), media=[uri], option=option)
+        ma("player_queues/play_media", queue_id=queue_id(), media=media, option=option)
 
 
-def play_on_station(uri):
-    queue_media(uri, "replace")
+def play_on_station(media):
+    queue_media(media, "replace")
 
 
-def enqueue(uri):
-    queue_media(uri, "add")
-
-
-def stop_fill():
-    CHANNEL_FILL["generation"] += 1
-
-
-def fill_channel(generation, uris):
-    for uri in uris:
-        if CHANNEL_FILL["generation"] != generation:
-            return
-        try:
-            enqueue(uri)
-        except Exception as error:
-            log(f"enqueue {uri} failed: {error}")
-
-
-def start_fill(uris):
-    generation = CHANNEL_FILL["generation"]
-    threading.Thread(target=fill_channel, args=(generation, uris), daemon=True).start()
+def track_media(video_id, title):
+    resolver = f"{RESOLVER}/yt/{video_id}"
+    return {
+        "media_type": "track",
+        "item_id": resolver,
+        "provider": "builtin",
+        "name": title,
+        "uri": f"builtin://track/{resolver}",
+        "duration": 0,
+        "provider_mappings": [
+            {
+                "item_id": resolver,
+                "provider_domain": "builtin",
+                "provider_instance": "builtin",
+                "in_library": False,
+            }
+        ],
+    }
 
 
 def add_and_play(video_id):
     entry = probe(video_id)
-    play_on_station(f"builtin://track/{RESOLVER}/yt/{entry['id']}")
+    play_on_station(track_media(entry["id"], entry["title"]))
     return entry["title"]
 
 
 def handle_channel(chat_id, url):
-    stop_fill()
     placeholder = say(chat_id, "⏳ Собираю видео…")
     message_id = placeholder["message_id"]
     try:
         title, entries = channel_entries(url)
         first = entries[0]
-        play_on_station(f"builtin://track/{RESOLVER}/yt/{first['id']}")
-        start_fill(
-            [f"builtin://track/{RESOLVER}/yt/{item['id']}" for item in entries[1:]]
-        )
+        play_on_station([track_media(item["id"], item["title"]) for item in entries])
         text = f"▶️ {first['title']}\nОчередь: {len(entries)} видео"
         if title and title != first["title"]:
             text += f"\n{title}"
@@ -348,20 +340,25 @@ def handle_channel(chat_id, url):
         rewrite(chat_id, message_id, f"⚠️ {error}")
 
 
+def item_name(item):
+    media = item.get("media_item") or {}
+    return media.get("name") or item.get("name") or "?"
+
+
 def show_queue(chat_id, message_id=None):
     try:
         queue = ma("player_queues/get", queue_id=queue_id()) or {}
         current = queue.get("current_index")
         offset = current + 1 if isinstance(current, int) else 0
         items = ma("player_queues/items", queue_id=queue_id(), limit=10, offset=offset) or []
-        current_name = (queue.get("current_item") or {}).get("name")
+        current_name = item_name(queue.get("current_item") or {})
         text = f"Очередь: {queue.get('items', 0)}"
-        if current_name:
+        if current_name != "?":
             text += f"\nСейчас: {current_name}"
         rows = [
             [
                 {
-                    "text": f"{offset + index + 1}. {item.get('name') or '?'}"[:64],
+                    "text": f"{offset + index + 1}. {item_name(item)}"[:64],
                     "callback_data": f"jump:{offset + index}",
                 }
             ]
@@ -396,7 +393,6 @@ def show_queue(chat_id, message_id=None):
 
 
 def handle_play(chat_id, video_id, playlist):
-    stop_fill()
     placeholder = say(chat_id, "⏳ Резолвлю ролик…")
     message_id = placeholder["message_id"]
     try:
