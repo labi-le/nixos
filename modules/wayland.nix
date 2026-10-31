@@ -1,18 +1,15 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
+let
+  wlrootsSession = !config.programs.niri.enable;
+in
 {
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = with pkgs; [
-    xdg-desktop-portal-wlr
-    # xdg-desktop-portal-gtk
-  ];
+  xdg.portal.extraPortals = lib.optionals wlrootsSession [ pkgs.xdg-desktop-portal-wlr ];
   programs.xwayland.enable = true;
   xdg.portal.config.common.default = "*";
 
-  # xdpw logs at ERROR by default, which hides the one message that matters
-  # when a screencast dies ("pipewire: out of buffers"). WARN costs nothing:
-  # a healthy stream prints nothing at all.
-  systemd.user.services.xdg-desktop-portal-wlr = {
+  systemd.user.services.xdg-desktop-portal-wlr = lib.mkIf wlrootsSession {
     overrideStrategy = "asDropin";
     serviceConfig.ExecStart = [
       ""
