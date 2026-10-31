@@ -415,8 +415,8 @@ def handle_callback(callback):
     try:
         if data.startswith("jump:"):
             index = int(data.split(":", 1)[1])
-            ma("player_queues/play_index", queue_id=queue_id(), index=index)
             tg("answerCallbackQuery", callback_query_id=callback["id"], text="ок")
+            ma("player_queues/play_index", queue_id=queue_id(), index=index)
             show_queue(chat_id, message.get("message_id"))
             return
         if data in QUEUE_ACTIONS:
