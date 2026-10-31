@@ -107,7 +107,7 @@ def ma(command, **args):
         },
     )
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=120) as response:
             payload = response.read()
     except urllib.error.HTTPError as error:
         detail = error.read().decode(errors="replace").strip()
