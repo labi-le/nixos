@@ -468,7 +468,7 @@ def handle_message(message):
     if not text:
         return
     if text == "queue":
-        show_queue(chat_id, QUEUE_PANEL.get(chat_id))
+        run_async(show_queue, chat_id, QUEUE_PANEL.get(chat_id))
         return
     try:
         if text in QUEUE_TEXT:
