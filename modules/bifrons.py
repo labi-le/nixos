@@ -154,7 +154,6 @@ def probe(video_id):
         "id": info.get("id") or video_id,
         "url": url,
         "title": info.get("title") or video_id,
-        "thumbnail": info.get("thumbnail"),
         "expires": time.time() + CACHE_TTL,
     }
     CACHE[entry["id"]] = entry
@@ -259,14 +258,7 @@ def play_on_station(uri):
 
 def add_and_play(video_id):
     entry = probe(video_id)
-    track = ma(
-        "builtin/add_track",
-        url=f"{RESOLVER}/yt/{entry['id']}",
-        name=entry["title"],
-        image_url=entry["thumbnail"],
-    )
-    uri = track.get("uri") if isinstance(track, dict) else None
-    play_on_station(uri or f"builtin://track/{RESOLVER}/yt/{entry['id']}")
+    play_on_station(f"builtin://track/{RESOLVER}/yt/{entry['id']}")
     return entry["title"]
 
 
