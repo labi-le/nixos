@@ -8,14 +8,17 @@ final: prev: {
   sls-steam-wrapped = inputs.sls-steam.packages.${system}.wrapped;
   ayugram-desktop = inputs.ayugram-desktop.packages.${system}.default;
 
-  # stable = import inputs.nixpkgs-stable {
-  #   inherit system;
-  #   config.allowUnfree = true;
-  # };
-
-  openldap = prev.openldap.overrideAttrs {
-    doCheck = !prev.stdenv.hostPlatform.isi686;
+  stable = import inputs.nixpkgs-stable {
+    inherit system;
+    config.allowUnfree = true;
   };
+
+
+  xdg-desktop-portal = prev.xdg-desktop-portal.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [
+      ./pkgs/xdg-desktop-portal/remove-token-assertion.patch
+    ];
+  });
 
   # Screencast on sway 1.11 goes through xdpw's ext-image-copy backend, and the
   # stream dies with "pipewire: out of buffers": upstream asks PipeWire for a
@@ -36,6 +39,38 @@ final: prev: {
     postPatch = (old.postPatch or "") + ''
       substituteInPlace include/pipewire_screencast.h \
         --replace-fail "#define XDPW_PWR_BUFFERS 2" "#define XDPW_PWR_BUFFERS 16"
+    '';
+    postInstall = (old.postInstall or "") + ''
+      substituteInPlace $out/share/xdg-desktop-portal/portals/wlr.portal \
+        --replace-fail "UseIn=wlroots;sway;Wayfire;river;phosh;Hyprland;" "UseIn=wlroots;sway;Wayfire;river;phosh;Hyprland;niri;"
+    '';
+  });
+
+  equicord = prev.equicord.overrideAttrs (_: rec {
+    version = "1.15.14.0";
+    src = final.fetchFromGitHub {
+      owner = "Equicord";
+      repo = "Equicord";
+      rev = "8d0ebf3549890be2ecb1e1d602b1695f584c71cc";
+      hash = "sha256-ijNxC/uR3Wy4JX/6qNnNGQwS5752+vK2T26N1bsLeG4=";
+    };
+    pnpmDeps = final.fetchPnpmDeps {
+      pname = "equicord";
+      inherit version src;
+      pnpm = final.pnpm_10;
+      fetcherVersion = 3;
+      hash = "sha256-vwGHq4chumYcdmiNcAh49bxErVv7GuxCnIyzgXO5pOE=";
+    };
+    env = {
+      EQUICORD_REMOTE = "Equicord/Equicord";
+      EQUICORD_HASH = src.rev;
+    };
+  });
+
+  equibop = prev.equibop.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace src/main/vencordDir.ts \
+        --replace-fail 'join(SESSION_DATA_DIR, "equicord.asar")' '"${final.equicord}/equibop"'
     '';
   });
 
