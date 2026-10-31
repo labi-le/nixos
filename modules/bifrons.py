@@ -16,19 +16,25 @@ YOUTUBE_URL = re.compile(
     r"https?://(?:www\.|m\.|music\.)?(?:youtube\.com/(?:watch\?[^\s]*v=|shorts/|live/)|youtu\.be/)"
     r"([A-Za-z0-9_-]{6,20})"
 )
+QUEUE_ACTIONS = {
+    "prev": "player_queues/previous",
+    "play_pause": "player_queues/play_pause",
+    "next": "player_queues/next",
+    "stop": "player_queues/stop",
+    "pause": "player_queues/pause",
+    "resume": "player_queues/resume",
+}
 KEYBOARD = {
     "inline_keyboard": [
         [
-            {"text": "⏸ Пауза", "callback_data": "pause"},
-            {"text": "▶️ Играть", "callback_data": "resume"},
+            {"text": "⏮️", "callback_data": "prev"},
+            {"text": "⏯️", "callback_data": "play_pause"},
+            {"text": "⏭️", "callback_data": "next"},
         ],
         [
-            {"text": "⏹ Стоп", "callback_data": "stop"},
-            {"text": "⏭ Следующий", "callback_data": "next"},
-        ],
-        [
-            {"text": "🔉 −", "callback_data": "vol_down"},
-            {"text": "🔊 +", "callback_data": "vol_up"},
+            {"text": "⏹️", "callback_data": "stop"},
+            {"text": "🔉", "callback_data": "vol_down"},
+            {"text": "🔊", "callback_data": "vol_up"},
         ],
     ]
 }
@@ -284,8 +290,8 @@ def handle_callback(callback):
         return
     data = callback.get("data") or ""
     try:
-        if data in ("stop", "pause", "resume", "next"):
-            ma(f"player_queues/{data}", queue_id=queue_id())
+        if data in QUEUE_ACTIONS:
+            ma(QUEUE_ACTIONS[data], queue_id=queue_id())
         elif data == "vol_up":
             ma("players/cmd/volume_up", player_id=queue_id())
         elif data == "vol_down":
