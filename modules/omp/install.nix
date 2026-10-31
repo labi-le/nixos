@@ -28,6 +28,7 @@ in
     "L+ ${files.agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
     "L+ ${files.agentDir}/extensions/git-upstream-gate.ts - - - - ${./extensions/git-upstream-gate.ts}"
     "L+ ${files.agentDir}/extensions/grep-gate.ts - - - - ${./extensions/grep-gate.ts}"
+    "L+ ${files.agentDir}/extensions/content-filter-retry.ts - - - - ${./extensions/content-filter-retry.ts}"
     "L+ ${files.agentDir}/extensions/delegation-gate.ts - - - - ${files.delegationGate}/delegation-gate.ts"
     "L+ ${files.agentDir}/extensions/repo-register.js - - - - ${files.repoRegisterJs}"
   ]

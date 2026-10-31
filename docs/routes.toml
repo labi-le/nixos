@@ -1204,6 +1204,13 @@ paths = ["modules/omp/extensions/grep-gate.ts", "modules/omp/install.nix", "modu
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
+group = "System Modules"
+task = "OMP retries turns a provider ended with finish_reason content_filter (all OMP hosts)"
+note = "The `session_stop` hook re-runs the request with a hidden continuation context, and the `context` hook drops the rejected assistant turn so the retry does not replay it. Turns carrying tool calls, images or Anthropic server-tool blocks are never retried. Bounded by omp's `SESSION_STOP_CONTINUATION_CAP` of 8; the original error surfaces past the cap."
+paths = ["modules/omp/extensions/content-filter-retry.ts", "modules/omp/content-filter-retry.test.ts"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
 group = "Code indexer wiring"
 task = "Indexer system service and ChromaDB endpoint"
 doc = "docs/routes-notes.md#index-repo"
