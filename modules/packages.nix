@@ -89,6 +89,7 @@ in
 
         generate-context
         jcode
+        cargo-slot
       ]
       ++ optionals cfg.desktop desktopPackages
       ++ optionals cfg.server serverPackages;

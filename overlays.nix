@@ -60,6 +60,7 @@ final: prev: {
   keychron-backlight = prev.callPackage ./pkgs/keychron-backlight.nix { };
   clip-links = prev.callPackage ./pkgs/clip-links.nix { };
   yam = prev.callPackage ./pkgs/yam.nix { };
+  cargo-slot = prev.callPackage ./pkgs/cargo-slot.nix { };
   agenix = inputs.agenix.packages.${system}.default;
   nur = (inputs.nur.overlays.default final prev).nur;
   apple-fonts = inputs.apple-fonts.packages.${system};

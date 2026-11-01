@@ -6,12 +6,13 @@
 }:
 
 let
-  tag = "v18.10.0";
+  tag = "v18.14.2";
   botLogin = "int8-ptr";
   botId = "126324301";
   bindPort = 6543;
   dataDir = "/drive/state/buer";
-  repoAllowlist = "labi-le/murmur,labi-le/sub-preprocessor";
+  cargoSlotRelay = pkgs.callPackage ../../pkgs/cargo-slot-relay.nix { };
+  repoAllowlist = "labi-le/maxwell,labi-le/murmur,labi-le/sub-preprocessor";
   maintainerLogins = "labi-le";
   reviewerBots = "chatgpt-codex-connector";
   reviewerBotLogin = "${reviewerBots}[bot]";
@@ -32,6 +33,17 @@ let
       gnumake
       golangci-lint
       goreleaser
+      cargo
+      rustc
+      rustfmt
+      clippy
+      sccache
+      pkg-config
+      openssl
+      sqlite
+      python3
+      ffmpeg
+      yt-dlp
     ];
   };
   toolchainClosure = pkgs.closureInfo {
@@ -83,6 +95,7 @@ let
     COPY registration /tmp/nix-registration
     COPY nix.conf /etc/nix/nix.conf
     COPY nix-shell /usr/local/bin/nix-shell
+    COPY cargo-slot /usr/local/bin/cargo-slot
     COPY daemon-root/ /buer-daemon-root/
     ENV PATH=/usr/local/bin:${toolchainPkgs.nix}/bin:$PATH \
         NIX_PATH=nixpkgs=${toolchainNixpkgs} \
@@ -119,6 +132,7 @@ let
     cp ${daemonPasswd} $out/passwd
     cp ${daemonGroup} $out/group
     cp ${nixShellWrapper} $out/nix-shell
+    cp ${cargoSlotRelay.client}/bin/cargo-slot $out/cargo-slot
     cp ${toolchainDockerfile} $out/Dockerfile
     ln -s ${toolchainPkgs.bash}/bin/bash $out/daemon-root/bin/sh
     ln -s ${toolchainPkgs.coreutils}/bin/false $out/daemon-root/bin/false
@@ -129,7 +143,7 @@ let
     owner = "can1357";
     repo = "oh-my-pi";
     tag = tag;
-    hash = "sha256-2ql/3YrFfEycm7JrC7fshlauNYfuFo/W7gBEEMMc0XA=";
+    hash = "sha256-g6448jF2+YKrrw8MOeptvOvXrRFYcpr4hqQQLogyzrc=";
   };
 
   piImage = "oh-my-pi/pi:${tag}";
@@ -246,6 +260,37 @@ in
     };
   };
 
+  systemd.services.cargo-slot-relay = {
+    description = "cargo-slot relay — run container build requests on pc";
+    after = [
+      "network-online.target"
+      "cargo-slot-staging.service"
+    ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      RuntimeDirectory = "cargo-slot";
+      RuntimeDirectoryMode = "0755";
+      Restart = "always";
+      RestartSec = "5s";
+      Environment = [ "PATH=/run/current-system/sw/bin:/usr/bin:/bin" ];
+      ExecStart = "${cargoSlotRelay.server}";
+    };
+  };
+
+  systemd.services.cargo-slot-staging = {
+    description = "Prepare the labile-owned staging tree for cargo-slot relay";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      StateDirectory = "cargo-slot";
+      ExecStart = "${pkgs.writeShellScript "cargo-slot-staging" ''
+        install -d -o labile -g users -m 0755 /var/lib/cargo-slot/staging /var/lib/cargo-slot/home
+      ''}";
+    };
+  };
+
   systemd.services.buer = {
     description = "buer — GitHub triage and pull-request bot (upstream robomp ${tag})";
     after = [
@@ -255,6 +300,7 @@ in
       "buer-images.service"
       "network-online.target"
       "buer-replay-token.service"
+      "cargo-slot-relay.service"
     ];
     wants = [ "network-online.target" ];
     requires = [
@@ -262,6 +308,7 @@ in
       "docker-network-litellm.service"
       "buer-images.service"
       "buer-replay-token.service"
+      "cargo-slot-relay.service"
     ];
     wantedBy = [ "multi-user.target" ];
     unitConfig.RequiresMountsFor = [ "/drive/state" ];

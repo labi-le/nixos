@@ -33,6 +33,24 @@
     ];
   };
 
+  fileSystems."/hdd4tb/cache" = {
+    device = "192.168.1.2:/hdd4tb/cache";
+    fsType = "nfs";
+    options = [
+      "noauto"
+      "x-systemd.automount"
+      "nofail"
+      "noatime"
+      "_netdev"
+      "hard"
+      "nconnect=16"
+      "noresvport"
+      "actimeo=60"
+      "nfsvers=4.2"
+      "nordirplus"
+    ];
+  };
+
   fileSystems."/hdd4tb/torrents" = {
     device = "192.168.1.2:/hdd4tb/torrents";
     fsType = "nfs";

@@ -28,12 +28,13 @@ The container *is* the trust boundary, and Nix cannot reproduce it cheaply:
   reimplementing the pi toolchain (bun, lazy rustup, pi-natives, the omp shim,
   the dashboard bundle) plus robomp's own slot users.
 
-The pinned rev is `v18.10.0`, the same tag `inputs.llm-agents` `493c34b` builds,
-so the host package and the container's agent come from one tree. Only the
-container-internal pair has to match, and it does: robomp's `omp_rpc` client and
-the image's baked `/pi` binary both ship from that source, never from the host's
-`omp`. The wire format did change between `v18.8.9` and `v18.10.0`
-(`sdk/*/omp-rpc/*wire*`), so the pin moves together with the lock.
+The pinned rev is `v18.14.2` (upgraded from `v18.10.0` on 2026-11-01; the)
+`empty-pr-body.patch` still applies, one hunk shifted by eleven lines). The host
+`omp` from `inputs.llm-agents` is a separate build and does not have to match:
+only the container-internal pair does, and it does, because robomp's `omp_rpc`
+client and the image's baked `/pi` binary both ship from that source, never from
+the host's `omp`. The wire format changed between `v18.8.9` and `v18.10.0`
+(`sdk/*/omp-rpc/*wire*`), so the pin moves as one unit with the images.
 
 ## Layout
 
@@ -47,7 +48,7 @@ the image's baked `/pi` binary both ship from that source, never from the host's
 
 ## Wiring
 
-- **Source pin**: `fetchFromGitHub` on `can1357/oh-my-pi` tag `v18.10.0`,
+- **Source pin**: `fetchFromGitHub` on `can1357/oh-my-pi` tag `v18.14.2`,
   hash `sha256-2ql/3YrFfEycm7JrC7fshlauNYfuFo/W7gBEEMMc0XA=`. That tree is the
   docker build context only. At runtime the `omp` shim runs the **image's own
   baked copy** (`PI_ROOT=/pi`), not a mounted checkout: `Dockerfile.dockerignore`
@@ -57,10 +58,10 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   stage the images are built from (default target of `Dockerfile`) is the same
   rev plus `bun install --frozen-lockfile`, i.e. `/pi/node_modules` with the
   workspace links the CLI resolves.
-- **Images**: `buer-images.service` builds `oh-my-pi/pi:v18.10.0` and the
-  patched upstream `robomp:v18.10.0-policy-<source-revision>`, then worker
-  `robomp:v18.10.0-nix-<revision>` and daemon
-  `robomp-nix:v18.10.0-<revision>`. The proxy uses the source-versioned policy
+- **Images**: `buer-images.service` builds `oh-my-pi/pi:v18.14.2` and the
+  patched upstream `robomp:v18.14.2-policy-<source-revision>`, then worker
+  `robomp:v18.14.2-nix-<revision>` and daemon
+  `robomp-nix:v18.14.2-<revision>`. The proxy uses the source-versioned policy
   image; only the worker receives the Nix client/toolchain layer. `<revision>` is the first 12
   hex digits of the generated context and patched source paths' hash. The marker
   `/drive/state/buer/image-rev` includes both source paths, the generated
@@ -220,9 +221,41 @@ the image's baked `/pi` binary both ship from that source, never from the host's
   in images without tzdata, and Go reads it too (`TZ=:<abs path>` is honoured
   by the `initLocal` branch for absolute paths).
 
+## Build offload to pc
+
+The server does not compile Rust. Every cargo invocation from the host or from
+the worker is funnelled through `cargo-slot`, which runs it on `pc`:
+
+- `pkgs/cargo-slot.nix` builds `pkgs/cargo-slot.sh` as `cargo-slot`. Slots are
+  lock files in `/drive/tmp/cargo-slots` (`r1`…`r5`, shared with `pc` because
+  the `/drive` export is mounted on both hosts), so three concurrent agents do
+  not oversubscribe `pc`. The command runs there under `nix develop <root>#default`
+  when the checkout has a `flake.nix`, under `nix-shell <root>` when it only has
+  `shell.nix`, else directly, wrapped in `systemd-run --user --scope` with
+  `MemoryMax=11G`.
+- `CARGO_TARGET_DIR` is mapped to `/home/labile/.cache/cargo-pc/<mangled name>`
+  on `pc`, guarded by a shared `flock` on `<target>.lock` and evicted by
+  `--evict-remote` when `pc` drops below 60 G free. A tree that `pc` cannot see
+  at the same path (for example `/home/labile/projects/maxwell`) is mirrored
+  with `rsync` into `/home/labile/.cache/cargo-pc/src/<hash>` first, so no
+  project has to move for remote compilation.
+- Local compilation is refused: without `CARGO_SLOT_REMOTE` or with
+  `pc` unreachable, `cargo-slot` exits 255 instead of falling back to the
+  server. `CARGO_SLOT_ALLOW_LOCAL=1` is the explicit escape hatch.
+- `tools/omp_worker.py`-style sandboxes reach the same path through
+  `cargo-slot-relay` (`pkgs/cargo-slot-relay.py`): a systemd service running as
+  `labile`, owning `/run/cargo-slot/socket` (mode 0666) and mounted into the
+  worker at `/run/cargo-slot`. The relay accepts only `cargo` subcommands whose
+  working directory resolves under `/drive/state/buer/workspaces` (the
+  container sees it as `/data/workspaces`), so the container never holds an SSH
+  key and cannot run arbitrary commands on `pc`.
+- Server-side caches are gone (`/drive/tmp/cargo-cache`, `/drive/tmp/sccache`,
+  `/drive/tmp/*target*`); the only remaining state is the slot lock directory
+  and the `pc` cache under `/home/labile/.cache/cargo-pc`.
+
 ## sub-preprocessor toolchain and isolation
 
-The allowlist contains exactly `labi-le/murmur,labi-le/sub-preprocessor` and
+The allowlist contains exactly `labi-le/maxwell,labi-le/murmur,labi-le/sub-preprocessor` and
 also feeds the delivery watchdog. Onboarding does not enable automerge.
 Keep a new repository's GitHub webhook inactive until image build, slot-user
 verification and deployment complete; activate and replay/trigger only afterward.
@@ -265,7 +298,8 @@ and supplementary GID 2000. The image's `nix-shell` wrapper sets `GOPATH` and
 the root-owned `/srv/agent-home`. It delegates to the pinned real `nix-shell`;
 the repository's own `shell.nix`, shell hook and review instructions stay intact.
 
-Run verification in the assigned slot/worktree through `nix-shell`:
+Run verification in the assigned slot/worktree through `nix-shell` (Go) or
+`cargo-slot` (Rust, which never compiles on the server):
 
 ```sh
 nix-shell --run 'go build ./...'
@@ -274,6 +308,16 @@ nix-shell --run 'make race'
 nix-shell --run 'make fmt'
 nix-shell --run 'make lint'
 nix-shell --run 'make bench'
+```
+
+For Rust repositories (`labi-le/maxwell`) the same rule applies with
+`cargo-slot`, which forwards to `pc` through the relay:
+
+```sh
+cargo-slot cargo check --all-targets
+cargo-slot cargo test
+cargo-slot cargo clippy --all-targets
+cargo-slot cargo fmt -- --check
 ```
 
 The target shell sets `CGO_ENABLED=0`; `make race` explicitly overrides it to

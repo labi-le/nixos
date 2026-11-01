@@ -23,6 +23,7 @@
         /drive/state 192.168.1.0/24(rw,async,no_subtree_check,insecure)
         /drive/tmp 192.168.1.0/24(rw,async,no_subtree_check,insecure)
         /hdd4tb/torrents 192.168.1.0/24(rw,async,no_subtree_check,insecure)
+        /hdd4tb/cache 192.168.1.0/24(rw,async,no_subtree_check,insecure)
       '';
       nproc = 16;
     };
@@ -37,10 +38,19 @@
   };
 
   systemd.services.nfs-server.unitConfig = {
-    RequiresMountsFor = [ "/hdd4tb/torrents" ];
+    RequiresMountsFor = [
+      "/hdd4tb/torrents"
+      "/hdd4tb/cache"
+    ];
     AssertPathIsMountPoint = "/hdd4tb";
     PartOf = [ "hdd4tb.mount" ];
   };
+
+  systemd.tmpfiles.rules = [
+    "d /hdd4tb/cache 0775 labile users -"
+    "d /hdd4tb/cache/src 0775 labile users -"
+    "d /hdd4tb/cache/sccache 0775 labile users -"
+  ];
 
   systemd.services.drive-torrents-empty-cleanup = {
     description = "Remove the retired /drive/torrents directory when empty";
