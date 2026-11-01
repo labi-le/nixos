@@ -10,6 +10,7 @@
     })).ghostty;
     settings = {
       class = osConfig.terminal.appId;
+      confirm-close-surface = false;
     };
   };
 }
