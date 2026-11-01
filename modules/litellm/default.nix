@@ -28,6 +28,11 @@ in
     mode = "0400";
   };
 
+  age.secrets.byesu-env = {
+    file = ../../secrets/byesu-env.age;
+    mode = "0400";
+  };
+
   age.secrets.litellm-db-env = {
     file = ../../secrets/litellm-db-env.age;
     mode = "0400";
@@ -66,6 +71,7 @@ in
         config.age.secrets.litellm-env.path
         config.age.secrets.opencode-go-pool-env.path
         config.age.secrets.xiaomi-mimo-env.path
+        config.age.secrets.byesu-env.path
         dbEnv
       ];
       environment = {

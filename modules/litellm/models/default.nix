@@ -7,6 +7,7 @@ let
 
   declaredGroups = [
     (import ./deepseek-v4.1-flash.nix)
+    (import ./gemini-4-argon.nix)
     (import ./gpt-6-astra.nix)
     (import ./gpt-6-luna.nix)
     (import ./gpt-6.1-sol.nix)
