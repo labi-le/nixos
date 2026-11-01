@@ -1,0 +1,66 @@
+--- a/python/robomp/src/config.py
++++ b/python/robomp/src/config.py
+@@ -45,6 +45,10 @@
+     release_max_rounds: int = Field(5, alias="ROBOMP_RELEASE_MAX_ROUNDS")
+     release_task_timeout_seconds: float = Field(3600.0, alias="ROBOMP_RELEASE_TASK_TIMEOUT_SECONDS")
+     release_model: str | None = Field(None, alias="ROBOMP_RELEASE_MODEL")
++    # Per-task-kind model selection: `task=model[|model];task=model`, where a
++    # `|`-separated list picks one model per run. Task kinds without an entry
++    # fall back to `release_model`, then to `model`.
++    model_roles_raw: str = Field("", alias="ROBOMP_MODEL_ROLES")
+ 
+     # gh-proxy. Set BOTH to route GitHub through the proxy; leave both empty
+     # to keep PAT-on-orchestrator behavior. Mixing the two (PAT + proxy) is
+@@ -346,6 +350,30 @@
+             return self.pick_model()
+         return random.choice(self.release_model_pool)
+ 
++    @property
++    def model_roles(self) -> dict[str, tuple[str, ...]]:
++        """Parse `task=model[|model];task=model` into per-task model pools."""
++        roles: dict[str, tuple[str, ...]] = {}
++        for entry in self.model_roles_raw.split(";"):
++            task, _, models = entry.partition("=")
++            pool = tuple(piece.strip() for piece in models.split("|") if piece.strip())
++            if task.strip() and pool:
++                roles[task.strip()] = pool
++        return roles
++
++    def model_pool_for(self, task_kind: str) -> tuple[str, ...]:
++        """Model pool for a task kind: its role, then release, then the general pool."""
++        role = self.model_roles.get(task_kind)
++        if role:
++            return role
++        if task_kind == "handle_release_ci" and self.release_model and self.release_model.strip():
++            return self.release_model_pool
++        return self.model_pool
++
++    def pick_model_for(self, task_kind: str) -> str:
++        """Random selection from the pool that owns this task kind."""
++        return random.choice(self.model_pool_for(task_kind))
++
+     @field_validator("event_retry_delays_raw", mode="before")
+     @classmethod
+     def _coerce_retry_delays(cls, v: object) -> str:
+--- a/python/robomp/src/worker.py
++++ b/python/robomp/src/worker.py
+@@ -613,16 +613,15 @@
+         },
+     )
+     model_override, thinking_override = _resolve_pragma_overrides(directive, settings)
+-    chosen_model = model_override or (
+-        settings.pick_release_model() if task_kind == "handle_release_ci" else settings.pick_model()
+-    )
++    chosen_pool = settings.model_pool_for(task_kind)
++    chosen_model = model_override or settings.pick_model_for(task_kind)
+     chosen_thinking = thinking_override or settings.thinking_level
+     log.info(
+         "rpc_model_pick",
+         extra={
+             "issue": bindings.issue_key,
+             "model": chosen_model,
+-            "pool": list(settings.release_model_pool if task_kind == "handle_release_ci" else settings.model_pool),
++            "pool": list(chosen_pool),
+             "thinking": chosen_thinking,
+             "pragma_model": model_override,
+             "pragma_thinking": thinking_override,

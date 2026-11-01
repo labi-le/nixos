@@ -78,7 +78,11 @@ the host's `omp`. The wire format changed between `v18.8.9` and `v18.10.0`
 - **Model**: a LiteLLM virtual key (alias `buer-agent`) with no `models`
   restriction, so discovery sees every proxy group; it is injected as
   `ROBOMP_LITELLM_KEY`. The bot's own `ROBOMP_MODEL` still pins
-  `llm-labile/deepseek-v4.1-flash`. The generated
+  `llm-labile/deepseek-v4.1-flash`, and `ROBOMP_MODEL_ROLES` maps task kinds to
+  their own pools (`review_pr=llm-labile/gemini-4-argon`), so reviews run on
+  Argon while coding stays on deepseek. The role map is a local patch
+  (`model-roles.patch`): upstream only has `ROBOMP_RELEASE_MODEL` for
+  `handle_release_ci`, and unlisted kinds fall back to `ROBOMP_MODEL`. The generated
   `models.yml` declares one provider, `llm-labile`, base URL
   `http://litellm:4000/v1` over the external docker network `litellm` that
   `modules/litellm` creates — not `https://llm.labile.cc`, because a container

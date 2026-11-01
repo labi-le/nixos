@@ -17,6 +17,7 @@ let
   reviewerBots = "chatgpt-codex-connector,gemini-code-assist";
   reviewerBotLogin = lib.concatMapStringsSep "," (bot: "${bot}[bot]") (lib.splitString "," reviewerBots);
   model = "llm-labile/deepseek-v4.1-flash";
+  modelRoles = "review_pr=llm-labile/gemini-4-argon";
   maxConcurrency = 3;
   toolchainNixpkgs = pkgs.fetchFromGitHub {
     owner = "NixOS";
@@ -154,6 +155,7 @@ let
   robompSource = pkgs.runCommand "robomp-src-${tag}-500k-local-logs" { } ''
     cp -r --no-preserve=mode,ownership ${src}/. $out/
     ${pkgs.patch}/bin/patch --directory="$out" -p1 < ${./empty-pr-body.patch}
+    ${pkgs.patch}/bin/patch --directory="$out" -p1 < ${./model-roles.patch}
     ${pkgs.gnused}/bin/sed -i 's/max_event_history=50_000/max_event_history=500_000/' $out/python/robomp/src/worker.py
     ${pkgs.gnugrep}/bin/grep -q 'max_event_history=500_000' $out/python/robomp/src/worker.py
     ${pkgs.gnused}/bin/sed -i 's/time\.strftime("%H:%M:%S", time\.gmtime(record\.created))/time.strftime("%H:%M:%S", time.localtime(record.created))/' $out/python/robomp/src/logging_config.py
@@ -197,6 +199,7 @@ let
     ROBOMP_REVIEWER_BOTS=${reviewerBots}
     ROBOMP_RATE_LIMIT_UNLIMITED=${reviewerBotLogin}
     ROBOMP_MODEL=${model}
+    ROBOMP_MODEL_ROLES=${modelRoles}
     ROBOMP_THINKING=high
     ROBOMP_MAX_CONCURRENCY=${toString maxConcurrency}
     ROBOMP_RATE_LIMIT_DEFAULT=10
