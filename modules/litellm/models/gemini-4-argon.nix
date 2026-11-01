@@ -1,7 +1,7 @@
 {
   name = "gemini-4-argon";
   provider = "byesu";
-  upstream = "openai/gemini-4-argon";
+  upstream = "byesu/gemini-4-argon";
   apiBase = "https://byesu.com/v1";
   apiKeyEnv = "os.environ/BYESU_API_KEY";
   retries = 0;

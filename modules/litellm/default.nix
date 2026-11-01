@@ -76,7 +76,7 @@ in
       ];
       environment = {
         PYTHONPATH = "/app";
-        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params";
+        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params,byesu_provider:install_byesu_provider";
         OPENCODE_USAGE_LIMIT_PERCENT = "100";
         TZ = ":/etc/localtime-host";
       };
@@ -86,6 +86,7 @@ in
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"
         "${./opencode-session.py}:/app/opencode_session.py:ro"
         "${./reasoning-params.py}:/app/reasoning_params.py:ro"
+        "${./byesu-provider.py}:/app/byesu_provider.py:ro"
         "/var/lib/litellm-chatgpt:/root/.config/litellm/chatgpt"
       ];
       extraOptions = [ "--dns=192.168.1.1" ];
