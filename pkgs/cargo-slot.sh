@@ -4,7 +4,6 @@ slot_dir=${CARGO_SLOT_DIR:-/run/cargo-slots}
 remote_host=${CARGO_SLOT_REMOTE-pc}
 remote_cache=${CARGO_SLOT_REMOTE_CACHE:-/home/labile/.cache/cargo-pc}
 remote_sources=${CARGO_SLOT_REMOTE_SOURCES:-/home/labile/.cache/cargo-src}
-remote_sccache=${CARGO_SLOT_REMOTE_SCCACHE:-/home/labile/.cache/sccache}
 marker=.cargo-slot-owned
 forward_names=${CARGO_SLOT_FORWARD:-RUST_BACKTRACE RUST_LOG RUST_TEST_THREADS SKIP_SYSTEM_IPV6_CHECK}
 
@@ -216,10 +215,6 @@ run_remote() {
     [ "$name" = CARGO_TARGET_DIR ] && continue
     envs+=("$(printf '%q' "$name=${!name}")")
   done
-  if ssh -o BatchMode=yes "$remote_host" test -d "$(printf '%q' "$remote_sccache")" 2>/dev/null; then
-    envs+=("SCCACHE_DIR=$(printf '%q' "$remote_sccache")")
-    envs+=("RUSTC_WRAPPER=$(printf '%q' "sccache")")
-  fi
   quoted=$(printf '%q ' "$@")
   remote_cmd="env ${envs[*]} CARGO_TARGET_DIR=$(printf '%q' "$target_dir") bash -c $(printf '%q' "$quoted")"
   remote_root=$root
