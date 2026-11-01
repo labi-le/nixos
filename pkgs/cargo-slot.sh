@@ -3,8 +3,8 @@ set -uo pipefail
 slot_dir=${CARGO_SLOT_DIR:-/run/cargo-slots}
 remote_host=${CARGO_SLOT_REMOTE-pc}
 remote_cache=${CARGO_SLOT_REMOTE_CACHE:-/home/labile/.cache/cargo-pc}
-remote_sources=${CARGO_SLOT_REMOTE_SOURCES:-/hdd4tb/cache/src}
-remote_sccache=${CARGO_SLOT_REMOTE_SCCACHE:-/hdd4tb/cache/sccache}
+remote_sources=${CARGO_SLOT_REMOTE_SOURCES:-/home/labile/.cache/cargo-src}
+remote_sccache=${CARGO_SLOT_REMOTE_SCCACHE:-/home/labile/.cache/sccache}
 marker=.cargo-slot-owned
 forward_names=${CARGO_SLOT_FORWARD:-RUST_BACKTRACE RUST_LOG RUST_TEST_THREADS SKIP_SYSTEM_IPV6_CHECK}
 
@@ -184,8 +184,8 @@ TEOF
 
 evict_remote() {
   local dryrun=${1:-0} skip=${2:-} trigger target script
-  trigger=$((${CARGO_SLOT_REMOTE_TRIGGER_GB:-60} * 1073741824))
-  target=$((${CARGO_SLOT_REMOTE_TARGET_GB:-100} * 1073741824))
+  trigger=$((${CARGO_SLOT_REMOTE_TRIGGER_GB:-150} * 1073741824))
+  target=$((${CARGO_SLOT_REMOTE_TARGET_GB:-250} * 1073741824))
   script=$(evict_script "$remote_cache" "$trigger" "$target" 0 "$dryrun" "$skip")
   ssh -o BatchMode=yes "$remote_host" bash -c "$(printf '%q' "$script")"
 }
