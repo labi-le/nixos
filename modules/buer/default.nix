@@ -14,8 +14,8 @@ let
   cargoSlotRelay = pkgs.callPackage ../../pkgs/cargo-slot-relay.nix { };
   repoAllowlist = "labi-le/maxwell,labi-le/murmur,labi-le/sub-preprocessor";
   maintainerLogins = "labi-le";
-  reviewerBots = "chatgpt-codex-connector";
-  reviewerBotLogin = "${reviewerBots}[bot]";
+  reviewerBots = "chatgpt-codex-connector,gemini-code-assist";
+  reviewerBotLogin = lib.concatMapStringsSep "," (bot: "${bot}[bot]") (lib.splitString "," reviewerBots);
   model = "llm-labile/deepseek-v4.1-flash";
   maxConcurrency = 3;
   toolchainNixpkgs = pkgs.fetchFromGitHub {

@@ -111,9 +111,10 @@ the host's `omp`. The wire format changed between `v18.8.9` and `v18.10.0`
   `GITHUB_TOKEN` appears in `buer-gh-proxy`'s block alone; the orchestrator
   never sees it. `ROBOMP_GH_PROXY_HMAC_KEY` and `GITHUB_WEBHOOK_SECRET` are in
   both, as upstream requires.
-- **External reviewer**: `ROBOMP_REVIEWER_BOTS=chatgpt-codex-connector`. The
-  router matches the login after stripping `[bot]` (`_reviewer_bot_login`), so
-  the value is the bare app slug. An inline review comment from a listed bot on
+- **External reviewer**: `ROBOMP_REVIEWER_BOTS=chatgpt-codex-connector,gemini-code-assist`.
+  The router matches the login after stripping `[bot]` (`_reviewer_bot_login`), so
+  each value is a bare app slug, comma-separated; `ROBOMP_RATE_LIMIT_UNLIMITED`
+  gets the same slugs with the `[bot]` suffix restored. An inline review comment from a listed bot on
   a **bot-authored** PR arrives as `pull_request_review_comment.created`, is
   queued as `handle_review` with `directive=True`, and the bot amends the
   branch in response — no `@`-mention needed. Review *bodies* without inline
