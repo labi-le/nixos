@@ -99,7 +99,7 @@ let
         "x-opencode-session" = sessionIdOf (index + 1);
       };
       timeout = 900;
-      stream_timeout = 180;
+      stream_timeout = 60;
       max_retries = 0;
       num_retries = 0;
       input_cost_per_token = group.inputCostPerToken;
@@ -123,7 +123,7 @@ let
       litellm_params = {
         model = group.upstream;
         timeout = 900;
-        stream_timeout = 180;
+        stream_timeout = 60;
         max_retries = retries;
         num_retries = retries;
         input_cost_per_token = group.inputCostPerToken;
