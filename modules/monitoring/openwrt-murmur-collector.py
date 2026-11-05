@@ -16,6 +16,7 @@ import uuid
 PROBES = {
     "claude": "https://platform.claude.com/",
     "cloudflare": "http://cp.cloudflare.com/generate_204",
+    "yandex": "https://browser.yandex.ru/generate_204",
 }
 STATES = ("healthy", "unhealthy", "unknown")
 PROBE_FRESHNESS_SECONDS = 600
@@ -503,17 +504,23 @@ def add_proxy_providers(metrics, payload, timestamp):
         totals = {state: 0 for state in STATES}
         probe_totals = {probe: {state: 0 for state in STATES} for probe in PROBES}
         newest = {}
+        active_probes = [
+            probe
+            for probe, url in PROBES.items()
+            if any(isinstance(p, dict) and probe_state(p, url, timestamp)[0] != "unknown" for p in proxies)
+        ] or list(PROBES)
         for proxy in proxies:
             if not isinstance(proxy, dict):
                 raise ValueError("proxy")
-            states = []
+            states = {}
             for probe, url in PROBES.items():
                 state, stamp = probe_state(proxy, url, timestamp)
-                states.append(state)
+                states[probe] = state
                 probe_totals[probe][state] += 1
                 if stamp is not None:
                     newest[probe] = max(stamp, newest.get(probe, stamp))
-            combined = "unhealthy" if "unhealthy" in states else "unknown" if "unknown" in states else "healthy"
+            active_states = [states[p] for p in active_probes]
+            combined = "unhealthy" if "unhealthy" in active_states else "unknown" if "unknown" in active_states else "healthy"
             totals[combined] += 1
         for state, count in totals.items():
             metrics.add("openwrt_murmur_provider_proxies", count, {"provider": name, "state": state})

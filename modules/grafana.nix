@@ -84,6 +84,23 @@ in
     mode = "0400";
   };
 
+  age.secrets.grafana-renderer-token = {
+    file = ../secrets/grafana-renderer-token.age;
+  };
+
+  systemd.services.grafana-image-renderer.serviceConfig.EnvironmentFile = [
+    config.age.secrets.grafana-renderer-token.path
+  ];
+
+  systemd.services.grafana.serviceConfig.EnvironmentFile = [
+    config.age.secrets.grafana-renderer-token.path
+  ];
+
+  services.grafana-image-renderer = {
+    enable = true;
+    provisionGrafana = true;
+  };
+
   services.grafana = {
     enable = true;
     settings = {
@@ -96,6 +113,7 @@ in
       analytics.reporting_enabled = false;
       security.secret_key = "$__file{${config.age.secrets.grafana.path}}";
       database.query_retries = 3;
+      rendering.renderer_token = "$__env{AUTH_TOKEN}";
     };
     provision = {
       enable = true;

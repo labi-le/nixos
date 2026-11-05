@@ -158,7 +158,7 @@ class CollectorTests(unittest.TestCase):
         values["proxy_providers"] = json.dumps({"providers": {provider: {"proxies": proxies}}})
         text = rendered(values, 'r"\\\n')
         self.assertIn('router="r\\"\\\\\\n",provider="p\\"\\\\\\nlabel",state="unknown"} 100\n', text)
-        self.assertEqual(sum(line.startswith("openwrt_murmur_probe_proxies{") for line in text.splitlines()), 6)
+        self.assertEqual(sum(line.startswith("openwrt_murmur_probe_proxies{") for line in text.splitlines()), 9)
         self.assertNotIn("private-", text)
 
     def test_network_and_connections_are_aggregate_counters(self):
