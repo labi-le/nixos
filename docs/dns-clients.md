@@ -288,6 +288,7 @@ uci set stubby.@resolver[-1].tls_auth_name='labile.cc'
 uci set stubby.@resolver[-1].tls_port='853'
 uci reorder stubby.@resolver[-1]=0
 uci set stubby.global.round_robin_upstreams='0'
+uci set stubby.global.idle_timeout='4000'
 uci -q delete stubby.global.dns_transport
 uci add_list stubby.global.dns_transport='GETDNS_TRANSPORT_TLS'
 uci commit stubby
@@ -303,6 +304,17 @@ whenever TLS fails, and it says so itself — *a Strict Profile only applies whe
 TLS is the ONLY transport*. The Cloudflare entries stay after ours as the
 failure path, which is why removing UDP costs nothing: DoT to `1.1.1.1:853`
 works from this router, verified, so the fallback is encrypted too.
+
+`idle_timeout` is the third line that matters, and it is about who closes the
+connection first. The server drops an idle DoT session after
+`tcp-idle-timeout: 8000` ms so that a public client hands its slot back, while
+stubby's default is ten seconds. For two seconds out of every quiet period the
+client therefore holds a socket the server has already closed, and a query
+landing in that window is written into nothing: one wasted round trip, one
+reconnect, and to a user a random stall. Four seconds puts the client strictly
+inside the server's window. Measured on the router, the shorter idle costs the
+first query after a quiet gap about 10 ms (median 20 to 30 ms) and leaves
+steady-state unchanged.
 
 Verified after the change: `Conn opened: TLS - Strict Profile` and
 `Verify passed : TLS` against `192.168.1.2` (the ZeroSSL chain validates

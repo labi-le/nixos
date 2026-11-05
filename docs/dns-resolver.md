@@ -48,7 +48,11 @@ than taste:
   client holds one; a single scanner could have starved LAN DoT and left the
   router falling back to Cloudflare.
 - `tcp-idle-timeout: 8000` ms, down from 30 s, so idle public TLS sessions
-  release their slot.
+  release their slot. Under TCP buffer pressure unbound scales that number
+  down itself, first to 1 % and then to 0.2 % of the configured value with a
+  200 ms floor, which is why clients in front of it must reconnect instead of
+  assuming a quiet socket is still alive: the router's stubby closes at 4 s
+  for exactly that reason.
 - `deny-any: yes`, since an open resolver should not answer `ANY`.
 
 ## Encrypted transports

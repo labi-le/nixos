@@ -2,16 +2,35 @@
 
 let
   textfileDir = "/var/lib/prometheus-openwrt";
+  logDir = "/var/log/openwrt-murmur";
+
   collector = pkgs.writeShellScript "openwrt-murmur-collector" ''
-    exec ${pkgs.python3}/bin/python3 ${./openwrt-murmur-collector.py} \
+    set -u
+    rc=0
+    ${pkgs.python3}/bin/python3 ${./openwrt-murmur-collector.py} \
+      --target root@router \
+      --router router \
+      --output ${textfileDir}/router-murmur.prom || rc=$?
+    ${pkgs.python3}/bin/python3 ${./openwrt-murmur-collector.py} \
       --target root@openwrt \
       --router openwrt \
-      --output ${textfileDir}/openwrt-murmur.prom
+      --output ${textfileDir}/openwrt-murmur.prom || true
+    exit $rc
+  '';
+
+  mkLogShipper = router: target: pkgs.writeShellScript "openwrt-murmur-logshipper-${router}" ''
+    exec ${pkgs.python3}/bin/python3 ${./openwrt-murmur-logshipper.py} \
+      --target ${target} \
+      --router ${router} \
+      --log-dir ${logDir}/${router}
   '';
 in
 {
   systemd.tmpfiles.rules = [
     "d ${textfileDir} 0755 labile users -"
+    "d ${logDir} 0755 labile users -"
+    "d ${logDir}/router 0755 labile users -"
+    "d ${logDir}/openwrt 0755 labile users -"
   ];
 
   systemd.services.openwrt-murmur-collector = {
@@ -24,7 +43,7 @@ in
       User = "labile";
       Group = "users";
       ExecStart = collector;
-      TimeoutStartSec = "40s";
+      TimeoutStartSec = "45s";
       UMask = "0022";
       NoNewPrivileges = true;
       PrivateTmp = true;
@@ -43,6 +62,52 @@ in
       OnUnitActiveSec = "60s";
       AccuracySec = "1s";
       Unit = "openwrt-murmur-collector.service";
+    };
+  };
+
+  systemd.services.openwrt-murmur-logshipper-router = {
+    description = "Stream murmur structured logs and OpenWrt syslog from main router to disk and Loki";
+    after = [ "network-online.target" "loki.service" ];
+    wants = [ "network-online.target" "loki.service" ];
+    wantedBy = [ "multi-user.target" ];
+    path = [ pkgs.openssh ];
+    serviceConfig = {
+      Type = "simple";
+      User = "labile";
+      Group = "users";
+      ExecStart = mkLogShipper "router" "root@router";
+      Restart = "always";
+      RestartSec = "5s";
+      UMask = "0022";
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      ProtectSystem = "strict";
+      ProtectHome = "read-only";
+      ReadWritePaths = [ logDir ];
+      RestrictSUIDSGID = true;
+    };
+  };
+
+  systemd.services.openwrt-murmur-logshipper-openwrt = {
+    description = "Stream murmur structured logs and OpenWrt syslog from test openwrt router to disk and Loki";
+    after = [ "network-online.target" "loki.service" ];
+    wants = [ "network-online.target" "loki.service" ];
+    wantedBy = [ "multi-user.target" ];
+    path = [ pkgs.openssh ];
+    serviceConfig = {
+      Type = "simple";
+      User = "labile";
+      Group = "users";
+      ExecStart = mkLogShipper "openwrt" "root@openwrt";
+      Restart = "always";
+      RestartSec = "10s";
+      UMask = "0022";
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      ProtectSystem = "strict";
+      ProtectHome = "read-only";
+      ReadWritePaths = [ logDir ];
+      RestrictSUIDSGID = true;
     };
   };
 

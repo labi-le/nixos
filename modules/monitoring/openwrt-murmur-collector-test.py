@@ -336,6 +336,47 @@ class CollectorTests(unittest.TestCase):
             self.assertEqual(errors.getvalue(), "FileNotFoundError\n")
             self.assertFalse(path.exists())
 
+    def test_conntrack_fd_breakdown_and_proxy_groups(self):
+        values = snapshot()
+        values["conntrack_count"] = "33478"
+        values["conntrack_max"] = "262144"
+        values["process_limits"] = "Limit Soft Limit Hard Limit Units\nMax open files 4096 4096 files\n"
+        values["fd_breakdown"] = "socket=170 anon=21 pipe=2 file=2"
+        values["connections"] = json.dumps({
+            "connections": [
+                {"metadata": {"network": "tcp"}, "chains": ["WARP-AWG2", "VPN"], "start": "2026-10-16T08:59:00Z"},
+                {"metadata": {"network": "udp"}, "chains": ["WARP-AWG1", "WARP"], "start": "2026-10-16T09:00:00Z"},
+            ],
+            "uploadTotal": 100,
+            "downloadTotal": 200,
+        })
+        values["proxies_rc"] = "0"
+        values["proxies_status"] = "200"
+        values["proxies"] = json.dumps({
+            "proxies": {
+                "VPN": {"type": "Fallback", "alive": True, "now": "WARP-AWG2"},
+                "VPN-ALL-AUTO": {"type": "URLTest", "alive": True, "now": "[SPD:120M] secret-node"},
+            }
+        })
+        text = rendered(values, "router")
+        for expected in [
+            'openwrt_conntrack_entries{router="router"} 33478',
+            'openwrt_conntrack_limit{router="router"} 262144',
+            'openwrt_murmur_max_fds{router="router"} 4096',
+            'openwrt_murmur_fd_entries{router="router",kind="socket"} 170',
+            'openwrt_murmur_fd_entries{router="router",kind="anon"} 21',
+            'openwrt_murmur_connections_by_network{router="router",network="tcp"} 1',
+            'openwrt_murmur_connections_by_network{router="router",network="udp"} 1',
+            'openwrt_murmur_connections_by_group{router="router",group="VPN"} 1',
+            'openwrt_murmur_connections_by_group{router="router",group="WARP"} 1',
+            'openwrt_murmur_connection_oldest_age_seconds{router="router"} 120',
+            'openwrt_murmur_group_alive{router="router",group="VPN",type="Fallback"} 1',
+            'openwrt_murmur_group_selected_info{router="router",group="VPN",type="Fallback",selected="WARP-AWG2"} 1',
+            'openwrt_murmur_group_alive{router="router",group="VPN-ALL-AUTO",type="URLTest"} 1',
+        ]:
+            self.assertIn(expected + "\n", text)
+        self.assertNotIn("secret-node", text)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -36,6 +36,8 @@ METRIC_HELP = {
     "openwrt_sockets": "Router socket accounting by protocol and lifecycle kind.",
     "openwrt_socket_memory_bytes": "Router protocol socket memory accounting converted from pages.",
     "openwrt_temperature_celsius": "Router thermal sensor temperature.",
+    "openwrt_conntrack_entries": "Active netfilter conntrack entries.",
+    "openwrt_conntrack_limit": "Maximum netfilter conntrack table capacity.",
     "openwrt_murmur_up": "Whether the production murmur process was present throughout the snapshot.",
     "openwrt_murmur_resident_memory_bytes": "Production murmur total resident memory, not live heap bytes.",
     "openwrt_murmur_anonymous_memory_bytes": "Production murmur anonymous resident pages.",
@@ -47,10 +49,17 @@ METRIC_HELP = {
     "openwrt_murmur_cpu_seconds_total": "Production murmur CPU seconds summed across threads.",
     "openwrt_murmur_threads": "Production murmur thread count.",
     "openwrt_murmur_open_fds": "Production murmur open file descriptor count.",
+    "openwrt_murmur_max_fds": "Production murmur soft open file descriptor limit.",
+    "openwrt_murmur_fd_entries": "Production murmur open file descriptors by target kind (socket, anon, pipe, file).",
     "openwrt_murmur_page_faults_total": "Production murmur page faults by minor or major kind.",
     "openwrt_murmur_api_success": "Whether a controller endpoint returned valid expected snapshot data.",
     "openwrt_murmur_connections": "Active connections tracked by the murmur controller.",
+    "openwrt_murmur_connections_by_network": "Active connections tracked by the murmur controller by network (tcp, udp).",
+    "openwrt_murmur_connections_by_group": "Active connections tracked by the murmur controller by top-level outbound group.",
+    "openwrt_murmur_connection_oldest_age_seconds": "Age in seconds of the oldest active connection tracked by the murmur controller.",
     "openwrt_murmur_traffic_bytes_total": "Cumulative tracked murmur traffic by direction, reset with process statistics.",
+    "openwrt_murmur_group_alive": "Whether a top-level murmur proxy group reports alive=true.",
+    "openwrt_murmur_group_selected_info": "Currently selected outbound or rung (1) for a top-level murmur Fallback/Selector group.",
     "openwrt_murmur_provider_proxies": "Provider proxy counts by combined fresh fixed-probe state.",
     "openwrt_murmur_probe_proxies": "Provider proxy counts by per-URL state; missing or older-than-600-second history is unknown.",
     "openwrt_murmur_probe_newest_timestamp_seconds": "Newest valid probe history timestamp across a provider, not every-node freshness.",
@@ -83,11 +92,25 @@ production_pid() {
     done
     printf '%s' "$found"
 }
+controller_addr() {
+    addr=$(sed -n "s/^[[:space:]]*external-controller:[[:space:]]*['\"]*\([^'\"]*\)['\"]*/\1/p" /etc/murmur/config.yaml 2>/dev/null | head -n 1)
+    case "$addr" in
+        :*) printf '127.0.0.1%s' "$addr" ;;
+        0.0.0.0:*) printf '127.0.0.1:%s' "${addr#0.0.0.0:}" ;;
+        ?*:?*) printf '%s' "$addr" ;;
+        *) printf '127.0.0.1:9090' ;;
+    esac
+}
+CTRL_ADDR=$(controller_addr)
 api_frame() {
     endpoint=$1
     route=$2
     rc=0
-    response=$(curl --config /etc/murmur/controller.curl --silent --connect-timeout 2 --max-time 4 --write-out '\n%{http_code}' "http://127.0.0.1:9090/$route" 2>/dev/null) || rc=$?
+    if [ -r /etc/murmur/controller.curl ]; then
+        response=$(curl --config /etc/murmur/controller.curl --silent --connect-timeout 2 --max-time 4 --write-out '\n%{http_code}' "http://$CTRL_ADDR/$route" 2>/dev/null) || rc=$?
+    else
+        response=$(curl --silent --connect-timeout 2 --max-time 4 --write-out '\n%{http_code}' "http://$CTRL_ADDR/$route" 2>/dev/null) || rc=$?
+    fi
     status=${response##*"$nl"}
     body=${response%"$nl"*}
     frame "${endpoint}_rc" "$rc"
@@ -104,19 +127,40 @@ file_frame meminfo /proc/meminfo
 file_frame vmstat /proc/vmstat
 file_frame netdev /proc/net/dev
 file_frame sockstat /proc/net/sockstat
+if [ -r /proc/sys/net/netfilter/nf_conntrack_count ]; then
+    file_frame conntrack_count /proc/sys/net/netfilter/nf_conntrack_count
+fi
+if [ -r /proc/sys/net/netfilter/nf_conntrack_max ]; then
+    file_frame conntrack_max /proc/sys/net/netfilter/nf_conntrack_max
+fi
 pid=$(production_pid)
 frame pid "$pid"
 if [ "$pid" != 0 ]; then
     file_frame cmdline "/proc/$pid/cmdline"
     file_frame process_stat "/proc/$pid/stat"
     file_frame process_status "/proc/$pid/status"
+    if [ -r "/proc/$pid/limits" ]; then
+        file_frame process_limits "/proc/$pid/limits"
+    fi
     count=0
+    fd_socket=0
+    fd_anon=0
+    fd_pipe=0
+    fd_file=0
     for descriptor in /proc/"$pid"/fd/*; do
         [ -L "$descriptor" ] || continue
         count=$((count + 1))
+        target=$(readlink "$descriptor" 2>/dev/null || true)
+        case "$target" in
+            socket:*) fd_socket=$((fd_socket + 1)) ;;
+            anon_inode:*) fd_anon=$((fd_anon + 1)) ;;
+            pipe:*) fd_pipe=$((fd_pipe + 1)) ;;
+            *) fd_file=$((fd_file + 1)) ;;
+        esac
     done
     [ -d "/proc/$pid/fd" ]
     frame fd_count "$count"
+    frame fd_breakdown "socket=$fd_socket anon=$fd_anon pipe=$fd_pipe file=$fd_file"
     file_frame process_stat_after "/proc/$pid/stat"
     file_frame cmdline_after "/proc/$pid/cmdline"
 fi
@@ -125,6 +169,7 @@ if [ -r /sys/class/thermal/thermal_zone0/temp ]; then
     file_frame temperature /sys/class/thermal/thermal_zone0/temp
 fi
 api_frame connections connections
+api_frame proxies proxies
 api_frame proxy_providers providers/proxies
 api_frame rule_providers providers/rules
 file_frame boot_id_after /proc/sys/kernel/random/boot_id
@@ -307,6 +352,10 @@ def add_base(metrics, frames):
                 metrics.add("openwrt_sockets", sockets[protocol][field], {"protocol": protocol.lower(), "kind": field})
         if protocol in ("TCP", "UDP") and "mem" in sockets.get(protocol, {}):
             metrics.add("openwrt_socket_memory_bytes", sockets[protocol]["mem"] * page_size, {"protocol": protocol.lower()})
+    if "conntrack_count" in frames:
+        metrics.add("openwrt_conntrack_entries", number(text(frames, "conntrack_count"), integer=True))
+    if "conntrack_max" in frames:
+        metrics.add("openwrt_conntrack_limit", number(text(frames, "conntrack_max"), integer=True))
     pid = number(text(frames, "pid"), integer=True)
     if pid != number(text(frames, "pid_after"), integer=True):
         raise ValueError("process changed")
@@ -328,12 +377,23 @@ def add_base(metrics, frames):
         metrics.add("openwrt_murmur_cpu_seconds_total", (number(before[11], integer=True) + number(before[12], integer=True)) / hz, kind="counter")
         metrics.add("openwrt_murmur_threads", number(status["Threads"], integer=True))
         metrics.add("openwrt_murmur_open_fds", number(text(frames, "fd_count"), integer=True))
+        if "process_limits" in frames:
+            for line in text(frames, "process_limits").splitlines():
+                if line.startswith("Max open files"):
+                    parts = line[len("Max open files"):].split()
+                    if parts and parts[0] != "unlimited":
+                        metrics.add("openwrt_murmur_max_fds", number(parts[0], integer=True))
+                    break
+        if "fd_breakdown" in frames:
+            for token in text(frames, "fd_breakdown").split():
+                kind, sep, val = token.partition("=")
+                if sep and kind in ("socket", "anon", "pipe", "file"):
+                    metrics.add("openwrt_murmur_fd_entries", number(val, integer=True), {"kind": kind})
         for name, index in (("minor", 7), ("major", 9)):
             metrics.add("openwrt_murmur_page_faults_total", number(before[index], integer=True), {"kind": name}, "counter")
     if "temperature" in frames:
         metrics.add("openwrt_temperature_celsius", number(text(frames, "temperature")) / 1000, {"sensor": "thermal_zone0"})
     return timestamp
-
 
 def provider_items(payload):
     if not isinstance(payload, dict) or not isinstance(payload.get("providers"), dict) or len(payload["providers"]) > 128:
@@ -380,11 +440,61 @@ def probe_state(proxy, url, timestamp):
 def add_connections(metrics, payload, timestamp):
     if not isinstance(payload, dict) or "connections" not in payload or (payload["connections"] is not None and not isinstance(payload["connections"], list)):
         raise ValueError("connections")
-    metrics.add("openwrt_murmur_connections", len(payload["connections"]) if payload["connections"] is not None else 0)
+    connections = payload["connections"] or []
+    if len(connections) > 16384:
+        raise ValueError("connections")
+    metrics.add("openwrt_murmur_connections", len(connections))
+    by_net = {"tcp": 0, "udp": 0}
+    by_group = {}
+    oldest_age = 0.0
+    for conn in connections:
+        if not isinstance(conn, dict):
+            raise ValueError("connection")
+        meta = conn.get("metadata")
+        if isinstance(meta, dict):
+            net = str(meta.get("network", "")).lower()
+            if net in by_net:
+                by_net[net] += 1
+        chains = conn.get("chains")
+        if isinstance(chains, list) and chains:
+            top_group = chains[-1]
+            if isinstance(top_group, str) and 0 < len(top_group) <= 64 and not top_group.startswith("["):
+                by_group[top_group] = by_group.get(top_group, 0) + 1
+        start_raw = conn.get("start")
+        if isinstance(start_raw, str):
+            try:
+                dt = datetime.datetime.fromisoformat(start_raw.replace("Z", "+00:00"))
+                if dt.tzinfo is not None:
+                    age = max(0.0, timestamp - dt.timestamp())
+                    if age > oldest_age:
+                        oldest_age = age
+            except (ValueError, TypeError, OverflowError):
+                pass
+    for net, count in by_net.items():
+        metrics.add("openwrt_murmur_connections_by_network", count, {"network": net})
+    if len(by_group) <= 32:
+        for group, count in sorted(by_group.items()):
+            metrics.add("openwrt_murmur_connections_by_group", count, {"group": group})
+    metrics.add("openwrt_murmur_connection_oldest_age_seconds", oldest_age)
     for direction, key in (("upload", "uploadTotal"), ("download", "downloadTotal")):
         metrics.add("openwrt_murmur_traffic_bytes_total", number(payload[key], integer=True), {"direction": direction}, "counter")
 
 
+def add_proxies(metrics, payload, timestamp):
+    if not isinstance(payload, dict) or not isinstance(payload.get("proxies"), dict) or len(payload["proxies"]) > 4096:
+        raise ValueError("proxies")
+    for name, entry in sorted(payload["proxies"].items()):
+        if not isinstance(name, str) or not name or len(name) > 128 or not isinstance(entry, dict):
+            raise ValueError("proxy")
+        ptype = entry.get("type")
+        if ptype not in ("Fallback", "URLTest", "Selector", "LoadBalance"):
+            continue
+        alive = entry.get("alive")
+        if isinstance(alive, bool):
+            metrics.add("openwrt_murmur_group_alive", int(alive), {"group": name, "type": ptype})
+        now_sel = entry.get("now")
+        if ptype in ("Fallback", "Selector") and isinstance(now_sel, str) and 0 < len(now_sel) <= 64 and not now_sel.startswith("["):
+            metrics.add("openwrt_murmur_group_selected_info", 1, {"group": name, "type": ptype, "selected": now_sel})
 def add_proxy_providers(metrics, payload, timestamp):
     for name, provider in provider_items(payload):
         proxies = provider.get("proxies")
@@ -422,7 +532,10 @@ def add_rule_providers(metrics, payload, timestamp):
 def render_snapshot(frames, router, duration, now):
     metrics = Metrics(router)
     timestamp = add_base(metrics, frames)
-    for endpoint, parser in (("connections", add_connections), ("proxy_providers", add_proxy_providers), ("rule_providers", add_rule_providers)):
+    optional_endpoints = {"proxies"}
+    for endpoint, parser in (("connections", add_connections), ("proxies", add_proxies), ("proxy_providers", add_proxy_providers), ("rule_providers", add_rule_providers)):
+        if endpoint in optional_endpoints and endpoint not in frames and endpoint + "_rc" not in frames:
+            continue
         data = Metrics(router)
         success = False
         try:

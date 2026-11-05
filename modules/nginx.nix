@@ -219,6 +219,29 @@ in
           }
           // lib.genAttrs [ "/static/" "/api/" "/events" "/issues" ] (_: internalLocation { inherit addr; })
         ));
+      maksutHook =
+        { addr }:
+        tlsVhost (base {
+          "/".return = "404";
+          "/webhook/maksut-deploy" = proxyLocation {
+            inherit addr;
+            extraConfig = ''
+              allow 9.234.106.48/28;
+              allow 9.234.98.160/28;
+              allow 9.234.98.176/28;
+              allow 192.30.252.0/22;
+              allow 185.199.108.0/22;
+              allow 140.82.112.0/20;
+              allow 143.55.64.0/20;
+              allow 2a0a:a440::/29;
+              allow 2606:50c0::/32;
+              deny all;
+              client_max_body_size 1m;
+              proxy_read_timeout 30s;
+              proxy_send_timeout 30s;
+            '';
+          };
+        });
       # Sub Store: the UI and the whole admin API sit behind the IP whitelist,
       # but subscription links must stay reachable from anywhere -- clients fetch
       # them over mobile networks. Only the backend's /download/ route is public,
@@ -320,6 +343,7 @@ in
       "cache.labile.cc" = lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:5000"; }) {
         kTLS = false;
       };
+      "hook.labile.cc" = maksutHook { addr = "http://127.0.0.1:6551"; };
       "buer.labile.cc" = buer { addr = "http://127.0.0.1:6543"; };
       "llm.labile.cc" = llmGateway { addr = "http://127.0.0.1:27015"; };
       "local.labile.cc" = proxy { addr = "http://192.168.1.3:8080"; };
