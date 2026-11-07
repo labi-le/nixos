@@ -231,36 +231,39 @@ signs in:
    stored refresh token; only a dead refresh chain asks for a code again, and
    that again needs a human.
 
-litellm refreshes only once the `expires_at` it stored has passed. A token the
-provider revokes earlier keeps being sent, and every call answers `401 Your
-authentication token has expired. Please try refreshing it.` while
-`expires_at` still lies days ahead. Observed 2026-10-27, when the account's
-prolite plan lapsed at 11:59 UTC. A dead refresh token cannot be repaired that
-way either: litellm falls through to the device-code login, which blocks the
-request until somebody answers the code.
+The request path never touches the network for auth. `chatgpt-guard.py` is
+installed as a worker startup hook and replaces
+`Authenticator.get_access_token` with a read of `auth.json`: a stored token
+whose `expires_at` lies in the future is returned as is, anything else raises
+`GetAccessTokenError` and the call answers `401`. Stock litellm instead
+refreshes inside `validate_environment`, which runs synchronously on the event
+loop, and on a dead refresh chain it falls through to the device-code login,
+whose poll sleeps in five-second steps for up to fifteen minutes. Measured
+2026-11-06: one such login froze the whole proxy from 16:02 to 16:20 - every
+model group answered nothing, Angie logged `499` for the clients that gave up,
+and a 122k-token deepseek call that was already in flight waited 1117 seconds
+for its first token.
 
-`litellm-chatgpt-token.service` (every 15 minutes, `chatgpt-token.py`) is what
-catches both. It probes `wham/usage` with the stored access token; on `200` it
-publishes `litellm_codex_token_valid 1` and exits. On `401` it refreshes
-against `auth.openai.com/oauth/token` itself, rewrites `auth.json` with the new
-access token, refresh token and `expires_at`, and re-probes. Only `401`
-triggers it: `403` is the region block described below, and a refresh cannot
-fix it. Two guards keep it from fighting litellm over the file: it re-reads
-`auth.json` before deciding to act and again before writing, and backs off if
-litellm changed the access token meanwhile. A refresh the provider rejects
-(`400 invalid_refresh_token…`) leaves the file untouched, publishes
-`litellm_codex_token_valid 0` and exits non-zero, which is the one case a
-person has to do the device login.
+`litellm-chatgpt-token.service` (every 5 minutes, `chatgpt-token.py`) owns the
+token now. It refreshes against `auth.openai.com/oauth/token` once
+`expires_at` is within an hour, and otherwise probes `wham/usage` with the
+stored access token: `200` publishes `litellm_codex_token_valid 1`, `401`
+refreshes and re-probes, `403` is the region block described below and is left
+alone. A refresh the provider rejects (`400 invalid_refresh_token…`,
+`401 refresh_token_reused`) leaves the file untouched, publishes
+`litellm_codex_token_valid 0` and exits non-zero; that is the case a person
+signs in again:
+
+    systemctl start litellm-chatgpt-login
+    journalctl -fu litellm-chatgpt-login
+
+The unit runs `chatgpt-token.py --login`: it asks for a device code, prints
+the URL and the code to the journal, polls in its own process, and writes
+`auth.json` when the code is answered. Nothing blocks the proxy while it
+waits, so ChatGPT groups answer `401` and every other group keeps serving.
 
 Refresh tokens rotate on every exchange but the old ones stay valid, measured
 2026-10-27: a token superseded three exchanges earlier still answered `200`.
-So this service and litellm can both refresh without invalidating each other.
-
-The same repair by hand, for when the unit is stopped or you are impatient:
-drop the access token and the next request rebuilds it (verified on a copy
-under `CHATGPT_TOKEN_DIR`):
-
-    docker exec litellm python3 -c 'import json;p="/root/.config/litellm/chatgpt/auth.json";d=json.load(open(p));d.pop("access_token",None);json.dump(d,open(p,"w"))'
 
 The router health-checks the new deployments as it loads them, so the first
 rebuild that adds these groups asks for a code at startup and **blocks the
@@ -1142,7 +1145,8 @@ login.
   `litellm_codex_token_valid{account="d74f3468"} 1`. A `0` there, or
   `systemctl status litellm-chatgpt-token` failed, means a device login is
   needed; `journalctl -u litellm-chatgpt-token -n 20` names the reason, and a
-  `refresh rejected with 400` line is the dead-refresh case.
+  `refresh rejected with` line is the dead-refresh case that
+  `litellm-chatgpt-login` repairs.
 - Trap: `systemctl cat docker-litellm` prints the unit, not the `docker run`
   line — the arguments are in the `ExecStart` script it points at. Use that
   script path, or `docker inspect litellm` for the effective mounts and

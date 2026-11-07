@@ -76,7 +76,7 @@ in
       ];
       environment = {
         PYTHONPATH = "/app";
-        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params,byesu_provider:install_byesu_provider";
+        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params,byesu_provider:install_byesu_provider,chatgpt_guard:install_chatgpt_guard";
         OPENCODE_USAGE_LIMIT_PERCENT = "100";
         TZ = ":/etc/localtime-host";
       };
@@ -87,6 +87,7 @@ in
         "${./opencode-session.py}:/app/opencode_session.py:ro"
         "${./reasoning-params.py}:/app/reasoning_params.py:ro"
         "${./byesu-provider.py}:/app/byesu_provider.py:ro"
+        "${./chatgpt-guard.py}:/app/chatgpt_guard.py:ro"
         "/var/lib/litellm-chatgpt:/root/.config/litellm/chatgpt"
       ];
       extraOptions = [ "--dns=192.168.1.1" ];
@@ -193,10 +194,22 @@ in
     '';
   };
 
+  systemd.services.litellm-chatgpt-login = {
+    description = "Sign litellm in to ChatGPT with a device code";
+    after = [ "docker-litellm.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      TimeoutStartSec = "20min";
+    };
+    script = ''
+      exec ${pkgs.python3}/bin/python3 ${./chatgpt-token.py} --login
+    '';
+  };
+
   systemd.timers.litellm-chatgpt-token = {
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      OnCalendar = "*:0/15";
+      OnCalendar = "*:0/5";
       RandomizedDelaySec = "30s";
     };
   };
