@@ -25,19 +25,19 @@ final: prev: {
   });
 
   equicord = prev.equicord.overrideAttrs (_: rec {
-    version = "1.15.14.0";
+    version = "2026-11-07";
     src = final.fetchFromGitHub {
       owner = "Equicord";
       repo = "Equicord";
-      rev = "8d0ebf3549890be2ecb1e1d602b1695f584c71cc";
-      hash = "sha256-ijNxC/uR3Wy4JX/6qNnNGQwS5752+vK2T26N1bsLeG4=";
+      rev = "200dba124066146a8f043fde7fc8b05e3dc5e68e";
+      hash = "sha256-R31S8NVVYECxKBTGyyHUuf9Drc4q8pQALxKElwJxU1k=";
     };
     pnpmDeps = final.fetchPnpmDeps {
       pname = "equicord";
       inherit version src;
       pnpm = final.pnpm_10;
       fetcherVersion = 3;
-      hash = "sha256-vwGHq4chumYcdmiNcAh49bxErVv7GuxCnIyzgXO5pOE=";
+      hash = "sha256-+W+itQv+BsB24B+wxKGAXfUikeJxqkDyVSZCXTsE8Ro=";
     };
     env = {
       EQUICORD_REMOTE = "Equicord/Equicord";
