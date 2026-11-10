@@ -99,7 +99,7 @@ let
         "x-opencode-session" = sessionIdOf (index + 1);
       };
       timeout = 900;
-      stream_timeout = 60;
+      stream_timeout = 120;
       max_retries = 0;
       num_retries = 0;
       input_cost_per_token = group.inputCostPerToken;

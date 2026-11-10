@@ -44,6 +44,7 @@ in
     "d /var/lib/litellm-db 0700 999 999 -"
     "d /var/lib/litellm-chatgpt 0700 0 0 -"
     "d /var/lib/litellm-price-sync 0700 0 0 -"
+    "d /var/lib/litellm-limits 0700 0 0 -"
     "R /var/lib/litellm-free-probe"
     "r /var/lib/prometheus-node-textfile-collector/litellm-free-probe.prom"
   ];
@@ -76,7 +77,9 @@ in
       ];
       environment = {
         PYTHONPATH = "/app";
-        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params,byesu_provider:install_byesu_provider,chatgpt_guard:install_chatgpt_guard";
+        LITELLM_WORKER_STARTUP_HOOKS = "opencode_go_usage:install_usage_route,opencode_session:install_session_forwarder,reasoning_params:install_reasoning_effort_params,stream_gate:install_stream_gate,byesu_provider:install_byesu_provider,chatgpt_guard:install_chatgpt_guard,argon_daily_limit:install_argon_daily_limit";
+        ARGON_DAILY_REQUEST_LIMIT = "50";
+        ARGON_DAILY_REQUEST_LIMIT_EXEMPT = "labile,pr-reviewer,murmur-pr-reviewer,buer-agent";
         OPENCODE_USAGE_LIMIT_PERCENT = "100";
         TZ = ":/etc/localtime-host";
       };
@@ -86,9 +89,12 @@ in
         "${./opencode-usage.py}:/app/opencode_go_usage.py:ro"
         "${./opencode-session.py}:/app/opencode_session.py:ro"
         "${./reasoning-params.py}:/app/reasoning_params.py:ro"
+        "${./stream-gate.py}:/app/stream_gate.py:ro"
         "${./byesu-provider.py}:/app/byesu_provider.py:ro"
         "${./chatgpt-guard.py}:/app/chatgpt_guard.py:ro"
+        "${./argon-daily-limit.py}:/app/argon_daily_limit.py:ro"
         "/var/lib/litellm-chatgpt:/root/.config/litellm/chatgpt"
+        "/var/lib/litellm-limits:/var/lib/litellm-limits"
       ];
       extraOptions = [ "--dns=192.168.1.1" ];
       ports = [ "127.0.0.1:27015:4000" ];

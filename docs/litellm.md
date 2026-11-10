@@ -86,59 +86,101 @@ every deployment is metered; the `/v1/usage` snapshot keeps its
 `provider: opencode-go-pool` label because it names the account pool, not a
 model group.
 
-Error-driven cooldown is off for every deployment of the pool group:
-`models/default.nix` gives each deployment `model_info.cooldown_time = 0` and
-`litellm_params.num_retries = 0`, so the `router_settings.cooldown_time = 600`
-and `num_retries = 30` left in `config.nix` are defaults none of these five
-deployments reaches. Cooldown keys on the deployment id — one per account key —
-not on the group or the request, which is why the reasoning below applies
-identically to every deployment of the pool group.
+Error-driven cooldown is off for every deployment, the pool included:
+`models/default.nix` gives them all `model_info.cooldown_time = 0` (the
+`metadata` default), so no timeout, 429 or 5xx ever takes an account out of
+rotation. Silence is answered with a retry instead. The walk is bounded by one
+number in `config.nix`: `router_settings.max_fallbacks = 2`. Every pool
+deployment declares `num_retries = 0`, so the router's own retry loop never
+runs and the attempts are `1 + max_fallbacks` — three per client request, each
+one capped by the stream gate below. `router_settings.num_retries` does not
+enter that count: a deployment-level value wins over it, and all ten catalog
+deployments set one, so the field is absent rather than left to mislead.
+Measured 2026-11-10 on an isolated router carrying the deployed shape against
+stall-only upstreams: three attempts on three distinct account keys, 45.8 s for
+a 2-token prompt and 90.1 s for a 50k-token one, with the *next* request getting
+its own three attempts instead of a `RouterRateLimitError`. The bound is the
+pool's: the `chatgpt` groups are single-deployment, where weighted failover has
+nothing to re-pick, and their own `num_retries = 2` plus the SDK's
+`aresponses_with_retries` layer measured nine POSTs for one stalled
+`/v1/responses` request — pre-existing, and the retries are the only protection
+a one-upstream group has.
 
-Error-driven cooldown was an amplifier, not a protection. On 2026-10-11 zen/go
-answered `429 {"error":{"type":"server_error","message":"Upstream request
-failed: Endpoint is unavailable."}}` for `step-5-preview-free` on all four
-account keys at once (the string is zen's; it appears nowhere in the litellm
-image), and litellm's retry loop re-picks a deployment after each cooldown, so
-a *single* client request walked all four keys and benched all four. Measured
-on this image with an isolated router, the same config shape and a 429-only echo
-upstream: one `acompletion` made four upstream attempts and left four
-600-second cooldowns, and the next request answered `RouterRateLimitError ...
-All deployments for selected model are in cooldown` with exactly those four ids
-in 16 ms. The group then stayed out of rotation for the whole window even after
-zen recovered, and the message's `Try again in 600 seconds` is the *configured*
-`cooldown_time` — `CooldownCache.get_min_cooldown` returns the stored value, not
-the time remaining — so it read 600 with one second left. Both groups paid for
-that: 4 139 `RouterRateLimitError` records for `step-5-preview` against 173 real
-upstream failures (87 `Endpoint is unavailable`, 35 connection errors, 33 idle
-timeouts, 10 per-key `Rate limit exceeded`, 7 5xx), in bursts of up to 1 588 an
-hour; and 49 for the paid pool (40 logged under the canonical name, 9 under
-`opencode-go-pool`, an alias at the time), whose entire origin was two
-`InternalServerError`s at 01:09 that benched all four accounts from 01:09 to
-01:16.
+Before that bound the same shape walked one attempt per account key — five
+measured against a 408-only upstream with the previous `num_retries = 30` and
+no `max_fallbacks`, because the repeat comes from weighted failover, not from
+the router's retry loop. 408 is retryable, so
+`_deployment_ids_to_skip_on_retry` excludes nothing and the failover keeps
+re-picking. The recorded pool timeouts fit that shape: single attempts dominate
+(the 60.3 s rows under the 60 s `stream_timeout`), 122.8 and 123.2 s are two,
+and the 2026-11-05 19:0x `aresponses` records ran against `stream_timeout = 180`
+— their own message reads `Timeout passed=180.0` — at 182.2, 362.9, 542.4 and
+862.4 s, one to about five attempts. The 901.9 s record is a non-streaming
+request that sat out the 900 s `timeout` instead.
 
-`cooldown_time = 0` makes `_should_run_cooldown_logic` skip the deployment
-entirely, so nothing but the usage poller takes an account out of rotation. The
-retry amplification the cooldown used to bound then has to come from
-`num_retries`, and it must be set explicitly: the router default of 30 finds
-nothing excluded once nothing is ever cooldowned, so left unset a single request
-against a dead upstream makes 31 attempts. At `num_retries = 0` the pool-wide
-walk is left to `enable_weighted_failover` — measured against the deployed
-`config.yaml` with a 429-only echo upstream, an all-dead request makes one
-attempt per account key, against 16 with the retry count at 3, because the
-weighted-failover layer re-walks all five keys once per retry (5 × (1 +
-`num_retries`)) — and with exactly one account key dead all 40 requests
-succeeded, 27 on the first attempt and 13 on a second. That keeps the failure
-bound identical to the old cooldown-bounded one (one pass over `poolSize`)
-without the 600-second blackout, and it couples every pool group to
-`enable_weighted_failover`: with that off, `num_retries = 0` is a single
-attempt, so a request that happens to pick a broken account fails and the
-deployments need `num_retries = poolSize - 1`.
+A 600-second cooldown over every exception was an amplifier, not a protection.
+On 2026-10-11 zen/go answered `429 … Upstream request failed: Endpoint is
+unavailable.` (the string is zen's; it appears nowhere in the litellm image) for
+all four account keys at once, a *single* client request walked all four and
+benched all four, and the group then answered `RouterRateLimitError ... All
+deployments for selected model are in cooldown` for the rest of the window even
+after zen recovered: 4 137 such records that day against 262 real upstream
+failures (161 `RateLimitError`, 66 connection errors, 23 `APIError`, 7
+`BadRequestError`, 4 5xx, 1 access denied), in bursts of up to 1 588 an hour.
+Two things were wrong there, not the idea. The window:
+`CooldownCache.get_min_cooldown` returns the *configured* value, not the time
+left, so `Try again in 600 seconds` read 600 with one second remaining. And the
+trigger: a bench keyed on exceptions turns an upstream wobble into a proxy
+outage. Shrinking the window to 120 s and keying it on timeouts alone was tried
+on 2026-11-07…10 and produced exactly that at the smaller scale: at 15:34 UTC on
+11-10 one request with an 11 841-token prompt was abandoned by the gate three
+times (55.8 s), each timeout benched its account, the next two requests finished
+off the remaining keys, and `anyouh` and `labile` got `429 all_deployments_in
+cooldown` with `retry-after: 120 s` while the upstream was answering other
+requests in the same minute. That is why nothing benches on errors now.
+
+Silence is the failure worth reacting to. zen/go withholds response headers
+until the first token, so litellm's streaming timeout is really a
+time-to-first-token budget — and its only knob, `litellm_params.stream_timeout`,
+also governs the gap between chunks. Measured 2026-11-07 against zen/go with one
+pool key: 1.85 s to first byte at 2k prompt tokens, 10.3 s at 40k, 26.0 s at
+160k, and the largest gap inside a 14-second stream was 1.47 s. A flat 60 s got
+both ends wrong: a stalled account held a request for a full minute per attempt,
+while 200k-token prompts were killed mid-prefill.
+
+`modules/litellm/stream-gate.py` caps the value per request at
+`min(deployment stream_timeout, 15 s + 0.3 s per 1k prompt tokens)`, the
+deployments now declaring 120 s as their ceiling. Two resolution points need
+patching, and missing either one leaves most traffic ungated: the chat route
+goes through `Router._get_stream_timeout`, while `/v1/responses` — 10 264 of the
+pool's 13 809 requests over 2026-11-04…07, measured in
+`LiteLLM_SpendLogs.call_type` — resolves through
+`litellm.passthrough.timeout_utils.resolve_llm_passthrough_timeout`, which the
+router imports by name inside the call, so patching the module attribute is
+enough. Prompt size is estimated from the request payload at four characters to
+the token, so no tokenizer runs per request; inline `data:` bodies (base64
+images) are skipped, or a single screenshot would saturate the ceiling and a
+two-token vision request would get 120 s. A deployment that declares no
+`stream_timeout` is capped by the gate alone instead of falling through to the
+900 s `timeout`, and a non-numeric value is treated the same way. A client that
+sets its own `stream_timeout` — body field or `x-litellm-stream-timeout` header
+— is left alone, and so is every deployment without the `x-opencode-session`
+header, which is what keeps the gate scoped to the pool. Measured on an
+isolated proxy carrying the deployed config shape against stall-only upstreams:
+15.2 s per attempt for a 2-token prompt and 30.0 s for a 50k-token one, on both
+the chat and the Responses route. The false-positive rate is the price: over
+the five days to 2026-11-10, 152 of 21 684 successful pool requests (0.70 %) had
+a
+time-to-first-token above this gate and are abandoned and retried on another
+account. A flat 15 s floor would have taken 2.81 % of them, which is why the
+budget grows with the prompt.
 
 Quota protection is the poller's, and it survives: `exhausted_window()` benches
 a key whose window is `rate-limited` or at `OPENCODE_USAGE_LIMIT_PERCENT`
 (100, set in `modules/litellm/default.nix`) by calling
-`cooldown_cache.add_deployment_to_cooldown` directly, a path that does not
-consult `model_info.cooldown_time` — verified with `cooldown_time = 0` on every
+`cooldown_cache.add_deployment_to_cooldown` directly, with
+`OPENCODE_USAGE_COOLDOWN_SECONDS` (600) as its window rather than the
+deployment's `cooldown_time` — verified with `cooldown_time = 0` on every
 deployment, where a bench added by hand kept that account out of 40 consecutive
 requests (0 served) while the other three took 14, 15 and 11.
 
@@ -394,9 +436,9 @@ Measured 2026-10-20 against that endpoint with the plan key:
 Prices and the two token limits come from litellm's cost map, whose
 `xiaomi_mimo/mimo-v2.6-pro` entry cites the vendor's pay-as-you-go page:
 4.35e-7 input, 8.7e-7 output and 3.6e-9 cached input per token, 1 048 576 input
-and 131 072 output. The deployment carries `cooldown_time = 0` and no retries
-like the pool deployments — one deployment per group means a retry only repeats
-the same upstream call.
+and 131 072 output. The deployment carries `cooldown_time = 0` and no retries,
+because one deployment per group means a retry only repeats the same upstream
+call and a bench would empty the group.
 
 A key scoped to the five OpenCode/ChatGPT names answers `403` for
 `mimo-v2.6-pro` until its scope is extended with `POST /key/update`; the master
@@ -687,6 +729,35 @@ same cache shows parsed, and that is why its catalog also advertises image and
 video ids (`black-forest-labs/*`, `bytedance/seedream-*`, `bytedance/seedance-*`)
 alongside chat models.
 
+### Daily request limit for one group
+
+`gemini-4-argon` is billed by byesu's own tariff and records zero spend
+locally, so no dollar budget can throttle it. The hook
+`modules/litellm/argon-daily-limit.py` is another
+`LITELLM_WORKER_STARTUP_HOOKS` entry: it counts admitted requests per API key
+per UTC day and raises `ProxyRateLimitError` — a 429 carrying `retry-after` to
+midnight UTC — once a key has used `ARGON_DAILY_REQUEST_LIMIT` (50). The
+counter is keyed by the key's hash, so revoking and reissuing a key starts from
+zero, and it persists to `/var/lib/litellm-limits/argon-daily.json`, one small
+rewrite per admitted request. The day is a field in that file, so a restart
+neither wipes the count nor resets the day; a rejected request does not consume
+quota.
+
+`ARGON_DAILY_REQUEST_LIMIT_EXEMPT` lists aliases that never reach the counter:
+`labile`, `pr-reviewer`, `murmur-pr-reviewer` and `buer-agent`. Requests with
+the master key are exempt by role (`proxy_admin`), which keeps the console, the
+spend tooling and `litellm-key` working even with every user key spent.
+Exemption is by alias, so a key created with one of those names skips the cap —
+the price of naming people rather than hashes, and why the list lives in
+`default.nix` next to the limit.
+
+Measured 2026-11-09 on the deployed proxy with a throwaway key scoped to
+`gemini-4-argon` and a 52-request loop: `{"200": 50, "429": 2}`, the 51st
+answering `gemini-4-argon accepts 50 requests per key per UTC day; this key
+used 50. The counter resets at 00:00 UTC.`, while the master key still got
+`200` on the same group and a key carrying an exempt alias at the limit was
+admitted.
+
 ## Keys and usage from the command line
 
 `litellm-key` (`modules/litellm/litellm-key.nix`, installed by the litellm
@@ -950,20 +1021,34 @@ name `/app/opencode_go_usage`, not importable, so the callback loader crashed
 the proxy. Keep the module a plain module with `install_usage_route` and no
 `CustomLogger` subclass.
 
-Verify cooldown against a real router rather than the live log, since a spent
-account is usually cooldowned by its own 429 before the poller sees it:
+Verify cooldown against a real router rather than the live log: with
+`cooldown_time = 0` on every deployment, `_should_run_cooldown_logic` returns
+early on `time_to_cooldown ≈ 0`, so an upstream 429 benches nothing and the
+poller is the only source of a bench — which fires only when a window is really
+spent, once a month. The snippet therefore adds the bench by hand, the same
+`add_deployment_to_cooldown` call the poller makes, and reads it back:
 
 ```sh
 docker exec litellm python3 -c '
 from litellm.router import Router
 import yaml
-r = Router(model_list=yaml.safe_load(open("/app/config.yaml"))["model_list"], cooldown_time=600)
+model_list = [d for d in yaml.safe_load(open("/app/config.yaml"))["model_list"]
+              if d["litellm_params"]["model"].startswith("openai/")]
+r = Router(model_list=model_list, cooldown_time=600)
 r.cooldown_cache.add_deployment_to_cooldown(
     model_id=r.model_list[0]["model_info"]["id"],
     original_exception=Exception("probe"), exception_status=429, cooldown_time=600)
 print(r.cooldown_cache.get_active_cooldowns(
     model_ids=[d["model_info"]["id"] for d in r.model_list], parent_otel_span=None))'
 ```
+
+The filter is load-bearing: the catalog now carries `byesu/gemini-4-argon`, and
+a bare `python3 -c` has none of the proxy's startup hooks, so a Router over the
+whole `model_list` dies with `LLM Provider NOT provided` before it can bench
+anything. A pool deployment is enough — the poller benches through the same
+call. Expected output is one tuple: the deployment id plus
+`{'exception_received': 'probe', 'status_code': '429', 'timestamp':
+<epoch float>, 'cooldown_time': 600}`.
 
 `totals` reads the whole request log and filters locally. Do not swap it for
 `/spend/logs?start_date=…&end_date=…`: with dates that endpoint switches shape
@@ -1132,6 +1217,39 @@ login.
 - Keys are in the DB, not in process memory:
   `docker exec litellm-db psql -U litellm -d litellm -c 'select key_alias,
   expires, models, spend from "LiteLLM_VerificationToken";'`
+- The stream gate is installed: `docker logs litellm 2>&1 | grep 'stream
+  gate'` → `stream gate: pool streams abandon a silent upstream after 15s +
+  0.3s per 1k prompt tokens, ceiling 120s`. Both parts are load-bearing: the
+  hooks print to stderr, so a `2>/dev/null` pipeline shows nothing, and
+  `--since 5m` only sees a container that started in the last five minutes.
+  No line for a running container means `LITELLM_WORKER_STARTUP_HOOKS` lost the
+  entry or `stream-gate.py` is not mounted; both live in
+  `modules/litellm/default.nix`, and the request path is then back to the flat
+  deployment timeout without any error.
+- Nothing benches on errors: `curl -s https://llm.labile.cc/model/info -H
+  "Authorization: Bearer $MASTER" | jq '.data[0].model_info |
+  {cooldown_time, allowed_fails_policy}'` → `{"cooldown_time":0,
+  "allowed_fails_policy":null}`. A non-zero value or a policy means the account
+  can be taken out of rotation by a timeout, and the group can answer
+  `429 all_deployments_in_cooldown` — the 2026-11-10 regression. The retry bound
+  is separate: `curl -s https://llm.labile.cc/model/info -H "Authorization:
+  Bearer $MASTER" | jq '.router_settings | {num_retries, max_fallbacks}'` is not
+  exposed there; read the mounted config instead —
+  `docker exec litellm grep -A5 router_settings /app/config.yaml` →
+  `max_fallbacks: 2` with no `num_retries`, i.e. `1 + max_fallbacks` = three
+  attempts per pool request. A stalled pool upstream must show three attempts
+  and then `408`; a fourth attempt or a `429` with `retry-after` means a bench
+  crept back in.
+- The argon daily limit is installed: `docker logs litellm 2>&1 | grep
+  'argon daily limit'` → `argon daily limit: gemini-4-argon 50 requests per key
+  per UTC day, exempt aliases ['buer-agent', 'labile', 'murmur-pr-reviewer',
+  'pr-reviewer'], state /var/lib/litellm-limits/argon-daily.json`. The counters
+  themselves: `docker exec litellm cat /var/lib/litellm-limits/argon-daily.json`
+  → `{"day": "2026-11-09", "counts": {"<key hash>": 12}}`. A key at its cap
+  answers `429` with `"type": "daily_request_limit"`; a key whose alias is on the
+  exempt list, and any request made with the master key, stays at `200` — if one
+  of those 429s, the hook read the wrong field and the counter is being written
+  for the wrong identity.
 - Provider limits are published:
   `cat /var/lib/prometheus-node-textfile-collector/litellm-provider-limits.prom`
   → five pool accounts with three windows each, then the Codex block;

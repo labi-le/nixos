@@ -12,7 +12,7 @@
     cooldown_time = 600;
     routing_strategy = "simple-shuffle";
     enable_weighted_failover = true;
-    num_retries = 30;
+    max_fallbacks = 2;
   };
   litellm_settings = {
     telemetry = false;
