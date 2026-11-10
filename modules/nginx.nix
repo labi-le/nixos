@@ -340,6 +340,19 @@ in
     in
     {
       "labile.cc" = proxy { addr = "http://127.0.0.1:7004"; };
+      "dns.labile.cc" = {
+        listen = [
+          {
+            addr = "0.0.0.0";
+            port = 80;
+          }
+        ];
+        serverName = "dns.labile.cc";
+        useACMEHost = "labile.cc";
+        locations."/" = {
+          return = "404";
+        };
+      };
       "cache.labile.cc" = lib.recursiveUpdate (proxy { addr = "http://127.0.0.1:5000"; }) {
         kTLS = false;
       };

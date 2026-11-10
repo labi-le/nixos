@@ -17,6 +17,8 @@ let
   tlsCertDir = "/var/lib/acme/${tlsHost}";
   tlsGroup = "dns-tls";
   tlsPort = 853;
+  dohHost = "dns.labile.cc";
+  dohPort = 8443;
   stateDir = config.services.unbound.stateDir;
   rpzDir = "${stateDir}/rpz";
   blockZone = "${rpzDir}/ads.zone";
@@ -55,6 +57,7 @@ in
 {
   services.unbound = {
     enable = true;
+    package = pkgs.unbound-with-systemd.override { withDoH = true; };
     resolveLocalQueries = false;
     enableRootTrustAnchor = true;
     localControlSocketPath = "/run/unbound/unbound.ctl";
@@ -68,9 +71,13 @@ in
           "127.0.0.1@${toString localPort}"
           "${lanAddress}@${toString tlsPort}"
           "${vpnAddress}@${toString tlsPort}"
+          "${lanAddress}@${toString dohPort}"
+          "${vpnAddress}@${toString dohPort}"
         ];
 
         tls-port = tlsPort;
+        https-port = dohPort;
+        http-endpoint = ''"/dns-query"'';
         tls-service-key = ''"${tlsCertDir}/key.pem"'';
         tls-service-pem = ''"${tlsCertDir}/fullchain.pem"'';
 
@@ -167,13 +174,17 @@ in
 
   networking.firewall.interfaces = {
     "${lanInterface}" = {
-      allowedTCPPorts = [ tlsPort ];
+      allowedTCPPorts = [
+        tlsPort
+        dohPort
+      ];
     };
     "${vpnInterface}" = {
       allowedUDPPorts = [ 53 ];
       allowedTCPPorts = [
         53
         tlsPort
+        dohPort
       ];
     };
   };
@@ -257,5 +268,11 @@ in
   security.acme.certs."${tlsHost}" = {
     group = tlsGroup;
     reloadServices = [ "unbound" ];
+    extraDomainNames = [ dohHost ];
+  };
+
+  systemd.services."acme-order-renew-${tlsHost}" = {
+    wants = [ "nginx.service" ];
+    after = [ "nginx.service" ];
   };
 }

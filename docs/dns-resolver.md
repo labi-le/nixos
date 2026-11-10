@@ -13,6 +13,8 @@ replacing it.
 | `10.8.0.1:53` | AmneziaWG clients, the only plain-DNS consumers left; `modules/awg/default.nix` already accepts `udp/53` on `wg0` |
 | `192.168.1.2@853` | DoT, reached by the LAN and, through a router forward, by the internet |
 | `10.8.0.1@853` | DoT for VPN clients |
+| `192.168.1.2@8443` | DoH on `https://dns.labile.cc:8443/dns-query`, reached the same two ways |
+| `10.8.0.1@8443` | DoH for VPN clients |
 
 Port 53 on loopback stays with dnsmasq. As of 2026-09-07 this resolver is a
 **deliberately open DoT resolver**: `access-control` ends in `0.0.0.0/0 allow`,
@@ -58,46 +60,50 @@ than taste:
 ## Encrypted transports
 
 DoT is unbound's own, because that needs nothing but `tls-port` and a
-certificate. It is the only transport this resolver offers to anything outside
-the VPN, and since 2026-09-07 it is public: the protocol carries no path and no
+certificate. Since 2026-09-07 it is public: the protocol carries no path and no
 token, so there is no access control available at any layer and none is
 pretended. The exposure is a decision, not an accident — the earlier text here
 argued the opposite, and the router forward that contradicted it went unnoticed
 for a day because unbound answered every handshake and then dropped the query,
 which reads externally as a broken DoT server rather than a denied client.
 
-The certificate is the one already issued for the apex name `labile.cc`, shared
-with the web vhost of the same name through group `dns-tls`, whose members are
-the nginx and unbound users; unbound gets it via `SupplementaryGroups` and
-`reloadServices = [ "unbound" ]` on the ACME cert sends a HUP after each
-renewal. There is deliberately no certificate of the resolver's own any more.
-`dns.labile.cc` had one until 2026-08-26, together with an nginx vhost that
-existed at the end only to answer the HTTP-01 challenge for it; both are gone.
-Clients authenticate the transport as `labile.cc`, and the SAN list holds that
-single name with no wildcard, so nothing else validates: measured,
-`openssl s_client -verify_hostname dns.labile.cc` against `192.168.1.2:853`
-returns code 62 while `labile.cc` returns 0.
-
-DoH is not offered at all. It was served briefly by `services.doh-server`
-behind Angie on 443, forwarding plain DNS to `127.0.0.1@5335`, and it was
-removed on 2026-08-26 as unused: it was the only
-publicly reachable part of the resolver, and keeping it honest cost a daemon, a
-`limit_req` zone, a fail2ban jail, a dedicated log format and a permanent
-cache-snooping oracle for strangers. Measured before removal, it was not even
-faster to give up: on the LAN plain 53, DoT and DoH were indistinguishable at
-`dig`'s 1 ms resolution on cache hits, and on a cold name DoT took 9 ms against
-DoH's 10 ms.
-
-Should anyone want it back, the trap that made the first attempt expensive is
-still there. The unbound in this nixpkgs is built without `libnghttp2`
-(`unbound -V` reports only libevent and OpenSSL), so its own DoH listener does
-not exist, and `unbound-checkconf` accepts `https-port` and `http-endpoint`
-regardless — a silent failure rather than a build error. Rebuilding with
-`withDoH = true` would not help either: that listener requires ALPN `h2`
+DoH joined it on 2026-11-08 at `https://dns.labile.cc:8443/dns-query`, listening
+on `192.168.1.2@8443` and `10.8.0.1@8443` with `http-endpoint: /dns-query`. The
+driver is the household router on the other side of the WAN: its operator
+measured `:853` cut for every server on that path while `:443` still passed, so
+a DoT upstream is unusable there and DoH is the only encrypted DNS that reaches
+this resolver. The port is 8443 and not 443 because Angie owns `0.0.0.0:443` and
+the DoH listener cannot sit behind it: unbound requires ALPN `h2`
 unconditionally (`util/netevent.c` sets `http_min_version = http_version_2` and
-drops any connection that does not negotiate `h2`), while nginx speaks HTTP/1.1
-to upstreams and can never sit in front of it. A separate daemon is the only
-shape that works, which is what was removed.
+drops any connection that does not negotiate `h2`), while Angie speaks HTTP/1.1
+to upstreams. The listener therefore owns its port, published through an
+imperative router forward of `tcp/8443` to `192.168.1.2:8443`, the same
+arrangement as the `tcp/853` one.
+
+The certificate is the one issued for the apex name `labile.cc`, shared with the
+web vhost of the same name through group `dns-tls`, whose members are the nginx
+and unbound users; unbound gets it via `SupplementaryGroups` and
+`reloadServices = [ "unbound" ]` on the ACME cert sends a HUP after each
+renewal. Unbound reads a single `tls-service-key`/`tls-service-pem` pair for
+every TLS listener, so the DoH name could not get a certificate of its own:
+`extraDomainNames = [ "dns.labile.cc" ]` widens the apex certificate instead,
+and a port-80 vhost that answers nothing but the ACME challenge exists so
+HTTP-01 can validate that name. Clients on `:853` still authenticate as
+`labile.cc`; the SAN list holds those two names and no wildcard.
+
+The default nixpkgs build has no DoH at all: without `libnghttp2` the listener
+is absent while `unbound-checkconf` still accepts `https-port` and
+`http-endpoint`, so a missing `withDoH` is a silent failure rather than a build
+error. `modules/unbound.nix` overrides the package with `withDoH = true` for
+that reason.
+
+DoH itself is not new here. It was served by `services.doh-server` behind Angie
+on 443, forwarding plain DNS to `127.0.0.1@5335`, and that shape was removed on
+2026-08-26 as unused: it cost a daemon, a `limit_req` zone, a fail2ban jail, a
+dedicated log format and a cache oracle in front of the resolver. None of it
+came back — the listener above is unbound's own, so no reverse proxy, rate-limit
+zone or jail sits in front of DoH. `ip-ratelimit` is the inbound guard, the same
+one DoT relies on.
 
 `ratelimit: 1000` stays, capping unbound's outbound queries per target zone so a
 random-subdomain flood cannot leave this host as the address a victim's
@@ -288,13 +294,13 @@ constraints govern how it is shared:
   users, plus `SupplementaryGroups` on the unbound unit and
   `reloadServices = [ "unbound" ]` so renewal reaches it through the existing
   `ExecReload=kill -HUP`.
-- Borrowing the apex certificate is what allowed `dns.labile.cc` to disappear
-  completely. A name of its own would need its own HTTP-01 challenge, and that
-  needs an nginx vhost for exactly that name — the 404 stub that existed for one
-  afternoon. The cost is that the transport authentication name is now tied to
-  the main site's certificate: if that vhost ever moves off this host, DoT must
-  be repointed at whatever certificate stays, and every client's SNI changes
-  with it.
+- Borrowing the apex certificate is what keeps `dns.labile.cc` out of a
+  certificate of its own. A separate certificate would need its own HTTP-01
+  challenge, and that needs an nginx vhost for exactly that name — the 404 stub
+  that port 80 carries. The cost is that the transport authentication name is
+  tied to the main site's certificate: if that vhost ever moves off this host,
+  DoT must be repointed at whatever certificate stays, and every client's SNI
+  changes with it.
 
 The root zone is transferred by AXFR, addressed by IP rather than by name,
 because resolving a name would be circular for the zone that provides the

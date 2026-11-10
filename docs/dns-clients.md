@@ -1,19 +1,22 @@
 # DNS clients for `labile.cc`
 
-The resolver on `server` exposes one encrypted endpoint. It fronts the same
-validating recursive resolver as plain DNS does, and it presents the publicly
+The resolver on `server` exposes two encrypted endpoints. Both front the same
+validating recursive resolver as plain DNS does, and both present the publicly
 trusted ZeroSSL certificate already issued for the apex name `labile.cc`, so
 clients need no custom CA and no SPKI pin.
 
 | Endpoint | Address | Reachable from | Transport |
 |---|---|---|---|
 | DoT | `labile.cc:853` (`192.168.1.2` on LAN, `10.8.0.1` on VPN, the public address from anywhere) | anywhere | DNS over TLS, RFC 7858 |
+| DoH | `https://dns.labile.cc:8443/dns-query` (`192.168.1.2:8443` on LAN, `10.8.0.1:8443` on VPN) | anywhere | DNS over HTTPS, RFC 8484 |
 
 Since 2026-09-07 this is a **deliberately open resolver**. The router forwards
-`tcp/853` from the WAN to the server and `access-control` ends in
-`0.0.0.0/0 allow`, so any client that can reach the name can resolve through it,
-roaming devices included. There is no token and no allowlist, because DoT
-carries neither: the protocol has no path in which to put a secret.
+`tcp/853` and, since 2026-11-08, `tcp/8443` from the WAN to the server, and
+`access-control` ends in `0.0.0.0/0 allow`, so any client that can reach either
+name can resolve through it, roaming devices included. There is no token and no
+allowlist: DoT has no path in which to put a secret, and DoH's `/dns-query` is
+the same string for every client, so it is a convention rather than a
+credential.
 
 Two consequences follow, and both are decisions rather than oversights. Ad and
 tracker filtering applies to public clients too — a stranger gets the
@@ -31,14 +34,21 @@ router's `stubby` over DoT, and 92.5 % of all queries already arrived over TLS.
 turning this host into a UDP amplifier. On the server itself, use
 `dig @127.0.0.1 -p 5335`; `dig @192.168.1.2` now answers `connection refused`.
 
-DoH existed until 2026-08-26 as `https://dns.labile.cc/dns-query` and was
-removed as unused; the `dns.labile.cc` name went with it, so DoT authenticates
-as `labile.cc`. Any client still configured with the old hostname fails
-verification rather than falling back — measured,
-`openssl s_client -verify_hostname dns.labile.cc` against `192.168.1.2:853`
-returns code 62, hostname mismatch, while `labile.cc` returns 0. Browsers speak
-only DoH, so they cannot be pointed here at all; they inherit whatever the
-operating system resolves.
+DoH came back on 2026-11-08 at `https://dns.labile.cc:8443/dns-query`, and it is
+not the arrangement that was removed on 2026-08-26. That one was
+`services.doh-server` behind Angie on `443`; this one is unbound's own listener,
+because a reverse proxy cannot carry it: unbound drops any connection that does
+not negotiate ALPN `h2`, while Angie speaks HTTP/1.1 to its upstreams. The
+port is `8443` for that reason, and `dns.labile.cc` lives in the apex
+certificate's SAN rather than in a certificate of its own, since unbound reads a
+single key pair for every TLS listener.
+
+Two consequences of that shape matter to clients. The listener speaks RFC 8484
+wire format only — `?name=example.com&type=A` returns 404, because unbound has
+no JSON API — and the port now matters. A client left on the old
+`https://dns.labile.cc/dns-query` without `:8443` finds no vhost for that name
+on `443`, so it fails certificate validation against whichever default vhost
+answers; on port 80 the same path is the ACME stub and returns 404.
 
 One piece of history worth knowing, because it explains why the router's stubby
 was dead weight for so long: until 2026-08-26 no LAN host could reach any
@@ -56,19 +66,26 @@ and `dstnat_lan` never sees it.
 
 ## Support matrix
 
-| Platform | DoT | Address format |
+| Platform | DoT | DoH |
 |---|---|---|
-| Android 9+ Private DNS | yes | hostname only, no port, no path |
-| iOS 14+ / macOS 11+ profile | yes (`TLS`) | `ServerAddresses` + `ServerName` |
-| Windows 11 | yes | `server=<ip>` + `dothost=<hostname>:<port>` |
-| systemd-resolved | yes | `IP:port#iface#SNI`, i.e. `IP:port#hostname` |
-| unbound forwarder | yes | `forward-addr: <ip>@<port>#<auth_name>` |
-| stubby (OpenWrt/Linux) | yes | `address_data` + `tls_auth_name` |
+| Android 9+ Private DNS | yes | no, the field takes a hostname and nothing else |
+| iOS 14+ / macOS 11+ profile | yes (`TLS`) | yes (`HTTPS` + `ServerURL`) |
+| Windows 11 | yes | unverified, see below |
+| systemd-resolved | yes | no |
+| unbound as a forwarder | yes | no, unbound has no DoH client |
+| stubby (OpenWrt/Linux) | yes | no |
+| AdGuard Home | yes | yes |
+| mihomo and murmur | `tls://host` | `https://host:8443/dns-query` |
+| Firefox, Chrome | no | yes, custom URL |
+| dig 9.20 or newer | `+tls` | `+https=/dns-query` |
 
-Browsers are absent from that table on purpose: Firefox, Chrome and Edge
-implement DoH only, so since the endpoint was removed they can no longer be
-pointed here at all. They inherit whatever the operating system resolves,
-which on the LAN is this resolver by way of the router.
+The DoT address formats are in the platform sections below. The DoH ones are a
+single URL with a client-specific wrapper, collected under "DoH clients".
+
+Browsers used to be absent from that table because they speak DoH only and
+there was no DoH endpoint to offer them. Firefox and Chrome now take the URL in
+their own settings; Edge reads the DoH configuration from the operating system
+and has none of its own.
 
 The split between the two client shapes matters more than the platform. Clients
 that take an explicit address plus a separate name for validation — stubby,
@@ -77,6 +94,80 @@ they can route to `192.168.1.2` or `10.8.0.1`, because the address is configured
 and the name is used only for the certificate. Clients that accept a hostname
 and nothing else, which is every Android Private DNS field, depend on how that
 name resolves for them.
+
+DoH clients are the second shape and one degree worse, because the URL carries
+both the name and the port and there is nowhere to put an address instead. They
+resolve `dns.labile.cc` first: on the LAN the router's split-horizon record
+answers `192.168.1.2`, off the LAN the public record plus the `tcp/8443`
+forward reach the same listener, and both paths present the same certificate.
+A client whose bootstrap resolver cannot reach the name cannot reach the
+endpoint either, which is the only real trap in this configuration.
+
+## DoH clients
+
+One URL, `https://dns.labile.cc:8443/dns-query`, is the whole interface. It is
+RFC 8484 over HTTP/2: POST with `application/dns-message` and GET with
+`?dns=<base64url>` both work, and the JSON API does not exist here.
+
+**AdGuard Home.** Put the URL in Settings → DNS settings → Upstream DNS
+servers:
+
+```
+https://dns.labile.cc:8443/dns-query
+```
+
+AdGuard Home resolves the hostname through its `bootstrap_dns` list before it
+can use the upstream, so a box whose own resolver cannot answer for
+`dns.labile.cc` needs a plain resolver listed there. The same URL works as a
+domain-scoped upstream, `[/labile.cc/]https://…`, though there is nothing to
+scope: this resolver answers every zone.
+
+**mihomo and murmur.** Both take the URL as a plain server string in the same
+places:
+
+```yaml
+dns:
+  default-nameserver:
+    - 223.5.5.5
+  nameserver:
+    - https://dns.labile.cc:8443/dns-query
+```
+
+`default-nameserver` exists to resolve the *names of* encrypted resolvers and
+must stay an IP or a differently-named encrypted resolver; pointing it at the
+same hostname is circular. Leave `prefer-h3` at its default: the listener's DoH
+is HTTP/2, and an HTTP/1.1 request to it is dropped rather than answered,
+measured.
+
+**Firefox.** Settings → Privacy & Security → DNS over HTTPS → Max Protection →
+custom, with `network.trr.uri` set to the URL. Chrome takes the same URL under
+Settings → Privacy and security → Use secure DNS → custom.
+
+**Apple.** A variant of the DoT profile in the iOS section below: `DNSProtocol`
+becomes `HTTPS` and the address becomes a single `ServerURL` string.
+`ServerAddresses` is optional for HTTPS; leave it out so the name is resolved
+normally, or fill it in with `192.168.1.2` on LAN-only devices.
+
+```xml
+<key>DNSProtocol</key>
+<string>HTTPS</string>
+<key>ServerURL</key>
+<string>https://dns.labile.cc:8443/dns-query</string>
+```
+
+**Windows 11.** The DoH template field is the natural home for the URL:
+
+```cmd
+netsh dnsclient add encryption server=192.168.1.2 dohtemplate=https://dns.labile.cc:8443/dns-query
+```
+
+Whether the Windows DNS client honours a port other than `443` in a template is
+not stated in Microsoft's documentation and was not measured here. If the
+client ignores the port, it fails rather than falling back, and on that platform
+DoT is the working transport — it needs no template.
+
+**Android.** Private DNS is DoT only, so there is no system DoH on Android; an
+app that ships its own DoH client is the only way in.
 
 ## Android
 
@@ -193,8 +284,8 @@ Prerequisites and notes:
   validation behaviour nor whether the CLI accepts an entry carrying only
   `dothost=` and no DoH template is spelled out in Microsoft's documentation;
   both are unverified here, and the first is irrelevant with a publicly trusted
-  certificate. Should the entry be rejected without a template, there is no
-  template to give it any more — use plain DNS on `192.168.1.2` instead.
+  certificate. If the entry is rejected without a template, the template to give
+  it is `https://dns.labile.cc:8443/dns-query`, from the DoH section above.
 
 ## systemd-resolved
 
@@ -345,21 +436,41 @@ From any client with BIND's `dig` 9.20 or newer:
 ```sh
 dig +tls +tls-ca +tls-hostname=labile.cc @192.168.1.2 example.com
 dig +tls +tls-ca +tls-hostname=labile.cc @10.8.0.1 example.com
-dig @192.168.1.2 example.com
+dig +https=/dns-query +tls-ca @dns.labile.cc -p 8443 example.com
+dig +https=/dns-query +https-get +tls-ca @dns.labile.cc -p 8443 example.com
 ```
 
-`+tls` selects DoT and defaults to port 853. `+tls-ca` enables certificate
-validation against the system trust store; `+tls-hostname` fixes the name
-checked against the certificate — without it dig checks the `@server`
-address, and `192.168.1.2` does not appear in the certificate. The certificate
-carries exactly one name, `labile.cc`, with no wildcard SAN, so that is the only
-value `+tls-hostname` accepts.
+`+tls` selects DoT and defaults to port 853. `+https=/dns-query` selects DoH
+with that path, and `-p` moves it off `443`; the server line in the output names
+the transport it actually used, `(HTTPS)` for DoH. `+tls-ca` enables certificate
+validation against the system trust store and is not optional in a check: left
+out, dig accepted a self-signed listener, measured. `+tls-hostname` fixes the
+name checked against the certificate, which DoT needs because the configured
+address `192.168.1.2` is not a SAN.
+
+The certificate carries two names, `labile.cc` and `dns.labile.cc`, with no
+wildcard SAN, and both listeners serve it, so either name verifies against
+either port. What each transport actually uses is the name its clients are
+configured with: DoT authenticates as `labile.cc`, DoH as `dns.labile.cc`,
+because the URL is the only place a DoH client learns the name from.
 
 DNSSEC correctness reads straight off the answer flags: a successful
-validation sets `ad` in the response header. DoT must return `ad` for signed
-names, and `dig +tls ... dnssec-failed.org` must return SERVFAIL. `ad` absent
-everywhere or SERVFAIL on everything indicates a broken path, not a broken
-resolver.
+validation sets `ad` in the response header. Both transports must return `ad`
+for signed names, and `dnssec-failed.org` must return SERVFAIL on both. `ad`
+absent everywhere or SERVFAIL on everything indicates a broken path, not a
+broken resolver.
+
+Without dig, the endpoint answers a hand-built RFC 8484 query:
+
+```sh
+curl -sS --http2 'https://dns.labile.cc:8443/dns-query' \
+  -H 'content-type: application/dns-message' \
+  --data-binary @query.bin -o answer.bin
+```
+
+`query.bin` is a raw DNS message; `-o answer.bin` gets one back. The JSON that
+`curl 'https://dns.labile.cc:8443/dns-query?name=example.com'` asks for does not
+exist on this listener, and returns 404.
 
 ## What direct clients give up
 
