@@ -208,7 +208,7 @@ the sync refused to apply the table, a rate changed, or nothing succeeded for th
 
 **FRP (Fast Reverse Proxy); fail2ban jail `frp-auth` and its filter**
 
-The control port (38392) is reachable from outside only over QUIC/UDP — TCP 38392 is never opened in the firewall, so the jail is `protocol = "udp"`, `port = "38392"`; a default TCP jail would install a rule that never sees a packet. A failed token login splits the client address and the failure verdict across two adjacent `frp-server` journal lines (`client login info: ip [<HOST>:port]...` then `register control error: token in login doesn't match token from configuration`), so the filter needs `maxlines = 2` in `[Init]` to join them before the failregex runs. The proxied ports 16666-16670 carry a remote client's RDP and SSH; that machine's own auth never appears in this host's logs, so those ports have no fail2ban rule
+The control port (38392) is reachable from outside only over QUIC/UDP — TCP 38392 is never opened in the firewall, so the jail is `protocol = "udp"`, `port = "38392"`; a default TCP jail would install a rule that never sees a packet. A failed token login splits the client address and the failure verdict across two adjacent `frp-server` journal lines (`client login info: ip [<HOST>:port]...` then `register control error: token in login doesn't match token from configuration`), so the filter needs `maxlines = 2` in `[Init]` to join them before the failregex runs. The proxied ports 16666-16670 carry a remote client's RDP and SSH; that machine's own auth never appears in this host's logs, so those ports have no fail2ban rule. The range is no longer opened or proxied.
 
 ## firewall-2
 

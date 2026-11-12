@@ -68,7 +68,7 @@ address on `client login info`, verdict on `register control error` — so
 ban action is `protocol = "udp"` — a default TCP ban installs a rule no packet
 matches. The proxied ports 16666-16670 carry a remote machine's own RDP/SSH;
 firewall counters showed zero packets there, so rate-limiting them was
-rejected.
+rejected. Those ports are no longer opened or proxied.
 
 ## Mailcow's chain fight, and moving fail2ban to nftables (2026-09-22)
 
