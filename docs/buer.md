@@ -241,7 +241,7 @@ the worker is funnelled through `cargo-slot`, which runs it on `pc`:
 - `CARGO_TARGET_DIR` is mapped to `/home/labile/.cache/cargo-pc/<mangled name>`
   on `pc`, guarded by a shared `flock` on `<target>.lock` and evicted by
   `--evict-remote` when `pc` drops below 60 G free. A tree that `pc` cannot see
-  at the same path (for example `/home/labile/projects/maxwell`) is mirrored
+  at the same path (for example `/home/labile/projects/maksut`) is mirrored
   with `rsync` into `/home/labile/.cache/cargo-pc/src/<hash>` first, so no
   project has to move for remote compilation.
 - Local compilation is refused: without `CARGO_SLOT_REMOTE` or with
@@ -260,7 +260,7 @@ the worker is funnelled through `cargo-slot`, which runs it on `pc`:
 
 ## sub-preprocessor toolchain and isolation
 
-The allowlist contains exactly `labi-le/maxwell,labi-le/murmur,labi-le/sub-preprocessor` and
+The allowlist contains exactly `labi-le/maksut,labi-le/murmur,labi-le/sub-preprocessor` and
 also feeds the delivery watchdog. Onboarding does not enable automerge.
 Keep a new repository's GitHub webhook inactive until image build, slot-user
 verification and deployment complete; activate and replay/trigger only afterward.
@@ -315,7 +315,7 @@ nix-shell --run 'make lint'
 nix-shell --run 'make bench'
 ```
 
-For Rust repositories (`labi-le/maxwell`) the same rule applies with
+For Rust repositories (`labi-le/maksut`) the same rule applies with
 `cargo-slot`, which forwards to `pc` through the relay:
 
 ```sh

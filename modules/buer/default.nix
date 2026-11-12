@@ -12,7 +12,7 @@ let
   bindPort = 6543;
   dataDir = "/drive/state/buer";
   cargoSlotRelay = pkgs.callPackage ../../pkgs/cargo-slot-relay.nix { };
-  repoAllowlist = "labi-le/maxwell,labi-le/murmur,labi-le/sub-preprocessor";
+  repoAllowlist = "labi-le/maksut,labi-le/murmur,labi-le/sub-preprocessor";
   maintainerLogins = "labi-le";
   reviewerBots = "chatgpt-codex-connector,gemini-code-assist";
   reviewerBotLogin = lib.concatMapStringsSep "," (bot: "${bot}[bot]") (lib.splitString "," reviewerBots);
