@@ -80,8 +80,8 @@ class RoutingQueries(unittest.TestCase):
         data = json.loads(text)
         self.assertTrue(data["routed"])
 
-    def test_reverse_lookup_finds_gate_scripts(self):
-        for path in ("modules/omp/extensions/grep-gate.ts", "modules/omp/skills-prune.sh"):
+    def test_reverse_lookup_finds_skill_cleanup(self):
+        for path in ("modules/omp/settings/skills.nix", "modules/omp/skills-prune.sh"):
             text, _ = routes.tool_route_file({"path": path}, "test", "test")
             self.assertTrue(json.loads(text)["routed"], path)
 

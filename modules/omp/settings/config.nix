@@ -4,6 +4,8 @@ let
   yaml = pkgs.formats.yaml { };
   configFile = yaml.generate "omp-config.yml" {
     setupVersion = 2;
+    encourageEdits = true;
+    bashInterceptor.enabled = true;
     extensions = [ ];
     advisor.enabled = false;
     defaultThinkingLevel = "auto";

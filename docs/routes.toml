@@ -1198,9 +1198,9 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "OMP shell grep gate and declarative skill cleanup (all OMP hosts)"
-note = "Shell grep/egrep/fgrep calls are refused with an instruction to use rg; the native grep tool stays available. Activation prunes undeclared entries in the main OMP skills directory. See `docs/nix-project-rules.md`."
-paths = ["modules/omp/extensions/grep-gate.ts", "modules/omp/install.nix", "modules/omp/packages.nix", "modules/omp/settings/skills.nix", "modules/omp/skills-prune.sh"]
+task = "Declarative OMP skill cleanup (all OMP hosts)"
+note = "Activation prunes undeclared entries in the main OMP skills directory. See `docs/nix-project-rules.md`."
+paths = ["modules/omp/install.nix", "modules/omp/settings/skills.nix", "modules/omp/skills-prune.sh"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]

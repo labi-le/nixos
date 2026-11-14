@@ -27,7 +27,6 @@ in
     "L+ ${files.agentDir}/extensions/commit-gate.ts - - - - ${./extensions/commit-gate.ts}"
     "L+ ${files.agentDir}/extensions/comment-gate.ts - - - - ${./extensions/comment-gate.ts}"
     "L+ ${files.agentDir}/extensions/git-upstream-gate.ts - - - - ${./extensions/git-upstream-gate.ts}"
-    "L+ ${files.agentDir}/extensions/grep-gate.ts - - - - ${./extensions/grep-gate.ts}"
     "L+ ${files.agentDir}/extensions/content-filter-retry.ts - - - - ${./extensions/content-filter-retry.ts}"
     "L+ ${files.agentDir}/extensions/delegation-gate.ts - - - - ${files.delegationGate}/delegation-gate.ts"
     "L+ ${files.agentDir}/extensions/repo-register.js - - - - ${files.repoRegisterJs}"
@@ -39,7 +38,6 @@ in
 
   activationScript = lib.stringAfter [ "users" ] ''
     mkdir -p ${files.agentDir}
-    rm -f ${files.agentDir}/rules/chroma-first.md ${files.agentDir}/rules/chroma-first-shell.md
     install -m 600 -o ${user.name} -g ${files.userCfg.group} ${files.configFile} ${files.agentDir}/config.yml
     ${pkgs.runtimeShell} ${./skills-prune.sh} ${lib.escapeShellArg skillsDir}${declaredSkills}
   '';

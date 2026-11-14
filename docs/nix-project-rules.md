@@ -97,14 +97,7 @@ These are command checks, not a sandbox. They do not inspect inherited
 Git configuration or intercept arbitrary HTTP/MCP requests. After a
 switch, start a new OMP process to load the deployed extension.
 
-## OMP Search Gate And Skills
-
-`modules/omp/extensions/grep-gate.ts` blocks visible shell invocations of
-`grep`, `egrep` and `fgrep` before execution. The tool error instructs the
-agent to rewrite the command using `rg`; `modules/omp/packages.nix` installs
-ripgrep. OMP's native `grep` tool remains available. The gate checks bash
-commands and explicit process calls in eval. It does not resolve aliases,
-external script contents or dynamically constructed commands.
+## OMP Skills
 
 `modules/omp/settings/skills.nix` owns the declared OMP skill names and links.
 Each system activation runs `modules/omp/skills-prune.sh` from
@@ -114,6 +107,6 @@ installed entry on the next switch. Symlink targets are preserved; a symlink
 in place of the skills directory makes cleanup fail. Project skills,
 `managed-skills`, jcode and Maki are outside this cleanup's scope.
 
-Verify with `bun test modules/omp/grep-gate.test.ts modules/omp/skills-prune.test.ts`
+Verify with `bun test modules/omp/skills-prune.test.ts`
 and `shellcheck modules/omp/skills-prune.sh`. Start a new OMP process after
-switching to load the new gate and refresh the skill list.
+switching to refresh the skill list.
