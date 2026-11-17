@@ -3,7 +3,6 @@
 import argparse
 import json
 import os
-import re
 import socket
 import subprocess
 import sys
@@ -11,7 +10,7 @@ import tempfile
 import time
 import urllib.request
 
-TABLE_URL = "https://opencode.ai/v2/docs/console/go/"
+MODELS_URL = "https://opencode.ai/inference/go/v1/models"
 METRIC_PATH = "/var/lib/prometheus-node-textfile-collector/litellm-price-sync.prom"
 STATE_PATH = "/var/lib/litellm-price-sync/state.json"
 PROXY = "http://127.0.0.1:27015"
@@ -19,13 +18,6 @@ CONTAINER = "litellm"
 MAX_RATIO = 5.0
 MAX_JOBS = "1"
 CORES = "2"
-
-LABELS = {
-    "deepseek-v4.1-flash": {
-        "peak": "DeepSeek V4.1 Flash (Peak)",
-        "offPeak": "DeepSeek V4.1 Flash (Off-Peak)",
-    },
-}
 
 
 class Abort(Exception):
@@ -44,85 +36,46 @@ def run(cmd, capture=False, timeout=None):
     return (result.stdout or "").strip()
 
 
-def fetch(table):
-    if table:
-        with open(table, encoding="utf-8") as handle:
+def fetch(catalog):
+    if catalog:
+        with open(catalog, encoding="utf-8") as handle:
             return handle.read()
     request = urllib.request.Request(
-        TABLE_URL,
-        headers={"Accept": "text/markdown", "User-Agent": "labile-nix-price-sync/1.0"},
+        MODELS_URL,
+        headers={"Accept": "application/json", "User-Agent": "labile-nix-price-sync/1.0"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.read().decode("utf-8")
 
 
-def go_plan(text):
-    start = text.find('<div slot="go">')
-    end = text.find('<div slot="go-plus">')
-    if start < 0 or end <= start:
-        raise Abort("the Go plan table is not where the docs page used to keep it")
-    return text[start:end]
+def model_catalog(text):
+    try:
+        payload = json.loads(text)
+        return {model["id"]: model for model in payload["data"]}
+    except (ValueError, KeyError, TypeError) as failure:
+        raise Abort(f"the Go models endpoint did not return a model catalog: {failure}")
 
 
-def per_token(cell):
-    cell = cell.strip().strip("*").strip()
-    if cell.lower() == "free":
-        return 0.0
-    match = re.fullmatch(r"\$([0-9]+(?:\.[0-9]+)?)", cell)
-    return None if match is None else float(match.group(1)) / 1e6
-
-
-def parse_rows(block):
-    rows = {}
-    for line in block.splitlines():
-        line = line.strip()
-        if not line.startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if len(cells) < 4:
-            continue
-        prices = [per_token(cell) for cell in cells[1:4]]
-        if any(price is None for price in prices):
-            continue
-        rows[cells[0]] = {
-            "input": prices[0],
-            "output": prices[1],
-            "cacheRead": prices[2],
+def entry_of(name, catalog):
+    model = catalog.get(name)
+    if model is None:
+        raise Abort(f"the Go models endpoint no longer lists {name!r}")
+    try:
+        cost = model["cost"]
+        text = cost["text"]
+        base = {
+            "input": text["input"]["price"],
+            "output": text["output"]["price"],
+            "cacheRead": text["input"]["cache"]["read"],
         }
-    return rows
-
-
-def row_of(rows, label):
-    row = rows.get(label)
-    if row is None:
-        raise Abort(f"the Go table no longer has the row {label!r}")
-    return row
-
-
-def entry_of(name, rows):
-    spec = LABELS.get(name)
-    if spec is None:
-        raise Abort(f"no OpenCode label mapping for {name}; add one to sync-prices.py")
-    if "flat" in spec:
-        row = row_of(rows, spec["flat"])
-        return {
-            "input": row["input"],
-            "output": row["output"],
-            "cacheRead": row["cacheRead"],
-            "offPeak": None,
-        }
-    peak = row_of(rows, spec["peak"])
-    off = row_of(rows, spec["offPeak"])
-    return {
-        "input": peak["input"],
-        "output": peak["output"],
-        "cacheRead": peak["cacheRead"],
-        "offPeak": {
-            "input": off["input"],
-            "output": off["output"],
-            "cacheRead": off["cacheRead"],
-        },
-    }
+        factors = [1.0] + [multiplier["factor"] for multiplier in cost.get("multipliers") or []]
+    except (KeyError, TypeError) as failure:
+        raise Abort(f"{name}: the Go models endpoint changed its cost shape ({failure})")
+    peak = {field: value * max(factors) / 1e6 for field, value in base.items()}
+    off = {field: value * min(factors) / 1e6 for field, value in base.items()}
+    entry = dict(peak)
+    entry["offPeak"] = None if peak == off else off
+    return entry
 
 
 def ratios(name, old, new):
@@ -176,7 +129,7 @@ def git(repo, as_user, *args, capture=False):
 def write_prices(repo, groups, entries, as_user):
     path = os.path.join(repo, "modules/litellm/models/prices.json")
     document = {
-        "source": TABLE_URL,
+        "source": MODELS_URL,
         "models": {name: entries[name] for name in sorted(groups)},
     }
     handle, tmp = tempfile.mkstemp(prefix=".prices.json.", dir=os.path.dirname(path))
@@ -315,7 +268,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", default="/home/labile/nix")
     parser.add_argument("--groups", help="JSON list of the Zen group names; defaults to the snapshot's keys")
-    parser.add_argument("--table", help="read the docs page from a file instead of the network")
+    parser.add_argument("--catalog", help="read the models endpoint from a file instead of the network")
     parser.add_argument("--as-user", help="run git and the checkout writes as this user")
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--commit", action="store_true")
@@ -340,8 +293,8 @@ def main():
     sha = None
     error = None
     try:
-        rows = parse_rows(go_plan(fetch(args.table)))
-        entries = {name: entry_of(name, rows) for name in groups}
+        catalog = model_catalog(fetch(args.catalog))
+        entries = {name: entry_of(name, catalog) for name in groups}
         summary = []
         for name in groups:
             old = current.get(name) or {}

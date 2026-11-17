@@ -914,10 +914,10 @@ logged under the alias `master`, and a key hash that matches no key in the DB
 shows as `other`; neither is a virtual key.
 
 Prices are sourced per provider and never copied across: the Zen groups take
-their figures from OpenCode's own tables — [Go plans](https://opencode.ai/v2/docs/console/go/),
+their figures from OpenCode's own tables — [Go plans](https://opencode.ai/docs/console/go/),
 the subscription this pool uses, which also carries the per-model monthly limits
 and the `5 h / week / month = 20 % / 50 % / 100 %` rule the `/v1/usage` hook
-mirrors, plus [Console models](https://opencode.ai/v2/docs/console/models/) for
+mirrors, plus [Console models](https://opencode.ai/docs/console/models/) for
 pay-as-you-go — while the chatgpt groups keep the rates the subscription itself
 reports (see ChatGPT subscription groups above; OpenAI's model cards,
 `developers.openai.com/api/docs/models/<id>`, publish the same figures). The same
@@ -928,14 +928,15 @@ output for the whole request) and the cache-write rate are not applied, so their
 `spend` is the untiered figure.
 
 The Zen rates are not written by hand any more. `modules/litellm/models/prices.json`
-is a generated snapshot — its `source` key names the table it came from — and
+is a generated snapshot — its `source` key names the catalog it came from — and
 `models/default.nix` injects its three rates into every `provider = "opencode-go"`
 group plus the off-peak rates into the windows that group declares, so editing a
 rate in a Zen group file would have no effect. `modules/litellm/sync-prices.py`
 keeps the snapshot honest: the `litellm-price-sync` oneshot — started at every
 boot (`wantedBy = multi-user.target`) and behind the daily `litellm-price-sync.timer`
-(`Persistent = true`, 30-minute jitter) — fetches the Go plan table as markdown
-(`Accept: text/markdown`), parses the price rows for the groups
+(`Persistent = true`, 30-minute jitter) — fetches the Go model catalog
+(`Accept: application/json`) from `https://opencode.ai/inference/go/v1/models`,
+reads `cost.text` and `cost.multipliers` for the groups
 `models/default.nix` exports as `zenGroupNames`, and then
 
 - writes nothing when every rate already matches — the usual outcome, exit 0;
@@ -945,24 +946,27 @@ boot (`wantedBy = multi-user.target`) and behind the daily `litellm-price-sync.t
   build, then re-reads `GET /model/info` and asserts the proxy serves the new
   rates; when it does not, it reverts its own commit, pushes, rebuilds and exits
   non-zero;
-- on anything it refuses — a row that disappeared from the table, a rate moving
-  more than 5×, an off-peak tariff appearing or disappearing (a free model going
-  paid), a group with no label mapping — writes nothing and exits 1.
+- on anything it refuses — a model id that disappeared from the catalog, a rate
+  moving more than 5×, an off-peak tariff appearing or disappearing (a free model
+  going paid), a `cost` shape the parser does not know — writes nothing and
+  exits 1.
 
-The refusal that needs a human is the free-model-going-paid shape, and
-2026-10-16 was one: the table renamed `Step 5 Preview Free` to
-`Step 5 Preview` and priced it, and Zen withdrew the `step-5-preview-free` model
-id in the same release, so the run exited 1 with `refusing to apply: the Go table
-no longer has the row 'Step 5 Preview Free'` while `step-5-preview` answered
-`400 … Upstream request failed: Model is unavailable.` to every client. Three
-hand edits repaired it, and the script can make none of them itself: the
-snapshot's three rates, `metered = true` in `models/step-5-preview.nix` — a
-priced row is metered against the account allowance — and the new upstream id in
-the same file. Ordinary rate moves never need a hand: the script applies those.
+The source moved on 2026-11-18: the Go docs page dropped its inline
+`<div slot="go">` table and now links token prices to the client-rendered console
+page, so a run exited 1 with `refusing to apply: the Go plan table is not where
+the docs page used to keep it`. The catalog endpoint carries the same numbers:
+`cost.text.input.price` and `cost.text.output.price` per 1M tokens, with
+`cost.multipliers` holding the peak factor over the off-peak base (DeepSeek V4.1
+Flash: base `0.15 / 0.6 / 0.003`, factor `2` over the weekday peak windows the
+group file declares). The free-model-going-paid shape still needs a human, as on
+2026-10-16 when a free row was renamed and priced: the script refuses a 0 →
+non-zero rate or an off-peak tariff appearing, and the hand edits are the
+snapshot's rates, `metered = true` in the group file, and the upstream id.
+Ordinary rate moves never need a hand: the script applies those.
 
 One trap for those hand edits: the numbers in `prices.json` are the doubles the
-parser computes, not the decimals the table prints, and the diff lines print
-them through `:g`, which hides a one-ulp difference. `$0.10` per 1M is
+parser computes, not the decimals the catalog carries, and the diff lines print
+them through `:g`, which hides a one-ulp difference. `0.1` per 1M is
 `0.1 / 1e6`, one ulp above `1e-07`, so a hand-written `1e-07` in that field reads
 as permanent drift — every later run rewrites the file and commits the ulp. Write
 `repr(float('0.10') / 1e6)`, or take the value from a run that applied the change
@@ -977,9 +981,9 @@ the textfile-collector file the script writes next to `docker-container-state.pr
 and the last outcome is kept in `/var/lib/litellm-price-sync/state.json`.
 
 Manual use: `python3 modules/litellm/sync-prices.py --repo /home/labile/nix`
-prints the drift against the live table and exits 1 when there is any, writing
-nothing without `--apply`; `--table <file>` reads a saved page instead of the
-network, which is how the refusals above are exercised.
+prints the drift against the live catalog and exits 1 when there is any, writing
+nothing without `--apply`; `--catalog <file>` reads a saved models response
+instead of the network, which is how the refusals above are exercised.
 
 ## Pool quota API
 

@@ -1,5 +1,5 @@
 {
-  "source": "https://opencode.ai/v2/docs/console/go/",
+  "source": "https://opencode.ai/inference/go/v1/models",
   "models": {
     "deepseek-v4.1-flash": {
       "input": 3e-07,
