@@ -20,7 +20,7 @@
             #   args = [ "--standard=PSR2" "$FILENAME" ];
             # };
             php_cs_fixer = {
-              command = "${pkgs.php83Packages.php-cs-fixer}/bin/php-cs-fixer";
+              command = "${pkgs.phpPackages.php-cs-fixer}/bin/php-cs-fixer";
               args = [
                 "fix"
                 "$FILENAME"

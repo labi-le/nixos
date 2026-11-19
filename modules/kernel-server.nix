@@ -10,5 +10,9 @@
   boot.blacklistedKernelModules = [
     "snd_pcsp"
     "pcspkr"
+    "sctp"
   ];
+  boot.extraModprobeConfig = ''
+    install sctp /bin/false
+  '';
 }

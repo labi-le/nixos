@@ -117,7 +117,7 @@ in
   };
 
   services.nginx = {
-    package = pkgs.angie;
+    package = pkgs.nginxMainline;
     enable = true;
     recommendedGzipSettings = true;
     # recommendedOptimisation = true;

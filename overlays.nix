@@ -7,6 +7,14 @@ final: prev: {
   sls-steam-wrapped = inputs.sls-steam.packages.${system}.wrapped;
   ayugram-desktop = inputs.ayugram-desktop.packages.${system}.default;
 
+  nginxMainline = prev.nginxMainline.overrideAttrs (_: {
+    version = "1.31.9";
+    src = final.fetchurl {
+      url = "https://nginx.org/download/nginx-1.31.9.tar.gz";
+      hash = "sha256-oRxe7uLiV/RHjw5kn4SwBAeH0nfS0+UjOVKqa23LgK0=";
+    };
+  });
+
   # xdpw asks PipeWire for two buffers while Chromium's capturer holds one, so
   # the stream wedges; sixteen buffers plus upstream #397 (issues #390/#395).
   xdg-desktop-portal-wlr = prev.xdg-desktop-portal-wlr.overrideAttrs (old: {

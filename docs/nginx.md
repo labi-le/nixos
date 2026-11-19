@@ -1,6 +1,6 @@
 # Reverse proxy on `server`
 
-Angie 1.11.8 (nginx 1.29.3 core, OpenSSL 3.6.3), `modules/nginx.nix`. Every
+nginx 1.31.9 (mainline, pinned in `overlays.nix`), `modules/nginx.nix`. Every
 proxied vhost comes from the `proxy` helper, which pins `kTLS = true` *after*
 merging caller arguments — passing `kTLS = false` as an argument is silently
 overridden, so an exception needs `lib.recursiveUpdate` around the call, the
@@ -250,3 +250,40 @@ whitelisted `/api/*` routes (`POST /api/trigger`, `POST /api/cancel`). The
 vhost does not route robomp's own `POST /replay`: a request there is answered
 by its `location /` 404 and never reaches robomp, whose `404 replay disabled`
 is visible only on the loopback port.
+
+## nginx2root: the edge runs nginx 1.31.9, not Angie
+
+Xint published five nginx vulnerabilities and a separate SCTP kernel flaw on
+2026-11-18. CVE-2026-123007 is the critical one: an unauthenticated client can
+corrupt HTTP/2 flow-control state and execute code as the worker user. Every
+nginx release from 1.9.5 through 1.31.8 carries the bug.
+
+The edge was running Angie 1.12.4, whose core is nginx 1.31.2, released
+2026-10-16. Angie 1.12.4 has the vulnerable check in
+`ngx_http_v2_state_window_update()`: it tests
+`window > NGX_HTTP_V2_MAX_WINDOW - h2c->send_window`, while nginx 1.31.9
+subtracts `h2c->send_queued` as well. Angie had no fixed release at the time, and nixpkgs master still packaged
+1.12.4. The nixpkgs pin was then updated to `0490633` (2026-11-17) as part of
+the full system update, and it still ships Angie 1.12.4 and nginx mainline
+1.31.8, so the override stays until Angie or nixpkgs catches up.
+
+`overlays.nix` pins `nginxMainline` to 1.31.9 and `modules/nginx.nix` selects
+it through `services.nginx.package`. The generated configuration needed no
+change: everything here is plain nginx syntax, HTTP/2 stays enabled, and after
+the switch the config test, ALPN `h2`, `labile.cc`, `cache.labile.cc` and the
+`llm` gateway were checked against the new binary. nginx 1.31.8 also removes
+the KTLS `recv() failed (5: Input/output error)` alert from nginx#651.
+
+Revert to Angie when it ships 1.12.5 or later with the same fixes: drop the
+overlay entry and point `services.nginx.package` back at `pkgs.angie`.
+
+Xint chained the nginx flaws with an SCTP use-after-free in the kernel send
+path that had no patch at disclosure. `modules/kernel-server.nix` now
+blacklists `sctp` and installs `/bin/false` for it, which stops new loads. The
+module is already loaded on the running kernel and cannot be unloaded while it
+is in use, so that block takes effect at the next reboot.
+
+The mailcow stack is separate: its `nginx-mailcow` container runs 1.30.6 with
+`http2 on`, published on `0.0.0.0:10443`, so it stays vulnerable until mailcow
+moves to a release with nginx 1.30.7 or later.
+
