@@ -81,7 +81,19 @@ programs.zsh.shellAliases = {
 
 ## Secrets Management With agenix
 
-Secrets live in `secrets/` as encrypted `.age` files.
+Secrets live in `secrets/` as encrypted `.age` files. Recipients are declared
+in `agenix-rules.nix` at the repository root; `agenix` discovers it from the
+current directory or any parent, so run it inside the repository.
+
+### Edit A Secret
+
+```bash
+sudo EDITOR=nvim agenix -e secrets/work/gitlab-work.age -i /etc/ssh/ssh_host_ed25519_key
+```
+
+The identity must match a recipient in `agenix-rules.nix`. Recipients on `pc`
+and `notebook` are ed25519 keys, so `/etc/ssh/ssh_host_rsa_key` cannot open
+them; `age` fails with `no identity matched any of the recipients`.
 
 ### Encrypt A Secret
 

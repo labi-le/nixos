@@ -290,7 +290,7 @@ TOOLS = [
         "name": "secret_list",
         "title": "Agenix secrets",
         "description": (
-            "Every secret declared in secrets.nix: recipients, whether the .age file exists, "
+            "Every secret declared in agenix-rules.nix: recipients, whether the .age file exists, "
             "and which local private key could decrypt it. `decrypt_here: null` means no key on "
             "this host is a recipient, so that secret cannot be opened here at any privilege "
             "level. Also reports .age files with no rule and rules with no file."
@@ -304,7 +304,7 @@ TOOLS = [
         "title": "Write an agenix secret",
         "description": (
             "Create or replace a secret with `age`, encrypting to the recipients declared for "
-            "that path in secrets.nix. Needs no root and no editor, because encryption only uses "
+            "that path in agenix-rules.nix. Needs no root and no editor, because encryption only uses "
             "public keys. It does NOT read the old value, so replacing an existing secret is "
             "destructive and needs confirm=\"yes\". Prefer `from_file` (absolute path outside the "
             "repo) over `content`, which would put the plaintext in the session transcript."
@@ -312,7 +312,7 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "repo-relative path exactly as keyed in secrets.nix"},
+                "path": {"type": "string", "description": "repo-relative path exactly as keyed in agenix-rules.nix"},
                 "content": {"type": "string", "description": "plaintext; lands in the transcript"},
                 "from_file": {"type": "string", "description": "absolute path outside the repo holding the plaintext"},
                 "confirm": {"type": "string", "description": "must be \"yes\" to overwrite an existing secret"},
@@ -335,7 +335,7 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "repo-relative path as keyed in secrets.nix"},
+                "path": {"type": "string", "description": "repo-relative path as keyed in agenix-rules.nix"},
                 "confirm": {"type": "string", "description": "must be \"yes\""},
             },
             "required": ["path", "confirm"],
@@ -347,7 +347,7 @@ TOOLS = [
         "name": "secret_rekey",
         "title": "Rekey agenix secrets",
         "description": (
-            "Re-encrypt secrets to the publicKeys currently declared in secrets.nix. Run it "
+            "Re-encrypt secrets to the publicKeys currently declared in agenix-rules.nix. Run it "
             "after adding or removing a recipient. Decrypts with a local recipient key, "
             "prompting for the sudo password on the desktop when only the host key qualifies. "
             "Plaintext never leaves the server process. Secrets no host key here can open are "
@@ -359,7 +359,7 @@ TOOLS = [
                 "paths": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "secrets to rekey; empty means every rule in secrets.nix",
+                    "description": "secrets to rekey; empty means every rule in agenix-rules.nix",
                 }
             },
         },

@@ -44,7 +44,7 @@ the host's `omp`. The wire format changed between `v18.8.9` and `v18.10.0`
 | `modules/buer/docker-compose.yml` | Worker, GitHub proxy and secretless Nix daemon; versioned private store volume and per-service environment allowlists |
 | `modules/buer/agent-AGENTS.md` | Global instruction file staged into the agent's `~/.agent/AGENTS.md` |
 | `modules/buer/empty-pr-body.patch` | Publishing guard and prompts enforcing empty PR descriptions, short single-line titles, and issue-comment verification evidence |
-| `secrets/buer-env.age` | `GITHUB_TOKEN`, `ROBOMP_LITELLM_KEY`, `GITHUB_WEBHOOK_SECRET`, `ROBOMP_GH_PROXY_HMAC_KEY` — recipients in `secrets.nix` (server key) |
+| `secrets/buer-env.age` | `GITHUB_TOKEN`, `ROBOMP_LITELLM_KEY`, `GITHUB_WEBHOOK_SECRET`, `ROBOMP_GH_PROXY_HMAC_KEY` — recipients in `agenix-rules.nix` (server key) |
 
 ## Wiring
 

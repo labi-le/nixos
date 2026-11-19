@@ -15,11 +15,11 @@ def secret_rules():
         ["nix", "eval", "--file", str(SECRETS_RULES), "--json"], timeout=300
     )
     if code != 0:
-        raise ToolError(f"cannot evaluate secrets.nix:\n{tail(nix_noise(err), 10)}")
+        raise ToolError(f"cannot evaluate agenix-rules.nix:\n{tail(nix_noise(err), 10)}")
     try:
         rules = json.loads(out)
     except ValueError:
-        raise ToolError("secrets.nix did not evaluate to JSON data")
+        raise ToolError("agenix-rules.nix did not evaluate to JSON data")
     return rules
 
 
@@ -98,7 +98,7 @@ def tool_secret_list(args, request_id, token):
         if str(found.relative_to(REPO)) not in known
     )
     header = {
-        "rules_file": "secrets.nix",
+        "rules_file": "agenix-rules.nix",
         "count": len(secrets),
         "identities_readable_without_root": [
             entry["identity"] for entry in identities if not entry["needs_root"]
@@ -137,7 +137,7 @@ def decrypt_secret(path, recipients):
         raise ToolError(
             f"no private key on this host is a recipient of {path}; it cannot be decrypted here "
             "at any privilege level. Rekey it on a host that is a recipient, or add a local key "
-            "to its publicKeys in secrets.nix"
+            "to its publicKeys in agenix-rules.nix"
         )
     argv = [AGE, "-d", "-i", identity["identity"], str(REPO / path)]
     if identity["needs_root"]:
@@ -157,7 +157,7 @@ def tool_secret_read(args, request_id, token):
         raise ToolError("path is required")
     rules = secret_rules()
     if path not in rules:
-        raise ToolError(f"{path!r} has no rule in secrets.nix")
+        raise ToolError(f"{path!r} has no rule in agenix-rules.nix")
     if args.get("confirm") != "yes":
         raise ToolError(
             "reading a secret puts its plaintext into this session's transcript and session "
@@ -183,7 +183,7 @@ def tool_secret_rekey(args, request_id, token):
     targets = wanted or sorted(rules)
     unknown = [path for path in targets if path not in rules]
     if unknown:
-        raise ToolError("no rule in secrets.nix for: " + ", ".join(unknown))
+        raise ToolError("no rule in agenix-rules.nix for: " + ", ".join(unknown))
     done = []
     skipped = []
     for path in targets:
@@ -228,7 +228,7 @@ def tool_secret_rekey(args, request_id, token):
         "skipped": skipped,
         "note": "plaintext never enters the transcript; when the host key is needed it transits "
         "a 0700 tmpfs scratch dir purged on every exit path including SIGTERM. Run after "
-        "changing publicKeys in secrets.nix",
+        "changing publicKeys in agenix-rules.nix",
     }
     return envelope(header), False
 
@@ -240,7 +240,7 @@ def tool_secret_write(args, request_id, token):
     rules = secret_rules()
     if path not in rules:
         raise ToolError(
-            f"{path!r} has no rule in secrets.nix; add its publicKeys there first. "
+            f"{path!r} has no rule in agenix-rules.nix; add its publicKeys there first. "
             "Known: " + ", ".join(sorted(rules))
         )
     content = args.get("content")
@@ -276,7 +276,7 @@ def tool_secret_write(args, request_id, token):
     spec = rules[path] or {}
     recipients = spec.get("publicKeys") or []
     if not recipients:
-        raise ToolError(f"{path} has no publicKeys in secrets.nix")
+        raise ToolError(f"{path} has no publicKeys in agenix-rules.nix")
     argv = [AGE]
     if spec.get("armor"):
         argv.append("--armor")
