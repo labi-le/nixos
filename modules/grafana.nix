@@ -213,6 +213,21 @@ in
               '';
             };
           }
+          {
+            name = "fail2ban";
+            type = "file";
+            disableDeletion = true;
+            folder = "fail2ban";
+            options = {
+              foldersFromFilesStructure = false;
+              path = pkgs.runCommand "grafana-fail2ban-dashboards" { nativeBuildInputs = [ pkgs.jq ]; } ''
+                mkdir -p $out
+                jq 'del(.__inputs, .__requires)' \
+                  ${./monitoring/dashboards/fail2ban.json} \
+                  > $out/fail2ban.json
+              '';
+            };
+          }
         ];
       };
     };
@@ -224,6 +239,10 @@ in
     retentionTime = "365d";
 
     exporters = {
+      fail2ban = {
+        enable = true;
+        port = 9191;
+      };
       node = {
         port = 3021;
         enabledCollectors = [
@@ -274,6 +293,16 @@ in
     };
 
     scrapeConfigs = [
+      {
+        job_name = "fail2ban";
+        static_configs = [
+          {
+            targets = [
+              "127.0.0.1:${toString config.services.prometheus.exporters.fail2ban.port}"
+            ];
+          }
+        ];
+      }
       {
         job_name = "nodes";
         static_configs = [

@@ -813,7 +813,7 @@ hosts = ["server"]
 group = "Server-Specific Modules"
 task = "fail2ban: sshd blindness, filter traps, port scoping, nftables ban backend"
 doc = "docs/routes-notes.md#firewall-2"
-paths = ["modules/network/firewall.nix", "modules/frp.nix", "docs/fail2ban.md"]
+paths = ["modules/network/firewall.nix", "modules/frp.nix", "modules/grafana.nix", "modules/monitoring/dashboards/fail2ban.json", "docs/fail2ban.md"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]

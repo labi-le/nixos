@@ -146,7 +146,7 @@ per-service documents under `docs/`.
 | Server-Specific Modules | Music Assistant server | `modules/music-assistant.nix`, `docs/music-assistant.md` | server | docs/routes-notes.md#music-assistant |
 | Server-Specific Modules | YouTube → станция (мост `bifrons`: Telegram-бот, резолвер `127.0.0.1:8096`, yt-dlp → очередь Music Assistant) | `modules/bifrons.nix`, `modules/bifrons.py` | server | docs/routes-notes.md#bifrons |
 | Server-Specific Modules | FRP (Fast Reverse Proxy); fail2ban jail `frp-auth` and its filter | `modules/frp.nix` | server | docs/routes-notes.md#frp |
-| Server-Specific Modules | fail2ban: sshd blindness, filter traps, port scoping, nftables ban backend | `modules/network/firewall.nix`, `modules/frp.nix`, `docs/fail2ban.md` | pc, fx516, notebook, server | docs/routes-notes.md#firewall-2 |
+| Server-Specific Modules | fail2ban: sshd blindness, filter traps, port scoping, nftables ban backend | `modules/network/firewall.nix`, `modules/frp.nix`, `modules/grafana.nix`, `modules/monitoring/dashboards/fail2ban.json`, `docs/fail2ban.md` | pc, fx516, notebook, server | docs/routes-notes.md#firewall-2 |
 | Server-Specific Modules | Grafana alert: | `modules/monitoring/frp.nix` | server | docs/routes-notes.md#frp-2 |
 | Server-Specific Modules | Syncthing (server) | `modules/syncthing/server.nix` | server |  |
 | Server-Specific Modules | NVIDIA GT 210 | `modules/nvidia/gt210.nix` | server |  |
@@ -203,7 +203,7 @@ per-service documents under `docs/`.
 | Other Files | Project-scoped MCP servers for maki in this repo | `.maki/mcp.toml` | pc, fx516, notebook, server |  |
 | Other Files | The `nix-control` MCP server, split by concern: | `.omp/nix-control-mcp/*.py` | pc, fx516, notebook, server |  |
 | Other Files | Project skills live under `.omp/skills/`, loaded by omp's native skill provider | `.omp/skills/nix-routing/SKILL.md` | pc, fx516, notebook, server |  |
-| System Modules | Declarative OMP skill cleanup (all OMP hosts) | `modules/omp/install.nix`, `modules/omp/settings/skills.nix`, `modules/omp/skills-prune.sh` | pc, fx516, notebook, server |  |
+| System Modules | Declarative OMP skill cleanup (all OMP hosts) | `modules/omp/install.nix`, `modules/omp/settings/skills.nix`, `modules/omp/skills-prune.sh` | pc, fx516, notebook, server | Activation prunes undeclared entries in the main OMP skills directory. See `docs/nix-project-rules.md`. |
 | System Modules | OMP retries turns a provider ended with finish_reason content_filter (all OMP hosts) | `modules/omp/extensions/content-filter-retry.ts`, `modules/omp/content-filter-retry.test.ts` | pc, fx516, notebook, server |  |
 | Code indexer wiring | Indexer system service and ChromaDB endpoint | `modules/omp/index-repo.nix`, `modules/chromadb.nix` | pc, fx516, notebook, server | docs/routes-notes.md#index-repo |
 | Other Files | Routing registry read by the nix-control route tool | `docs/routes.toml` | pc, fx516, notebook, server |  |

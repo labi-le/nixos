@@ -101,6 +101,24 @@ mailcow's `netfilter` container, was rejected: the conflict is built entirely
 on the host side by fail2ban's `-I INPUT 1` insert, and that container's
 Redis-driven ban UI stays needed.
 
+## Metrics and dashboard
+
+`services.prometheus.exporters.fail2ban` runs
+`prometheus-fail2ban-exporter` on `127.0.0.1:9191` and reads
+`/run/fail2ban/fail2ban.sock`. The NixOS module gives the unit the socket's
+group (`systemd.sockets.fail2ban.socketConfig.SocketGroup`, currently
+`fail2ban`), so no extra permission setup is needed. Prometheus scrapes it as
+job `fail2ban`; the dashboard is provisioned at `/d/fail2ban` from
+`modules/monitoring/dashboards/fail2ban.json`.
+
+The exporter exposes jail counters only: `f2b_jail_banned_current`,
+`f2b_jail_banned_total`, `f2b_jail_failed_current`, `f2b_jail_failed_total`,
+`f2b_config_jail_*`, `f2b_jail_count`, `f2b_up` and `f2b_errors`. No metric
+carries the banned address. The dashboard's log panel reads the fail2ban
+action lines, addresses included, from Loki (`job="fail2ban"`, shipped by
+Alloy in `modules/grafana.nix`). An exact list of addresses banned right now
+still needs `fail2ban-client`.
+
 ## Verify
 
 ```sh
@@ -144,6 +162,17 @@ sudo fail2ban-regex /var/log/nginx/access.log \
 Expected: nonzero `Failregex`, `Ignoreregex: 0 total`. Large `Ignored` means
 the anchor regressed into User-Agent/Referer — rerun with `User-Agent: GET
 /x.css HTTP`, confirm `Missed` not `Ignored`.
+
+```sh
+systemctl status prometheus-fail2ban-exporter
+curl -s http://127.0.0.1:9191/metrics | grep -E '^f2b_(up|jail_banned_current)'
+curl -sG http://127.0.0.1:3020/api/v1/query --data-urlencode 'query=f2b_up'
+```
+Expected: unit active, `f2b_up 1` and one `f2b_jail_banned_current` line per
+jail, Prometheus returns value `1`. `f2b_up 0`, a rising
+`f2b_errors{type="socket_conn"}`, or a restart loop means the unit lost the
+socket group: check `systemctl show prometheus-fail2ban-exporter -p
+SupplementaryGroups` for `fail2ban`.
 
 [banaction]: https://search.nixos.org/options?query=banaction
 [packageFirewall]: https://search.nixos.org/options?query=packageFirewall
