@@ -27,7 +27,7 @@
         "name": "router",
         "label": "Router",
         "type": "custom",
-        "query": "router,openwrt",
+        "query": "router",
         "current": {
           "text": "router",
           "value": "router"
@@ -37,11 +37,6 @@
             "selected": true,
             "text": "router",
             "value": "router"
-          },
-          {
-            "selected": false,
-            "text": "openwrt",
-            "value": "openwrt"
           }
         ],
         "multi": false,

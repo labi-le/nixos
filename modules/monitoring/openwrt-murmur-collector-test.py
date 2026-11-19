@@ -59,7 +59,7 @@ def framed(values):
     return result
 
 
-def rendered(values=None, router="openwrt"):
+def rendered(values=None, router="router"):
     return collector.render_snapshot(collector.parse_frames(framed(values or snapshot())), router, 1.25, 1792141262)
 
 
@@ -67,14 +67,14 @@ class CollectorTests(unittest.TestCase):
     def test_exact_memory_hz_page_and_cpu_units(self):
         text = rendered()
         for expected in [
-            'openwrt_memory_bytes{router="openwrt",kind="total"} 1048576',
-            'openwrt_murmur_resident_memory_bytes{router="openwrt"} 81920',
-            'openwrt_murmur_cpu_seconds_total{router="openwrt"} 3',
-            'openwrt_cpu_seconds_total{router="openwrt",mode="user"} 0.98',
-            'openwrt_socket_memory_bytes{router="openwrt",protocol="tcp"} 20480',
-            'openwrt_murmur_start_time_seconds{router="openwrt"} 1792141070',
-            'openwrt_murmur_page_faults_total{router="openwrt",kind="minor"} 7',
-            'openwrt_murmur_page_faults_total{router="openwrt",kind="major"} 3',
+            'openwrt_memory_bytes{router="router",kind="total"} 1048576',
+            'openwrt_murmur_resident_memory_bytes{router="router"} 81920',
+            'openwrt_murmur_cpu_seconds_total{router="router"} 3',
+            'openwrt_cpu_seconds_total{router="router",mode="user"} 0.98',
+            'openwrt_socket_memory_bytes{router="router",protocol="tcp"} 20480',
+            'openwrt_murmur_start_time_seconds{router="router"} 1792141070',
+            'openwrt_murmur_page_faults_total{router="router",kind="minor"} 7',
+            'openwrt_murmur_page_faults_total{router="router",kind="major"} 3',
         ]:
             self.assertIn(expected + '\n', text)
 
@@ -82,8 +82,8 @@ class CollectorTests(unittest.TestCase):
         values = snapshot()
         values["auxv"] = struct.pack("<QQQQQQ", 6, 16384, 17, 250, 0, 0)
         text = rendered(values)
-        self.assertIn('openwrt_murmur_cpu_seconds_total{router="openwrt"} 1.2\n', text)
-        self.assertIn('openwrt_socket_memory_bytes{router="openwrt",protocol="tcp"} 81920\n', text)
+        self.assertIn('openwrt_murmur_cpu_seconds_total{router="router"} 1.2\n', text)
+        self.assertIn('openwrt_socket_memory_bytes{router="router",protocol="tcp"} 81920\n', text)
 
     def test_missing_process_has_no_process_values(self):
         values = snapshot()
@@ -93,7 +93,7 @@ class CollectorTests(unittest.TestCase):
             if key.startswith("process_") or key in ("cmdline", "cmdline_after", "fd_count"):
                 del values[key]
         text = rendered(values)
-        self.assertIn('openwrt_murmur_up{router="openwrt"} 0\n', text)
+        self.assertIn('openwrt_murmur_up{router="router"} 0\n', text)
         self.assertNotIn("openwrt_murmur_resident_memory_bytes", text)
 
     def test_pid_reuse_and_wrong_configuration_fail(self):
@@ -109,10 +109,10 @@ class CollectorTests(unittest.TestCase):
         values["proxy_providers_rc"] = "28"
         values["proxy_providers"] = "private error"
         text = rendered(values)
-        self.assertIn('openwrt_murmur_api_success{router="openwrt",endpoint="proxy_providers"} 0\n', text)
+        self.assertIn('openwrt_murmur_api_success{router="router",endpoint="proxy_providers"} 0\n', text)
         self.assertNotIn("openwrt_murmur_provider_proxies", text)
         self.assertNotIn("private error", text)
-        self.assertIn('openwrt_collector_success{router="openwrt"} 1\n', text)
+        self.assertIn('openwrt_collector_success{router="router"} 1\n', text)
 
     def test_malformed_api_does_not_publish_partial_endpoint(self):
         for name, payload in [("connections", {"connections": [], "uploadTotal": 0}), ("proxy_providers", {"providers": {"ok": {"proxies": []}, "bad": {}}}), ("rule_providers", {"providers": {"ok": {"ruleCount": 42}, "bad": {"ruleCount": -1}}})]:
@@ -126,12 +126,12 @@ class CollectorTests(unittest.TestCase):
     def test_health_uses_timestamped_per_url_history(self):
         text = rendered()
         for line in [
-            'openwrt_murmur_probe_proxies{router="openwrt",provider="subscription",probe="claude",state="healthy"} 1',
-            'openwrt_murmur_probe_proxies{router="openwrt",provider="subscription",probe="claude",state="unknown"} 1',
-            'openwrt_murmur_probe_proxies{router="openwrt",provider="subscription",probe="cloudflare",state="unhealthy"} 1',
-            'openwrt_murmur_provider_proxies{router="openwrt",provider="subscription",state="unhealthy"} 1',
-            'openwrt_murmur_provider_proxies{router="openwrt",provider="subscription",state="unknown"} 1',
-            'openwrt_murmur_probe_newest_timestamp_seconds{router="openwrt",provider="subscription",probe="claude"} 1792141200',
+            'openwrt_murmur_probe_proxies{router="router",provider="subscription",probe="claude",state="healthy"} 1',
+            'openwrt_murmur_probe_proxies{router="router",provider="subscription",probe="claude",state="unknown"} 1',
+            'openwrt_murmur_probe_proxies{router="router",provider="subscription",probe="cloudflare",state="unhealthy"} 1',
+            'openwrt_murmur_provider_proxies{router="router",provider="subscription",state="unhealthy"} 1',
+            'openwrt_murmur_provider_proxies{router="router",provider="subscription",state="unknown"} 1',
+            'openwrt_murmur_probe_newest_timestamp_seconds{router="router",provider="subscription",probe="claude"} 1792141200',
         ]:
             self.assertIn(line + '\n', text)
         for secret in ("secret-node", "another-secret", "secret-ip", "platform.claude", "generate_204", "999999"):
@@ -164,10 +164,10 @@ class CollectorTests(unittest.TestCase):
     def test_network_and_connections_are_aggregate_counters(self):
         text = rendered()
         for expected in [
-            'openwrt_network_bytes_total{router="openwrt",device="eth0",direction="receive"} 1000',
-            'openwrt_network_errors_total{router="openwrt",device="eth0",direction="transmit"} 4',
-            'openwrt_murmur_connections{router="openwrt"} 1',
-            'openwrt_murmur_traffic_bytes_total{router="openwrt",direction="download"} 3400',
+            'openwrt_network_bytes_total{router="router",device="eth0",direction="receive"} 1000',
+            'openwrt_network_errors_total{router="router",device="eth0",direction="transmit"} 4',
+            'openwrt_murmur_connections{router="router"} 1',
+            'openwrt_murmur_traffic_bytes_total{router="router",direction="download"} 3400',
         ]:
             self.assertIn(expected + '\n', text)
 
@@ -206,9 +206,9 @@ class CollectorTests(unittest.TestCase):
 
     def test_failure_replaces_all_stale_gauges(self):
         previous = rendered()
-        text = collector.render_failure("openwrt", 2.5, collector.previous_success(previous, "openwrt"))
-        self.assertIn('openwrt_collector_success{router="openwrt"} 0\n', text)
-        self.assertIn('openwrt_collector_last_success_timestamp_seconds{router="openwrt"} 1792141262\n', text)
+        text = collector.render_failure("router", 2.5, collector.previous_success(previous, "router"))
+        self.assertIn('openwrt_collector_success{router="router"} 0\n', text)
+        self.assertIn('openwrt_collector_last_success_timestamp_seconds{router="router"} 1792141262\n', text)
         self.assertNotIn("openwrt_memory_bytes", text)
         self.assertNotIn("openwrt_murmur_up", text)
         self.assertIsNone(collector.previous_success(previous, "different"))
@@ -258,7 +258,7 @@ class CollectorTests(unittest.TestCase):
             text = rendered(values)
             self.assertIn('endpoint="connections"} 0\n', text)
             self.assertNotIn("openwrt_murmur_traffic_bytes_total", text)
-            self.assertIn('openwrt_collector_success{router="openwrt"} 1\n', text)
+            self.assertIn('openwrt_collector_success{router="router"} 1\n', text)
 
     def test_future_and_unzoned_probe_times_are_unknown(self):
         for stamp in ("2099-01-01T00:00:00Z", "2026-10-16T09:00:00"):
@@ -278,29 +278,29 @@ class CollectorTests(unittest.TestCase):
     def test_optional_temperature_converts_millicelsius(self):
         values = snapshot()
         values["temperature"] = "44442"
-        self.assertIn('openwrt_temperature_celsius{router="openwrt",sensor="thermal_zone0"} 44.442\n', rendered(values))
+        self.assertIn('openwrt_temperature_celsius{router="router",sensor="thermal_zone0"} 44.442\n', rendered(values))
 
     def test_main_transport_failure_publishes_sanitized_failure(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as directory:
             path = Path(directory) / "router.prom"
             path.write_text(rendered())
             errors = io.StringIO()
-            with patch.object(collector.sys, "argv", ["collector", "--target", "root@openwrt", "--output", str(path)]), patch.object(collector, "collect", side_effect=ValueError("private payload and secret")), contextlib.redirect_stderr(errors):
+            with patch.object(collector.sys, "argv", ["collector", "--target", "root@router", "--output", str(path)]), patch.object(collector, "collect", side_effect=ValueError("private payload and secret")), contextlib.redirect_stderr(errors):
                 result = collector.main()
             self.assertEqual(result, 1)
             self.assertEqual(errors.getvalue(), "ValueError\n")
             content = path.read_text()
-            self.assertIn('openwrt_collector_success{router="openwrt"} 0\n', content)
-            self.assertIn('openwrt_collector_last_success_timestamp_seconds{router="openwrt"} 1792141262\n', content)
+            self.assertIn('openwrt_collector_success{router="router"} 0\n', content)
+            self.assertIn('openwrt_collector_last_success_timestamp_seconds{router="router"} 1792141262\n', content)
             self.assertNotIn("openwrt_memory_bytes", content)
 
     def test_main_success_publishes_real_parsed_metrics(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as directory:
             path = Path(directory) / "router.prom"
-            with patch.object(collector.sys, "argv", ["collector", "--target", "root@openwrt", "--output", str(path)]), patch.object(collector, "collect", return_value=collector.parse_frames(framed(snapshot()))):
+            with patch.object(collector.sys, "argv", ["collector", "--target", "root@router", "--output", str(path)]), patch.object(collector, "collect", return_value=collector.parse_frames(framed(snapshot()))):
                 result = collector.main()
             self.assertEqual(result, 0)
-            self.assertIn('openwrt_murmur_resident_memory_bytes{router="openwrt"} 81920\n', path.read_text())
+            self.assertIn('openwrt_murmur_resident_memory_bytes{router="router"} 81920\n', path.read_text())
 
     def test_stale_probe_is_unknown_but_retains_timestamp(self):
         values = snapshot()
@@ -313,7 +313,7 @@ class CollectorTests(unittest.TestCase):
         values = snapshot()
         values["connections"] = '{"connections":null,"uploadTotal":12,"downloadTotal":34}'
         text = rendered(values)
-        self.assertIn('openwrt_murmur_connections{router="openwrt"} 0\n', text)
+        self.assertIn('openwrt_murmur_connections{router="router"} 0\n', text)
         self.assertIn('endpoint="connections"} 1\n', text)
         values["connections"] = '{"uploadTotal":12,"downloadTotal":34}'
         self.assertIn('endpoint="connections"} 0\n', rendered(values))
@@ -330,7 +330,7 @@ class CollectorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as directory:
             path = Path(directory) / "absent" / "router.prom"
             errors = io.StringIO()
-            with patch.object(collector.sys, "argv", ["collector", "--target", "root@openwrt", "--output", str(path)]), patch.object(collector, "collect", return_value=collector.parse_frames(framed(snapshot()))), contextlib.redirect_stderr(errors):
+            with patch.object(collector.sys, "argv", ["collector", "--target", "root@router", "--output", str(path)]), patch.object(collector, "collect", return_value=collector.parse_frames(framed(snapshot()))), contextlib.redirect_stderr(errors):
                 result = collector.main()
             self.assertEqual(result, 1)
             self.assertEqual(errors.getvalue(), "FileNotFoundError\n")

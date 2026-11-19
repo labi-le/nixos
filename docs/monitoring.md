@@ -15,7 +15,7 @@ page).
 `modules/monitoring/openwrt-murmur.nix` adds a server-side SSH collector and the
 `OpenWrt / murmur` dashboard at `/d/openwrt-murmur`. The collector runs every
 60 seconds as `labile`, using that user's existing SSH identity and verified
-host key for `root@openwrt`. It does not install a daemon or store history on
+host key for `root@router`. It does not install a daemon or store history on
 the router. Prometheus retains the samples through the existing server node
 exporter and datasource `prometheus`.
 
@@ -28,7 +28,7 @@ uses two fixed probes, Cloudflare and Claude; untested or stale results are
 unknown rather than healthy.
 
 The service publishes atomically to
-`/var/lib/prometheus-openwrt/openwrt-murmur.prom`. Node exporter reads this
+`/var/lib/prometheus-openwrt/router-murmur.prom`. Node exporter reads this
 directory in addition to its existing textfile directory. A failed SSH or
 invalid system snapshot replaces old data with failure/freshness metrics;
 failed API requests omit only the affected API data. Check both

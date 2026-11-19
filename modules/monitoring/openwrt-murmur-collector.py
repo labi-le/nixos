@@ -613,7 +613,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", required=True)
     parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--router", default="openwrt")
+    parser.add_argument("--router", default="router")
     args = parser.parse_args()
     started = time.monotonic()
     failed = False

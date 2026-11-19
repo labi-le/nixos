@@ -5,24 +5,17 @@ let
   logDir = "/var/log/openwrt-murmur";
 
   collector = pkgs.writeShellScript "openwrt-murmur-collector" ''
-    set -u
-    rc=0
-    ${pkgs.python3}/bin/python3 ${./openwrt-murmur-collector.py} \
+    exec ${pkgs.python3}/bin/python3 ${./openwrt-murmur-collector.py} \
       --target root@router \
       --router router \
-      --output ${textfileDir}/router-murmur.prom || rc=$?
-    ${pkgs.python3}/bin/python3 ${./openwrt-murmur-collector.py} \
-      --target root@openwrt \
-      --router openwrt \
-      --output ${textfileDir}/openwrt-murmur.prom || true
-    exit $rc
+      --output ${textfileDir}/router-murmur.prom
   '';
 
-  mkLogShipper = router: target: pkgs.writeShellScript "openwrt-murmur-logshipper-${router}" ''
+  logShipper = pkgs.writeShellScript "openwrt-murmur-logshipper" ''
     exec ${pkgs.python3}/bin/python3 ${./openwrt-murmur-logshipper.py} \
-      --target ${target} \
-      --router ${router} \
-      --log-dir ${logDir}/${router}
+      --target root@router \
+      --router router \
+      --log-dir ${logDir}/router
   '';
 in
 {
@@ -30,7 +23,6 @@ in
     "d ${textfileDir} 0755 labile users -"
     "d ${logDir} 0755 labile users -"
     "d ${logDir}/router 0755 labile users -"
-    "d ${logDir}/openwrt 0755 labile users -"
   ];
 
   systemd.services.openwrt-murmur-collector = {
@@ -75,32 +67,9 @@ in
       Type = "simple";
       User = "labile";
       Group = "users";
-      ExecStart = mkLogShipper "router" "root@router";
+      ExecStart = logShipper;
       Restart = "always";
       RestartSec = "5s";
-      UMask = "0022";
-      NoNewPrivileges = true;
-      PrivateTmp = true;
-      ProtectSystem = "strict";
-      ProtectHome = "read-only";
-      ReadWritePaths = [ logDir ];
-      RestrictSUIDSGID = true;
-    };
-  };
-
-  systemd.services.openwrt-murmur-logshipper-openwrt = {
-    description = "Stream murmur structured logs and OpenWrt syslog from test openwrt router to disk and Loki";
-    after = [ "network-online.target" "loki.service" ];
-    wants = [ "network-online.target" "loki.service" ];
-    wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.openssh ];
-    serviceConfig = {
-      Type = "simple";
-      User = "labile";
-      Group = "users";
-      ExecStart = mkLogShipper "openwrt" "root@openwrt";
-      Restart = "always";
-      RestartSec = "10s";
       UMask = "0022";
       NoNewPrivileges = true;
       PrivateTmp = true;
