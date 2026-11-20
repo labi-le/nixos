@@ -370,6 +370,7 @@ in
         addr = "http://127.0.0.1:7001";
         internal = true;
       };
+      "autodiscover.labile.cc" = proxy { addr = "http://127.0.0.1:7001"; };
       "torrent.labile.cc" = proxy {
         addr = "http://127.0.0.1:7000";
         internal = true;
