@@ -182,8 +182,7 @@ of scope here.
 ## The LLM gateway vhost: public API, whitelisted dashboard
 
 Two vhosts are deliberately split: `llm.labile.cc` here and `buer.labile.cc` in
-the next section. For the gateway, the API has to answer from anywhere — jcode
-on every host and friends' tools call it over
+the next section. For the gateway, the API has to answer from anywhere — agents on every host and friends' tools call it over
 mobile and foreign networks, and a virtual key is the gate — while the admin
 dashboard only has to answer to you. `modules/nginx.nix` therefore builds it
 with `llmGateway`: `/` stays public, and four prefixes go behind the same

@@ -88,7 +88,6 @@ in
         pgcli
 
         generate-context
-        jcode
         cargo-slot
       ]
       ++ optionals cfg.desktop desktopPackages

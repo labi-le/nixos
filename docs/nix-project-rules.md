@@ -81,17 +81,14 @@ invocation and does not consume these Makefile variables.
 
 ## Agent MR Text Gate
 
-OMP and jcode allow only empty MR/PR descriptions and nonempty, single-line
+OMP allows only empty MR/PR descriptions and nonempty, single-line
 titles of at most 70 Unicode characters. Creation requires both values
 explicitly, including an empty description. The gates inspect `git push`
 push options, inline `push.pushOption` settings and `gh`/`glab` creation
 and editing commands. Files, templates, editors and generated text are
 refused; ordinary pushes and metadata-only edits remain allowed.
 
-Verify OMP with `bun test modules/omp/commit-gate.test.ts` and jcode with
-`JCODE_GATE_MATRIX_DIR="$PWD" make gate-matrix`. The matrix creates and
-removes its Git fixtures inside the working tree. Its Git commands do
-not publish anything.
+Verify OMP with `bun test modules/omp/commit-gate.test.ts`.
 
 These are command checks, not a sandbox. They do not inspect inherited
 Git configuration or intercept arbitrary HTTP/MCP requests. After a
@@ -105,7 +102,7 @@ Each system activation runs `modules/omp/skills-prune.sh` from
 `~/.omp/agent/skills`. Removing a declaration therefore removes the old
 installed entry on the next switch. Symlink targets are preserved; a symlink
 in place of the skills directory makes cleanup fail. Project skills,
-`managed-skills`, jcode and Maki are outside this cleanup's scope.
+`managed-skills` and Maki are outside this cleanup's scope.
 
 Verify with `bun test modules/omp/skills-prune.test.ts`
 and `shellcheck modules/omp/skills-prune.sh`. Start a new OMP process after

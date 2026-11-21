@@ -12,7 +12,7 @@ USAGE_URL = os.environ.get("OPENCODE_USAGE_URL", "https://opencode.ai/zen/go/v1/
 SYNC_INTERVAL_SECONDS = int(os.environ.get("OPENCODE_USAGE_SYNC_SECONDS", "120"))
 COOLDOWN_SECONDS = int(os.environ.get("OPENCODE_USAGE_COOLDOWN_SECONDS", "600"))
 LIMIT_PERCENT = float(os.environ.get("OPENCODE_USAGE_LIMIT_PERCENT", "95"))
-USER_AGENT = os.environ.get("OPENCODE_USAGE_USER_AGENT", "jcode/0.89.3")
+USER_AGENT = os.environ.get("OPENCODE_USAGE_USER_AGENT", "litellm")
 SESSION = "litellm-usage-sync"
 WINDOWS = ("rolling", "weekly", "monthly")
 

@@ -7,19 +7,12 @@ published as `127.0.0.1:27015` and proxied by `llm.labile.cc`. Keys, spend and
 models live in PostgreSQL, not in the container, so they survive restarts,
 rebuilds and image updates.
 
-jcode consumes the group as its default provider (`llm-labile` with model
-`deepseek-v4.1-flash` in `modules/jcode/providers.nix`) on every host that
-receives the master key, so interactive turns shuffle across the five accounts;
-hosts outside the secret's recipients (fx516) keep the direct `opencode-go`
-profile. That provider's model list is derived from the catalog
-(`import ../litellm/models`), one entry per group, so a new group file appears in
-jcode's `/model` picker without an edit here. omp
-reaches the same gateway as provider `llm-labile` (`discovery.type = "litellm"`
+omp reaches the gateway as provider `llm-labile` (`discovery.type = "litellm"`
 over `https://llm.labile.cc/v1`, declared only on hosts that receive the master
-key), so its roster, limits and prices come from the proxy's own metadata rather
-than from a list here, and an OpenAI-backed group is dispatched over the
-Responses route; it also authenticates against `byesu` and `closerouter`
-directly.
+key), so interactive turns shuffle across the accounts and its roster, limits
+and prices come from the proxy's own metadata rather than from a list here, and
+an OpenAI-backed group is dispatched over the Responses route; it also
+authenticates against `byesu` and `closerouter` directly.
 
 ## Model groups
 
@@ -671,64 +664,6 @@ Verify: `omp models llm-labile --json` lists exactly the key's groups with
 `403 key_model_access_denied` on first use means the client pinned its roster
 instead of discovering it.
 
-jcode discovers too, through `model_catalog`, which reads the same live
-`GET /v1/models` (`jcode provider add --model-catalog` writes the profile that
-way, `/refresh-model-list` re-reads it inside a session). Measured 2026-10-11 in
-an isolated `JCODE_HOME` with a profile carrying nothing but `base_url`,
-`api_key_env` and `model_catalog`:
-`jcode model list --provider-profile llm-labile-probe` returned the five groups
-that existed then as `available`, and `jcode run` on `deepseek-v4.1-flash` answered. Two things the
-catalog does not carry. Ids arrive bare — LiteLLM publishes
-`id/object/created/owned_by` — so reasoning, context and effort still come from
-the declared `models` entries, the same reason `space-bunny-free` is pinned by
-hand in `modules/jcode/space-bunny.nix`. And a bare `openai-compatible` profile
-without `default_model` selects a synthetic `anthropic/claude-sonnet-4`, which
-this proxy rejects with `400 Invalid model name … Call /v1/models`. Minimal
-profile in `~/.jcode/config.toml`:
-
-```toml
-[providers.llm-labile]
-type = "openai-compatible"
-base_url = "https://llm.labile.cc/v1"
-api_key_env = "LITELLM_MASTER_KEY"
-default_model = "deepseek-v4.1-flash"
-model_catalog = true
-supports_reasoning_effort = true
-
-[[providers.llm-labile.models]]
-id = "deepseek-v4.1-flash"
-reasoning = true
-context_window = 1000000
-input = ["text", "image"]
-```
-
-A named profile is not a `-p` value; select it with
-`--provider-profile <name>`, or choose it from `/model` in a session.
-
-Measured against the deployed profiles on 2026-10-11, `jcode model list
---provider-profile <p> --json` returns the live rosters — 30 ids for `byesu`,
-98 for `closerouter`, 5 for `llm-labile` — so the `[[providers.<p>.models]]`
-blocks in `modules/jcode/providers.nix` are metadata overlays, not rosters.
-Deleting them costs capability rather than staleness, and the reason is a key
-mismatch rather than missing data: LiteLLM's `/v1/models` answers
-`id/object/created/owned_by` plus `max_input_tokens`/`max_output_tokens`, and
-byesu's answers `supported_endpoint_types` — none of them the `context_length` /
-`max_model_len` / `architecture.input_modalities` keys jcode's catalog parser
-reads, so the parsed cache (`$JCODE_HOME/cache/<profile>_models.json`) records
-`context_length: null` and `input: []` even though the proxy does answer
-`max_input_tokens: 1000000`. jcode asks only `/v1/models`: in the `docker-litellm`
-journal the `/model_group/info`, `/model/info` and `/v2/model/info` requests come
-from omp, never from jcode. jcode's models.dev integration is a *pricing* catalog
-(`models_dev_pricing.json`, "models.dev pricing catalog"), not a capability one —
-so context, modalities and the reasoning flag have no other source, and these
-declarations only become unnecessary once one side learns the other's keys: the
-jcode parser accepting LiteLLM's names, or a gateway-side `/v1/models` shim
-emitting the OpenRouter-style ones. `closerouter` is the exception: its payload
-carries `context_length`, `pricing` and `architecture.input_modalities`, which the
-same cache shows parsed, and that is why its catalog also advertises image and
-video ids (`black-forest-labs/*`, `bytedance/seedream-*`, `bytedance/seedance-*`)
-alongside chat models.
-
 ### Daily request limit for one group
 
 `gemini-4-argon` is billed by byesu's own tariff and records zero spend
@@ -909,7 +844,7 @@ completion tokens produced `1.32e-05`, exactly `32×3.0e-7 + 3×1.2e-6`. The CLI
 prints anything below `0.0001` in scientific notation, so a live row reads
 `1.32e-05` rather than `0.0000`.
 
-Traffic authenticated with the master key — everything omp and jcode send — is
+Traffic authenticated with the master key — everything omp sends — is
 logged under the alias `master`, and a key hash that matches no key in the DB
 shows as `other`; neither is a virtual key.
 

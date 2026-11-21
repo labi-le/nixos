@@ -25,7 +25,7 @@ ZEN_WINDOWS = ("rolling", "weekly", "monthly")
 CODEX_WINDOWS = ("primary", "secondary")
 TIMEOUT_SECONDS = 15
 EMPTY_RUNS_BEFORE_FAILURE = 3
-ZEN_USER_AGENT = "jcode/0.89.3"
+ZEN_USER_AGENT = "litellm"
 CODEX_USER_AGENT = "codex_cli_rs/0.1.0"
 
 

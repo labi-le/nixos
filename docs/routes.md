@@ -38,7 +38,7 @@ per-service documents under `docs/`.
 | System Modules | GNOME keyring | `modules/keyring.nix` | pc, fx516, notebook, server |  |
 | System Modules | Locale, timezone | `modules/locale.nix` | pc, fx516, notebook, server |  |
 | System Modules | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | pc, fx516, notebook, server |  |
-| System Modules | LLM gateway and provider API keys for omp/jcode hosts | `modules/opencode-secrets.nix` | pc, fx516, notebook, server | docs/routes-notes.md#opencode-secrets |
+| System Modules | LLM gateway and provider API keys for omp/maki hosts | `modules/opencode-secrets.nix` | pc, fx516, notebook, server | docs/routes-notes.md#opencode-secrets |
 | System Modules | Environment variables | `modules/env.nix` | pc, fx516, notebook, server |  |
 | System Modules | Network entry point | `modules/network/default.nix` | pc, fx516, notebook, server | Imports DNS, firewall, hosts, proxy sub-modules |
 | System Modules | Network DNS | `modules/network/dns.nix` | pc, fx516, notebook, server | Imported by `modules/network/default.nix` |
@@ -62,9 +62,6 @@ per-service documents under `docs/`.
 | System Modules | Flake registry `dev` | `modules/shell/registry.nix` | pc, fx516, notebook, server | (global dev shell access); Added to `commonModules` in `flake.nix` |
 | System Modules | Oh My Pi (omp) coding agent | `modules/omp/default.nix` | pc, fx516, notebook, server | docs/routes-notes.md#omp |
 | System Modules | Oh My Pi input, module and package overlay | `flake.nix`, `flake.lock`, `overlays.nix` | pc, fx516, notebook, server | docs/routes-notes.md#flake |
-| System Modules | Jcode coding agent | `modules/jcode/default.nix` | pc, fx516, notebook, server | docs/routes-notes.md#jcode |
-| System Modules | Local FreeDeepseekAPI profile for jcode | `modules/jcode/deepseek-web.nix`, `modules/jcode/deepseek-session.py` | pc, fx516, notebook, server | docs/routes-notes.md#deepseek-web |
-| System Modules | OpenCode Go `space-bunny-free` capability override for jcode | `modules/jcode/space-bunny.nix` | pc, fx516, notebook, server | docs/routes-notes.md#space-bunny |
 | System Modules | Maki coding agent | `modules/maki/default.nix` | pc, notebook, server | docs/routes-notes.md#maki |
 | System Modules | Yazi file manager | `modules/yazi.nix` | pc, fx516, notebook, server | docs/routes-notes.md#yazi |
 | Desktop-Only Modules | Desktop packages | `modules/packages-desktop.nix` | pc, fx516, notebook |  |
@@ -192,7 +189,6 @@ per-service documents under `docs/`.
 | Cross-Cutting Tasks | Add new HM module | `home-manager/modules/<name>.nix`, `home-manager/modules/default.nix` | pc, fx516, notebook, server | `home-manager/modules/<name>.nix` (create); `home-manager/modules/default.nix` (add import) |
 | Code indexer wiring | Package overlay | `overlays.nix` | pc, fx516, notebook, server | `index-repo = inputs.index-repo.packages.${system}.default` (→ `pkgs.index-repo`) |
 | Code indexer wiring | Oh-my-pi register hook | `~/.omp/agent/extensions/repo-register.js` | pc, fx516, notebook, server |  |
-| Code indexer wiring | Jcode register hook | `~/.jcode/config.toml` | pc, fx516, notebook, server |  |
 | Optional / Currently Unimported Modules | Virtual machines / libvirt | `modules/vm.nix` | pc | Commented in `hosts/configuration.nix` |
 | Other Files | Flake inputs, outputs, host wiring | `flake.nix` | pc, fx516, notebook, server |  |
 | Other Files | Per-language dev shells | `modules/shell/devshells.nix` | pc, fx516, notebook, server | (`nix develop dev#<lang>`); imported by `flake.nix` outputs |

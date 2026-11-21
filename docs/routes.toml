@@ -100,7 +100,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
-task = "LLM gateway and provider API keys for omp/jcode hosts"
+task = "LLM gateway and provider API keys for omp/maki hosts"
 doc = "docs/routes-notes.md#opencode-secrets"
 paths = ["modules/opencode-secrets.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
@@ -258,27 +258,6 @@ group = "System Modules"
 task = "Oh My Pi input, module and package overlay"
 doc = "docs/routes-notes.md#flake"
 paths = ["flake.nix", "flake.lock", "overlays.nix"]
-hosts = ["pc", "fx516", "notebook", "server"]
-
-[[route]]
-group = "System Modules"
-task = "Jcode coding agent"
-doc = "docs/routes-notes.md#jcode"
-paths = ["modules/jcode/default.nix"]
-hosts = ["pc", "fx516", "notebook", "server"]
-
-[[route]]
-group = "System Modules"
-task = "Local FreeDeepseekAPI profile for jcode"
-doc = "docs/routes-notes.md#deepseek-web"
-paths = ["modules/jcode/deepseek-web.nix", "modules/jcode/deepseek-session.py"]
-hosts = ["pc", "fx516", "notebook", "server"]
-
-[[route]]
-group = "System Modules"
-task = "OpenCode Go `space-bunny-free` capability override for jcode"
-doc = "docs/routes-notes.md#space-bunny"
-paths = ["modules/jcode/space-bunny.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
@@ -1123,13 +1102,6 @@ paths = ["~/.omp/agent/extensions/repo-register.js"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
-group = "Code indexer wiring"
-task = "Jcode register hook"
-note = "Points at a store copy of `modules/jcode/repo-register.sh` with `@indexRepo@` replaced by `${pkgs.index-repo}`; jcode passes the session cwd as `JCODE_HOOK_CWD` and the script registers that path with its own pid (`REPO_REGISTER_PID`, else `$PPID`) — no unregister, the indexer's dead-pid scan reaps it"
-paths = ["~/.jcode/config.toml"]
-hosts = ["pc", "fx516", "notebook", "server"]
-
-[[route]]
 group = "Optional / Currently Unimported Modules"
 task = "Virtual machines / libvirt"
 note = "Commented in `hosts/configuration.nix`"
@@ -1186,7 +1158,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Other Files"
 task = "The `nix-control` MCP server, split by concern:"
-note = "`config` constants, `protocol` JSON-RPC, `text` formatting, `shell` subprocess, `jobs` detached runs, `pane` sudo tmux pane, `system`/`flake`/`routes`/`rules`/`agenix` tools, `registry` schemas, `server` dispatch, `__main__` entry. Project-scoped consumers: `.omp/mcp.json`, `.jcode/mcp.json` and `.maki/mcp.toml`, all launching it as `python3 -B .omp/nix-control-mcp` from the repo root"
+note = "`config` constants, `protocol` JSON-RPC, `text` formatting, `shell` subprocess, `jobs` detached runs, `pane` sudo tmux pane, `system`/`flake`/`routes`/`rules`/`agenix` tools, `registry` schemas, `server` dispatch, `__main__` entry. Project-scoped consumers: `.omp/mcp.json` and `.maki/mcp.toml`, all launching it as `python3 -B .omp/nix-control-mcp` from the repo root"
 paths = [".omp/nix-control-mcp/*.py"]
 hosts = ["pc", "fx516", "notebook", "server"]
 

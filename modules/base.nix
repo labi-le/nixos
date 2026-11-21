@@ -25,7 +25,6 @@
     ./cache-push.nix
     ./opencode-secrets.nix
     ./omp
-    ./jcode
     ./yazi.nix
     ./nixvim
     ./stylix.nix

@@ -244,6 +244,8 @@ def clip_strings(value, limit):
 
 
 def fit_response(header, key):
+    budget = MAX_TEXT - 64
+
     def size():
         return len(json.dumps(header, indent=2, ensure_ascii=False))
 
@@ -253,7 +255,7 @@ def fit_response(header, key):
         settled = clip_strings(header, limit)
         header.clear()
         header.update(settled)
-        if size() <= MAX_TEXT:
+        if size() <= budget:
             header["truncated_fields"] = True
             return header
     trimmed = {
@@ -267,16 +269,16 @@ def fit_response(header, key):
     }
     header.clear()
     header.update(trimmed)
-    if size() <= MAX_TEXT:
+    if size() <= budget:
         header["truncated_fields"] = True
         return header
     items = header.get(key) or []
-    while len(items) > 1 and size() > MAX_TEXT:
+    while len(items) > 1 and size() > budget:
         items.pop()
         header["omitted_matches"] = header.get("omitted_matches", 0) + 1
     for name in ("dead_paths", "unrouted_nix_files", "duplicate_paths", "missing_docs"):
         values = header.get(name)
-        while isinstance(values, list) and len(values) > 1 and size() > MAX_TEXT:
+        while isinstance(values, list) and len(values) > 1 and size() > budget:
             values.pop()
             header[name + "_omitted"] = header.get(name + "_omitted", 0) + 1
     header["truncated"] = True

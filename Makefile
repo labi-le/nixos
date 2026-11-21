@@ -29,9 +29,6 @@ generate-hardware:
 fmt:
 	nix-shell -p nixfmt --command 'nixfmt .'
 
-gate-matrix:
-	@python3 modules/jcode/gate-matrix.py
-
 routes-check:
 	@python3 .omp/nix-control-mcp/routes_test.py
 
@@ -50,7 +47,7 @@ cleanup: boot
 optimise:
 	nix-store --optimise
 
-.PHONY: dump gate-matrix routes-check routes-index
+.PHONY: dump routes-check routes-index
 dump:
 	@{ \
 		echo "=== START PROJECT CODE DUMP ==="; \
