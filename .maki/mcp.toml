@@ -1,2 +1,3 @@
 [mcp.nix-control]
 command = ["python3", "-B", ".omp/nix-control-mcp"]
+timeout = 300000
