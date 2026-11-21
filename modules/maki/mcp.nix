@@ -38,6 +38,9 @@ let
     context7 = {
       url = "https://mcp.context7.com/mcp";
     };
+    telegram = {
+      url = "http://127.0.0.1:8932/mcp";
+    };
   };
 in
 toml.generate "mcp.toml" { mcp = servers; }
