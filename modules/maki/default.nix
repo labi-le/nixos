@@ -14,7 +14,10 @@ let
   skillLinks = import ./skills.nix { inherit lib pkgs skillsDir; };
 in
 {
-  environment.systemPackages = [ pkgs.maki ];
+  environment.systemPackages = [
+    pkgs.maki
+    pkgs.snapcompact-render
+  ];
 
   systemd.tmpfiles.rules = [
     "d ${configDir} 0700 ${user.name} ${userCfg.group} -"
@@ -29,6 +32,7 @@ in
     "L+ ${configDir}/lua/commit_gate.lua - - - - ${./lua/commit_gate.lua}"
     "L+ ${configDir}/lua/comment_gate.lua - - - - ${./lua/comment_gate.lua}"
     "L+ ${configDir}/lua/git_upstream_gate.lua - - - - ${./lua/git_upstream_gate.lua}"
+    "L+ ${configDir}/lua/snapcompact.lua - - - - ${./lua/snapcompact.lua}"
     "L+ ${configDir}/plugin.toml - - - - ${./plugin.toml}"
     "L+ ${configDir}/providers.toml - - - - ${./providers.toml}"
   ]

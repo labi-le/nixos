@@ -63,6 +63,7 @@ per-service documents under `docs/`.
 | System Modules | Oh My Pi (omp) coding agent | `modules/omp/default.nix` | pc, fx516, notebook, server | docs/routes-notes.md#omp |
 | System Modules | Oh My Pi input, module and package overlay | `flake.nix`, `flake.lock`, `overlays.nix` | pc, fx516, notebook, server | docs/routes-notes.md#flake |
 | System Modules | Maki coding agent | `modules/maki/default.nix` | pc, notebook, server | docs/routes-notes.md#maki |
+| System Modules | Maki /snapcompact bitmap archive command | `pkgs/snapcompact-render.nix` | pc, notebook, server | docs/routes-notes.md#maki |
 | System Modules | Yazi file manager | `modules/yazi.nix` | pc, fx516, notebook, server | docs/routes-notes.md#yazi |
 | Desktop-Only Modules | Desktop packages | `modules/packages-desktop.nix` | pc, fx516, notebook |  |
 | Desktop-Only Modules | Sound / audio | `modules/sound.nix` | pc, fx516, notebook |  |

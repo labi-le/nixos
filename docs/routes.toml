@@ -269,6 +269,13 @@ hosts = ["pc", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
+task = "Maki /snapcompact bitmap archive command"
+doc = "docs/routes-notes.md#maki"
+paths = ["modules/maki/lua/snapcompact.lua", "pkgs/snapcompact-render.nix"]
+hosts = ["pc", "notebook", "server"]
+
+[[route]]
+group = "System Modules"
 task = "Yazi file manager"
 doc = "docs/routes-notes.md#yazi"
 paths = ["modules/yazi.nix"]

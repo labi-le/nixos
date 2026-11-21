@@ -4,6 +4,7 @@ require("llm_labile")
 require("commit_gate")
 require("comment_gate")
 require("git_upstream_gate")
+require("snapcompact")
 
 maki.setup({
   always_yolo = true,

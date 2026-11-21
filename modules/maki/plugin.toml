@@ -1,4 +1,4 @@
-min_maki_version = "0.6.4"
+min_maki_version = "0.7.2"
 
 [permissions]
 net = true
@@ -6,4 +6,7 @@ env = true
 fs_read = true
 fs_write = true
 run = true
+agent = true
+session_read = true
+session_write = true
 net_hosts = ["llm.labile.cc", "api.closerouter.dev", "byesu.com"]

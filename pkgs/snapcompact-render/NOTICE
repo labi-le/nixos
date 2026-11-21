@@ -1,0 +1,35 @@
+snapcompact-render bundles code and assets from oh-my-pi
+(https://github.com/can1357/oh-my-pi), MIT licensed:
+
+  src/fonts.rs, src/render.rs   port of crates/natives/src/snapcompact.rs
+  fonts/5x8.bdf                  X.org 5x8 font
+  fonts/6x12.bdf                 X.org 6x12 font
+  fonts/8x13.bdf                 X.org 8x13 font (ucs-fonts)
+  fonts/unscii-8.hex             unscii-8
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+The BDF fonts (5x8.bdf, 6x12.bdf, 8x13.bdf) and unscii-8.hex are public domain.
+
+Silver.ttf is licensed under Creative Commons Attribution 4.0 International
+(CC BY 4.0), https://creativecommons.org/licenses/by/4.0/, by Poppy Works,
+with contributions from Wolfgang Wozniak, Itou Hiro (PixelMPlus),
+leedheo (DOSGothic) and Buchidot. Full terms in fonts/Silver.LICENSE.
