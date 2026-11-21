@@ -6,6 +6,11 @@ merging caller arguments — passing `kTLS = false` as an argument is silently
 overridden, so an exception needs `lib.recursiveUpdate` around the call, the
 way `cache.labile.cc` does it.
 
+The one non-proxied vhost is `s.labile.cc`: it serves the static
+`pkgs.lightshot-jumpscare` tree straight from its store path through the
+vhost's `root`, with the same `enableACME`/`forceSSL`/`kTLS` set the proxy
+helper would give it.
+
 `lib.recursiveUpdate` on a vhost only replaces scalar keys (`kTLS`,
 `enableACME`, `forceSSL`) and recurses into attribute sets. Pointing it at
 `locations."/".extraConfig` replaces the location's config string outright,
@@ -52,7 +57,7 @@ by the code path in nginx#651, and their mechanism is unidentified.
 Differences not yet tested: Angie 1.11.8 versus vanilla nginx, OpenSSL 3.6.3
 versus 4.0.1, a real network versus loopback.
 
-KTLS stays on the other 11 vhosts. None of them serves bulk downloads, and
+KTLS stays on every other vhost. None of them serves bulk downloads, and
 the reproducer says the alert alone costs nothing but log noise — but that is
 an argument from a reproducer that does not reproduce the aborts, so treat it
 as provisional.

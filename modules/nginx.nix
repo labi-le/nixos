@@ -381,6 +381,12 @@ in
         # internal = true;
       };
       "ip.labile.cc" = proxy { addr = "http://127.0.0.1:7006"; };
+      "s.labile.cc" = {
+        root = pkgs.lightshot-jumpscare;
+        enableACME = true;
+        forceSSL = true;
+        kTLS = true;
+      };
       "sub.labile.cc" = subStore { addr = "http://127.0.0.1:3001"; };
       "sync.labile.cc" = proxy {
         addr = "http://127.0.0.1:8384";

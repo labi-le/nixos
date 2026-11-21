@@ -70,6 +70,7 @@ final: prev: {
   yam = prev.callPackage ./pkgs/yam.nix { };
   cargo-slot = prev.callPackage ./pkgs/cargo-slot.nix { };
   snapcompact-render = prev.callPackage ./pkgs/snapcompact-render.nix { };
+  lightshot-jumpscare = prev.callPackage ./pkgs/lightshot-jumpscare.nix { };
   agenix = inputs.agenix.packages.${system}.default;
   nur = (inputs.nur.overlays.default final prev).nur;
   apple-fonts = inputs.apple-fonts.packages.${system};

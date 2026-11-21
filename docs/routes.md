@@ -162,6 +162,7 @@ per-service documents under `docs/`.
 | Server-Specific Modules | Ad and tracker filtering, blocklist refresh | `modules/unbound.nix` | server | docs/routes-notes.md#unbound-3 |
 | Server-Specific Modules | Router-side DNS hijack, adblock-fast removal | `docs/dns-clients.md` | server | docs/routes-notes.md#dns-clients |
 | Server-Specific Modules | ifconfig.io container behind `ip.labile.cc` | `modules/ifconfig.nix` | server | docs/routes-notes.md#ifconfig |
+| Server-Specific Modules | Static lightshot-jumpscare prank site on `s.labile.cc` | `modules/nginx.nix`, `pkgs/lightshot-jumpscare.nix` | server | docs/routes-notes.md#lightshot-jumpscare |
 | Server-Specific Modules | ChromaDB vector database service | `modules/chromadb.nix` | server | docs/routes-notes.md#chromadb |
 | Server-Specific Modules | Hardware (server) | `hosts/hardware-server.nix` | server |  |
 | Home Manager Modules | HM entry point | `home-manager/modules/default.nix` | pc, fx516, notebook, server |  |

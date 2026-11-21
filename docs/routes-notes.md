@@ -248,6 +248,12 @@ Two `rpz:` zones applied to every client since 2026-09-07: `access-control-tag` 
 
 `virtualisation.oci-containers` container `ifconfig` (image `georgyo/ifconfig.io`, tag `latest` as before), bound to `127.0.0.1:7006` only because Angie is its sole client, with `Restart = "always"` on `docker-ifconfig.service` the way `modules/awg/compose.nix` does it. Supersedes the hand-run compose file in `~/projects/ifconfig` on the server, which had no restart policy at all and left `ip.labile.cc` answering 502 once the container was gone
 
+## lightshot-jumpscare
+
+**Static lightshot-jumpscare prank site on `s.labile.cc`**
+
+Pure static tree served by nginx from `pkgs/lightshot-jumpscare.nix`, a `fetchFromGitHub` pin of `colouredflower/lightshot-jumpscare` at `f3b9415`; the vhost in `modules/nginx.nix` sets `root`, `enableACME` and `forceSSL`, and the wildcard `*.labile.cc` record already points at this host, so no DNS change is involved. No proxy or container: the repository contains only HTML, CSS, JS, images and two copies of the same video, and nginx serves it directly.
+
 ## chromadb
 
 **ChromaDB vector database service**

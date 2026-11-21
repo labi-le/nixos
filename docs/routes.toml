@@ -918,6 +918,13 @@ hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
+task = "Static lightshot-jumpscare prank site on `s.labile.cc`"
+doc = "docs/routes-notes.md#lightshot-jumpscare"
+paths = ["modules/nginx.nix", "pkgs/lightshot-jumpscare.nix"]
+hosts = ["server"]
+
+[[route]]
+group = "Server-Specific Modules"
 task = "ChromaDB vector database service"
 doc = "docs/routes-notes.md#chromadb"
 paths = ["modules/chromadb.nix"]
