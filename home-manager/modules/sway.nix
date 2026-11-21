@@ -396,8 +396,6 @@ in
         "XF86AudioPause" = "exec playerctl pause";
         "XF86AudioNext" = "exec playerctl next";
         "XF86AudioPrev" = "exec playerctl previous";
-        "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
-        "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
         "${common}+r" = "exec ${filemanager}";
         "${common}+o" = "exec ${browser}";
         "Print" = "exec ${grimshot} copy area";
@@ -431,7 +429,11 @@ in
               ]
             )
         )
-      );
+      )
+      // lib.optionalAttrs osConfig.hardware.backlight {
+        "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set +5%";
+        "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl -c backlight set 5%-";
+      };
 
       bindkeysToCode = true;
       workspaceOutputAssign = [

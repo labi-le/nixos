@@ -63,6 +63,13 @@ hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
 group = "System Modules"
+task = "Internal panel backlight capability flag"
+note = "(per-host); consumed by the waybar `backlight` module and the brightness keys, false on desktops"
+paths = ["modules/backlight.nix"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
+group = "System Modules"
 task = "Docker daemon"
 paths = ["modules/docker.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]

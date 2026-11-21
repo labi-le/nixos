@@ -7,6 +7,7 @@
     ./shell.nix
     ./tmux.nix
     ./monitors.nix
+    ./backlight.nix
     ./docker.nix
     ./polkit.nix
     ./nvme.nix

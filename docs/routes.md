@@ -32,6 +32,7 @@ per-service documents under `docs/`.
 | System Modules | tmux terminal multiplexer | `modules/tmux.nix` | pc, fx516, notebook, server | (prefix `Ctrl+a`) |
 | System Modules | Terminal switch | `modules/terminal.nix` | pc, fx516, notebook, server | docs/routes-notes.md#terminal |
 | System Modules | Display monitors | `modules/monitors.nix` | pc, fx516, notebook, server | (declarations); Values set in per-host config |
+| System Modules | Internal panel backlight capability flag | `modules/backlight.nix` | pc, fx516, notebook, server | (per-host); consumed by the waybar `backlight` module and the brightness keys, false on desktops |
 | System Modules | Docker daemon | `modules/docker.nix` | pc, fx516, notebook, server |  |
 | System Modules | Polkit rules | `modules/polkit.nix` | pc, fx516, notebook, server |  |
 | System Modules | NVMe drive tuning | `modules/nvme.nix`, `docs/nvme.md` | pc, fx516, notebook, server | docs/routes-notes.md#nvme |

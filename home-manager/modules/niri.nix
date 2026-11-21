@@ -319,6 +319,7 @@ let
     "XF86AudioPause".spawn = [ "playerctl" "pause" ];
     "XF86AudioNext".spawn = [ "playerctl" "next" ];
     "XF86AudioPrev".spawn = [ "playerctl" "previous" ];
+  } // lib.optionalAttrs osConfig.hardware.backlight {
     "XF86MonBrightnessUp".spawn = [ brightnessctl "-c" "backlight" "set" "+5%" ];
     "XF86MonBrightnessDown".spawn = [ brightnessctl "-c" "backlight" "set" "5%-" ];
   };

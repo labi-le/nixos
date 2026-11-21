@@ -61,18 +61,21 @@ in
           "clock"
 
         ];
-        modules-right = [
-          languageModule
-          "network"
-          "custom/vpn"
-          # "memory"
-          # "cpu"
-          "pulseaudio"
-          "backlight"
-          "battery"
+        modules-right =
+          [
+            languageModule
+            "network"
+            "custom/vpn"
+            # "memory"
+            # "cpu"
+            "pulseaudio"
+          ]
+          ++ lib.optional osConfig.hardware.backlight "backlight"
+          ++ [
+            "battery"
 
-          "tray"
-        ];
+            "tray"
+          ];
         "${workspacesModule}" = workspacesConfig;
         "${languageModule}" = languageConfig;
         backlight = {

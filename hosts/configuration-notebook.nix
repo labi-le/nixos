@@ -47,6 +47,8 @@
     # pycharm.enable = true;
   };
 
+  hardware.backlight = true;
+
   monitors = {
     "eDP-1" = {
       mode = "1920x1080@144Hz";
