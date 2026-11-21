@@ -86,6 +86,23 @@ kernel, 150 requests at 25 concurrent with `keepalive_requests 20`:
 `TlsTxSw` in `/proc/net/tls_stat` moved only in the KTLS-on arms, which is
 what proves KTLS was engaged rather than silently falling back to userspace.
 
+## Metrics and dashboard
+
+`services.prometheus.exporters.nginx` runs `nginx-prometheus-exporter` on
+`127.0.0.1:9113` and reads `http://localhost/nginx_status`; Prometheus scrapes
+it as job `nginx`. The dashboard is provisioned at `/d/nginx` from
+`modules/monitoring/dashboards/nginx.json`.
+
+stub_status exposes only `nginx_up`, connection counters and a total request
+count. Status classes, vhosts and client addresses come from the access log in
+Loki (`job="nginx"`, `logtype="access"`, shipped by Alloy in
+`modules/grafana.nix`). The status parser matches `HTTP/x.y" <status> `.
+
+Alloy's query redaction replaces `?…` up to the next space, so it eats the
+closing quote after `$scheme://$host$request_uri` on requests with a query
+string. The dashboard's host regex treats that quote as optional; lines
+without a query keep it.
+
 ## Verify
 
 ```sh
@@ -105,6 +122,16 @@ Two traps in checking this:
 - **A worker abort does not restart the unit.** `systemctl show nginx
   -p ExecMainStartTimestamp` stays put across these failures, so uptime
   proves nothing about whether connections were dropped.
+
+```sh
+curl -s http://127.0.0.1:9113/metrics | grep -E '^nginx_(up|http_requests_total)'
+curl -sG http://127.0.0.1:3020/api/v1/query --data-urlencode 'query=nginx_up'
+curl -sG http://127.0.0.1:3100/loki/api/v1/query \
+  --data-urlencode 'query=sum(count_over_time({job="nginx", logtype="access"}[1h]))'
+```
+Expected: `nginx_up 1`, Prometheus returns value `1`, Loki returns a non-zero
+count. `nginx_up 0` means the exporter lost `/nginx_status`; an empty Loki
+result means Alloy's access log pipeline stopped.
 
 ## Unprivileged log access
 

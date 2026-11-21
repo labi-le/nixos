@@ -624,7 +624,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 group = "Server-Specific Modules"
 task = "Nginx; aborted HTTP/2 downloads, KTLS; fail2ban nginx jails"
 doc = "docs/routes-notes.md#nginx"
-paths = ["modules/nginx.nix", "docs/nginx.md"]
+paths = ["modules/nginx.nix", "modules/grafana.nix", "modules/monitoring/dashboards/nginx.json", "docs/nginx.md"]
 hosts = ["server"]
 
 [[route]]

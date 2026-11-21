@@ -228,6 +228,21 @@ in
               '';
             };
           }
+          {
+            name = "nginx";
+            type = "file";
+            disableDeletion = true;
+            folder = "nginx";
+            options = {
+              foldersFromFilesStructure = false;
+              path = pkgs.runCommand "grafana-nginx-dashboards" { nativeBuildInputs = [ pkgs.jq ]; } ''
+                mkdir -p $out
+                jq 'del(.__inputs, .__requires)' \
+                  ${./monitoring/dashboards/nginx.json} \
+                  > $out/nginx.json
+              '';
+            };
+          }
         ];
       };
     };

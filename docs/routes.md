@@ -119,7 +119,7 @@ per-service documents under `docs/`.
 | Notebook-Specific Modules | Hardware (notebook) | `hosts/hardware-notebook.nix` | notebook |  |
 | Server-Specific Modules | Server host config entry point | `hosts/configuration-server.nix` | server |  |
 | Server-Specific Modules | Server packages | `modules/packages-server.nix` | pc, fx516, notebook, server |  |
-| Server-Specific Modules | Nginx; aborted HTTP/2 downloads, KTLS; fail2ban nginx jails | `modules/nginx.nix`, `docs/nginx.md` | server | docs/routes-notes.md#nginx |
+| Server-Specific Modules | Nginx; aborted HTTP/2 downloads, KTLS; fail2ban nginx jails | `modules/nginx.nix`, `modules/grafana.nix`, `modules/monitoring/dashboards/nginx.json`, `docs/nginx.md` | server | docs/routes-notes.md#nginx |
 | Server-Specific Modules | Binary cache | `modules/harmonia.nix`, `docs/nginx.md` | server | (harmonia) |
 | Server-Specific Modules | ZeroSSL ACME for nginx | `modules/zerossl.nix` | server | docs/routes-notes.md#zerossl |
 | Server-Specific Modules | LiteLLM | `modules/litellm/default.nix` | server | docs/routes-notes.md#litellm |
