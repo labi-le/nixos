@@ -32,7 +32,7 @@ final: prev: {
     '';
   });
 
-  equicord = prev.equicord.overrideAttrs (_: rec {
+  equicord = (prev.equicord.override { pnpm_11 = final.pnpm_10; }).overrideAttrs (_: rec {
     version = "2026-11-07";
     src = final.fetchFromGitHub {
       owner = "Equicord";
