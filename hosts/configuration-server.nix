@@ -20,6 +20,7 @@
     inputs.tidal-syncer.nixosModules.default
     ./../modules/tidal-syncer.nix
     ./../modules/music-assistant.nix
+    ./../modules/home-assistant
     ./../modules/bifrons.nix
     ./../modules/frp.nix
     ./../modules/syncthing/server.nix

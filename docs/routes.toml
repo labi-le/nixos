@@ -790,6 +790,13 @@ hosts = ["server"]
 
 [[route]]
 group = "Server-Specific Modules"
+task = "Home Assistant server"
+note = "(`services.home-assistant`, self-contained custom component packaging, config on `data/state`, loopback-only `:8123`, internal vhost `home.labile.cc`)"
+paths = ["modules/home-assistant/default.nix", "modules/home-assistant/dreame-vacuum.nix", "modules/home-assistant/mini-racer.nix"]
+hosts = ["server"]
+
+[[route]]
+group = "Server-Specific Modules"
 task = "YouTube → станция (мост `bifrons`: Telegram-бот, резолвер `127.0.0.1:8096`, yt-dlp → очередь Music Assistant)"
 doc = "docs/routes-notes.md#bifrons"
 paths = ["modules/bifrons.nix", "modules/bifrons.py"]

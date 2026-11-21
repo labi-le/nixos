@@ -366,6 +366,11 @@ in
         internal = true;
         websockets = true;
       };
+      "home.labile.cc" = proxy {
+        addr = "http://127.0.0.1:8123";
+        internal = true;
+        websockets = true;
+      };
       "proto.labile.cc" = proxy { addr = "http://127.0.0.1:51821"; };
       "mail.labile.cc" = proxy {
         addr = "http://127.0.0.1:7001";
