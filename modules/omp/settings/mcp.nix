@@ -11,7 +11,7 @@ let
   telegramRemoteUrl = "http://192.168.1.2:${toString telegramPort}/mcp";
 
   chromaCommand = pkgs.writeShellScript "omp-chroma-mcp" ''
-    exec ${pkgs.uv}/bin/uvx --from chroma-mcp \
+    exec ${pkgs.uv}/bin/uvx --python ${pkgs.python3.interpreter} --from chroma-mcp \
       --with 'pydantic<2.14' \
       --with 'chromadb==${config.services.chromadb.package.version}' \
       python -c '
