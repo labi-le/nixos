@@ -121,7 +121,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "System Modules"
 task = "Network entry point"
-note = "Imports DNS, firewall, hosts, proxy sub-modules; owns shared `network.{lanInterface,wakeOnLan,lanSubnet,lanGateway,serverAddress,vpnInterface,vpnAddress,vpnSubnet}` options."
+note = "Imports DNS, firewall, hosts, proxy sub-modules; owns shared `network.{lanInterface,wakeOnLan,staticLan,lanSubnet,lanGateway,serverAddress,vpnInterface,vpnAddress,vpnSubnet}` options."
 paths = ["modules/network/default.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -830,10 +830,10 @@ paths = ["modules/syncthing/server.nix"]
 hosts = ["server"]
 
 [[route]]
-group = "Server-Specific Modules"
+group = "Optional / Currently Unimported Modules"
 task = "NVIDIA GT 210"
 paths = ["modules/nvidia/gt210.nix"]
-hosts = ["server"]
+hosts = []
 
 [[route]]
 group = "Server-Specific Modules"
@@ -878,7 +878,7 @@ hosts = ["server"]
 [[route]]
 group = "Server-Specific Modules"
 task = "Network (server)"
-note = "Per-host `network.lanInterface` (`enp42s0`) and `network.wakeOnLan` set in `hosts/configuration-server.nix`."
+note = "Per-host `network.lanInterface` (`enp42s0`), `network.wakeOnLan`, and `network.staticLan` set in `hosts/configuration-server.nix`."
 paths = ["modules/network/default.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 

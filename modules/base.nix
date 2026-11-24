@@ -1,3 +1,4 @@
+{ config, user, ... }:
 {
   imports = [
     ./boot.nix
@@ -29,5 +30,11 @@
     ./yazi.nix
     ./nixvim
     ./stylix.nix
+  ];
+
+  age.identityPaths = [
+    "/etc/ssh/ssh_host_rsa_key"
+    "/etc/ssh/ssh_host_ed25519_key"
+    "${config.users.users.${user.name}.home}/.ssh/id_ed25519"
   ];
 }

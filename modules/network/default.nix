@@ -49,6 +49,12 @@ in
       description = "Enable Wake-on-LAN on network.lanInterface.";
     };
 
+    staticLan = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Configure static IPv4 (network.serverAddress/24 via network.lanGateway) on network.lanInterface.";
+    };
+
     lanSubnet = mkOption {
       type = types.str;
       default = "192.168.1.0/24";
@@ -99,8 +105,34 @@ in
         assertion = !cfg.wakeOnLan || cfg.lanInterface != null;
         message = "network.lanInterface must be set when network.wakeOnLan is enabled.";
       }
+      {
+        assertion = !cfg.staticLan || cfg.lanInterface != null;
+        message = "network.lanInterface must be set when network.staticLan is enabled.";
+      }
     ];
     networking.networkmanager.enable = cfg.enableNetworkManager;
+    networking.networkmanager.ensureProfiles.profiles =
+      optionalAttrs (cfg.staticLan && cfg.lanInterface != null)
+        {
+          lan-static = {
+            connection = {
+              id = "lan-static";
+              type = "ethernet";
+              interface-name = cfg.lanInterface;
+              autoconnect = true;
+              autoconnect-priority = 100;
+            };
+            ipv4 = {
+              method = "manual";
+              address1 = "${cfg.serverAddress}/24,${cfg.lanGateway}";
+              dns = "${cfg.lanGateway};";
+              dns-search = "lan;";
+            };
+            ipv6 = {
+              method = "disabled";
+            };
+          };
+        };
     networking.firewall.enable = cfg.enableFirewall;
     networking.enableIPv6 = cfg.enableIPv6;
     networking.interfaces = optionalAttrs (cfg.lanInterface != null && cfg.wakeOnLan) {

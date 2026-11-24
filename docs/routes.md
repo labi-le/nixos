@@ -149,14 +149,14 @@ per-service documents under `docs/`.
 | Server-Specific Modules | fail2ban: sshd blindness, filter traps, port scoping, nftables ban backend | `modules/network/firewall.nix`, `modules/frp.nix`, `modules/grafana.nix`, `modules/monitoring/dashboards/fail2ban.json`, `docs/fail2ban.md` | pc, fx516, notebook, server | docs/routes-notes.md#firewall-2 |
 | Server-Specific Modules | Grafana alert: | `modules/monitoring/frp.nix` | server | docs/routes-notes.md#frp-2 |
 | Server-Specific Modules | Syncthing (server) | `modules/syncthing/server.nix` | server |  |
-| Server-Specific Modules | NVIDIA GT 210 | `modules/nvidia/gt210.nix` | server |  |
+| Optional / Currently Unimported Modules | NVIDIA GT 210 | `modules/nvidia/gt210.nix` | pc, fx516, notebook, server |  |
 | Server-Specific Modules | Vaultwarden | `modules/vaultwarden.nix` | server |  |
 | Server-Specific Modules | qBittorrent (download path and mount guard) | `modules/qbittorrent.nix` | server | docs/routes-notes.md#qbittorrent |
 | Server-Specific Modules | AmneziaWG | `modules/awg/default.nix` | server |  |
 | Server-Specific Modules | AmneziaWG compose stack | `modules/awg/compose.nix` | server |  |
 | Server-Specific Modules | GitHub triage / fix bot | `modules/buer/default.nix`, `modules/buer/docker-compose.yml`, `docs/buer.md` | server | docs/routes-notes.md#buer |
 | Server-Specific Modules | Buer Go/Nix toolchain and publication policy | `modules/buer/default.nix`, `modules/buer/docker-compose.yml`, `modules/buer/agent-AGENTS.md`, `modules/buer/empty-pr-body.patch`, `docs/buer.md` | server |  |
-| Server-Specific Modules | Network (server) | `modules/network/default.nix` | pc, fx516, notebook, server | Per-host `network.lanInterface` (`enp42s0`) and `network.wakeOnLan` set in `hosts/configuration-server.nix`. |
+| Server-Specific Modules | Network (server) | `modules/network/default.nix` | pc, fx516, notebook, server |  |
 | Server-Specific Modules | Recursive validating DNS resolver | `modules/unbound.nix` | server |  |
 | Server-Specific Modules | Encrypted DNS: | `modules/unbound.nix` | server | docs/routes-notes.md#unbound |
 | Server-Specific Modules | DNS query logging and outbound rate limit | `modules/unbound.nix` | server | docs/routes-notes.md#unbound-2 |

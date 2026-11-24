@@ -30,7 +30,6 @@ in
     ./../modules/bifrons.nix
     ./../modules/frp.nix
     ./../modules/syncthing/server.nix
-    ./../modules/nvidia/gt210.nix
     ./../modules/vaultwarden.nix
     ./../modules/qbittorrent.nix
     ./../modules/awg
@@ -52,6 +51,7 @@ in
     enableFirewall = true;
     lanInterface = "enp42s0";
     wakeOnLan = true;
+    staticLan = true;
   };
 
   drive.hddDevice = "/dev/disk/by-uuid/d4cd9ea9-f656-438b-bd3f-e7bbbbd9e373";
