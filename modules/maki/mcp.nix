@@ -20,8 +20,10 @@ let
     chroma = {
       command = [
         "${pkgs.uv}/bin/uvx"
+        "--python-preference"
+        "only-managed"
         "--python"
-        "${pkgs.python3.interpreter}"
+        "3.14"
         "--from"
         "chroma-mcp"
         "--with"
