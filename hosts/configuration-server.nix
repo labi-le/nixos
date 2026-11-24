@@ -2,6 +2,7 @@
   config,
   inputs,
   lib,
+  pkgs,
   ...
 }:
 
@@ -95,6 +96,68 @@
   systemd.services.ngate-wrapped-vm = {
     startLimitIntervalSec = 0;
     serviceConfig.RestartSec = 5;
+  };
+
+  systemd.services.maksut-deploy-hook = {
+    description = "Maksut GitHub deploy webhook";
+    after = [
+      "docker.service"
+      "network-online.target"
+    ];
+    wants = [
+      "docker.service"
+      "network-online.target"
+    ];
+    path = [
+      config.system.path
+      pkgs.python3
+      pkgs.git
+    ];
+    environment = {
+      AUTO_DEPLOY_REPO = "/home/labile/projects/maksut";
+      AUTO_DEPLOY_STATE_DIR = "/home/labile/projects/maksut/self-improve";
+      MAKSUT_HOOK_HOST = "127.0.0.1";
+      MAKSUT_HOOK_PORT = "6551";
+      MAKSUT_HOOK_PATH = "/webhook/maksut-deploy";
+      MAKSUT_HOOK_SECRET_FILE = "/home/labile/projects/maksut/.secrets/deploy-hook.secret";
+    };
+    serviceConfig = {
+      User = "labile";
+      Group = "users";
+      WorkingDirectory = "/home/labile/projects/maksut";
+      ExecStart = "${pkgs.python3}/bin/python3 /home/labile/projects/maksut/tools/deploy_hook.py";
+      Restart = "on-failure";
+      RestartSec = 5;
+      NoNewPrivileges = true;
+    };
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.maksut-self-improve = {
+    description = "Maksut self-improvement orchestrator";
+    after = [ "docker.service" ];
+    wants = [ "docker.service" ];
+    path = [
+      config.system.path
+      pkgs.python3
+      pkgs.git
+    ];
+    environment = {
+      SELF_IMPROVE_REPO = "/home/labile/projects/maksut";
+      SELF_IMPROVE_DIR = "/home/labile/projects/maksut/self-improve";
+      SELF_IMPROVE_OMP = "/run/current-system/sw/bin/omp";
+    };
+    serviceConfig = {
+      User = "labile";
+      Group = "users";
+      WorkingDirectory = "/home/labile/projects/maksut";
+      EnvironmentFile = "/home/labile/projects/maksut/.env";
+      ExecStart = "${pkgs.python3}/bin/python3 /home/labile/projects/maksut/tools/self_improve_orchestrator.py";
+      Restart = "on-failure";
+      RestartSec = 10;
+      NoNewPrivileges = true;
+    };
+    wantedBy = [ "multi-user.target" ];
   };
 
   boot.kernel.sysctl = {
