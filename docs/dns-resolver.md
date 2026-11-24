@@ -27,7 +27,7 @@ traffic was measured: over the daemon's whole lifetime its only clients were
 `192.168.1.1` (the router's stubby, which speaks DoT), `10.8.0.2` (a VPN client)
 and six diagnostic queries from the host itself — 92.5 % of all queries arrived
 over TLS (`num.query.tls` 1 791 122 of `total.num.queries` 1 936 004). Plain 53
-now exists only on `10.8.0.1`, inside the tunnel, and `enp37s0` no longer opens
+now exists only on `10.8.0.1`, inside the tunnel, and `enp42s0` no longer opens
 53 at all. So loosening the ACL cannot turn this host into a UDP amplifier:
 there is nothing on a publicly reachable address that speaks plain DNS, and DoT
 is TCP, which cannot be spoofed into an amplification vector.

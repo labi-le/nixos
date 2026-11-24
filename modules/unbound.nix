@@ -6,7 +6,7 @@
 }:
 
 let
-  lanInterface = "enp37s0";
+  lanInterface = "enp42s0";
   lanAddress = "192.168.1.2";
   lanNetwork = "192.168.1.0/24";
   vpnInterface = "wg0";

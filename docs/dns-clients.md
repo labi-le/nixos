@@ -30,7 +30,7 @@ Plain DNS is **not** offered outside the VPN. It lives on `10.8.0.1:53` only;
 the `192.168.1.2:53` listener was removed once measurement showed its only users
 were the host's own diagnostics — the LAN reaches this resolver through the
 router's `stubby` over DoT, and 92.5 % of all queries already arrived over TLS.
-`enp37s0` no longer opens 53 at all, which is what keeps an open ACL from
+`enp42s0` no longer opens 53 at all, which is what keeps an open ACL from
 turning this host into a UDP amplifier. On the server itself, use
 `dig @127.0.0.1 -p 5335`; `dig @192.168.1.2` now answers `connection refused`.
 

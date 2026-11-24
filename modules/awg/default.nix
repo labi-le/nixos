@@ -29,7 +29,7 @@ let
       fi
       printf '  chain postrouting {\n'
       printf '    type nat hook postrouting priority srcnat + 10; policy accept;\n'
-      printf '    ip saddr 10.8.0.0/24 oifname "enp37s0" masquerade\n'
+      printf '    ip saddr 10.8.0.0/24 oifname "enp42s0" masquerade\n'
       printf '  }\n'
       printf '}\n'
     } | nft -f -

@@ -40,7 +40,7 @@ correctly from inside the container under any backend.
 The two rules from `/run/agenix/awg-env` — hairpin DNAT for VPN clients
 reaching the server's own public (`external.lan`) address, redirected to
 the LAN address `192.168.1.2`, and masquerade for VPN traffic leaving
-`enp37s0` — are reproduced on the host in a dedicated table, `table ip
+`enp42s0` — are reproduced on the host in a dedicated table, `table ip
 awg`, installed by `systemd.services.awg-nat` (`modules/awg/default.nix`).
 A separate table means nothing here collides with docker's or the VM's
 rules in `table ip nat`; nothing is added to that shared table.
@@ -96,14 +96,14 @@ can take up to ~4 s on the direct query and ~8 s once the `@$ROUTER`
 fallback triggers. Connections already open when the gap opens survive
 it, since NAT is bound into conntrack on the first packet and the kernel
 does not re-evaluate existing conntrack entries against a new ruleset,
-but anything opened inside the gap leaves `enp37s0` with an
+but anything opened inside the gap leaves `enp42s0` with an
 unmasqueraded `10.8.0.0/24` source address. Reload avoids the gap
 entirely, because `nft -f -` replaces the table's contents in one kernel
 transaction instead of removing then recreating it.
 
-The masquerade rule is `ip saddr 10.8.0.0/24 oifname "enp37s0" masquerade`,
+The masquerade rule is `ip saddr 10.8.0.0/24 oifname "enp42s0" masquerade`,
 deliberately narrowed from the secret's own catch-all
-(`iptables -t nat -A POSTROUTING -o enp37s0 -j MASQUERADE`, no source
+(`iptables -t nat -A POSTROUTING -o enp42s0 -j MASQUERADE`, no source
 match) to the tunnel's actual address space (`LOCAL_SUBNET=10.8.0.0/24`,
 `WG_DEFAULT_ADDRESS=10.8.0.x`) rather than transcribed verbatim. Docker
 and the VM carry their own masquerade rules in `table ip nat`, so this

@@ -851,7 +851,7 @@ hosts = ["server"]
 [[route]]
 group = "Server-Specific Modules"
 task = "AmneziaWG"
-note = "Host NAT for the tunnel (hairpin DNAT to `192.168.1.2`, masquerade out `enp37s0`) in dedicated `table ip awg`; binds host `dnsmasq` to `wg0` with zero cache and router upstream so tunnel clients resolve through the router's dnsmasq/mihomo fake-ip path, and allows forward of `198.18.1.0/24` to the tunnel."
+note = "Host NAT for the tunnel (hairpin DNAT to `192.168.1.2`, masquerade out `enp42s0`) in dedicated `table ip awg`; binds host `dnsmasq` to `wg0` with zero cache and router upstream so tunnel clients resolve through the router's dnsmasq/mihomo fake-ip path, and allows forward of `198.18.1.0/24` to the tunnel."
 paths = ["modules/awg/default.nix"]
 hosts = ["server"]
 
