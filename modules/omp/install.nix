@@ -7,6 +7,7 @@
 
 let
   skillsDir = "${files.agentDir}/skills";
+  fastembedRuntimeDir = "${dirOf files.agentDir}/cache/fastembed-runtime";
   declaredSkills = lib.concatMapStrings (name: " ${lib.escapeShellArg name}") files.skillNames;
 in
 {
@@ -39,6 +40,11 @@ in
   activationScript = lib.stringAfter [ "users" ] ''
     install -d -m 0700 -o ${user.name} -g ${files.userCfg.group} ${files.agentDir}
     install -m 600 -o ${user.name} -g ${files.userCfg.group} ${files.configFile} ${files.agentDir}/config.yml
+    for runtime in ${fastembedRuntimeDir}/*/; do
+      [ -f "$runtime/node_modules/fastembed/package.json" ] || continue
+      [ -f "$runtime/node_modules/onnxruntime-node/package.json" ] && continue
+      rm -rf "$runtime"
+    done
     ${pkgs.runtimeShell} ${./skills-prune.sh} ${lib.escapeShellArg skillsDir}${declaredSkills}
   '';
 }
