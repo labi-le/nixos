@@ -1,4 +1,8 @@
-{ config, lib, pkgs }:
+{
+  config,
+  lib,
+  pkgs,
+}:
 
 let
   toml = pkgs.formats.toml { };
@@ -16,6 +20,8 @@ let
     chroma = {
       command = [
         "${pkgs.uv}/bin/uvx"
+        "--python"
+        "${pkgs.python3.interpreter}"
         "--from"
         "chroma-mcp"
         "--with"
