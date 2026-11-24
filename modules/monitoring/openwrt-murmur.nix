@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  pkgs,
+  user,
+  ...
+}:
 
 let
   textfileDir = "/var/lib/prometheus-openwrt";
@@ -20,9 +25,9 @@ let
 in
 {
   systemd.tmpfiles.rules = [
-    "d ${textfileDir} 0755 labile users -"
-    "d ${logDir} 0755 labile users -"
-    "d ${logDir}/router 0755 labile users -"
+    "d ${textfileDir} 0755 ${user.name} ${config.users.users.${user.name}.group} -"
+    "d ${logDir} 0755 ${user.name} ${config.users.users.${user.name}.group} -"
+    "d ${logDir}/router 0755 ${user.name} ${config.users.users.${user.name}.group} -"
   ];
 
   systemd.services.openwrt-murmur-collector = {
@@ -32,8 +37,8 @@ in
     path = [ pkgs.openssh ];
     serviceConfig = {
       Type = "oneshot";
-      User = "labile";
-      Group = "users";
+      User = user.name;
+      Group = config.users.users.${user.name}.group;
       ExecStart = collector;
       TimeoutStartSec = "45s";
       UMask = "0022";
@@ -59,14 +64,20 @@ in
 
   systemd.services.openwrt-murmur-logshipper-router = {
     description = "Stream murmur structured logs and OpenWrt syslog from main router to disk and Loki";
-    after = [ "network-online.target" "loki.service" ];
-    wants = [ "network-online.target" "loki.service" ];
+    after = [
+      "network-online.target"
+      "loki.service"
+    ];
+    wants = [
+      "network-online.target"
+      "loki.service"
+    ];
     wantedBy = [ "multi-user.target" ];
     path = [ pkgs.openssh ];
     serviceConfig = {
       Type = "simple";
-      User = "labile";
-      Group = "users";
+      User = user.name;
+      Group = config.users.users.${user.name}.group;
       ExecStart = logShipper;
       Restart = "always";
       RestartSec = "5s";

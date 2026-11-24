@@ -8,7 +8,7 @@
 let
   chromaPort = 8931;
   telegramPort = 8932;
-  telegramRemoteUrl = "http://192.168.1.2:${toString telegramPort}/mcp";
+  telegramRemoteUrl = "http://${config.network.serverAddress}:${toString telegramPort}/mcp";
 
   chromaCommand = pkgs.writeShellScript "omp-chroma-mcp" ''
     exec ${pkgs.uv}/bin/uvx --python-preference only-managed --python 3.14 --from chroma-mcp \
@@ -45,7 +45,7 @@ let
     export MCP_TRANSPORT=http
     export MCP_HOST=0.0.0.0
     export MCP_PORT=${toString telegramPort}
-    export MCP_ALLOWED_HOSTS="127.0.0.1:${toString telegramPort},localhost:${toString telegramPort},192.168.1.2:${toString telegramPort}"
+    export MCP_ALLOWED_HOSTS="127.0.0.1:${toString telegramPort},localhost:${toString telegramPort},${config.network.serverAddress}:${toString telegramPort}"
     exec ${pkgs.uv}/bin/uvx --from \
       'git+https://github.com/labi-le/telegram-mcp.git@f086f7a8276fa4dcf368fa7eea7d918e5cd5ed72' \
       telegram-mcp

@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  user,
   ...
 }:
 with lib;
@@ -307,7 +308,7 @@ in
 
     user = mkOption {
       type = types.str;
-      default = "labile";
+      default = user.name;
       description = "User whose btop config this module manages.";
     };
   };

@@ -1,4 +1,4 @@
-{ ... }:
+{ osConfig, ... }:
 
 {
   programs.ssh = {
@@ -6,7 +6,7 @@
     enableDefaultConfig = false;
 
     settings = {
-      "pet".HostName = "192.168.1.2";
+      "pet".HostName = osConfig.network.serverAddress;
 
       "pc".HostName = "192.168.1.3";
 
@@ -16,7 +16,7 @@
       };
 
       "router" = {
-        HostName = "192.168.1.1";
+        HostName = osConfig.network.lanGateway;
         User = "root";
       };
 

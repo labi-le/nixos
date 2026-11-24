@@ -4,11 +4,11 @@
 #
 # `type = "path"` with a string literal keeps it pointed at the live working
 # copy, so the shells reflect uncommitted changes (no frozen store snapshot).
-{ ... }:
+{ config, user, ... }:
 
 {
   nix.registry.dev.to = {
     type = "path";
-    path = "/home/labile/nix";
+    path = "${config.users.users.${user.name}.home}/nix";
   };
 }

@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  user,
+  ...
+}:
 
 let
   enabledHosts = [
@@ -11,22 +16,22 @@ in
   config = lib.mkIf (builtins.elem config.networking.hostName enabledHosts) {
     age.secrets.opencode-litellm-master-key = {
       file = ../secrets/litellm-env.age;
-      owner = "labile";
-      group = "users";
+      owner = user.name;
+      group = config.users.users.${user.name}.group;
       mode = "0400";
     };
 
     age.secrets.llm-labile-env = {
       file = ../secrets/llm-labile-env.age;
-      owner = "labile";
-      group = "users";
+      owner = user.name;
+      group = config.users.users.${user.name}.group;
       mode = "0400";
     };
 
     age.secrets.byesu-env = {
       file = ../secrets/byesu-env.age;
-      owner = "labile";
-      group = "users";
+      owner = user.name;
+      group = config.users.users.${user.name}.group;
       mode = "0400";
     };
 

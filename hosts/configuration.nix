@@ -83,7 +83,10 @@
 
   packages.desktop = true;
 
-  networking.interfaces.eno1.wakeOnLan.enable = true;
+  network = {
+    lanInterface = "eno1";
+    wakeOnLan = true;
+  };
   monitors = {
     "DP-1" = {
       mode = "2560x1440@179.999Hz";

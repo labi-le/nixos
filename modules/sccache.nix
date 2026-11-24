@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  pkgs,
+  user,
+  ...
+}:
 
 {
   environment.systemPackages = [ pkgs.sccache ];
@@ -9,8 +14,8 @@
     after = [ "local-fs.target" ];
     serviceConfig = {
       Type = "simple";
-      User = "labile";
-      Group = "users";
+      User = user.name;
+      Group = config.users.users.${user.name}.group;
       CacheDirectory = "sccache";
       RuntimeDirectory = "sccache";
       RuntimeDirectoryMode = "0755";

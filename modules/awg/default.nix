@@ -1,5 +1,12 @@
-{ user, pkgs, lib, ... }:
+{
+  config,
+  user,
+  pkgs,
+  lib,
+  ...
+}:
 let
+  net = config.network;
   awgNatApply = pkgs.writeShellScript "awg-nat-apply" ''
     set -euo pipefail
 
@@ -24,12 +31,12 @@ let
       if [ -n "$WAN_IP" ]; then
         printf '  chain prerouting {\n'
         printf '    type nat hook prerouting priority dstnat + 10; policy accept;\n'
-        printf '    iifname "wg0" ip daddr %s dnat to 192.168.1.2\n' "$WAN_IP"
+        printf '    iifname "${net.vpnInterface}" ip daddr %s dnat to ${net.serverAddress}\n' "$WAN_IP"
         printf '  }\n'
       fi
       printf '  chain postrouting {\n'
       printf '    type nat hook postrouting priority srcnat + 10; policy accept;\n'
-      printf '    ip saddr 10.8.0.0/24 oifname "enp42s0" masquerade\n'
+      printf '    ip saddr ${net.vpnSubnet} oifname "${net.lanInterface}" masquerade\n'
       printf '  }\n'
       printf '}\n'
     } | nft -f -
@@ -46,6 +53,13 @@ let
   '';
 in
 {
+  assertions = [
+    {
+      assertion = net.lanInterface != null;
+      message = "network.lanInterface must be set on hosts importing modules/awg.";
+    }
+  ];
+
   age.secrets.awg-env = {
     file = ./../../secrets/awg/env.age;
     owner = user.name;
@@ -59,17 +73,16 @@ in
     allowedUDPPorts = [ 51820 ];
 
     extraCommands = ''
-      # RFC1918
-      iptables -A INPUT  -i wg0 -d 10.8.0.1 -p udp --dport 53 -j ACCEPT
-      iptables -A INPUT  -i wg0 -d 10.8.0.1 -p tcp --dport 53 -j ACCEPT
-      iptables -A INPUT  -i wg0 -d 10.0.0.0/8     -j DROP
-      iptables -A INPUT  -i wg0 -d 172.16.0.0/12  -j DROP
-      iptables -A INPUT  -i wg0 -d 192.168.0.0/16 -j DROP
+      iptables -A INPUT  -i ${net.vpnInterface} -d ${net.vpnAddress} -p udp --dport 53 -j ACCEPT
+      iptables -A INPUT  -i ${net.vpnInterface} -d ${net.vpnAddress} -p tcp --dport 53 -j ACCEPT
+      iptables -A INPUT  -i ${net.vpnInterface} -d 10.0.0.0/8     -j DROP
+      iptables -A INPUT  -i ${net.vpnInterface} -d 172.16.0.0/12  -j DROP
+      iptables -A INPUT  -i ${net.vpnInterface} -d 192.168.0.0/16 -j DROP
 
-      iptables -A FORWARD -i wg0 -d 198.18.1.0/24 -j ACCEPT
-      iptables -A FORWARD -i wg0 -d 10.0.0.0/8     -j DROP
-      iptables -A FORWARD -i wg0 -d 172.16.0.0/12  -j DROP
-      iptables -A FORWARD -i wg0 -d 192.168.0.0/16 -j DROP
+      iptables -A FORWARD -i ${net.vpnInterface} -d 198.18.1.0/24 -j ACCEPT
+      iptables -A FORWARD -i ${net.vpnInterface} -d 10.0.0.0/8     -j DROP
+      iptables -A FORWARD -i ${net.vpnInterface} -d 172.16.0.0/12  -j DROP
+      iptables -A FORWARD -i ${net.vpnInterface} -d 192.168.0.0/16 -j DROP
     '';
   };
 
@@ -125,7 +138,7 @@ in
   services.dnsmasq.settings = {
     interface = lib.mkForce [
       "lo"
-      "wg0"
+      net.vpnInterface
     ];
     bind-interfaces = lib.mkForce false;
     bind-dynamic = true;

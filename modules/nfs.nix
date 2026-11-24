@@ -1,22 +1,7 @@
-{ user, ... }:
+{ config, ... }:
 {
-  # sudo ssh-copy-id ${user.name}@192.168.1.2
-  # fileSystems."/drive" = {
-  #   device = "${user.name}@192.168.1.2:/drive";
-
-  #   fsType = "sshfs";
-  #   options = [
-  #     "allow_other"
-  #     "_netdev"
-  #     "x-systemd.automount"
-  #     # SSH options
-  #     "reconnect" # handle connection drops
-  #     "ServerAliveInterval=15" # keep connections alive
-  #   ];
-  # };
-
   fileSystems."/home/drive" = {
-    device = "192.168.1.2:/drive";
+    device = "${config.network.serverAddress}:/drive";
     fsType = "nfs";
     options = [
       "noauto"
@@ -34,7 +19,7 @@
   };
 
   fileSystems."/hdd4tb/torrents" = {
-    device = "192.168.1.2:/hdd4tb/torrents";
+    device = "${config.network.serverAddress}:/hdd4tb/torrents";
     fsType = "nfs";
     options = [
       "noauto"

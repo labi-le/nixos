@@ -17,7 +17,7 @@ let
   # one cannot drift apart.
   staticAllows = [
     "allow 127.0.0.1;"
-    "allow 192.168.1.0/24;"
+    "allow ${config.network.lanSubnet};"
   ];
   nginxJailIgnoreIp = [
     "127.0.0.1/8"
@@ -158,7 +158,11 @@ in
         enableACME = true;
       };
       proxyLocation =
-        { addr, extraConfig ? "", websockets ? false }:
+        {
+          addr,
+          extraConfig ? "",
+          websockets ? false,
+        }:
         {
           proxyPass = addr;
           extraConfig = extraConfig;
@@ -167,7 +171,11 @@ in
           proxyWebsockets = true;
         };
       internalLocation =
-        { addr, extraConfig ? "", websockets ? false }:
+        {
+          addr,
+          extraConfig ? "",
+          websockets ? false,
+        }:
         proxyLocation {
           inherit addr websockets;
           extraConfig = internalOnly + extraConfig;
@@ -204,21 +212,23 @@ in
         );
       buer =
         { addr }:
-        tlsVhost (base (
-          {
-            "/".return = "404";
-            "/ui".return = "302 /ui/";
-            "/webhook/github" = proxyLocation {
-              inherit addr;
-              extraConfig = ''
-                proxy_read_timeout 30s;
-                proxy_send_timeout 30s;
-              '';
-            };
-            "/ui/" = internalLocation { addr = "${addr}/"; };
-          }
-          // lib.genAttrs [ "/static/" "/api/" "/events" "/issues" ] (_: internalLocation { inherit addr; })
-        ));
+        tlsVhost (
+          base (
+            {
+              "/".return = "404";
+              "/ui".return = "302 /ui/";
+              "/webhook/github" = proxyLocation {
+                inherit addr;
+                extraConfig = ''
+                  proxy_read_timeout 30s;
+                  proxy_send_timeout 30s;
+                '';
+              };
+              "/ui/" = internalLocation { addr = "${addr}/"; };
+            }
+            // lib.genAttrs [ "/static/" "/api/" "/events" "/issues" ] (_: internalLocation { inherit addr; })
+          )
+        );
       maksutHook =
         { addr }:
         tlsVhost (base {
@@ -274,10 +284,14 @@ in
           };
           uiLocation = internalLocation { inherit addr; };
         in
-        tlsVhost (base (
-          { "/" = apiLocation; }
-          // lib.genAttrs [ "/ui" "/litellm-asset-prefix/" "/login" "/sso/" ] (_: uiLocation)
-        ));
+        tlsVhost (
+          base (
+            {
+              "/" = apiLocation;
+            }
+            // lib.genAttrs [ "/ui" "/litellm-asset-prefix/" "/login" "/sso/" ] (_: uiLocation)
+          )
+        );
       gachiRadio =
         { rewrite, rewritePlain }:
         {

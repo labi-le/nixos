@@ -2,9 +2,9 @@
   config,
   lib,
   pkgs,
+  user,
   ...
 }:
-
 let
   catalog = import ./models { inherit lib; };
 
@@ -96,7 +96,7 @@ in
         "/var/lib/litellm-chatgpt:/root/.config/litellm/chatgpt"
         "/var/lib/litellm-limits:/var/lib/litellm-limits"
       ];
-      extraOptions = [ "--dns=192.168.1.1" ];
+      extraOptions = [ "--dns=${config.network.lanGateway}" ];
       ports = [ "127.0.0.1:27015:4000" ];
       networks = [ "litellm" ];
       dependsOn = [ "litellm-db" ];
@@ -152,9 +152,9 @@ in
     };
     script = ''
       exec ${pkgs.python3}/bin/python3 ${./sync-prices.py} \
-        --repo /home/labile/nix \
+        --repo ${config.users.users.${user.name}.home}/nix \
         --groups ${zenGroupsJson} \
-        --as-user labile \
+        --as-user ${user.name} \
         --apply --commit --push --rebuild --verify --metric
     '';
   };

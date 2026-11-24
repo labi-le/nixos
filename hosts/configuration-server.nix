@@ -3,9 +3,14 @@
   inputs,
   lib,
   pkgs,
+  user,
   ...
 }:
 
+let
+  userCfg = config.users.users.${user.name};
+  maksutDir = "${userCfg.home}/projects/maksut";
+in
 {
   imports = [
     ./../modules/base.nix
@@ -45,8 +50,11 @@
 
   network = {
     enableFirewall = true;
+    lanInterface = "enp42s0";
+    wakeOnLan = true;
   };
 
+  drive.hddDevice = "/dev/disk/by-uuid/d4cd9ea9-f656-438b-bd3f-e7bbbbd9e373";
   zfs = {
     enable = true;
     hostId = "204cf2f5";
@@ -64,8 +72,8 @@
 
   age.secrets.litellm-env = {
     file = ../secrets/litellm-env.age;
-    owner = "labile";
-    group = "users";
+    owner = user.name;
+    group = userCfg.group;
     mode = "0400";
   };
 
@@ -81,8 +89,8 @@
     persistent = true;
     randomizedDelaySec = "1h";
   };
-  nix.settings.trusted-users = [ "labile" ];
-  users.users.labile.openssh.authorizedKeys.keys = [
+  nix.settings.trusted-users = [ user.name ];
+  users.users.${user.name}.openssh.authorizedKeys.keys = [
     "command=\"nix-store --serve --write\",restrict ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIK4XUt2RWmKFHA+eKh4mP6k580R5pk/0IsuK/XRgSUx cache-push"
   ];
 
@@ -114,18 +122,18 @@
       pkgs.git
     ];
     environment = {
-      AUTO_DEPLOY_REPO = "/home/labile/projects/maksut";
-      AUTO_DEPLOY_STATE_DIR = "/home/labile/projects/maksut/self-improve";
+      AUTO_DEPLOY_REPO = maksutDir;
+      AUTO_DEPLOY_STATE_DIR = "${maksutDir}/self-improve";
       MAKSUT_HOOK_HOST = "127.0.0.1";
       MAKSUT_HOOK_PORT = "6551";
       MAKSUT_HOOK_PATH = "/webhook/maksut-deploy";
-      MAKSUT_HOOK_SECRET_FILE = "/home/labile/projects/maksut/.secrets/deploy-hook.secret";
+      MAKSUT_HOOK_SECRET_FILE = "${maksutDir}/.secrets/deploy-hook.secret";
     };
     serviceConfig = {
-      User = "labile";
-      Group = "users";
-      WorkingDirectory = "/home/labile/projects/maksut";
-      ExecStart = "${pkgs.python3}/bin/python3 /home/labile/projects/maksut/tools/deploy_hook.py";
+      User = user.name;
+      Group = userCfg.group;
+      WorkingDirectory = maksutDir;
+      ExecStart = "${pkgs.python3}/bin/python3 ${maksutDir}/tools/deploy_hook.py";
       Restart = "on-failure";
       RestartSec = 5;
       NoNewPrivileges = true;
@@ -143,16 +151,16 @@
       pkgs.git
     ];
     environment = {
-      SELF_IMPROVE_REPO = "/home/labile/projects/maksut";
-      SELF_IMPROVE_DIR = "/home/labile/projects/maksut/self-improve";
+      SELF_IMPROVE_REPO = maksutDir;
+      SELF_IMPROVE_DIR = "${maksutDir}/self-improve";
       SELF_IMPROVE_OMP = "/run/current-system/sw/bin/omp";
     };
     serviceConfig = {
-      User = "labile";
-      Group = "users";
-      WorkingDirectory = "/home/labile/projects/maksut";
-      EnvironmentFile = "/home/labile/projects/maksut/.env";
-      ExecStart = "${pkgs.python3}/bin/python3 /home/labile/projects/maksut/tools/self_improve_orchestrator.py";
+      User = user.name;
+      Group = userCfg.group;
+      WorkingDirectory = maksutDir;
+      EnvironmentFile = "${maksutDir}/.env";
+      ExecStart = "${pkgs.python3}/bin/python3 ${maksutDir}/tools/self_improve_orchestrator.py";
       Restart = "on-failure";
       RestartSec = 10;
       NoNewPrivileges = true;
@@ -176,5 +184,4 @@
   };
 
   services.logind.settings.Login.HandleLidSwitch = "ignore";
-  networking.interfaces.enp42s0.wakeOnLan.enable = true;
 }

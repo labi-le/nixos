@@ -6,12 +6,12 @@
 }:
 
 let
-  lanInterface = "enp42s0";
-  lanAddress = "192.168.1.2";
-  lanNetwork = "192.168.1.0/24";
-  vpnInterface = "wg0";
-  vpnAddress = "10.8.0.1";
-  vpnNetwork = "10.8.0.0/24";
+  lanInterface = config.network.lanInterface;
+  lanAddress = config.network.serverAddress;
+  lanNetwork = config.network.lanSubnet;
+  vpnInterface = config.network.vpnInterface;
+  vpnAddress = config.network.vpnAddress;
+  vpnNetwork = config.network.vpnSubnet;
   localPort = 5335;
   tlsHost = "labile.cc";
   tlsCertDir = "/var/lib/acme/${tlsHost}";
@@ -55,6 +55,13 @@ let
   );
 in
 {
+  assertions = [
+    {
+      assertion = lanInterface != null;
+      message = "network.lanInterface must be set on hosts importing modules/unbound.nix.";
+    }
+  ];
+
   services.unbound = {
     enable = true;
     package = pkgs.unbound-with-systemd.override { withDoH = true; };

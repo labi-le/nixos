@@ -18,7 +18,14 @@ let
       ;
   };
   packages = import ./packages.nix { inherit pkgs; };
-  install = import ./install.nix { inherit files lib pkgs user; };
+  install = import ./install.nix {
+    inherit
+      files
+      lib
+      pkgs
+      user
+      ;
+  };
 in
 {
   imports = [
@@ -34,6 +41,6 @@ in
   system.activationScripts.ompConfig = install.activationScript;
 
   networking.firewall.extraCommands = lib.mkIf (files.telegramSecret != null) ''
-    iptables -A nixos-fw -s 192.168.1.0/24 -p tcp --dport ${toString files.telegramPort} -j nixos-fw-accept
+    iptables -A nixos-fw -s ${config.network.lanSubnet} -p tcp --dport ${toString files.telegramPort} -j nixos-fw-accept
   '';
 }

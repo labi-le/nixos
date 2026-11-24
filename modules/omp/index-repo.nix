@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   pkgs,
   user,
@@ -10,8 +11,7 @@
 
   services.index-repo = {
     enable = true;
-    host = "192.168.1.2";
-    package = pkgs.index-repo;
+    host = config.network.serverAddress;
     debounce = 15000;
   };
 

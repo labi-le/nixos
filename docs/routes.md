@@ -41,7 +41,7 @@ per-service documents under `docs/`.
 | System Modules | User accounts, shell aliases, Home Manager wiring | `modules/users.nix` | pc, fx516, notebook, server |  |
 | System Modules | LLM gateway and provider API keys for omp/maki hosts | `modules/opencode-secrets.nix` | pc, fx516, notebook, server | docs/routes-notes.md#opencode-secrets |
 | System Modules | Environment variables | `modules/env.nix` | pc, fx516, notebook, server |  |
-| System Modules | Network entry point | `modules/network/default.nix` | pc, fx516, notebook, server | Imports DNS, firewall, hosts, proxy sub-modules |
+| System Modules | Network entry point | `modules/network/default.nix` | pc, fx516, notebook, server |  |
 | System Modules | Network DNS | `modules/network/dns.nix` | pc, fx516, notebook, server | Imported by `modules/network/default.nix` |
 | System Modules | Network firewall | `modules/network/firewall.nix` | pc, fx516, notebook, server | docs/routes-notes.md#firewall |
 | System Modules | Network hosts injection | `modules/network/hosts.nix` | pc, fx516, notebook, server | Imported by `modules/network/default.nix` |
@@ -156,7 +156,7 @@ per-service documents under `docs/`.
 | Server-Specific Modules | AmneziaWG compose stack | `modules/awg/compose.nix` | server |  |
 | Server-Specific Modules | GitHub triage / fix bot | `modules/buer/default.nix`, `modules/buer/docker-compose.yml`, `docs/buer.md` | server | docs/routes-notes.md#buer |
 | Server-Specific Modules | Buer Go/Nix toolchain and publication policy | `modules/buer/default.nix`, `modules/buer/docker-compose.yml`, `modules/buer/agent-AGENTS.md`, `modules/buer/empty-pr-body.patch`, `docs/buer.md` | server |  |
-| Server-Specific Modules | Network (server) | `modules/network/default.nix` | pc, fx516, notebook, server |  |
+| Server-Specific Modules | Network (server) | `modules/network/default.nix` | pc, fx516, notebook, server | Per-host `network.lanInterface` (`enp42s0`) and `network.wakeOnLan` set in `hosts/configuration-server.nix`. |
 | Server-Specific Modules | Recursive validating DNS resolver | `modules/unbound.nix` | server |  |
 | Server-Specific Modules | Encrypted DNS: | `modules/unbound.nix` | server | docs/routes-notes.md#unbound |
 | Server-Specific Modules | DNS query logging and outbound rate limit | `modules/unbound.nix` | server | docs/routes-notes.md#unbound-2 |

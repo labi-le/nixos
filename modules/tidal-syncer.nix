@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, user, ... }:
 
 # Native tidal-syncer daemon, replacing the hand-driven docker-compose checkout at
 # /home/labile/projects/tidal-syncer. The module itself ships from the app's own
@@ -26,8 +26,8 @@
     # The identity that already owns the library and the old ./data directory
     # (docker-compose ran as PUID/PGID=1000:100). Reusing it avoids a chown -R over
     # ~250 artist directories that ./drive.nix also NFS-exports to the LAN.
-    user = "labile";
-    group = "users";
+    user = user.name;
+    group = config.users.users.${user.name}.group;
 
     paths.music = "/drive/sync/music";
 

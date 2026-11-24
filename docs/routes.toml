@@ -121,7 +121,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "System Modules"
 task = "Network entry point"
-note = "Imports DNS, firewall, hosts, proxy sub-modules"
+note = "Imports DNS, firewall, hosts, proxy sub-modules; owns shared `network.{lanInterface,wakeOnLan,lanSubnet,lanGateway,serverAddress,vpnInterface,vpnAddress,vpnSubnet}` options."
 paths = ["modules/network/default.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
@@ -878,6 +878,7 @@ hosts = ["server"]
 [[route]]
 group = "Server-Specific Modules"
 task = "Network (server)"
+note = "Per-host `network.lanInterface` (`enp42s0`) and `network.wakeOnLan` set in `hosts/configuration-server.nix`."
 paths = ["modules/network/default.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
