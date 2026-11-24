@@ -51,6 +51,10 @@ in
         ];
       };
 
+      systemd.tmpfiles.rules = [
+        "d ${config.users.users.${cfg.name}.home}/.config 0700 ${cfg.name} ${config.users.users.${cfg.name}.group} -"
+      ];
+
       services.getty.autologinUser = cfg.name;
 
       environment.variables = {

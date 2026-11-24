@@ -39,7 +39,7 @@ in
   ++ skillLinks;
 
   system.activationScripts.makiMcpConfig = lib.stringAfter [ "users" ] ''
-    mkdir -p ${configDir}
+    install -d -m 0700 -o ${user.name} -g ${userCfg.group} ${configDir}
     rm -f ${configDir}/mcp.toml
     install -m 600 -o ${user.name} -g ${userCfg.group} ${mcpToml} ${configDir}/mcp.toml
   '';
