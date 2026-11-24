@@ -37,7 +37,7 @@ in
   ++ files.skillLinks;
 
   activationScript = lib.stringAfter [ "users" ] ''
-    mkdir -p ${files.agentDir}
+    install -d -m 0700 -o ${user.name} -g ${files.userCfg.group} ${files.agentDir}
     install -m 600 -o ${user.name} -g ${files.userCfg.group} ${files.configFile} ${files.agentDir}/config.yml
     ${pkgs.runtimeShell} ${./skills-prune.sh} ${lib.escapeShellArg skillsDir}${declaredSkills}
   '';
