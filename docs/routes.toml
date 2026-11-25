@@ -506,7 +506,7 @@ hosts = ["pc"]
 group = "PC-Specific Modules"
 task = "RGB lighting (OpenRGB):"
 doc = "docs/routes-notes.md#openrgb-profile"
-paths = ["pkgs/openrgb-profile.nix"]
+paths = ["pkgs/openrgb-profile.nix", "pkgs/openrgb-rescan.nix"]
 hosts = ["pc"]
 
 [[route]]

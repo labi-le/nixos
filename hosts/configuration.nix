@@ -50,9 +50,12 @@
   systemd.services.openrgb.preStart = ''
     config=/var/lib/OpenRGB/OpenRGB.json
     if [ -f "$config" ]; then
-      ${pkgs.jq}/bin/jq '.Detectors.detectors."Keychron Q6 Max" = false | del(.Detectors."Keychron Q6 Max")' "$config" > "$config.new" \
+      ${pkgs.jq}/bin/jq '.Detectors.detectors."Keychron RGB QMK/ZMK Keyboard" = false' "$config" > "$config.new" \
         && ${pkgs.coreutils}/bin/mv -f "$config.new" "$config"
     fi
+  '';
+  services.udev.extraRules = ''
+    SUBSYSTEM=="hidraw", ACTION=="add|remove", RUN+="${pkgs.openrgb-rescan}/bin/openrgb-rescan"
   '';
   virtualisation.waydroid.enable = true;
 

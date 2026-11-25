@@ -65,6 +65,7 @@ final: prev: {
   generate-context = prev.callPackage ./pkgs/generate-context.nix { };
   tmux-session-switcher = prev.callPackage ./pkgs/tmux-session-switcher.nix { };
   openrgb-profile = prev.callPackage ./pkgs/openrgb-profile.nix { };
+  openrgb-rescan = prev.callPackage ./pkgs/openrgb-rescan.nix { };
   keychron-backlight = prev.callPackage ./pkgs/keychron-backlight.nix { };
   clip-links = prev.callPackage ./pkgs/clip-links.nix { };
   yam = prev.callPackage ./pkgs/yam.nix { };

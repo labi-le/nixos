@@ -100,7 +100,7 @@ per-service documents under `docs/`.
 | PC-Specific Modules | Monitor values | `hosts/configuration.nix` | pc | (pc) |
 | PC-Specific Modules | Hardware (pc) | `hosts/hardware-pc.nix` | pc |  |
 | PC-Specific Modules | GPU profile (LACT: undervolt, fan curve, power profile) | `hosts/lact-pc.yaml` | pc | Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink |
-| PC-Specific Modules | RGB lighting (OpenRGB): | `pkgs/openrgb-profile.nix` | pc | docs/routes-notes.md#openrgb-profile |
+| PC-Specific Modules | RGB lighting (OpenRGB): | `pkgs/openrgb-profile.nix`, `pkgs/openrgb-rescan.nix` | pc | docs/routes-notes.md#openrgb-profile |
 | PC-Specific Modules | Keyboard backlight | `pkgs/keychron-backlight.nix` | pc | docs/routes-notes.md#keychron-backlight |
 | PC-Specific Modules | Hardware watchdog | `hosts/configuration.nix` | pc | (sp5100_tco); armed by `systemd.settings.Manager.RuntimeWatchdogSec`; self-reboot 60s after a hang |
 | PC-Specific Modules | belphegor, gnupg, dconf | `hosts/configuration.nix` | pc |  |
