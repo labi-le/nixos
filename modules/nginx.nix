@@ -297,6 +297,7 @@ in
         {
           locations."/" = {
             proxyPass = "https://radio.gachibass.us.to";
+            recommendedProxySettings = false;
             extraConfig = ''
               proxy_ssl_server_name on;
               proxy_ssl_name radio.gachibass.us.to;
@@ -323,6 +324,7 @@ in
 
           locations."/fisting" = {
             proxyPass = "https://radio.gachibass.us.to/fisting";
+            recommendedProxySettings = false;
             extraConfig = ''
               proxy_ssl_server_name on;
               proxy_ssl_name radio.gachibass.us.to;
