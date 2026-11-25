@@ -184,6 +184,7 @@ per-service documents under `docs/`.
 | Home Manager Modules | Thunar (user config) | `home-manager/modules/thunar.nix` | pc, fx516, notebook, server |  |
 | Home Manager Modules | yt-dlp | `home-manager/modules/yt-dlp.nix` | pc, fx516, notebook, server |  |
 | Home Manager Modules | XDG user dirs | `home-manager/modules/xdg.nix` | pc, fx516, notebook, server |  |
+| Home Manager Modules | OpenRGB GUI autostart | `home-manager/modules/openrgb.nix` | pc | docs/routes-notes.md#openrgb-profile |
 | Cross-Cutting Tasks | Add package from flake input | `flake.nix`, `overlays.nix`, `modules/packages.nix`, `packages-desktop.nix`, `packages-server.nix` | pc, fx516, notebook, server |  |
 | Cross-Cutting Tasks | Add local package | `pkgs/<name>.nix`, `overlays.nix`, `modules/packages.nix`, `packages-desktop.nix`, `packages-server.nix` | pc, fx516, notebook, server |  |
 | Cross-Cutting Tasks | Push store paths to the binary cache | `modules/cache-push.nix`, `settings.nix`, `modules/packages.nix` | pc, fx516, notebook, server |  |

@@ -17,6 +17,7 @@
     ./thunar.nix
     ./yt-dlp.nix
     ./xdg.nix
+    ./openrgb.nix
   ];
 
 }

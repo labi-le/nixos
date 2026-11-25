@@ -1061,6 +1061,13 @@ paths = ["home-manager/modules/xdg.nix"]
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
+group = "Home Manager Modules"
+task = "OpenRGB GUI autostart"
+doc = "docs/routes-notes.md#openrgb-profile"
+paths = ["home-manager/modules/openrgb.nix"]
+hosts = ["pc"]
+
+[[route]]
 group = "Cross-Cutting Tasks"
 task = "Add package from flake input"
 note = "`flake.nix` (add input); `overlays.nix` (add overlay); `modules/packages.nix` or `packages-desktop.nix` or `packages-server.nix`"
