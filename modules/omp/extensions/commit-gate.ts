@@ -25,7 +25,36 @@ const WRAPPERS: Record<string, true> = {
 };
 const FOREIGN: Record<string, true> = { ssh: true, docker: true, podman: true };
 const COMMIT_TOKEN = /(?<![\w./-])commit(?![\w./-])/;
-const EVAL_RISK = /(?<![\w./-])(commit|--amend|--force|--hard)(?![\w./-])/;
+const EVAL_COMMIT_RISK = /(?<![\w./-])commit(?![\w./-])/;
+const EVAL_HISTORY_RISK = /(?<![\w./-])(?:--amend|--force|--hard)(?![\w./-])/;
+const OMP_EVAL_RISK = /\bomp\s+commit\b|["']omp["']\s*,\s*["']commit["']/;
+const GIT_EVAL_RISK = /\bgit\s+commit\b|["']git["']\s*,\s*["']commit["']|["']commit["']\s*,\s*["']git["']/;
+const PRELUDE_EVAL_RISK = /_+omp_prelude_*\s*\(\s*["']commit["']/;
+const DETACHED_COMMIT_RISK = /\.\s*commit(?!\s*\()/;
+const BRACKET_COMMIT_RISK = /\[\s*["']commit["']\s*\]/;
+const OMP_VALUE_FLAGS: Record<string, true> = {
+  "--model": true,
+  "--smol": true,
+  "--slow": true,
+  "--plan": true,
+  "--prewalk-into": true,
+  "--plan-yolo-into": true,
+  "--provider": true,
+  "--api-key": true,
+  "--system-prompt": true,
+  "--system-prompt-template": true,
+  "--append-system-prompt": true,
+  "--profile": true,
+  "--alias": true,
+  "--cwd": true,
+  "--mode": true,
+  "--config": true,
+  "--add-dir": true,
+  "--resume": true,
+  "--session-dir": true,
+  "--models": true,
+  "-r": true,
+};
 const MR_EVAL_RISK = /\b(?:gh|glab)\b.{0,100}\b(?:pr|mr)\b.{0,100}\b(?:create|new|edit|update)\b|\bmerge_request\.(?:create|title|description)\b|\bgit\b.{0,100}\bpush\b.{0,100}(?:-o|--push-option)/s;
 const ADD_SWEEP = /^-[a-zA-Z]*[Au][a-zA-Z]*$/;
 const AMEND = "\u0000amend";
@@ -264,6 +293,372 @@ export function checkMessage(messages: string[]): string | null {
   return null;
 }
 
+type Draft = { name: string; repo?: string; dynamicRepo: boolean };
+
+type Literal = { kind: "string"; value: string } | { kind: "empty" } | { kind: "dynamic" };
+
+function escapeRe(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+type Quote = { text: string; raw: boolean };
+
+function quoteAt(src: string, at: number): Quote | null {
+  const c = src[at];
+  if (c !== "'" && c !== '"' && c !== "`") return null;
+  const triple = c !== "`" && src.startsWith(c.repeat(3), at);
+  return { text: triple ? c.repeat(3) : c, raw: c === "`" };
+}
+
+function skipQuoted(src: string, at: number): { end: number; closed: boolean } {
+  const quote = quoteAt(src, at);
+  if (!quote) return { end: at, closed: false };
+  let i = at + quote.text.length;
+  while (i < src.length) {
+    if (src[i] === "\\" && !quote.raw) {
+      i += 2;
+      continue;
+    }
+    if (src.startsWith(quote.text, i)) return { end: i + quote.text.length, closed: true };
+    i++;
+  }
+  return { end: src.length, closed: false };
+}
+
+function maskCode(src: string): string {
+  const out = src.split("");
+  const blank = (from: number, to: number) => {
+    for (let i = from; i < to; i++) if (out[i] !== "\n") out[i] = " ";
+  };
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (c === "/" && src[i + 1] === "/") {
+      const end = src.indexOf("\n", i);
+      blank(i, end < 0 ? src.length : end);
+      i = end < 0 ? src.length : end;
+      continue;
+    }
+    if (c === "/" && src[i + 1] === "*") {
+      const end = src.indexOf("*/", i + 2);
+      blank(i, end < 0 ? src.length : end + 2);
+      i = end < 0 ? src.length : end + 2;
+      continue;
+    }
+    if (c === "#") {
+      const end = src.indexOf("\n", i);
+      blank(i, end < 0 ? src.length : end);
+      i = end < 0 ? src.length : end;
+      continue;
+    }
+    const quoted = skipQuoted(src, i);
+    if (quoted.closed || quoted.end > i) {
+      blank(i, quoted.end);
+      i = quoted.end;
+      continue;
+    }
+    i++;
+  }
+  return out.join("");
+}
+
+function matchingParen(src: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    if (src[i] === "(") depth++;
+    else if (src[i] === ")" && --depth === 0) return i;
+  }
+  return -1;
+}
+
+function splitArgs(raw: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let start = 0;
+  let i = 0;
+  while (i < raw.length) {
+    const c = raw[i];
+    const quoted = skipQuoted(raw, i);
+    if (quoted.end > i) {
+      i = quoted.end;
+      continue;
+    }
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") depth--;
+    else if (c === "," && depth === 0) {
+      out.push(raw.slice(start, i).trim());
+      start = i + 1;
+    }
+    i++;
+  }
+  const last = raw.slice(start).trim();
+  if (last) out.push(last);
+  return out;
+}
+
+function topLevelColon(entry: string): number {
+  let depth = 0;
+  let i = 0;
+  while (i < entry.length) {
+    const c = entry[i];
+    const quoted = skipQuoted(entry, i);
+    if (quoted.end > i) {
+      i = quoted.end;
+      continue;
+    }
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") depth--;
+    else if (c === ":" && depth === 0) return i;
+    i++;
+  }
+  return -1;
+}
+
+function literalValue(raw: string): Literal {
+  const text = raw.trim();
+  if (!text) return { kind: "dynamic" };
+  if (/^(?:None|null|undefined)$/.test(text)) return { kind: "empty" };
+  if (/^(?:\[\s*\]|\(\s*\)|\{\s*\})$/.test(text)) return { kind: "empty" };
+  const prefixed = /^([rRbBuUfF]{0,2})("""|'''|"|')/.exec(text);
+  const at = prefixed ? prefixed[0].length - prefixed[2].length : 0;
+  const quote = quoteAt(text, at);
+  if (!quote) return { kind: "dynamic" };
+  if (prefixed && /[fF]/.test(prefixed[1])) return { kind: "dynamic" };
+  const quoted = skipQuoted(text, at);
+  if (!quoted.closed || quoted.end !== text.length) return { kind: "dynamic" };
+  const body = text.slice(at + quote.text.length, quoted.end - quote.text.length);
+  if (quote.raw && body.includes("${")) return { kind: "dynamic" };
+  const rawPrefix = prefixed ? /[rR]/.test(prefixed[1]) : false;
+  const value = rawPrefix
+    ? body
+    : body
+        .replace(/\\n/g, "\n")
+        .replace(/\\r/g, "\r")
+        .replace(/\\u2028/g, "\u2028")
+        .replace(/\\u2029/g, "\u2029");
+  return { kind: "string", value };
+}
+
+function emptyStatus(raw: string): "empty" | "content" | "dynamic" {
+  const text = raw.trim();
+  if (text.startsWith("[") && text.endsWith("]")) {
+    let content = false;
+    for (const item of splitArgs(text.slice(1, -1))) {
+      const status = emptyStatus(item);
+      if (status === "dynamic") return "dynamic";
+      if (status === "content") content = true;
+    }
+    return content ? "content" : "empty";
+  }
+  const literal = literalValue(text);
+  if (literal.kind === "empty") return "empty";
+  if (literal.kind === "string") return literal.value.trim() ? "content" : "empty";
+  if (/^-?\d+(?:\.\d+)?$/.test(text)) return "content";
+  return "dynamic";
+}
+
+function amendValue(raw: string): "true" | "false" | "dynamic" {
+  const text = raw.trim();
+  if (/^(?:true|True)$/.test(text)) return "true";
+  if (/^(?:false|False|None|null|undefined)$/.test(text)) return "false";
+  return "dynamic";
+}
+
+function parseCallArgs(raw: string): { positional: string[]; options: Record<string, string> } {
+  const args = splitArgs(raw);
+  const options: Record<string, string> = {};
+  let positional = args;
+  const last = args.at(-1)?.trim() ?? "";
+  if (last.startsWith("{") && last.endsWith("}")) {
+    positional = args.slice(0, -1);
+    for (const entry of splitArgs(last.slice(1, -1))) {
+      const at = topLevelColon(entry);
+      if (at < 0) {
+        const shorthand = entry.trim();
+        if (/^[A-Za-z_$][\w$]*$/.test(shorthand)) options[shorthand] = shorthand;
+        continue;
+      }
+      const key = entry.slice(0, at).trim().replace(/^["']|["']$/g, "");
+      options[key] = entry.slice(at + 1).trim();
+    }
+  }
+  const rest: string[] = [];
+  for (const arg of positional) {
+    const keyword = /^([A-Za-z_]\w*)\s*=(?!=)([\s\S]*)$/.exec(arg);
+    if (keyword) options[keyword[1]] = keyword[2].trim();
+    else rest.push(arg);
+  }
+  return { positional: rest, options };
+}
+
+function readDraftRepo(raw: string): Draft {
+  const repoRaw = parseCallArgs(raw).options.repo;
+  if (repoRaw === undefined) return { name: "", dynamicRepo: false };
+  const repo = literalValue(repoRaw);
+  return repo.kind === "string"
+    ? { name: "", repo: repo.value, dynamicRepo: false }
+    : { name: "", dynamicRepo: true };
+}
+
+function hasSubject(raw: string): boolean {
+  const { positional, options } = parseCallArgs(raw);
+  if (options.subject !== undefined) return true;
+  const first = positional[0]?.trim();
+  if (first === undefined) return false;
+  return !/^(?:true|false|True|False|None|null|undefined|-?\d+(?:\.\d+)?|[\[({])/.test(first);
+}
+
+type EvalCheck = { reason: string; subject?: string } | { amend: Draft } | null;
+
+function checkEvalCommit(raw: string | null, draft: Draft | undefined): EvalCheck {
+  if (raw === null) {
+    return {
+      reason:
+        "the commit call is not a complete expression, so its message cannot be read; write one `d.commit(...)` call",
+    };
+  }
+  const { positional, options } = parseCallArgs(raw);
+  const subjectRaw = positional[0] ?? options.subject;
+  if (positional[0] !== undefined && options.subject !== undefined) {
+    return { reason: "the subject is given both positionally and as a keyword" };
+  }
+  if (subjectRaw === undefined) {
+    return { reason: "the commit carries no subject; pass the literal subject as the first argument" };
+  }
+  const subject = literalValue(subjectRaw);
+  if (subject.kind === "dynamic") {
+    return {
+      reason:
+        "the commit subject is assembled by the code, so what would be recorded cannot be read; pass the literal text",
+    };
+  }
+  if (subject.kind === "empty") return { reason: "the subject is empty" };
+  if (/[\r\n\u2028\u2029]/.test(subject.value)) {
+    return {
+      reason:
+        "the message carries a body; it is one line only -- a decision the diff cannot show belongs in `docs/`",
+      subject: subject.value.split(/[\r\n\u2028\u2029]/)[0],
+    };
+  }
+  const broken = checkMessage([subject.value]);
+  if (broken) return { reason: broken, subject: subject.value };
+
+  if (positional[1] !== undefined && options.body !== undefined) {
+    return { reason: "the body is given both positionally and as an option", subject: subject.value };
+  }
+  const bodyRaw = positional[1] ?? options.body;
+  if (bodyRaw !== undefined) {
+    const body = emptyStatus(bodyRaw);
+    if (body === "dynamic") {
+      return {
+        reason:
+          "the commit body is assembled by the code, so what would be recorded cannot be read; pass no body at all",
+        subject: subject.value,
+      };
+    }
+    if (body === "content") {
+      return {
+        reason:
+          "the message carries a body; it is one line only -- a decision the diff cannot show belongs in `docs/`",
+        subject: subject.value,
+      };
+    }
+  }
+
+  const fixesRaw = options.fixes;
+  if (fixesRaw !== undefined) {
+    const fixes = emptyStatus(fixesRaw);
+    if (fixes === "dynamic") {
+      return {
+        reason: "the `fixes` reference is assembled by the code, so the trailer cannot be read; drop it",
+        subject: subject.value,
+      };
+    }
+    if (fixes === "content") {
+      return {
+        reason: "the message appends a generated `Fixes` trailer; the subject is the whole message",
+        subject: subject.value,
+      };
+    }
+  }
+
+  const amendRaw = options.amend;
+  if (amendRaw !== undefined) {
+    const amend = amendValue(amendRaw);
+    if (amend === "dynamic") {
+      return {
+        reason: "`amend` is decided at runtime, so the target cannot be checked; pass a literal `amend`",
+        subject: subject.value,
+      };
+    }
+    if (amend === "true") return { amend: draft ?? { name: "", dynamicRepo: false } };
+  }
+  return null;
+}
+
+function collectEvalCommits(src: string): {
+  broken?: { reason: string; subject?: string };
+  amend?: Draft;
+  parsed: number;
+} {
+  const masked = maskCode(src);
+  const drafts = new Map<string, Draft>();
+  const binding = /\b([A-Za-z_$][\w$]*)\s*=\s*(?:\(\s*)?(?:await\s+)?(?:\(\s*)?commit\s*\.\s*draft\s*\(/g;
+  for (const match of masked.matchAll(binding)) {
+    const open = (match.index ?? 0) + match[0].length - 1;
+    const close = matchingParen(masked, open);
+    const draft = readDraftRepo(close > open ? src.slice(open + 1, close) : "");
+    draft.name = match[1];
+    drafts.set(match[1], draft);
+  }
+
+  const seen = new Set<number>();
+  const calls: { raw: string | null; draft?: Draft }[] = [];
+  const push = (open: number, draft?: Draft) => {
+    if (seen.has(open)) return;
+    seen.add(open);
+    const close = matchingParen(masked, open);
+    calls.push({ raw: close < 0 ? null : src.slice(open + 1, close), draft });
+  };
+
+  for (const draft of drafts.values()) {
+    const call = new RegExp(`\\b${escapeRe(draft.name)}\\s*\\.\\s*commit\\s*\\(`, "g");
+    for (const match of masked.matchAll(call)) push((match.index ?? 0) + match[0].length - 1, draft);
+  }
+
+  const anyCall = /(?:^|[^\w$])([A-Za-z_$][\w$]*)\s*\.\s*commit\s*\(/g;
+  for (const match of masked.matchAll(anyCall)) {
+    const open = (match.index ?? 0) + match[0].length - 1;
+    if (seen.has(open)) continue;
+    const close = matchingParen(masked, open);
+    const raw = close < 0 ? null : src.slice(open + 1, close);
+    if (raw !== null && !hasSubject(raw)) continue;
+    push(open, drafts.get(match[1]));
+  }
+
+  const chain = /\bcommit\s*\.\s*draft\s*\(/g;
+  for (const match of masked.matchAll(chain)) {
+    const open = (match.index ?? 0) + match[0].length - 1;
+    const close = matchingParen(masked, open);
+    if (close < 0) continue;
+    let i = close + 1;
+    while (i < masked.length && /[\s)]/.test(masked[i])) i++;
+    const after = /^\.\s*commit\s*\(/.exec(masked.slice(i));
+    if (!after) continue;
+    push(i + after[0].length - 1, readDraftRepo(src.slice(open + 1, close)));
+  }
+
+  let broken: { reason: string; subject?: string } | undefined;
+  let amend: Draft | undefined;
+  for (const call of calls) {
+    const finding = checkEvalCommit(call.raw, call.draft);
+    if (!finding) continue;
+    if ("reason" in finding) broken ??= finding;
+    else amend ??= finding.amend;
+  }
+  return { broken, amend, parsed: calls.length };
+}
+
 /** Every commit invocation in a command line, including wrapped ones. */
 function collectInvocations(src: string, depth = 0): Invocation[] {
   const out: Invocation[] = [];
@@ -278,6 +673,38 @@ function collectInvocations(src: string, depth = 0): Invocation[] {
       if (/\bgit\b/.test(tok) && /\bcommit\b/.test(tok)) {
         out.push(...collectInvocations(tok, depth + 1));
       }
+    }
+  }
+  return out;
+}
+
+function readOmpCommit(cmd: Simple): string | null {
+  const at = cmd.findIndex((token) => /(?:^|\/)omp$/.test(token));
+  if (at < 0) return null;
+  const prefix = cmd.slice(0, at);
+  const wrapped = WRAPPERS[(cmd[0] ?? "").replace(/^.*\//, "")];
+  const assigned = prefix.every((token) => /^[A-Za-z_]\w*=/.test(token));
+  if (at > 0 && !wrapped && !assigned) return null;
+  let i = at + 1;
+  while (i < cmd.length && cmd[i].startsWith("-")) {
+    const flag = cmd[i];
+    const takesValue = !flag.includes("=") && OMP_VALUE_FLAGS[flag.split("=")[0]];
+    i += takesValue ? 2 : 1;
+  }
+  if (cmd[i] !== "commit") return null;
+  const dryRun = cmd.slice(i + 1).some((token) => token === "--dry-run" || token === "--dry-run=true");
+  if (dryRun) return null;
+  return "`omp commit` writes the message with a model, so what it would record cannot be read; pass the literal subject through eval's `commit` namespace or `git commit -m`";
+}
+
+function collectOmpCommits(src: string, depth = 0): string[] {
+  const out: string[] = [];
+  for (const simple of splitCommands(src)) {
+    const risk = readOmpCommit(simple);
+    if (risk) out.push(risk);
+    if (depth >= 2 || !WRAPPERS[(simple[0] ?? "").replace(/^.*\//, "")]) continue;
+    for (const token of simple.slice(1)) {
+      if (/\bomp\b/.test(token) && /\bcommit\b/.test(token)) out.push(...collectOmpCommits(token, depth + 1));
     }
   }
   return out;
@@ -521,14 +948,31 @@ export default function commitGate(pi: ExtensionAPI): void {
         : event.toolName === "eval"
           ? String(event.input.code ?? "")
           : null;
-    if (source === null || !/\b(?:git|gh|glab)\b/.test(source)) return;
+    if (source === null || !/\b(?:git|gh|glab|omp|commit)\b/.test(source)) return;
 
     const risks = collectDangers(source);
-    let broken: string | null = collectMrRisks(source)[0] ?? risks.find((r) => r !== AMEND) ?? null;
+    let broken: string | null =
+      collectOmpCommits(source)[0] ??
+      collectMrRisks(source)[0] ??
+      risks.find((r) => r !== AMEND) ??
+      null;
     if (!broken && risks.includes(AMEND)) {
       const where = String(event.input.cwd ?? "");
       broken = await amendRisk(pi, where ? resolve(ctx.cwd, where) : ctx.cwd);
     }
+
+    const evalCommits = !broken && event.toolName === "eval" ? collectEvalCommits(source) : null;
+    if (evalCommits?.broken) {
+      broken = evalCommits.broken.reason;
+      if (evalCommits.broken.subject) broken = `${broken}\n\nSubject: ${evalCommits.broken.subject}`;
+    }
+    if (!broken && evalCommits?.amend) {
+      const draft = evalCommits.amend;
+      broken = draft.dynamicRepo
+        ? "`amend` targets a repository chosen at runtime, where HEAD cannot be checked from here; pass a literal `repo` to `commit.draft`"
+        : await amendRisk(pi, draft.repo ? resolve(ctx.cwd, draft.repo) : ctx.cwd);
+    }
+
     const found = !broken && COMMIT_TOKEN.test(source) ? collectInvocations(source) : [];
 
     for (const inv of found) {
@@ -552,12 +996,21 @@ export default function commitGate(pi: ExtensionAPI): void {
       }
     }
 
-    // An exec that did not parse is refused rather than trusted: a template
-    // literal can carry the message in a variable that exists only at runtime.
-    if (!broken && event.toolName === "eval" &&
-        ((!found.length && EVAL_RISK.test(source)) || MR_EVAL_RISK.test(source))) {
-      broken =
-        "a commit, MR mutation or history rewrite driven from `eval` cannot be read as a command line; run it through the bash tool so the command is visible";
+    if (!broken && event.toolName === "eval") {
+      const masked = maskCode(source);
+      const evalOpaque =
+        (!found.length && !evalCommits?.parsed && EVAL_COMMIT_RISK.test(masked)) ||
+        DETACHED_COMMIT_RISK.test(masked) ||
+        BRACKET_COMMIT_RISK.test(source) ||
+        EVAL_HISTORY_RISK.test(source) ||
+        MR_EVAL_RISK.test(source) ||
+        PRELUDE_EVAL_RISK.test(source) ||
+        GIT_EVAL_RISK.test(source) ||
+        OMP_EVAL_RISK.test(source);
+      if (evalOpaque) {
+        broken =
+          "a commit, MR mutation or history rewrite driven from `eval` cannot be read; for a commit, call `d.commit(...)` with a literal subject, or run `git commit` through the bash tool so the command is visible";
+      }
     }
     if (!broken) return;
 

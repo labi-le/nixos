@@ -95,6 +95,16 @@ const cases: [string, string, boolean][] = [
   ["multiple commands", "gh pr edit 1 --add-label reviewed; gh pr edit 1 -b prose", true],
   ["valid commit preserved", "git commit -m 'omp: fix gate'", false],
   ["invalid commit preserved", "git commit -m wip", true],
+  ["omp commit generates the message", "omp commit", true],
+  ["omp commit dry run", "omp commit --dry-run", false],
+  ["omp commit dry run true", "omp commit --dry-run=true", false],
+  ["omp commit dry run disabled", "omp commit --dry-run=false", true],
+  ["omp global profile commit", "omp --profile work commit", true],
+  ["omp continue commit", "omp -c commit", true],
+  ["nested omp commit", `bash -lc "omp commit"`, true],
+  ["omp commit as prose", "echo omp commit", false],
+  ["env prefixed omp commit", "env FOO=1 omp commit", true],
+  ["assignment prefixed omp commit", "FOO=1 omp commit", true],
 ];
 
 describe("MR text gate", () => {
@@ -109,10 +119,65 @@ describe("MR text gate", () => {
     'subprocess.run(["glab", "mr", "update", "1", "--description", body])',
     'subprocess.run(["git", "push", "-o", "merge_request.create", "-o", option])',
     'command = "gh pr create " + options; subprocess.run(command, shell=True)',
+    'subprocess.run(["omp", "commit"])',
+    'subprocess.run("omp commit", shell=True)',
+    'subprocess.run(["git", "commit", "-m", "omp: fix gate"])',
+    'globalThis.__omp_prelude__("commit", { action: "commit", subject: "omp: fix gate" })',
   ]) {
     test(`opaque eval blocks: ${code}`, async () => {
       const result = await handler({ toolName: "eval", input: { code } }, { cwd: process.cwd() });
       expect(result?.block).toBe(true);
+    });
+  }
+});
+
+describe("eval commit namespace", () => {
+  const commitCases: [string, string, boolean][] = [
+    ["literal subject", 'd = await commit.draft()\nawait d.commit("omp: fix gate")', false],
+    ["empty array body", 'd = await commit.draft()\nawait d.commit("omp: fix gate", [])', false],
+    ["empty string body", 'd = await commit.draft()\nawait d.commit("omp: fix gate", "", { silent: true })', false],
+    ["python empty body", 'd = await commit.draft()\nawait d.commit("omp: fix gate", None, silent=True)', false],
+    ["python keyword subject", 'd = await commit.draft()\nawait d.commit(subject="omp: fix gate")', false],
+    ["python keyword invalid subject", 'd = await commit.draft()\nawait d.commit(subject="wip")', true],
+    ["chained draft", 'await (await commit.draft()).commit("omp: fix gate")', false],
+    ["parenthesized draft", 'd = (await commit.draft())\nawait d.commit("omp: fix gate")', false],
+    ["parenthesized invalid subject", 'd = (await commit.draft())\nawait d.commit("wip")', true],
+    ["draft only", 'd = await commit.draft()', false],
+    ["unrelated commit method", 'db.commit()', false],
+    ["commit word in text", 'print("commit")', false],
+    ["git log beside commit", 'subprocess.run(["git", "log"])\nd = await commit.draft()\nawait d.commit("commit: inspect")', false],
+    ["cross-cell literal subject", 'await d.commit("omp: fix gate")', false],
+    ["cross-cell invalid subject", 'await d.commit("wip")', true],
+    ["cross-cell body", 'await d.commit("omp: fix gate", ["- body"])', true],
+    ["gitpython literal subject", 'repo.index.commit("omp: fix gate")', false],
+    ["gitpython invalid subject", 'repo.index.commit("wip")', true],
+    ["sqlalchemy commit", 'session.commit(expire_on_commit=False)', false],
+    ["database commit argument", 'conn.commit(True)', false],
+    ["detached commit method", 'fn = d.commit\nawait fn("wip")', true],
+    ["bracket commit method", 'await d["commit"]("wip")', true],
+    ["literal no amend", 'd = await commit.draft()\nawait d.commit("omp: fix gate", { amend: false })', false],
+    ["subject format", 'd = await commit.draft()\nawait d.commit("wip")', true],
+    ["positional body", 'd = await commit.draft()\nawait d.commit("omp: fix gate", ["- body"])', true],
+    ["object body", 'd = await commit.draft()\nawait d.commit("omp: fix gate", { body: "- body" })', true],
+    ["shorthand body", 'd = await commit.draft()\nbody = ["- body"]\nawait d.commit("omp: fix gate", { body })', true],
+    ["python body keyword", 'd = await commit.draft()\nawait d.commit("omp: fix gate", body=["- body"])', true],
+    ["fixes option", 'd = await commit.draft()\nawait d.commit("omp: fix gate", { fixes: 12 })', true],
+    ["python fixes keyword", 'd = await commit.draft()\nawait d.commit("omp: fix gate", fixes=12)', true],
+    ["dynamic subject", 'd = await commit.draft()\nsubject = "omp: fix gate"\nawait d.commit(subject)', true],
+    ["interpolated subject", "d = await commit.draft()\nawait d.commit(`omp: ${what}`)", true],
+    ["python f-string subject", 'd = await commit.draft()\nawait d.commit(f"omp: {what}")', true],
+    ["dynamic body", 'd = await commit.draft()\nawait d.commit("omp: fix gate", body)', true],
+    ["dynamic fixes", 'd = await commit.draft()\nawait d.commit("omp: fix gate", { fixes: issue })', true],
+    ["dynamic amend", 'd = await commit.draft()\nawait d.commit("omp: fix gate", { amend: flag })', true],
+    ["unchecked amend", 'd = await commit.draft()\nawait d.commit("omp: fix gate", { amend: true })', true],
+    ["empty subject", 'd = await commit.draft()\nawait d.commit("")', true],
+    ["escaped newline subject", 'd = await commit.draft()\nawait d.commit("omp: fix\\ngate")', true],
+    ["long subject", 'd = await commit.draft()\nawait d.commit("omp: ' + "x".repeat(80) + '")', true],
+  ];
+  for (const [name, code, blocked] of commitCases) {
+    test(name, async () => {
+      const result = await handler({ toolName: "eval", input: { code } }, { cwd: process.cwd() });
+      expect(result?.block ?? false).toBe(blocked);
     });
   }
 });

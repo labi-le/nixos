@@ -79,7 +79,7 @@ invocation and does not consume these Makefile variables.
 - For performance-sensitive changes, include a quick benchmark check in the
   verification output.
 
-## Agent MR Text Gate
+## Agent Commit and MR Text Gate
 
 OMP allows only empty MR/PR descriptions and nonempty, single-line
 titles of at most 70 Unicode characters. Creation requires both values
@@ -88,11 +88,18 @@ push options, inline `push.pushOption` settings and `gh`/`glab` creation
 and editing commands. Files, templates, editors and generated text are
 refused; ordinary pushes and metadata-only edits remain allowed.
 
+The same gate covers OMP's own commit path. Eval cells are parsed before
+they run: a draft from `commit.draft()` must commit with a literal
+single-line subject, and a body, a `fixes` trailer, a runtime-built
+subject or an unchecked `amend` is refused. `omp commit`, which writes
+the message with a model, is refused except with `--dry-run`.
+
 Verify OMP with `bun test modules/omp/commit-gate.test.ts`.
 
-These are command checks, not a sandbox. They do not inspect inherited
-Git configuration or intercept arbitrary HTTP/MCP requests. After a
-switch, start a new OMP process to load the deployed extension.
+These are command and source checks, not a sandbox. They do not inspect
+inherited Git configuration or intercept arbitrary HTTP/MCP requests,
+raw plumbing such as `git commit-tree`, or values assembled at runtime.
+After a switch, start a new OMP process to load the deployed extension.
 
 ## OMP Skills
 

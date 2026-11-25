@@ -1219,6 +1219,13 @@ paths = ["modules/omp/extensions/content-filter-retry.ts", "modules/omp/content-
 hosts = ["pc", "fx516", "notebook", "server"]
 
 [[route]]
+group = "System Modules"
+task = "OMP commit and MR text gate (all OMP hosts)"
+note = "The `tool_call` hook parses bash and eval before they run: `git commit` messages, `omp commit`, `gh`/`glab` MR text, and eval's `commit.draft()`/`d.commit(subject, body, { fixes, amend })`. Generated, edited, runtime-built or unreadable text is refused; `--dry-run` and metadata-only edits pass. Rule: `modules/omp/rules/commit-style.md`; verification: `bun test modules/omp/commit-gate.test.ts`."
+paths = ["modules/omp/extensions/commit-gate.ts", "modules/omp/commit-gate.test.ts", "modules/omp/rules/commit-style.md"]
+hosts = ["pc", "fx516", "notebook", "server"]
+
+[[route]]
 group = "Code indexer wiring"
 task = "Indexer system service and ChromaDB endpoint"
 doc = "docs/routes-notes.md#index-repo"

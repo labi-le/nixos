@@ -206,6 +206,7 @@ per-service documents under `docs/`.
 | Other Files | Project skills live under `.omp/skills/`, loaded by omp's native skill provider | `.omp/skills/nix-routing/SKILL.md` | pc, fx516, notebook, server |  |
 | System Modules | Declarative OMP skill cleanup (all OMP hosts) | `modules/omp/install.nix`, `modules/omp/settings/skills.nix`, `modules/omp/skills-prune.sh` | pc, fx516, notebook, server | Activation prunes undeclared entries in the main OMP skills directory. See `docs/nix-project-rules.md`. |
 | System Modules | OMP retries turns a provider ended with finish_reason content_filter (all OMP hosts) | `modules/omp/extensions/content-filter-retry.ts`, `modules/omp/content-filter-retry.test.ts` | pc, fx516, notebook, server |  |
+| System Modules | OMP commit and MR text gate (all OMP hosts) | `modules/omp/extensions/commit-gate.ts`, `modules/omp/commit-gate.test.ts`, `modules/omp/rules/commit-style.md` | pc, fx516, notebook, server |  |
 | Code indexer wiring | Indexer system service and ChromaDB endpoint | `modules/omp/index-repo.nix`, `modules/chromadb.nix` | pc, fx516, notebook, server | docs/routes-notes.md#index-repo |
 | Other Files | Routing registry read by the nix-control route tool | `docs/routes.toml` | pc, fx516, notebook, server |  |
 | Other Files | Generated route index for humans and for a failed MCP server | `docs/routes.md` | pc, fx516, notebook, server |  |
