@@ -35,5 +35,12 @@ in
       mode = "0400";
     };
 
+    age.secrets.plusvibe-env = {
+      file = ../secrets/plusvibe-env.age;
+      owner = user.name;
+      group = config.users.users.${user.name}.group;
+      mode = "0400";
+    };
+
   };
 }

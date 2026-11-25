@@ -30,6 +30,7 @@ in
   "secrets/xiaomi-mimo-env.age".publicKeys = [ server ];
   "secrets/litellm-db-env.age".publicKeys = [ server ];
   "secrets/byesu-env.age".publicKeys = all;
+  "secrets/plusvibe-env.age".publicKeys = all;
   "secrets/cache-push-key.age".publicKeys = all;
   "secrets/nix-access-tokens.age".publicKeys = all;
 

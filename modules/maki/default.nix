@@ -26,6 +26,7 @@ in
     "L+ ${configDir}/init.lua - - - - ${./init.lua}"
     "L+ ${configDir}/AGENTS.md - - - - ${./AGENTS.md}"
     "L+ ${configDir}/lua/byesu.lua - - - - ${./lua/byesu.lua}"
+    "L+ ${configDir}/lua/plusvibe.lua - - - - ${./lua/plusvibe.lua}"
     "L+ ${configDir}/lua/closerouter.lua - - - - ${./lua/closerouter.lua}"
     "L+ ${configDir}/lua/llm_labile.lua - - - - ${./lua/llm_labile.lua}"
     "L+ ${configDir}/lua/secret.lua - - - - ${./lua/secret.lua}"

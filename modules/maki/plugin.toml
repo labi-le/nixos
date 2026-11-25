@@ -9,4 +9,4 @@ run = true
 agent = true
 session_read = true
 session_write = true
-net_hosts = ["llm.labile.cc", "api.closerouter.dev", "byesu.com"]
+net_hosts = ["llm.labile.cc", "api.closerouter.dev", "byesu.com", "plusvibeapi.ru"]

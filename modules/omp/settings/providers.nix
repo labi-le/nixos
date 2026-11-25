@@ -28,6 +28,13 @@ let
     else
       "BYESU_API_KEY";
 
+  plusvibeSecret = config.age.secrets.plusvibe-env or null;
+  plusvibeKey =
+    if plusvibeSecret != null then
+      "!${pkgs.gnused}/bin/sed -n 's/^PLUSVIBE_API_KEY=//p' ${plusvibeSecret.path}"
+    else
+      "PLUSVIBE_API_KEY";
+
   modelsYml = pkgs.writeText "models.yml" (
     builtins.toJSON {
       providers = {
@@ -45,6 +52,14 @@ let
           apiKey = byesuKey;
           discovery = {
             type = "proxy";
+          };
+        };
+        plusvibe = {
+          baseUrl = "https://plusvibeapi.ru/v1";
+          api = "openai-completions";
+          apiKey = plusvibeKey;
+          discovery = {
+            type = "openai-models-list";
           };
         };
       }
