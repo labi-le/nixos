@@ -1173,7 +1173,7 @@ hosts = ["pc", "fx516", "notebook", "server"]
 [[route]]
 group = "Other Files"
 task = "Convenience targets:"
-note = "`switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise`"
+note = "`switch`, `boot`, `upgrade`, `fmt`, `cleanup`, `optimise`, `bootstrap-livecd`"
 paths = ["Makefile"]
 hosts = ["pc", "fx516", "notebook", "server"]
 

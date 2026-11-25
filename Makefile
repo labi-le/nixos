@@ -8,6 +8,8 @@ MEMORY_HIGH ?= 8G
 MEMORY_MAX ?= 10G
 SCOPE := systemd-run --user --scope --quiet -p MemoryHigh=$(MEMORY_HIGH) -p MemoryMax=$(MEMORY_MAX) -p MemorySwapMax=0 --
 BUILD_FLAGS := --max-jobs $(MAX_JOBS) --cores $(CPUS)
+HOST ?= $(HOSTNAME)
+ROOT ?= /mnt
 
 disko:
 	sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./disko.nix
@@ -47,7 +49,7 @@ cleanup: boot
 optimise:
 	nix-store --optimise
 
-.PHONY: dump routes-check routes-index
+.PHONY: dump routes-check routes-index bootstrap-livecd
 dump:
 	@{ \
 		echo "=== START PROJECT CODE DUMP ==="; \
@@ -146,4 +148,40 @@ restore-root-keys:
 	@sudo chmod 644 /root/.ssh/id_rsa.pub
 	@sudo chown -R root:root /root/.ssh
 	@echo "root key restored for $(HOSTNAME)"
+
+bootstrap-livecd:
+	@if [ ! -d "hosts" ] || { [ ! -f "hosts/configuration-$(HOST).nix" ] && [ "$(HOST)" != "pc" ]; }; then \
+		echo "Run from the repository root (/mnt/home/labile/nix) with HOST=<pc|fx516|notebook|server>"; \
+		exit 1; \
+	fi
+	@if ! mountpoint -q "$(ROOT)"; then \
+		echo "$(ROOT) is not a mountpoint; mount target / and /boot under $(ROOT) first"; \
+		exit 1; \
+	fi
+	@if [ ! -f "secrets/keys/$(HOST)_ssh_host_ed25519_key.age" ]; then \
+		echo "key not found: secrets/keys/$(HOST)_ssh_host_ed25519_key.age"; \
+		exit 1; \
+	fi
+	@echo "Decrypting SSH key for $(HOST)..."
+	@if ! age -d "secrets/keys/$(HOST)_ssh_host_ed25519_key.age" > /tmp/bootstrap_ssh_key; then \
+		rm -f /tmp/bootstrap_ssh_key; \
+		exit 1; \
+	fi
+	@chmod 600 /tmp/bootstrap_ssh_key
+	@ssh-keygen -y -f /tmp/bootstrap_ssh_key > /tmp/bootstrap_ssh_key.pub
+	@sudo install -d -m 0755 "$(ROOT)/etc/ssh"
+	@sudo install -m 0600 -o 0 -g 0 /tmp/bootstrap_ssh_key "$(ROOT)/etc/ssh/ssh_host_ed25519_key"
+	@sudo install -m 0644 -o 0 -g 0 /tmp/bootstrap_ssh_key.pub "$(ROOT)/etc/ssh/ssh_host_ed25519_key.pub"
+	@sudo install -d -m 0700 -o 1000 -g 100 "$(ROOT)/home/labile/.ssh"
+	@sudo install -m 0600 -o 1000 -g 100 /tmp/bootstrap_ssh_key "$(ROOT)/home/labile/.ssh/id_ed25519"
+	@sudo install -m 0644 -o 1000 -g 100 /tmp/bootstrap_ssh_key.pub "$(ROOT)/home/labile/.ssh/id_ed25519.pub"
+	@sudo install -d -m 0700 -o 0 -g 0 /root/.ssh
+	@sudo install -m 0600 -o 0 -g 0 /tmp/bootstrap_ssh_key /root/.ssh/id_ed25519
+	@sudo install -m 0644 -o 0 -g 0 /tmp/bootstrap_ssh_key.pub /root/.ssh/id_ed25519.pub
+	@rm -f /tmp/bootstrap_ssh_key /tmp/bootstrap_ssh_key.pub
+	@echo "Generating hosts/hardware-$(HOST).nix from $(ROOT)..."
+	@sudo nixos-generate-config --root "$(ROOT)" --show-hardware-config > "hosts/hardware-$(HOST).nix"
+	@sudo chown -R 1000:100 "$(ROOT)/home/labile"
+	@echo "Installing NixOS configuration .#$(HOST) into $(ROOT)..."
+	@sudo nixos-install --root "$(ROOT)" --flake ".#$(HOST)" --impure --no-root-passwd $(BUILD_FLAGS)
 

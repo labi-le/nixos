@@ -176,6 +176,7 @@ make fmt                 # format nix files
 make disko               # run disko for disk partitioning
 make cleanup             # remove old generations and apply configuration
 make optimise            # optimise nix store
+make bootstrap-livecd HOST=server  # decrypt keys, generate hardware-<host>.nix, and run nixos-install from LiveCD
 ```
 
 ## Rebuild Memory Cap
