@@ -57,6 +57,21 @@
   services.udev.extraRules = ''
     SUBSYSTEM=="hidraw", ACTION=="add|remove", RUN+="${pkgs.openrgb-rescan}/bin/openrgb-rescan"
   '';
+  systemd.services.openrgb-boot-rescan = {
+    wants = [ "openrgb.service" ];
+    after = [ "openrgb.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.openrgb-rescan}/bin/openrgb-rescan";
+    };
+  };
+  systemd.timers.openrgb-boot-rescan = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "20s";
+      Unit = "openrgb-boot-rescan.service";
+    };
+  };
   virtualisation.waydroid.enable = true;
 
   # GPU profile lives in the repo instead of being hand-placed in /etc. Raw
