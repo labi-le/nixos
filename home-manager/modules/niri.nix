@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   osConfig,
   pkgs,
@@ -12,7 +11,6 @@ let
   brightnessctl = "${pkgs.brightnessctl}/bin/brightnessctl";
   openrgbProfile = "${pkgs.openrgb-profile}/bin/openrgb-profile";
   keychronBacklight = "${pkgs.keychron-backlight}/bin/keychron-backlight";
-  wallpaper = "Pictures/bryan-goff-f7YQo-eYHdM-unsplash.jpg";
 
   niriPower = pkgs.writeShellScript "niri-power" ''
     state="''${1:-toggle}"
@@ -67,7 +65,7 @@ let
       spawn-at-startup._args = [
         "${pkgs.swaybg}/bin/swaybg"
         "-i"
-        "${config.home.homeDirectory}/${wallpaper}"
+        "${osConfig.stylix.image}"
       ];
     }
     { spawn-at-startup._args = [ "${pkgs.openrgb-profile}/bin/openrgb-profile" "--wait" "default" ]; }
