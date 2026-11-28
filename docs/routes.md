@@ -99,6 +99,7 @@ per-service documents under `docs/`.
 | PC-Specific Modules | Syncthing device IDs | `modules/syncthing/devices.nix` | pc, notebook, server |  |
 | PC-Specific Modules | Monitor values | `hosts/configuration.nix` | pc | (pc) |
 | PC-Specific Modules | Hardware (pc) | `hosts/hardware-pc.nix` | pc |  |
+| PC-Specific Modules | Netac 2TB NVMe TRIM workaround (/mnt/ssd2tb) | `hosts/configuration.nix`, `docs/nvme-netac-2tb.md` | pc | docs/nvme-netac-2tb.md |
 | PC-Specific Modules | GPU profile (LACT: undervolt, fan curve, power profile) | `hosts/lact-pc.yaml` | pc | Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink |
 | PC-Specific Modules | RGB lighting (OpenRGB): | `pkgs/openrgb-profile.nix`, `pkgs/openrgb-rescan.nix` | pc | docs/routes-notes.md#openrgb-profile |
 | PC-Specific Modules | Keyboard backlight | `pkgs/keychron-backlight.nix` | pc | docs/routes-notes.md#keychron-backlight |
