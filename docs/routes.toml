@@ -497,6 +497,13 @@ hosts = ["pc"]
 
 [[route]]
 group = "PC-Specific Modules"
+task = "Netac 2TB NVMe TRIM workaround (/mnt/ssd2tb)"
+doc = "docs/nvme-netac-2tb.md"
+paths = ["hosts/configuration.nix", "docs/nvme-netac-2tb.md"]
+hosts = ["pc"]
+
+[[route]]
+group = "PC-Specific Modules"
 task = "GPU profile (LACT: undervolt, fan curve, power profile)"
 note = "Deployed to `/etc/lact/config.yaml` via `environment.etc`; GUI cannot save while it is a store symlink"
 paths = ["hosts/lact-pc.yaml"]
