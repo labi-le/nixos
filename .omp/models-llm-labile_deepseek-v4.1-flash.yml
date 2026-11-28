@@ -1,7 +1,10 @@
+advisor:
+  enabled: true
 defaultThinkingLevel: auto
 providers:
   autoThinkingMaxEffort: max
 modelRoles:
+  advisor: llm-labile/deepseek-v4.1-flash:max
   default: llm-labile/deepseek-v4.1-flash:max
   smol: llm-labile/deepseek-v4.1-flash:low
   slow: llm-labile/deepseek-v4.1-flash:max
