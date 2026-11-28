@@ -56,6 +56,7 @@
   '';
   services.udev.extraRules = ''
     SUBSYSTEM=="hidraw", ACTION=="add|remove", RUN+="${pkgs.openrgb-rescan}/bin/openrgb-rescan"
+    ACTION=="add|change", SUBSYSTEM=="block", KERNEL=="nvme[0-9]n[0-9]", ATTRS{model}=="Netac NVMe SSD 2TB*", ATTR{queue/discard_max_bytes}="4194304"
   '';
   systemd.services.openrgb-boot-rescan = {
     wants = [ "openrgb.service" ];
